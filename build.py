@@ -274,6 +274,8 @@ def external_resources(flutter, args, res_dir):
 
 def get_features(args):
     features = ['inline'] if not args.flutter else []
+    if os.environ.get('SWAN_BUILD') == '1':
+        features.append('swan_custom')
     if args.hwcodec:
         features.append('hwcodec')
     if args.vram:

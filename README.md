@@ -8,6 +8,13 @@
   <b>We need your help to translate this README, <a href="https://github.com/rustdesk/rustdesk/tree/master/src/lang">RustDesk UI</a> and <a href="https://github.com/rustdesk/doc.rustdesk.com">RustDesk Doc</a> to your native language</b>
 </p>
 
+> [!IMPORTANT]
+> This branch contains the **Swan Remote Support** managed client maintained by Swan Computing. It is pinned to RustDesk `1.4.9`, uses Swan branding, embeds the public Swan server routing/trust defaults, provides an express consented-unattended installation, and hides the customer-facing ID/password after setup. Customer release is blocked until the public-source, privacy, Tailnet-policy, testing, and trusted code-signing gates pass. Start with the [Swan build/deployment guide](docs/SWAN_CUSTOM_BUILD.md), [Tailscale deployment](docs/TAILSCALE_DEPLOYMENT.md), [code-signing policy](docs/CODE_SIGNING_POLICY.md), [privacy statement](docs/PRIVACY.md), and [source/licensing notes](docs/SOURCE_AND_LICENSE.md).
+
+Continuing on the live server? Use the evidence-first [server continuation prompt](docs/SERVER_CONTINUATION_PROMPT.md).
+
+**[Code signing policy](docs/CODE_SIGNING_POLICY.md):** Free code signing provided by [SignPath.io](https://about.signpath.io/), certificate by [SignPath Foundation](https://signpath.org/).
+
 > [!Caution]
 > **Misuse Disclaimer:** <br>
 > The developers of RustDesk do not condone or support any unethical or illegal use of this software. Misuse, such as unauthorized access, control or invasion of privacy, is strictly against our guidelines. The authors are not responsible for any misuse of the application.

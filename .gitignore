@@ -17,6 +17,12 @@ cert.pfx
 *png
 *svg
 *jpg
+!branding/
+!branding/*.svg
+!flutter/assets/icon.svg
+!flutter/assets/icon.png
+!flutter/assets/logo_light.png
+!flutter/assets/logo_dark.png
 sciter.dll
 **pdb
 src/bridge_generated.rs
@@ -56,3 +62,6 @@ vcpkg_installed
 flutter/lib/generated_plugin_registrant.dart
 libsciter.dylib
 flutter/web/
+
+# Working activity log required by the repository's AI-agent rules.
+docs/AI_CHANGELOG.md

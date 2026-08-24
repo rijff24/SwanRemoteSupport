@@ -1,0 +1,206 @@
+name: Build Swan Remote Support for Windows x64
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  RUST_VERSION: "1.75"
+  LLVM_VERSION: "15.0.6"
+  FLUTTER_VERSION: "3.24.5"
+  VCPKG_COMMIT_ID: "120deac3062162151622ca4860575a33844ba10b"
+  VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
+  VERSION: "1.4.9"
+
+jobs:
+  generate-bridge:
+    uses: ./.github/workflows/bridge.yml
+
+  build-topmost-window:
+    uses: ./.github/workflows/third-party-RustDeskTempTopMostWindow.yml
+    with:
+      upload-artifact: true
+      target: windows-2022
+      configuration: Release
+      platform: x64
+      target_version: Windows10
+
+  build-windows-x64:
+    name: Swan Remote Support x64
+    needs: [generate-bridge, build-topmost-window]
+    runs-on: windows-2022
+    env:
+      SWAN_BUILD: "1"
+      # Public Tailscale routing/trust defaults. Never put a private server key,
+      # unattended password, token, or signing credential in this section.
+      RENDEZVOUS_SERVER: "100.82.236.84"
+      RELAY_SERVER: "100.82.236.84"
+      RS_PUB_KEY: "I0s1JvqJ19WDNKBLFY+FC5HekcOqNWPpH+6xGmKUQLI="
+      API_SERVER: ""
+    steps:
+      - name: Export GitHub Actions cache environment variables
+        uses: actions/github-script@d7906e4ad0b1822421a7e6a35d5ca353c962f410 # v6
+        with:
+          script: |
+            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
+            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+
+      - name: Checkout source code
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          submodules: recursive
+
+      - name: Validate public server configuration
+        shell: pwsh
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:RENDEZVOUS_SERVER)) {
+            throw "Set the RENDEZVOUS_SERVER repository Actions variable to the public hbbs hostname."
+          }
+          if ($env:RENDEZVOUS_SERVER -match "^https?://") {
+            throw "RENDEZVOUS_SERVER must be a hostname or host:port, without http:// or https://."
+          }
+          if ([string]::IsNullOrWhiteSpace($env:RS_PUB_KEY)) {
+            throw "Set the RS_PUB_KEY repository Actions variable to the contents of id_ed25519.pub."
+          }
+          try {
+            $decodedKey = [Convert]::FromBase64String($env:RS_PUB_KEY)
+          } catch {
+            throw "RS_PUB_KEY is not valid Base64: $($_.Exception.Message)"
+          }
+          if ($decodedKey.Length -ne 32) {
+            throw "RS_PUB_KEY must decode to a 32-byte Ed25519 public key; received $($decodedKey.Length) bytes."
+          }
+          if (-not [string]::IsNullOrWhiteSpace($env:API_SERVER)) {
+            $apiUri = $null
+            if (-not [Uri]::TryCreate($env:API_SERVER, [UriKind]::Absolute, [ref]$apiUri) -or
+                $apiUri.Scheme -ne "https") {
+              throw "API_SERVER must be an absolute HTTPS URL when supplied."
+            }
+          }
+          Write-Output "Public Swan server configuration passed structural validation."
+
+      - name: Restore Flutter bridge files
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: bridge-artifact
+          path: ./
+
+      - name: Install LLVM and Clang
+        uses: KyleMayes/install-llvm-action@ebc0426251bc40c7cd31162802432c68818ab8f0 # v2.0.9
+        with:
+          version: "${{ env.LLVM_VERSION }}"
+
+      - name: Install Flutter
+        uses: subosito/flutter-action@2783a3f08e1baf891508463f8c6653c258246225 # v2.12.0
+        with:
+          channel: stable
+          flutter-version: "${{ env.FLUTTER_VERSION }}"
+          architecture: x64
+
+      - name: Replace Flutter engine with RustDesk Windows engine
+        shell: pwsh
+        run: |
+          flutter doctor -v
+          flutter precache --windows
+          Invoke-WebRequest -Uri https://github.com/rustdesk/engine/releases/download/main/windows-x64-release.zip -OutFile windows-x64-release.zip
+          Expand-Archive -Path windows-x64-release.zip -DestinationPath windows-x64-release
+          Move-Item -Path windows-x64-release\* -Destination C:\hostedtoolcache\windows\flutter\stable-${{ env.FLUTTER_VERSION }}-x64\bin\cache\artifacts\engine\windows-x64-release\ -Force
+
+      - name: Patch Flutter 3.24 dropdown support
+        shell: bash
+        run: |
+          cp .github/patches/flutter_3.24.4_dropdown_menu_enableFilter.diff "$(dirname "$(dirname "$(which flutter)")")"
+          cd "$(dirname "$(dirname "$(which flutter)")")"
+          git apply flutter_3.24.4_dropdown_menu_enableFilter.diff
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9 # v1
+        with:
+          toolchain: "${{ env.RUST_VERSION }}"
+          targets: x86_64-pc-windows-msvc
+          components: rustfmt
+
+      - name: Cache Rust build
+        uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
+        with:
+          prefix-key: windows-2022-swan-x64
+
+      - name: Set up pinned vcpkg
+        uses: lukka/run-vcpkg@b1a0dd252f06b9e25b3c022a9a03bd7a427fb6a2 # v11
+        with:
+          vcpkgDirectory: C:\vcpkg
+          vcpkgGitCommitId: "${{ env.VCPKG_COMMIT_ID }}"
+          doNotCache: false
+
+      - name: Install native dependencies
+        env:
+          VCPKG_DEFAULT_HOST_TRIPLET: x64-windows-static
+        shell: bash
+        run: |
+          if ! "$VCPKG_ROOT/vcpkg" install \
+            --triplet x64-windows-static \
+            --x-install-root="$VCPKG_ROOT/installed"; then
+            find "$VCPKG_ROOT" -name "*.log" -print -exec tail -n 200 {} \;
+            exit 1
+          fi
+
+      - name: Build branded client
+        shell: pwsh
+        run: |
+          python3 .\build.py --portable --flutter --skip-portable-pack --hwcodec --vram
+          Move-Item .\flutter\build\windows\x64\runner\Release .\swan-client
+
+      - name: Add signed topmost-window helper
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: topmostwindow-artifacts-x64
+          path: ./swan-client
+
+      - name: Build self-extracting installer
+        shell: bash
+        run: |
+          runner_res=$(find . -name "Runner.res" -print -quit)
+          if [[ -z "$runner_res" ]]; then
+            echo "Runner.res was not produced; refusing to package an installer with stale metadata." >&2
+            exit 1
+          fi
+          cp "$runner_res" ./libs/portable/Runner.res
+          sed -i '/dpiAware/d' res/manifest.xml
+          pushd ./libs/portable
+          pip3 install -r requirements.txt
+          python3 ./generate.py -f ../../swan-client/ -o . -e ../../swan-client/rustdesk.exe
+          popd
+          mkdir -p ./artifacts
+          # The portable packer opens RustDesk's one-page installer when the
+          # filename ends in "install.exe".
+          mv ./target/release/rustdesk-portable-packer.exe ./artifacts/SwanRemoteSupport-${{ env.VERSION }}-x64-unsigned-install.exe
+          sha256sum ./artifacts/SwanRemoteSupport-*.exe | tee ./artifacts/SHA256SUMS.txt
+
+      - name: Add express installation helpers
+        shell: pwsh
+        run: |
+          Copy-Item .\scripts\Install-SwanRemoteSupport.ps1 .\artifacts\
+          Copy-Item .\scripts\Install-SwanRemoteSupport.cmd .\artifacts\
+          Copy-Item .\scripts\Enable-SwanUnattendedAccess.ps1 .\artifacts\
+          Copy-Item .\scripts\Disable-SwanUnattendedAccess.ps1 .\artifacts\
+          Copy-Item .\docs\CUSTOMER_INSTALL.md .\artifacts\
+          Copy-Item .\docs\PRIVACY.md .\artifacts\
+          Copy-Item .\docs\SOURCE_AND_LICENSE.md .\artifacts\
+
+      - name: Upload unsigned installer and checksum
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: SwanRemoteSupport-${{ env.VERSION }}-x64-unsigned
+          if-no-files-found: error
+          path: |
+            artifacts/SwanRemoteSupport-${{ env.VERSION }}-x64-unsigned-install.exe
+            artifacts/SHA256SUMS.txt
+            artifacts/Install-SwanRemoteSupport.ps1
+            artifacts/Install-SwanRemoteSupport.cmd
+            artifacts/Enable-SwanUnattendedAccess.ps1
+            artifacts/Disable-SwanUnattendedAccess.ps1
+            artifacts/CUSTOMER_INSTALL.md
+            artifacts/PRIVACY.md
+            artifacts/SOURCE_AND_LICENSE.md

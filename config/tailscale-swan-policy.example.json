@@ -1,0 +1,19 @@
+{
+  "tagOwners": {
+    "tag:swan-customer": ["autogroup:admin"],
+    "tag:swan-support-operator": ["autogroup:admin"],
+    "tag:swan-rustdesk-server": ["autogroup:admin"]
+  },
+  "grants": [
+    {
+      "src": ["tag:swan-customer", "tag:swan-support-operator"],
+      "dst": ["tag:swan-rustdesk-server"],
+      "ip": ["tcp:21115-21117", "udp:21116"]
+    },
+    {
+      "src": ["tag:swan-support-operator"],
+      "dst": ["tag:swan-customer"],
+      "ip": ["tcp:*", "udp:*"]
+    }
+  ]
+}

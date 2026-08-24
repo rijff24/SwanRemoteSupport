@@ -34,6 +34,7 @@ class DesktopHomePage extends StatefulWidget {
 }
 
 const borderColor = Color(0xFF2F65BA);
+const swanManagedAppName = 'Swan Remote Support';
 
 class _DesktopHomePageState extends State<DesktopHomePage>
     with AutomaticKeepAliveClientMixin, WidgetsBindingObserver {
@@ -79,8 +80,9 @@ class _DesktopHomePageState extends State<DesktopHomePage>
   Widget buildLeftPane(BuildContext context) {
     final isIncomingOnly = bind.isIncomingOnly();
     final isOutgoingOnly = bind.isOutgoingOnly();
+    final isSwanManagedClient = bind.mainGetAppNameSync() == swanManagedAppName;
     final children = <Widget>[
-      if (!isOutgoingOnly) buildPresetPasswordWarning(),
+      if (!isOutgoingOnly && !isSwanManagedClient) buildPresetPasswordWarning(),
       if (bind.isCustomClient())
         Align(
           alignment: Alignment.center,
@@ -90,9 +92,12 @@ class _DesktopHomePageState extends State<DesktopHomePage>
         alignment: Alignment.center,
         child: loadLogo(),
       ),
-      buildTip(context),
-      if (!isOutgoingOnly) buildIDBoard(context),
-      if (!isOutgoingOnly) buildPasswordBoard(context),
+      if (isSwanManagedClient)
+        buildSwanManagedOverview(context)
+      else
+        buildTip(context),
+      if (!isOutgoingOnly && !isSwanManagedClient) buildIDBoard(context),
+      if (!isOutgoingOnly && !isSwanManagedClient) buildPasswordBoard(context),
       FutureBuilder<Widget>(
         future: Future.value(
             Obx(() => buildHelpCards(stateGlobal.updateUrl.value))),
@@ -131,7 +136,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
     return ChangeNotifierProvider.value(
       value: gFFI.serverModel,
       child: Container(
-        width: isIncomingOnly ? 280.0 : 200.0,
+        width: isSwanManagedClient ? 360.0 : (isIncomingOnly ? 280.0 : 200.0),
         color: Theme.of(context).colorScheme.background,
         child: Stack(
           children: [
@@ -184,6 +189,79 @@ class _DesktopHomePageState extends State<DesktopHomePage>
     return Container(
       color: Theme.of(context).scaffoldBackgroundColor,
       child: ConnectionPage(),
+    );
+  }
+
+  Widget buildSwanManagedOverview(BuildContext context) {
+    return FutureBuilder<String>(
+      future: bind.mainGetCommon(key: 'permanent-password-set'),
+      builder: (context, snapshot) {
+        final isReady = snapshot.data == 'true';
+        final statusColor = isReady ? const Color(0xFF0A7D5A) : Colors.orange;
+        final statusIcon = isReady ? Icons.verified_user : Icons.warning_amber;
+        final statusTitle = isReady
+            ? 'Ready for unattended support'
+            : 'Swan setup is not complete';
+        final statusText = isReady
+            ? 'This computer can receive private Swan Computing support while it is connected to Tailscale.'
+            : 'A Swan technician must finish express setup and securely record this computer\'s unique support credentials.';
+
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 16, 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Managed by Swan Computing',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Remote support is configured for Swan Computing\'s private Tailscale network. The device ID and password are hidden from this customer screen.',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: statusColor.withOpacity(0.10),
+                  border: Border.all(color: statusColor.withOpacity(0.55)),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(statusIcon, color: statusColor, size: 24),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            statusTitle,
+                            style: TextStyle(
+                              color: statusColor,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(statusText,
+                              style: Theme.of(context).textTheme.bodySmall),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'The computer owner can use the tray icon to view or stop the support service.',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
