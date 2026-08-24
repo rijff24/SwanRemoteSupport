@@ -176,16 +176,21 @@ jobs:
           # The portable packer opens RustDesk's one-page installer when the
           # filename ends in "install.exe".
           mv ./target/release/rustdesk-portable-packer.exe ./artifacts/SwanRemoteSupport-${{ env.VERSION }}-x64-unsigned-install.exe
-          sha256sum ./artifacts/SwanRemoteSupport-*.exe | tee ./artifacts/SHA256SUMS.txt
+          pushd ./artifacts
+          sha256sum SwanRemoteSupport-*.exe | tee SHA256SUMS.txt
+          popd
 
       - name: Add express installation helpers
         shell: pwsh
         run: |
           Copy-Item .\scripts\Install-SwanRemoteSupport.ps1 .\artifacts\
           Copy-Item .\scripts\Install-SwanRemoteSupport.cmd .\artifacts\
+          Copy-Item .\scripts\Install-SwanRemoteSupport-UNSIGNED-TEST.cmd .\artifacts\
+          Copy-Item .\scripts\Run-Swan-Technician-UNSIGNED-TEST.cmd .\artifacts\
           Copy-Item .\scripts\Enable-SwanUnattendedAccess.ps1 .\artifacts\
           Copy-Item .\scripts\Disable-SwanUnattendedAccess.ps1 .\artifacts\
           Copy-Item .\docs\CUSTOMER_INSTALL.md .\artifacts\
+          Copy-Item .\docs\UNSIGNED_SPARE_LAPTOP_TEST.md .\artifacts\
           Copy-Item .\docs\PRIVACY.md .\artifacts\
           Copy-Item .\docs\SOURCE_AND_LICENSE.md .\artifacts\
 
@@ -199,8 +204,11 @@ jobs:
             artifacts/SHA256SUMS.txt
             artifacts/Install-SwanRemoteSupport.ps1
             artifacts/Install-SwanRemoteSupport.cmd
+            artifacts/Install-SwanRemoteSupport-UNSIGNED-TEST.cmd
+            artifacts/Run-Swan-Technician-UNSIGNED-TEST.cmd
             artifacts/Enable-SwanUnattendedAccess.ps1
             artifacts/Disable-SwanUnattendedAccess.ps1
             artifacts/CUSTOMER_INSTALL.md
+            artifacts/UNSIGNED_SPARE_LAPTOP_TEST.md
             artifacts/PRIVACY.md
             artifacts/SOURCE_AND_LICENSE.md

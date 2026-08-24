@@ -59,7 +59,7 @@ function Assert-TrustedAuthenticodePublisher {
         return
     }
 
-    if ($AllowUnsigned) {
+    if ($AllowUnsigned -and $signature.Status -eq [Management.Automation.SignatureStatus]::NotSigned) {
         Write-Warning "TEST ONLY: '$Path' does not have the required trusted signature. Do not use -AllowUnsignedSwanInstaller for a customer installation."
         return
     }
