@@ -75,3 +75,16 @@ Do not change only the version string. For each update:
 First run the Swan unattended-access disable helper or uninstall Swan Remote Support. Then remove the customer device from the Tailscale admin console so its node identity can no longer join the tailnet. Uninstall Tailscale only after confirming the customer does not use it for another agreed purpose. Remove the Swan password-manager record according to the support agreement and retention policy.
 
 Weekly backups and software maintenance are separate authorized services, not features of Tailscale or RustDesk. Record the customer's consent, scope, schedule, destination, encryption, retention, restore test, and audit trail separately before using unattended access for those jobs.
+
+## Live server validation checkpoint
+
+The Swan server and dedicated technician device were validated against this design on 24 August 2026. At that checkpoint:
+
+- the server had only `tag:swan-rustdesk-server`, and the dedicated technician device had only `tag:swan-support-operator`;
+- the default allow-all grant had been removed and replaced by the two grants in the example policy, while the pre-existing self-only Tailscale SSH check rule was retained;
+- the Windows server firewall allowed `hbbs` TCP `21115-21116`, `hbbs` UDP `21116`, and `hbbr` TCP `21117` only from the Tailscale adapter and CGNAT address range;
+- older application-wide, unrestricted-port, and stale test-binary firewall rules were disabled but retained for rollback;
+- the RustDesk server public key matched the documented public key, and the private-key ACL was restricted to Windows SYSTEM and Administrators; and
+- `hbbs` and `hbbr` remained running after the policy, tag, firewall, and ACL changes without a service restart.
+
+This checkpoint is not customer acceptance. The technician device was offline and no customer-tagged test device was enrolled, so operational UDP, operator-to-server, customer isolation, numeric ID allocation, forced or observed relay, and unauthorized-device tests remain pending. The signing, clean-VM, Defender, release, privacy, and hosted-service-plan gates elsewhere in this repository also remain in force.
