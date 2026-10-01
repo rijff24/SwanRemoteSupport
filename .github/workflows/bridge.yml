@@ -114,3 +114,12 @@ jobs:
             ./flutter/lib/generated_bridge.freezed.dart
             ./flutter/macos/Runner/bridge_generated.h
             ./flutter/ios/Runner/bridge_generated.h
+
+      # Review and commit dependency resolution before native --locked builds.
+      # Never overwrite a checked-out lockfile from this artifact during builds.
+      - name: Export resolved dependency lock for review
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ${{ matrix.job.artifact-name }}-resolved-lock
+          path: ./Cargo.lock
+          if-no-files-found: error
