@@ -168,7 +168,7 @@ pub fn overview()->String {
         Ok(state)=>match state.display_profile(){
             Ok(profile)=>{
                 let brand=if state.bootstrap.edition==Edition::Technician{&profile.technician}else{&profile.customer};
-                serde_json::json!({"configured":true,"profile_valid":state.company_profile().is_ok(),"edition":state.bootstrap.edition,"enrolled":state.device_id.is_some(),"unattended":state.unattended_consent,"display_name":brand.display_name,"primary_color":brand.primary_color,"logo_svg":brand.logo_svg,"support_url":brand.support_url,"consent_text":brand.consent_text,"domain":profile.management_url}).to_string()
+                serde_json::json!({"configured":true,"profile_valid":state.company_profile().is_ok(),"edition":state.bootstrap.edition,"enrolled":state.device_id.is_some(),"unattended":state.unattended_consent,"allow_unattended":profile.allow_unattended,"display_name":brand.display_name,"primary_color":brand.primary_color,"logo_svg":brand.logo_svg,"support_url":brand.support_url,"consent_text":brand.consent_text,"domain":profile.management_url}).to_string()
             }
             Err(_)=>"{\"configured\":false}".into()
         },

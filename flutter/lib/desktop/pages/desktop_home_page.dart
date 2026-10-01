@@ -294,6 +294,30 @@ class _DesktopHomePageState extends State<DesktopHomePage>
                   icon: const Icon(Icons.shield_outlined),
                   label: const Text('Revoke unattended access'),
                 ),
+              if (isReady && company['unattended'] != true && company['allow_unattended'] == true)
+                TextButton.icon(
+                  onPressed: () async {
+                    final accepted = await showDialog<bool>(
+                      context: context,
+                      builder: (dialogContext) => AlertDialog(
+                        title: const Text('Allow unattended support?'),
+                        content: Text('Approved technicians from ${company['display_name']} can connect while you are absent, including at the Windows sign-in screen. You can revoke this permission here at any time.\n\nCompany server: ${company['domain']}\n\n${company['consent_text'] ?? ''}'),
+                        actions: [
+                          TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: const Text('Cancel')),
+                          TextButton(onPressed: () => Navigator.of(dialogContext).pop(true), child: const Text('Allow ongoing support')),
+                        ],
+                      ),
+                    );
+                    if (accepted != true || !mounted) return;
+                    await bind.mainSetCommon(key: 'company-allow-unattended', value: 'Y');
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Consent change requested. Unattended access stays disabled until the company accepts it.')));
+                      setState(() {});
+                    }
+                  },
+                  icon: const Icon(Icons.shield_outlined),
+                  label: const Text('Allow unattended support'),
+                ),
               Text(
                 'Use the tray icon to view sessions. Powered by Swan Remote Support and RustDesk · AGPL-3.0.',
                 style: Theme.of(context).textTheme.bodySmall,

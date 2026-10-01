@@ -885,6 +885,20 @@ async fn handle(data: Data, stream: &mut Connection) {
             }
             Some(value) => {
                 #[cfg(feature = "swan_custom")]
+                if name == "company-allow-unattended" && value == "Y" {
+                    let directory=swan_agent::state_directory();
+                    match swan_agent::AgentState::load(&directory) {
+                        Ok(mut state)=>{
+                            match state.consent(true).await {
+                                Ok(())=>if let Err(error)=state.set_local_consent(&directory,true){log::error!("Cannot persist explicit unattended consent: {}",error);},
+                                Err(error)=>log::warn!("Company did not accept unattended consent: {}",error),
+                            }
+                        }
+                        Err(error)=>log::error!("Cannot load current company policy: {}",error),
+                    }
+                    return;
+                }
+                #[cfg(feature = "swan_custom")]
                 if name == "company-revoke-unattended" && value == "N" {
                     match swan_agent::AgentState::load_for_refresh(&swan_agent::state_directory()) {
                         Ok(mut state) => {

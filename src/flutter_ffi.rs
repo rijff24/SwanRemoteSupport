@@ -2914,9 +2914,9 @@ pub fn main_get_common_sync(key: String) -> SyncReturn<String> {
 
 pub fn main_set_common(_key: String, _value: String) {
     #[cfg(feature = "swan_custom")]
-    if _key == "company-revoke-unattended" && _value == "N" {
-        if let Err(error) = crate::ipc::set_config("company-revoke-unattended", "N".into()) {
-            log::error!("Cannot revoke company unattended support: {}", error);
+    if (_key == "company-revoke-unattended" && _value == "N") || (_key == "company-allow-unattended" && _value == "Y") {
+        if let Err(error) = crate::ipc::set_config(&_key, _value) {
+            log::error!("Cannot change company unattended support: {}", error);
         }
         return;
     }
