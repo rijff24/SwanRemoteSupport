@@ -37,6 +37,8 @@ pub struct AgentState {
     pub device_id:Option<String>,
     pub device_token:Option<String>,
     pub unattended_consent:bool,
+    #[serde(default)]
+    pub consent_revision:u64,
     pub last_release_sequence:u64,
 }
 impl AgentState {
@@ -53,6 +55,16 @@ impl AgentState {
         Ok(state)
     }
     pub fn save(&self,directory:&Path)->Result<()> {
+        self.save_internal(directory,None)
+    }
+    pub fn set_local_consent(&mut self,directory:&Path,enabled:bool)->Result<()> {
+        ensure!(self.bootstrap.edition==Edition::Customer,"Customer consent is required");
+        ensure!(self.device_id.is_some(),"Device enrollment required");
+        ensure!(!enabled || self.company_profile()?.allow_unattended,"Company disallows unattended support");
+        self.save_internal(directory,Some(enabled))?;
+        *self=Self::load_for_refresh(directory)?;Ok(())
+    }
+    fn save_internal(&self,directory:&Path,consent_change:Option<bool>)->Result<()> {
         self.bootstrap.validate()?;self.cached_profile()?;
         std::fs::create_dir_all(directory)?;
         #[cfg(unix)] {use std::os::unix::fs::PermissionsExt; std::fs::set_permissions(directory,std::fs::Permissions::from_mode(0o700))?;}
@@ -71,10 +83,16 @@ impl AgentState {
             ensure!(existing.accepted_revision<=self.accepted_revision,"A newer profile has already been saved");
             saved.last_release_sequence=saved.last_release_sequence.max(existing.last_release_sequence);
             if let Some(id)=existing.device_id.as_ref(){
+                ensure!(consent_change.is_some() || self.consent_revision<=existing.consent_revision,"Consent revision changes require explicit customer consent");
                 ensure!(self.device_id.as_ref().map(|value|value==id).unwrap_or(true),"Cannot replace enrolled device identity");
                 ensure!(self.device_token.as_ref().map(|value|Some(value)==existing.device_token.as_ref()).unwrap_or(true),"Cannot replace enrolled device credential");
-                if self.device_id.is_none(){saved.unattended_consent=existing.unattended_consent;}
-                if !existing.unattended_consent {saved.unattended_consent=false;}
+                if self.device_id.is_none() || self.consent_revision<existing.consent_revision {saved.unattended_consent=existing.unattended_consent;}
+                if self.consent_revision==existing.consent_revision && !existing.unattended_consent {saved.unattended_consent=false;}
+                saved.consent_revision=existing.consent_revision;
+                if let Some(enabled)=consent_change {
+                    saved.consent_revision=existing.consent_revision.checked_add(1).context("Consent revision exhausted")?;
+                    saved.unattended_consent=enabled;
+                }
                 saved.device_id=existing.device_id;saved.device_token=existing.device_token;
             }
         }
@@ -215,7 +233,7 @@ pub async fn bootstrap(input:Bootstrap)->Result<AgentState> {
     let profile:SignedEnvelope=client.get(format!("{}/api/v1/profile",input.management_url.trim_end_matches('/'))).send().await?.error_for_status()?.json().await?;
     let parsed:CompanyProfile=profile.verify(&public_key(&input.profile_public_key)?)?;
     parsed.validate(&input.company_id,0,now())?;
-    Ok(AgentState {bootstrap:input,profile,accepted_revision:parsed.revision,device_id:None,device_token:None,unattended_consent:false,last_release_sequence:0})
+    Ok(AgentState {bootstrap:input,profile,accepted_revision:parsed.revision,device_id:None,device_token:None,unattended_consent:false,consent_revision:0,last_release_sequence:0})
 }
 
 pub fn http_client(timeout_seconds:u64,artifact_redirects:bool)->Result<reqwest::Client> {
@@ -234,7 +252,19 @@ mod tests {
     fn fixture()->AgentState {
         let key=SigningKey::from_bytes(&[7;32]);let public=STANDARD.encode(key.verifying_key().as_bytes());
         let profile=CompanyProfile{schema:1,company_id:"test-company".into(),revision:1,issued_at:now()-1000,expires_at:now()+3600,management_url:"https://support.example.com".into(),rendezvous:"support.example.com".into(),relay:"support.example.com".into(),transport_public_key:public.clone(),customer:Branding::default(),technician:Branding::default(),allow_unattended:true,updates_paused:true,rollout_percent:100,maintenance_start_utc:0,maintenance_end_utc:0,update_channel:"test".into(),next_profile_public_key:None};
-        AgentState{bootstrap:Bootstrap{schema:1,edition:Edition::Customer,company_id:profile.company_id.clone(),management_url:profile.management_url.clone(),profile_public_key:public.clone(),release_public_key:public},profile:SignedEnvelope::sign(&profile,&key).unwrap(),accepted_revision:1,device_id:Some("device".into()),device_token:Some(random_token()),unattended_consent:true,last_release_sequence:0}
+        AgentState{bootstrap:Bootstrap{schema:1,edition:Edition::Customer,company_id:profile.company_id.clone(),management_url:profile.management_url.clone(),profile_public_key:public.clone(),release_public_key:public},profile:SignedEnvelope::sign(&profile,&key).unwrap(),accepted_revision:1,device_id:Some("device".into()),device_token:Some(random_token()),unattended_consent:true,consent_revision:0,last_release_sequence:0}
+    }
+    #[test]
+    fn explicit_consent_changes_survive_older_refreshes() {
+        let directory=std::env::temp_dir().join(format!("swan-consent-{}",random_token()));
+        let mut state=fixture();state.save(&directory).unwrap();let old_allowed=state.clone();
+        state.set_local_consent(&directory,false).unwrap();let old_revoked=state.clone();
+        old_allowed.save(&directory).unwrap();assert!(!AgentState::load(&directory).unwrap().unattended_consent);
+        state.set_local_consent(&directory,true).unwrap();old_revoked.save(&directory).unwrap();
+        let current=AgentState::load(&directory).unwrap();assert!(current.unattended_consent);assert_eq!(current.consent_revision,2);
+        state.set_local_consent(&directory,false).unwrap();current.save(&directory).unwrap();
+        assert!(!AgentState::load(&directory).unwrap().unattended_consent);
+        std::fs::remove_dir_all(directory).unwrap();
     }
     #[test]
     fn stale_refresh_cannot_restore_consent_or_replay_update_state() {

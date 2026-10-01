@@ -8,8 +8,8 @@ native support session or a clean-machine installation.
 
 - Public baseline tag `swan-single-company-baseline-1.4.9` preserves the original
   Swan deployment and build instructions. Its source was not replaced.
-- Fourteen product tests pass on the local Windows development host, including
-  enrollment/trust preservation across stale writes, trusted key rotation, and refusal to automatically reinstall a removed endpoint.
+- Fifteen product tests pass on the local Windows development host, including
+  enrollment/trust preservation across stale writes, trusted key rotation, refusal to automatically reinstall a removed endpoint, and explicit consent changes surviving older refreshes.
   The preceding eleven-test component source passed tests and release compilation on
   [Windows 2022 and Ubuntu 24.04 CI](https://github.com/rijff24/SwanRemoteSupport/actions/runs/36856716860)
   at commit `411269b`.

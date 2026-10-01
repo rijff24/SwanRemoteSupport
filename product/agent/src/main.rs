@@ -56,8 +56,14 @@ async fn main()->Result<()> {
             println!("Installer metadata, bytes and publisher verified.");
         }
         "revoke-unattended"=>{
-            let mut state=AgentState::load(&directory)?;state.unattended_consent=false;state.save(&directory)?;
+            let mut state=AgentState::load_for_refresh(&directory)?;state.set_local_consent(&directory,false)?;
             match state.consent(false).await {Ok(())=>println!("Unattended access revoked locally and on the server."),Err(_)=>println!("Unattended access revoked locally. Server synchronization will retry when available.")}
+        }
+        "allow-unattended"=>{
+            ensure!(args.iter().any(|value|value=="--confirm-unattended"),"Explicit --confirm-unattended consent is required");
+            let mut state=AgentState::load(&directory)?;
+            state.consent(true).await?;state.set_local_consent(&directory,true)?;
+            println!("Unattended support enabled by explicit customer consent.");
         }
         "login"=>{
             let state=AgentState::load(&directory)?;
@@ -98,7 +104,7 @@ async fn main()->Result<()> {
                 .env("SWAN_SESSION_PROOF_KEY",hex::encode(proof.to_bytes())).spawn()?;
             ensure!(child.wait()?.success(),"Technician application exited unsuccessfully");
         }
-        _=>{println!("Swan Remote Support configuration agent\nCommands: setup, enroll, sync, watch, update, revoke-unattended, login, devices, history, logout, connect\nState directory: {}",directory.display());if command!="help"{bail!("Unknown command");}}
+        _=>{println!("Swan Remote Support configuration agent\nCommands: setup, enroll, sync, watch, update, revoke-unattended, allow-unattended --confirm-unattended, login, devices, history, logout, connect\nState directory: {}",directory.display());if command!="help"{bail!("Unknown command");}}
     }
     Ok(())
 }

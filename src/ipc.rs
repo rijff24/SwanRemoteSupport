@@ -886,10 +886,9 @@ async fn handle(data: Data, stream: &mut Connection) {
             Some(value) => {
                 #[cfg(feature = "swan_custom")]
                 if name == "company-revoke-unattended" && value == "N" {
-                    match swan_agent::AgentState::load(&swan_agent::state_directory()) {
+                    match swan_agent::AgentState::load_for_refresh(&swan_agent::state_directory()) {
                         Ok(mut state) => {
-                            state.unattended_consent = false;
-                            match state.save(&swan_agent::state_directory()) {
+                            match state.set_local_consent(&swan_agent::state_directory(),false) {
                                 Ok(()) => {
                                     // Revocation is already durable locally even if the API is offline.
                                     if let Err(error) = state.consent(false).await {
