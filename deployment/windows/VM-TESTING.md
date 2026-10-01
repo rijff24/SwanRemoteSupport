@@ -72,4 +72,8 @@ The initial TCG attempt used the insufficient default CPU and was restarted
 with the corrected model. No completed Windows installation is recorded yet.
 The corrected TCG attempt reached a Windows crash screen reporting
 `SYSTEM_SERVICE_EXCEPTION (0x3B)` in `win32kbase.sys`. Its screenshot and disk
-remain private. A WHPX userspace-interrupt attempt is pending verification.
+remain private. The WHPX userspace-interrupt attempt emitted repeated XSAVE
+state errors. `SWAN_VM_ACCELERATOR=whpx-baseline` retains that interrupt mode
+and selects `Westmere-v2`; a local QMP probe confirmed SSE4.2, POPCNT, CX16 and
+NX are present, while XSAVE and AVX are absent. Its actual installation result
+remains unverified. No operating system hardware-check bypass is applied.

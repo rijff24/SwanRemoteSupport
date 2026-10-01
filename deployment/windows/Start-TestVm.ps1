@@ -3,7 +3,7 @@ param(
     [Parameter(Mandatory=$true)][string]$IsoPath,
     [Parameter(Mandatory=$true)][string]$LabDirectory,
     [ValidatePattern('^[a-z0-9-]+$')][string]$Name = 'server-2025',
-    [ValidateSet('whpx','whpx-userspace','tcg')][string]$Accelerator = 'tcg',
+    [ValidateSet('whpx','whpx-userspace','whpx-baseline','tcg')][string]$Accelerator = 'tcg',
     [ValidateRange(2048,8192)][int]$MemoryMiB = 4096
 )
 $ErrorActionPreference = 'Stop'
@@ -27,8 +27,8 @@ if ((Get-CimInstance Win32_OperatingSystem).FreePhysicalMemory / 1024 -lt ($Memo
 $running = Get-CimInstance Win32_Process -Filter "Name='qemu-system-x86_64.exe'"
 if ($running | Where-Object { $_.CommandLine -and $_.CommandLine.Contains($disk) }) { throw 'Guest disk is already in use' }
 # Reconstruct fixed arguments; saved metadata must never supply arbitrary QEMU options.
-$acceleratorOption = if ($Accelerator -eq 'whpx-userspace') { 'whpx,hyperv=off,kernel-irqchip=off' } else { $Accelerator }
-$cpuModel = if ($Accelerator -eq 'tcg') { 'max' } else { 'host' }
+$acceleratorOption = if ($Accelerator -in @('whpx-userspace','whpx-baseline')) { 'whpx,hyperv=off,kernel-irqchip=off' } else { $Accelerator }
+$cpuModel = if ($Accelerator -eq 'whpx-baseline') { 'Westmere-v2' } elseif ($Accelerator -eq 'tcg') { 'max' } else { 'host' }
 $arguments = @('-name',$Name,'-machine','q35','-accel',$acceleratorOption,
     '-cpu',$cpuModel,'-m',$MemoryMiB.ToString(),'-smp','2','-drive',"file=$disk,format=qcow2",
     '-cdrom',$iso.FullName,'-boot','order=d','-nic','user,model=e1000',
