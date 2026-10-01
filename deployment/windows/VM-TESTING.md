@@ -21,6 +21,11 @@ recorded only after the official HTTPS download exits successfully. It verifies
 the recorded size and hash before creating a guest. This record proves local
 download integrity; it does not replace verification of the Microsoft origin.
 Do not write the completion record while a downloader is still running.
+For a preserved guest, add `-Resume` and set `SWAN_VM_ACCELERATOR=tcg` in the
+private environment file to try the software-emulation fallback. The resume
+helper verifies the ISO again, retains the existing disk, reconstructs fixed
+loopback-only QEMU options, and refuses a disk already in use. TCG performance
+and successful Windows installation still require actual verification.
 Windows 11 also requires supported UEFI/Secure Boot and TPM configuration:
 the generic starter script is for Server guests and does not establish Windows
 11 compatibility. Do not bypass Windows 11 hardware requirements for acceptance.

@@ -1,4 +1,4 @@
-param([Parameter(Mandatory=$true)][string]$EnvironmentFile)
+param([Parameter(Mandatory=$true)][string]$EnvironmentFile,[switch]$Resume)
 $ErrorActionPreference = 'Stop'
 # Machine paths belong in an untracked file. Never evaluate its contents as code.
 $settings = @{}
@@ -34,4 +34,5 @@ $parameters = @{
     MemoryMiB = [int]$settings['SWAN_VM_MEMORY_MIB']
     Accelerator = $settings['SWAN_VM_ACCELERATOR']
 }
-& (Join-Path $PSScriptRoot 'New-TestVm.ps1') @parameters
+$script = if ($Resume) { 'Start-TestVm.ps1' } else { 'New-TestVm.ps1' }
+& (Join-Path $PSScriptRoot $script) @parameters
