@@ -75,6 +75,16 @@ async fn main()->Result<()> {
             let devices=state.technician_inventory(&token).await?;
             println!("{}",serde_json::to_string_pretty(&devices)?);
         }
+        "history"=>{
+            let state=AgentState::load(&directory)?;
+            let token=std::env::var("SWAN_TECHNICIAN_TOKEN").context("Set authenticated technician token")?;
+            println!("{}",serde_json::to_string_pretty(&state.technician_history(&token).await?)?);
+        }
+        "logout"=>{
+            let state=AgentState::load_for_refresh(&directory)?;
+            let token=std::env::var("SWAN_TECHNICIAN_TOKEN").context("Set authenticated technician token")?;
+            state.technician_logout(&token).await?;println!("Technician session signed out.");
+        }
         "connect"=>{
             let state=AgentState::load(&directory)?;let device=args.get(2).context("Usage: swan-agent connect DEVICE_ID APP_EXE [--unattended]")?;
             let executable=PathBuf::from(args.get(3).context("Missing app executable")?);
@@ -88,7 +98,7 @@ async fn main()->Result<()> {
                 .env("SWAN_SESSION_PROOF_KEY",hex::encode(proof.to_bytes())).spawn()?;
             ensure!(child.wait()?.success(),"Technician application exited unsuccessfully");
         }
-        _=>{println!("Swan Remote Support configuration agent\nCommands: setup, enroll, sync, watch, update, revoke-unattended, login, devices, connect\nState directory: {}",directory.display());if command!="help"{bail!("Unknown command");}}
+        _=>{println!("Swan Remote Support configuration agent\nCommands: setup, enroll, sync, watch, update, revoke-unattended, login, devices, history, logout, connect\nState directory: {}",directory.display());if command!="help"{bail!("Unknown command");}}
     }
     Ok(())
 }

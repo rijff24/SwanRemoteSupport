@@ -4,7 +4,7 @@ use hbb_common::{config::{self, keys}, ResultType};
 use swan_agent::{protocol::{self, Edition, ManagedLogin, SignedEnvelope}, AgentState, Lease};
 
 struct TechnicianLogin {token:String,company:String,username:String}
-struct PendingTicket {envelope:SignedEnvelope,key_hex:String,expires_at:u64,company:String}
+struct PendingTicket {envelope:SignedEnvelope,key_hex:String,expires_at:u64,company:String,peer:String}
 #[derive(Default)]
 struct TechnicianMemory {
     generation:u64,
@@ -76,8 +76,9 @@ async fn technician_request_inner(request:&str)->ResultType<serde_json::Value> {
         if memory.tickets.len()>=32 {bail!("Too many pending connections");}
         // The proof is consumed inside native handle_hash, never sent to Dart,
         // command-line arguments, another app instance or IPC configuration.
-        memory.tickets.insert(grant.rustdesk_id.clone(),PendingTicket{envelope,key_hex:hex::encode(key.to_bytes()),expires_at:grant.expires_at,company:grant.company_id});
-        return Ok(json!({"rustdesk_id":grant.rustdesk_id}));
+        let handle=format!("SWT1.{}",protocol::random_token());
+        memory.tickets.insert(handle.clone(),PendingTicket{envelope,key_hex:hex::encode(key.to_bytes()),expires_at:grant.expires_at,company:grant.company_id,peer:grant.rustdesk_id.clone()});
+        return Ok(json!({"rustdesk_id":grant.rustdesk_id,"ticket_handle":handle}));
     }
     bail!("Unknown technician action")
 }
@@ -134,7 +135,7 @@ pub async fn renew(lease:&mut Lease)->ResultType<()> {
     state.renew(lease).await?;Ok(())
 }
 
-pub fn login(challenge:&str,target:&str)->ResultType<Vec<u8>> {
+pub fn login(challenge:&str,target:&str,local_ticket:&str)->ResultType<Vec<u8>> {
     // Hold the shared activity lock for the outgoing app process. Incoming leases
     // hold their own locks. The updater acquires the exclusive side before install.
     static ACTIVITY:std::sync::Mutex<Option<std::fs::File>>=std::sync::Mutex::new(None);
@@ -143,9 +144,14 @@ pub fn login(challenge:&str,target:&str)->ResultType<Vec<u8>> {
     drop(activity);
     let state=AgentState::load(&swan_agent::state_directory())?;
     if state.bootstrap.edition!=Edition::Technician {hbb_common::bail!("Technician edition required");}
-    let pending=TECHNICIAN.lock().unwrap().tickets.remove(target);
+    // The opaque handle identifies one window's pending request. It contains
+    // no grant or proof key and cannot overwrite another request to this peer.
+    let pending=if local_ticket.is_empty(){None}else{
+        if !local_ticket.starts_with("SWT1."){hbb_common::bail!("Managed ticket required; legacy passwords are disabled");}
+        Some(TECHNICIAN.lock().unwrap().tickets.remove(local_ticket).ok_or_else(||hbb_common::anyhow::anyhow!("Ticket missing or already consumed"))?)
+    };
     let (envelope,key)=if let Some(ticket)=pending {
-        if ticket.company!=state.bootstrap.company_id || ticket.expires_at<=protocol::now(){hbb_common::bail!("Expired or wrong-company ticket");}
+        if ticket.company!=state.bootstrap.company_id || ticket.peer!=target || ticket.expires_at<=protocol::now(){hbb_common::bail!("Expired or wrong-target ticket");}
         (ticket.envelope,protocol::signing_key_from_hex(&ticket.key_hex)?)
     }else{
         (serde_json::from_str(&std::env::var("SWAN_SESSION_GRANT")?)?,protocol::signing_key_from_hex(&std::env::var("SWAN_SESSION_PROOF_KEY")?)?)

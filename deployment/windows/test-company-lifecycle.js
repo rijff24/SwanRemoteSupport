@@ -4,10 +4,21 @@ const fs=require('node:fs'), path=require('node:path'), https=require('node:http
 const crypto=require('node:crypto'), assert=require('node:assert/strict');
 const {spawnSync}=require('node:child_process');
 const root=path.resolve(__dirname,'../..');
-const data=path.join(root,'swan-data/local-test');
+const envFile=process.argv[2];
+if(!envFile)throw new Error('Pass a private local-test.env file for a fresh isolated server');
+const settings={};
+for(const line of fs.readFileSync(envFile,'utf8').split(/\r?\n/)){
+  if(!line.trim()||line.trimStart().startsWith('#'))continue;
+  const match=/^([A-Z_]+)=(.*)$/.exec(line);if(!match)throw new Error('Invalid test environment data');
+  settings[match[1]]=match[2];
+}
+assert.match(settings.SWAN_LISTEN??'',/^127\.0\.0\.1:\d+$/);
+assert(settings.SWAN_DATA_DIR,'A separate test data directory is required');
+const data=path.resolve(settings.SWAN_DATA_DIR);
 const agent=path.join(root,'product/target/debug/swan-agent.exe');
 const ca=new crypto.X509Certificate(fs.readFileSync(path.join(data,'localhost.cer'))).toString();
-const base='https://localhost:18443';
+const port=Number(settings.SWAN_TEST_TLS_PORT);assert(Number.isInteger(port)&&port>=1024&&port<=65535);
+const base=`https://localhost:${port}`;
 const alphabet='ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
 function base32(bytes){let bits=0,value=0,result='';for(const byte of bytes){value=(value<<8)|byte;bits+=8;while(bits>=5){result+=alphabet[(value>>>(bits-5))&31];bits-=5;}}if(bits)result+=alphabet[(value<<(5-bits))&31];return result;}
 function decode32(text){let bits=0,value=0,result=[];for(const c of text.replace(/=/g,'')){value=(value<<5)|alphabet.indexOf(c);bits+=5;if(bits>=8){result.push((value>>>(bits-8))&255);bits-=8;}}return Buffer.from(result);}
@@ -50,11 +61,15 @@ async function main(){
   const grant=await api('grants','POST',technicianLogin.token,ticket);assert.equal(grant.status,200);
   assert.equal((await api('grants/claim','POST',customer.device_token,{grant:grant.body})).status,200);
   assert.equal((await api('grants/claim','POST',customer.device_token,{grant:grant.body})).status,403,'Grant replay accepted');
+  const history=JSON.parse(runAgent(techDir,['history'],auth));assert.equal(history.length,1);assert.equal(history[0].claimed,true);assert.equal(history[0].device_id,customer.device_id);
   current.customer.display_name='Changed Local Test Branding';assert.equal((await api('profile','PUT',admin,current)).status,200);
   runAgent(customerDir,['sync']);const updated=JSON.parse(Buffer.from(state(customerDir).profile.payload,'base64'));assert.equal(updated.customer.display_name,'Changed Local Test Branding');assert.equal(updated.revision,2);
   assert.equal((await api(`devices/${customer.device_id}/state`,'PUT',admin,{state:'revoked',group:'test-customers'})).status,200);
   assert.equal((await api('grants','POST',technicianLogin.token,ticket)).status,403,'Revoked device accessible');
-  fs.writeFileSync(path.join(data,'lifecycle-result.json'),JSON.stringify({passed:true,at:new Date().toISOString(),checks:['HTTPS certificate validation','fresh company setup','built agent bootstrap and enrollment','pending approval denial','technician MFA login and group inventory','unattended consent denial','grant replay denial','signed branding sync','device revocation']},null,2));
+  runAgent(techDir,['logout'],auth);assert.equal((await api('devices','GET',technicianLogin.token)).status,401,'Logged-out credential still authorized');
+  const source=spawnSync('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8'});
+  const dirty=spawnSync('git',['status','--porcelain'],{cwd:root,encoding:'utf8'});
+  fs.writeFileSync(path.join(data,'lifecycle-result.json'),JSON.stringify({passed:true,at:new Date().toISOString(),source_commit:source.status===0?source.stdout.trim():'unknown',source_dirty:dirty.status===0?dirty.stdout.trim().length>0:null,agent_sha256:crypto.createHash('sha256').update(fs.readFileSync(agent)).digest('hex'),management_sha256:crypto.createHash('sha256').update(fs.readFileSync(path.join(root,'product/target/debug/swan-management.exe'))).digest('hex'),checks:['HTTPS certificate validation','fresh company setup','built agent bootstrap and enrollment','pending approval denial','technician MFA login and group inventory','technician session history','logout revokes credentials','unattended consent denial','grant replay denial','signed branding sync','device revocation']},null,2));
   console.log('PASS: real local HTTPS company lifecycle and built-agent checks. Native sessions and installers remain separate tests.');
 }
 main().catch(error=>{console.error(error.message);process.exitCode=1;});

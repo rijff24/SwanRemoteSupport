@@ -53,6 +53,7 @@ impl AgentState {
         Ok(state)
     }
     pub fn save(&self,directory:&Path)->Result<()> {
+        self.bootstrap.validate()?;self.cached_profile()?;
         std::fs::create_dir_all(directory)?;
         #[cfg(unix)] {use std::os::unix::fs::PermissionsExt; std::fs::set_permissions(directory,std::fs::Permissions::from_mode(0o700))?;}
         let path=directory.join("managed-state.json");
@@ -62,10 +63,20 @@ impl AgentState {
         let mut saved=self.clone();
         if path.exists(){
             let existing:AgentState=serde_json::from_slice(&std::fs::read(&path)?)?;
+            existing.bootstrap.validate()?;let existing_profile=existing.cached_profile()?;
             ensure!(existing.bootstrap.company_id==self.bootstrap.company_id,"Cannot change company ownership");
+            ensure!(existing.bootstrap.edition==self.bootstrap.edition,"Cannot change installed edition");
+            ensure!(existing.bootstrap.release_public_key==self.bootstrap.release_public_key,"Cannot silently replace the release trust key");
+            ensure!(existing.bootstrap.profile_public_key==self.bootstrap.profile_public_key || existing_profile.next_profile_public_key.as_ref()==Some(&self.bootstrap.profile_public_key),"Profile key rotation requires the previously trusted signed profile");
             ensure!(existing.accepted_revision<=self.accepted_revision,"A newer profile has already been saved");
             saved.last_release_sequence=saved.last_release_sequence.max(existing.last_release_sequence);
-            if existing.device_id.is_some() && !existing.unattended_consent {saved.unattended_consent=false;}
+            if let Some(id)=existing.device_id.as_ref(){
+                ensure!(self.device_id.as_ref().map(|value|value==id).unwrap_or(true),"Cannot replace enrolled device identity");
+                ensure!(self.device_token.as_ref().map(|value|Some(value)==existing.device_token.as_ref()).unwrap_or(true),"Cannot replace enrolled device credential");
+                if self.device_id.is_none(){saved.unattended_consent=existing.unattended_consent;}
+                if !existing.unattended_consent {saved.unattended_consent=false;}
+                saved.device_id=existing.device_id;saved.device_token=existing.device_token;
+            }
         }
         let temporary=directory.join(format!("state-{}.tmp",random_token()));
         use std::io::Write;
@@ -139,6 +150,7 @@ impl AgentState {
     }
     pub async fn request_grant(&self,token:&str,device:&str,unattended:bool,key:&SigningKey)->Result<SignedEnvelope> {
         ensure!(self.bootstrap.edition==Edition::Technician,"Technician edition required");
+        self.company_profile()?;
         let grant:SignedEnvelope=self.client()?.post(self.endpoint("grants")?).bearer_auth(token).json(&json!({"device_id":device,"proof_public_key":STANDARD.encode(key.verifying_key().as_bytes()),"unattended":unattended})).send().await?.error_for_status()?.json().await?;
         let parsed:SessionGrant=grant.verify(&public_key(&self.bootstrap.profile_public_key)?)?;
         parsed.validate(&self.bootstrap.company_id,device,&parsed.rustdesk_id,now())?;
@@ -159,7 +171,8 @@ impl AgentState {
         Ok(Lease { grant_id:grant.grant_id,unattended:grant.unattended,expires_at:expires,last_renewed:now(),_activity:activity })
     }
     pub async fn renew(&self,lease:&mut Lease)->Result<()> {
-        ensure!(!lease.unattended || self.unattended_consent,"Unattended consent revoked");
+        let profile=self.company_profile()?;
+        ensure!(!lease.unattended || (self.unattended_consent && profile.allow_unattended),"Unattended consent or company permission revoked");
         let result:Value=self.client()?.post(self.endpoint(&format!("grants/{}/renew",lease.grant_id))?).bearer_auth(self.device_token.as_ref().context("Not enrolled")?).send().await?.error_for_status()?.json().await?;
         let expires=result["lease_until"].as_u64().context("Missing lease expiry")?;
         ensure!(expires>now() && expires<=now()+310,"Invalid session lease");
@@ -232,6 +245,32 @@ mod tests {
         assert!(!actual.unattended_consent);assert_eq!(actual.last_release_sequence,10);
         assert_eq!(actual.device_id,state.device_id);assert_eq!(actual.device_token,state.device_token);
         std::fs::remove_dir_all(directory).unwrap();
+    }
+    #[test]
+    fn stale_pre_enrollment_refresh_preserves_identity_and_trust() {
+        let directory=std::env::temp_dir().join(format!("swan-enrollment-{}",random_token()));
+        let enrolled=fixture();let mut before=enrolled.clone();before.device_id=None;before.device_token=None;before.unattended_consent=false;
+        before.save(&directory).unwrap();enrolled.save(&directory).unwrap();before.save(&directory).unwrap();
+        let current=AgentState::load(&directory).unwrap();assert_eq!(current.device_id,enrolled.device_id);assert_eq!(current.device_token,enrolled.device_token);assert!(current.unattended_consent);
+        let mut replacement=current.clone();replacement.device_id=Some("different-device".into());assert!(replacement.save(&directory).is_err());
+        let mut replacement=current.clone();replacement.device_token=Some(random_token());assert!(replacement.save(&directory).is_err());
+        let mut replacement=current.clone();replacement.bootstrap.edition=Edition::Technician;assert!(replacement.save(&directory).is_err());
+        let mut replacement=current.clone();replacement.bootstrap.release_public_key=STANDARD.encode(SigningKey::from_bytes(&[8;32]).verifying_key().as_bytes());assert!(replacement.save(&directory).is_err());
+        let mut replacement=current.clone();let key=SigningKey::from_bytes(&[9;32]);replacement.bootstrap.profile_public_key=STANDARD.encode(key.verifying_key().as_bytes());replacement.profile=SignedEnvelope::sign(&current.company_profile().unwrap(),&key).unwrap();assert!(replacement.save(&directory).is_err());
+        assert_eq!(AgentState::load(&directory).unwrap().device_token,enrolled.device_token);
+        std::fs::remove_dir_all(directory).unwrap();
+    }
+    #[test]
+    fn trusted_profile_rotation_preserves_enrollment_and_rejects_rollback() {
+        let directory=std::env::temp_dir().join(format!("swan-rotation-{}",random_token()));
+        let mut state=fixture();let next=SigningKey::from_bytes(&[10;32]);let next_public=STANDARD.encode(next.verifying_key().as_bytes());
+        let mut profile=state.company_profile().unwrap();profile.next_profile_public_key=Some(next_public.clone());
+        state.profile=SignedEnvelope::sign(&profile,&SigningKey::from_bytes(&[7;32])).unwrap();state.save(&directory).unwrap();let old=state.clone();
+        profile.revision+=1;profile.next_profile_public_key=None;profile.management_url="https://new-support.example.com".into();
+        state.bootstrap.profile_public_key=next_public.clone();state.bootstrap.management_url=profile.management_url.clone();state.accepted_revision=profile.revision;state.profile=SignedEnvelope::sign(&profile,&next).unwrap();
+        state.save(&directory).unwrap();let loaded=AgentState::load(&directory).unwrap();
+        assert_eq!(loaded.bootstrap.profile_public_key,next_public);assert_eq!(loaded.bootstrap.management_url,profile.management_url);assert_eq!(loaded.device_id,old.device_id);assert_eq!(loaded.device_token,old.device_token);assert_eq!(loaded.unattended_consent,old.unattended_consent);
+        assert!(old.save(&directory).is_err());std::fs::remove_dir_all(directory).unwrap();
     }
     #[test]
     fn expired_cache_only_allows_refresh_and_never_unsigned_policy() {

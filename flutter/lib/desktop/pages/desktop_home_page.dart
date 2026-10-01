@@ -271,6 +271,20 @@ class _DesktopHomePageState extends State<DesktopHomePage>
                 ),
               ),
               const SizedBox(height: 12),
+              Obx(() => TextButton.icon(
+                onPressed: () async { await start_service(svcStopped.value); },
+                icon: Icon(svcStopped.value ? Icons.play_arrow : Icons.stop_circle_outlined),
+                label: Text(svcStopped.value ? 'Resume support' : 'Stop support'),
+              )),
+              if ((company['support_url'] as String? ?? '').isNotEmpty)
+                TextButton.icon(
+                  onPressed: () async {
+                    final url = Uri.tryParse(company['support_url'] as String);
+                    if (url != null && url.scheme == 'https' && url.host.isNotEmpty && url.userInfo.isEmpty) await launchUrl(url);
+                  },
+                  icon: const Icon(Icons.support_agent),
+                  label: const Text('Contact support'),
+                ),
               if (company['unattended'] == true)
                 TextButton.icon(
                   onPressed: () async {
@@ -281,7 +295,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
                   label: const Text('Revoke unattended access'),
                 ),
               Text(
-                'Use the tray icon to view or stop support. Company branding powered by Swan Remote Support · AGPL-3.0.',
+                'Use the tray icon to view sessions. Powered by Swan Remote Support and RustDesk · AGPL-3.0.',
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ],

@@ -4,8 +4,9 @@ Use official Microsoft evaluation media, within its evaluation period. Never
 disable activation checks or redistribute evaluation images with project releases.
 Media, VM disks, local credentials, screenshots and raw test logs stay outside Git.
 
-The initial local lab is `D:\SwanRemoteSupport-TestLab`. It uses QEMU with one
-guest at a time, 4 GiB RAM, two virtual CPUs and a sparse 64 GiB disk. User-mode
+Choose the local lab, QEMU and ISO paths in a private local environment file.
+The initial resource budget is one guest at a time, 4 GiB RAM, two virtual CPUs
+and a sparse 64 GiB disk. User-mode
 NAT does not change the host bridge, firewall or existing RustDesk services.
 VNC (port 5920) and the QEMU monitor (4444) listen on loopback only. These sockets
 provide full guest access; close QEMU when the guest is not under test.

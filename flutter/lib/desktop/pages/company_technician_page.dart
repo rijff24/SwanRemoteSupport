@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_hbb/common.dart';
+import 'package:flutter_hbb/models/platform_model.dart';
 
 /// Company authorization lives in Rust and on the receiver. This view never
 /// receives a bearer token, signing key or reusable device credential.
@@ -76,7 +77,10 @@ class _CompanyTechnicianPageState extends State<CompanyTechnicianPage> {
     final response = await _request({'action': 'connect', 'device_id': device['id'],
       'unattended': unattended}) as Map<String, dynamic>;
     if (!mounted) return;
-    await connect(context, response['rustdesk_id'] as String);
+    // Only a one-use local handle enters the window API; signed grants and
+    // challenge proof keys stay in Rust memory and are bound to the target.
+    await connect(context, response['rustdesk_id'] as String,
+        password: response['ticket_handle'] as String);
   }
 
   @override
