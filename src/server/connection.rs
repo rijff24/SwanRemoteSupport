@@ -316,6 +316,8 @@ pub struct Connection {
     port_forward_address: String,
     tx_to_cm: mpsc::UnboundedSender<ipc::Data>,
     authorized: bool,
+    #[cfg(feature = "swan_custom")]
+    managed_lease: Option<swan_agent::Lease>,
     require_2fa: Option<totp_rs::TOTP>,
     keyboard: bool,
     clipboard: bool,
@@ -517,6 +519,8 @@ impl Connection {
             port_forward_address: "".to_owned(),
             tx_to_cm,
             authorized: false,
+            #[cfg(feature = "swan_custom")]
+            managed_lease: None,
             keyboard: Self::permission(keys::OPTION_ENABLE_KEYBOARD, &control_permissions),
             clipboard: Self::permission(keys::OPTION_ENABLE_CLIPBOARD, &control_permissions),
             audio: Self::permission(keys::OPTION_ENABLE_AUDIO, &control_permissions),
@@ -1065,6 +1069,18 @@ impl Connection {
                     }
                 }
                 _ = second_timer.tick() => {
+                    #[cfg(feature = "swan_custom")]
+                    if let Some(lease) = conn.managed_lease.as_mut() {
+                        let expired = swan_agent::protocol::now() >= lease.expires_at;
+                        let renewal_failed = !expired
+                            && swan_agent::protocol::now().saturating_sub(lease.last_renewed) >= 60
+                            && crate::managed::renew(lease).await.is_err();
+                        if expired || renewal_failed {
+                            conn.send_close_reason_no_retry("Company session authorization expired or revoked").await;
+                            conn.on_close("Managed authorization unavailable", true).await;
+                            break;
+                        }
+                    }
                     #[cfg(windows)]
                     conn.portable_check();
                     raii::AuthedConnID::check_wake_lock_on_setting_changed();
@@ -1613,6 +1629,11 @@ impl Connection {
     // Returns whether this connection should be kept alive.
     // `true` does not necessarily mean authorization succeeded (e.g. REQUIRE_2FA case).
     async fn send_logon_response_and_keep_alive(&mut self) -> bool {
+        #[cfg(feature = "swan_custom")]
+        if self.managed_lease.as_ref().map(|lease| swan_agent::protocol::now() < lease.expires_at) != Some(true) {
+            self.send_login_error("A valid company session grant is required").await;
+            return false;
+        }
         if self.authorized {
             return true;
         }
@@ -2523,11 +2544,26 @@ impl Connection {
         }
         // After handling CloseReason messages, proceed to process other message types
         if let Some(message::Union::LoginRequest(lr)) = msg.union {
+            #[cfg(feature = "swan_custom")]
+            if self.managed_lease.is_none() {
+                match crate::managed::claim(&lr.password, &self.hash.challenge, &Config::get_id()).await {
+                    Ok(lease) => self.managed_lease = Some(lease),
+                    Err(_) => {
+                        self.send_login_error("Company session authorization denied").await;
+                        return false;
+                    }
+                }
+            }
             self.handle_login_request_without_validation(&lr).await;
             if self.authorized {
                 return true;
             }
             self.reset_session_scope_for_login();
+            #[cfg(feature = "swan_custom")]
+            if matches!(lr.union.as_ref(), Some(login_request::Union::Terminal(_)) | Some(login_request::Union::PortForward(_)) | Some(login_request::Union::ViewCamera(_))) {
+                self.send_login_error("This company edition permits desktop support and file transfer only").await;
+                return false;
+            }
             match lr.union {
                 Some(login_request::Union::FileTransfer(ft)) => {
                     if !Self::permission(
@@ -2672,6 +2708,19 @@ impl Connection {
             let allow_logon_screen_password =
                 crate::get_builtin_option(keys::OPTION_ALLOW_LOGON_SCREEN_PASSWORD) == "Y"
                     && is_logon();
+
+            #[cfg(feature = "swan_custom")]
+            {
+                // Server-verified technician identity replaces all password/recent-session paths.
+                if self.managed_lease.as_ref().map(|lease| lease.unattended) == Some(true) {
+                    if !self.send_logon_response_and_keep_alive().await { return false; }
+                    self.try_start_cm(lr.my_id, lr.my_name, self.authorized);
+                } else {
+                    self.try_start_cm(lr.my_id, lr.my_name, false);
+                    self.send_login_error(crate::client::LOGIN_MSG_NO_PASSWORD_ACCESS).await;
+                }
+                return true;
+            }
 
             if (password::approve_mode() == ApproveMode::Click && !allow_logon_screen_password)
                 || password::approve_mode() == ApproveMode::Both && !password::has_valid_password()

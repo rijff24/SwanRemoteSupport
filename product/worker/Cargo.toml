@@ -1,0 +1,15 @@
+[package]
+name = "swan-worker"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+swan-protocol = { path = "../protocol" }
+swan-agent = { path = "../agent" }
+anyhow.workspace = true
+serde_json.workspace = true
+reqwest.workspace = true
+tokio.workspace = true
+zip = { version = "2", default-features = false, features = ["deflate"] }

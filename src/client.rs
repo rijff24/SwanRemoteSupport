@@ -3480,6 +3480,15 @@ pub async fn handle_hash(
     peer: &mut Stream,
 ) {
     lc.write().unwrap().hash = hash.clone();
+    #[cfg(feature = "swan_custom")]
+    {
+        let target = lc.read().unwrap().id.clone();
+        match crate::managed::login(&hash.challenge, &target) {
+            Ok(proof) => send_login(lc, String::new(), String::new(), proof, peer).await,
+            Err(_) => interface.msgbox("error", "Company authorization required", "Start this session from the authenticated technician launcher.", ""),
+        }
+        return;
+    }
     // Take care of password application order
 
     // switch_uuid

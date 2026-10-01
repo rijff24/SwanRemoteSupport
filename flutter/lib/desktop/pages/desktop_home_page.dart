@@ -80,7 +80,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
   Widget buildLeftPane(BuildContext context) {
     final isIncomingOnly = bind.isIncomingOnly();
     final isOutgoingOnly = bind.isOutgoingOnly();
-    final isSwanManagedClient = bind.mainGetAppNameSync() == swanManagedAppName;
+    final isSwanManagedClient = bind.mainGetAppNameSync() == swanManagedAppName && isIncomingOnly;
     final children = <Widget>[
       if (!isOutgoingOnly && !isSwanManagedClient) buildPresetPasswordWarning(),
       if (bind.isCustomClient())
@@ -194,17 +194,21 @@ class _DesktopHomePageState extends State<DesktopHomePage>
 
   Widget buildSwanManagedOverview(BuildContext context) {
     return FutureBuilder<String>(
-      future: bind.mainGetCommon(key: 'permanent-password-set'),
+      future: bind.mainGetCommon(key: 'company-overview'),
       builder: (context, snapshot) {
-        final isReady = snapshot.data == 'true';
+        Map<String, dynamic> company = {};
+        try {
+          company = jsonDecode(snapshot.data ?? '{}') as Map<String, dynamic>;
+        } catch (_) {}
+        final isReady = company['configured'] == true && company['enrolled'] == true;
         final statusColor = isReady ? const Color(0xFF0A7D5A) : Colors.orange;
         final statusIcon = isReady ? Icons.verified_user : Icons.warning_amber;
         final statusTitle = isReady
-            ? 'Ready for unattended support'
-            : 'Swan setup is not complete';
+            ? (company['unattended'] == true ? 'Unattended support enabled' : 'Customer approval required')
+            : 'Company setup is not complete';
         final statusText = isReady
-            ? 'This computer can receive private Swan Computing support while it is connected to Tailscale.'
-            : 'A Swan technician must finish express setup and securely record this computer\'s unique support credentials.';
+            ? 'Only company-authorized technicians can request access. Your company must approve this device before support begins.'
+            : 'Run the company setup included with your download to verify its server and enroll this computer.';
 
         return Padding(
           padding: const EdgeInsets.fromLTRB(20, 16, 16, 8),
@@ -212,12 +216,12 @@ class _DesktopHomePageState extends State<DesktopHomePage>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Managed by Swan Computing',
+                company['display_name'] as String? ?? 'Swan Remote Support',
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: 8),
               Text(
-                'Remote support is configured for Swan Computing\'s private Tailscale network. The device ID and password are hidden from this customer screen.',
+                company['consent_text'] as String? ?? 'Support requires a verified company configuration. No public-network fallback is permitted.',
                 style: Theme.of(context).textTheme.bodySmall,
               ),
               const SizedBox(height: 16),
@@ -254,8 +258,17 @@ class _DesktopHomePageState extends State<DesktopHomePage>
                 ),
               ),
               const SizedBox(height: 12),
+              if (company['unattended'] == true)
+                TextButton.icon(
+                  onPressed: () {
+                    bind.mainSetCommon(key: 'company-revoke-unattended', value: 'N');
+                    setState(() {});
+                  },
+                  icon: const Icon(Icons.shield_outlined),
+                  label: const Text('Revoke unattended access'),
+                ),
               Text(
-                'The computer owner can use the tray icon to view or stop the support service.',
+                'Use the tray icon to view or stop support. Company branding powered by Swan Remote Support · AGPL-3.0.',
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ],

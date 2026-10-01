@@ -827,6 +827,11 @@ async fn handle(data: Data, stream: &mut Connection) {
                 let value;
                 if name == "id" {
                     value = Some(Config::get_id());
+                } else if name == "company-overview" {
+                    #[cfg(feature = "swan_custom")]
+                    { value = Some(crate::managed::overview()); }
+                    #[cfg(not(feature = "swan_custom"))]
+                    { value = None; }
                 } else if name == "temporary-password" {
                     value = Some(password::temporary_password());
                 } else if name == "permanent-password-storage-and-salt" {
@@ -879,6 +884,25 @@ async fn handle(data: Data, stream: &mut Connection) {
                 allow_err!(stream.send(&Data::Config((name, value))).await);
             }
             Some(value) => {
+                #[cfg(feature = "swan_custom")]
+                if name == "company-revoke-unattended" && value == "N" {
+                    match swan_agent::AgentState::load(&swan_agent::state_directory()) {
+                        Ok(mut state) => {
+                            state.unattended_consent = false;
+                            match state.save(&swan_agent::state_directory()) {
+                                Ok(()) => {
+                                    // Revocation is already durable locally even if the API is offline.
+                                    if let Err(error) = state.consent(false).await {
+                                        log::warn!("Server consent synchronization failed: {}", error);
+                                    }
+                                }
+                                Err(error) => log::error!("Cannot persist consent revocation: {}", error),
+                            }
+                        }
+                        Err(error) => log::error!("Cannot load company consent: {}", error),
+                    }
+                    return;
+                }
                 let mut updated = true;
                 if name == "id" {
                     Config::set_key_confirmed(false);
