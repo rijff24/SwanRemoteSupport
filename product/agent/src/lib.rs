@@ -48,8 +48,7 @@ impl AgentState {
     pub fn load_for_refresh(directory:&Path)->Result<Self> {
         let state:Self=serde_json::from_slice(&std::fs::read(directory.join("managed-state.json"))?)?;
         state.bootstrap.validate()?;
-        let profile:CompanyProfile=state.profile.verify(&public_key(&state.bootstrap.profile_public_key)?)?;
-        ensure!(profile.company_id==state.bootstrap.company_id && profile.revision>=state.accepted_revision,"Invalid cached company profile");
+        state.cached_profile()?;
         Ok(state)
     }
     pub fn save(&self,directory:&Path)->Result<()> {
@@ -76,12 +75,19 @@ impl AgentState {
         replace_state(&temporary,&path)?;Ok(())
     }
     pub fn company_profile(&self)->Result<CompanyProfile> {
-        let p:CompanyProfile=self.profile.verify(&public_key(&self.bootstrap.profile_public_key)?)?;
+        let p=self.cached_profile()?;
         p.validate(&self.bootstrap.company_id,self.accepted_revision,now())?;
         Ok(p)
     }
+    fn cached_profile(&self)->Result<CompanyProfile> {
+        let p:CompanyProfile=self.profile.verify(&public_key(&self.bootstrap.profile_public_key)?)?;
+        // Expiration blocks use, but a previously signed rotation key remains a
+        // trust anchor for obtaining fresh policy after a long offline period.
+        p.validate(&self.bootstrap.company_id,self.accepted_revision,now().min(p.expires_at.saturating_sub(1)))?;
+        Ok(p)
+    }
     pub fn client(&self)->Result<reqwest::Client> {
-        Ok(reqwest::Client::builder().timeout(std::time::Duration::from_secs(15)).redirect(reqwest::redirect::Policy::none()).https_only(true).build()?)
+        http_client(15,false)
     }
     pub fn endpoint(&self,path:&str)->Result<String> {
         self.bootstrap.validate()?;
@@ -93,7 +99,7 @@ impl AgentState {
         let profile:CompanyProfile=match envelope.verify(&key){
             Ok(p)=>p,
             Err(error)=>{
-                let old=self.company_profile()?;
+                let old=self.cached_profile()?;
                 let next=old.next_profile_public_key.as_ref().context("Profile signature invalid and no trusted key rotation")?;
                 let p=envelope.verify(&public_key(next)?)?;
                 // Commit the new pin only after every validation succeeds below.
@@ -103,7 +109,7 @@ impl AgentState {
         };
         profile.validate(&self.bootstrap.company_id,self.accepted_revision,now())?;
         if envelope.verify::<CompanyProfile>(&key).is_err(){
-            self.bootstrap.profile_public_key=self.company_profile()?.next_profile_public_key.context("Missing rotation key")?;
+            self.bootstrap.profile_public_key=self.cached_profile()?.next_profile_public_key.context("Missing rotation key")?;
         }
         self.bootstrap.management_url=profile.management_url.clone();
         self.accepted_revision=profile.revision;self.profile=envelope;
@@ -154,6 +160,9 @@ impl AgentState {
         ensure!(expires>now() && expires<=now()+310,"Invalid session lease");
         lease.expires_at=expires;lease.last_renewed=now();Ok(())
     }
+    pub async fn close(&self,grant_id:&str)->Result<()> {
+        self.client()?.post(self.endpoint(&format!("grants/{grant_id}/close"))?).bearer_auth(self.device_token.as_ref().context("Not enrolled")?).send().await?.error_for_status()?;Ok(())
+    }
 }
 
 fn replace_state(temporary:&Path,path:&Path)->Result<()> {
@@ -184,16 +193,50 @@ pub fn state_directory()->PathBuf {
 }
 pub async fn bootstrap(input:Bootstrap)->Result<AgentState> {
     input.validate()?;
-    let client=reqwest::Client::builder().timeout(std::time::Duration::from_secs(15)).redirect(reqwest::redirect::Policy::none()).https_only(true).build()?;
+    let client=http_client(15,false)?;
     let profile:SignedEnvelope=client.get(format!("{}/api/v1/profile",input.management_url.trim_end_matches('/'))).send().await?.error_for_status()?.json().await?;
     let parsed:CompanyProfile=profile.verify(&public_key(&input.profile_public_key)?)?;
     parsed.validate(&input.company_id,0,now())?;
     Ok(AgentState {bootstrap:input,profile,accepted_revision:parsed.revision,device_id:None,device_token:None,unattended_consent:false,last_release_sequence:0})
 }
 
+pub fn http_client(timeout_seconds:u64,artifact_redirects:bool)->Result<reqwest::Client> {
+    let builder=reqwest::Client::builder().timeout(std::time::Duration::from_secs(timeout_seconds)).https_only(true)
+        .redirect(if artifact_redirects{reqwest::redirect::Policy::limited(5)}else{reqwest::redirect::Policy::none()});
+    #[cfg(debug_assertions)]
+    let builder=if let Some(path)=std::env::var_os("SWAN_TEST_CA_FILE") {
+        builder.add_root_certificate(reqwest::Certificate::from_der(&std::fs::read(path)?)?)
+    }else{builder};
+    Ok(builder.build()?)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    fn fixture()->AgentState {
+        let key=SigningKey::from_bytes(&[7;32]);let public=STANDARD.encode(key.verifying_key().as_bytes());
+        let profile=CompanyProfile{schema:1,company_id:"test-company".into(),revision:1,issued_at:now()-1000,expires_at:now()+3600,management_url:"https://support.example.com".into(),rendezvous:"support.example.com".into(),relay:"support.example.com".into(),transport_public_key:public.clone(),customer:Branding::default(),technician:Branding::default(),allow_unattended:true,updates_paused:true,rollout_percent:100,maintenance_start_utc:0,maintenance_end_utc:0,update_channel:"test".into(),next_profile_public_key:None};
+        AgentState{bootstrap:Bootstrap{schema:1,edition:Edition::Customer,company_id:profile.company_id.clone(),management_url:profile.management_url.clone(),profile_public_key:public.clone(),release_public_key:public},profile:SignedEnvelope::sign(&profile,&key).unwrap(),accepted_revision:1,device_id:Some("device".into()),device_token:Some(random_token()),unattended_consent:true,last_release_sequence:0}
+    }
+    #[test]
+    fn stale_refresh_cannot_restore_consent_or_replay_update_state() {
+        let directory=std::env::temp_dir().join(format!("swan-state-{}",random_token()));
+        let mut state=fixture();state.save(&directory).unwrap();let stale=state.clone();
+        state.unattended_consent=false;state.last_release_sequence=10;state.save(&directory).unwrap();
+        stale.save(&directory).unwrap();let actual=AgentState::load(&directory).unwrap();
+        assert!(!actual.unattended_consent);assert_eq!(actual.last_release_sequence,10);
+        assert_eq!(actual.device_id,state.device_id);assert_eq!(actual.device_token,state.device_token);
+        std::fs::remove_dir_all(directory).unwrap();
+    }
+    #[test]
+    fn expired_cache_only_allows_refresh_and_never_unsigned_policy() {
+        let directory=std::env::temp_dir().join(format!("swan-expired-{}",random_token()));let mut state=fixture();
+        let mut profile=state.company_profile().unwrap();profile.expires_at=now()-1;
+        state.profile=SignedEnvelope::sign(&profile,&SigningKey::from_bytes(&[7;32])).unwrap();state.save(&directory).unwrap();
+        assert!(AgentState::load(&directory).is_err());assert!(AgentState::load_for_refresh(&directory).is_ok());
+        state.profile.payload=STANDARD.encode(b"{}");std::fs::write(directory.join("managed-state.json"),serde_json::to_vec(&state).unwrap()).unwrap();
+        assert!(AgentState::load_for_refresh(&directory).is_err());std::fs::remove_dir_all(directory).unwrap();
+    }
     #[test]
     fn bootstrap_never_accepts_http_or_embedded_credentials() {
         let key=STANDARD.encode(SigningKey::from_bytes(&[1;32]).verifying_key().as_bytes());

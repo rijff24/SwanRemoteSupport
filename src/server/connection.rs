@@ -4830,6 +4830,17 @@ impl Connection {
     }
 
     async fn on_close(&mut self, reason: &str, lock: bool) {
+        #[cfg(feature = "swan_custom")]
+        if let Some(lease)=self.managed_lease.take() {
+            let grant_id=lease.grant_id.clone();drop(lease);
+            // Local stop does not wait for a management endpoint to respond.
+            tokio::spawn(async move {
+                match swan_agent::AgentState::load_for_refresh(&swan_agent::state_directory()) {
+                    Ok(state)=>if let Err(error)=state.close(&grant_id).await {log::warn!("Cannot report company session closure: {}",error);},
+                    Err(error)=>log::warn!("Cannot load company state for session closure: {}",error),
+                }
+            });
+        }
         if self.closed {
             return;
         }

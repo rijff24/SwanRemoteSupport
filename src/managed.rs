@@ -16,6 +16,7 @@ pub fn apply_defaults() {
     overrides.insert(keys::OPTION_API_SERVER.into(),String::new());
     // Company release updates are handled by the configuration agent, not upstream.
     overrides.insert(keys::OPTION_ALLOW_AUTO_UPDATE.into(),"N".into());
+    overrides.insert(keys::OPTION_ENABLE_RECORD_SESSION.into(),"N".into());
     overrides.insert(keys::OPTION_APPROVE_MODE.into(),"click".into());
     overrides.insert(keys::OPTION_ALLOW_ONLY_CONN_WINDOW_OPEN.into(),"N".into());
     drop(overrides);

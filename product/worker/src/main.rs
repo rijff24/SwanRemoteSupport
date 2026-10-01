@@ -13,7 +13,7 @@ async fn main()->Result<()> {
     let company_key=std::env::var("SWAN_PROFILE_PUBLIC_KEY").context("Pin SWAN_PROFILE_PUBLIC_KEY on the worker")?;public_key(&company_key)?;
     let output=PathBuf::from(std::env::var("SWAN_ARTIFACT_DIR").context("Set worker artifact output directory")?);
     std::fs::create_dir_all(&output)?;
-    let client=reqwest::Client::builder().timeout(std::time::Duration::from_secs(600)).redirect(reqwest::redirect::Policy::none()).https_only(true).build()?;
+    let client=swan_agent::http_client(600,false)?;
     loop {
         let response=client.post(format!("{}/api/v1/worker/claim",server.trim_end_matches('/'))).bearer_auth(&token).send().await;
         match response {
@@ -42,7 +42,7 @@ async fn main()->Result<()> {
     }
 }
 
-async fn build(client:&reqwest::Client,job:&Value,output:&Path,id:&str,release_key:&str,company_key:&str)->Result<(String,String)> {
+async fn build(_client:&reqwest::Client,job:&Value,output:&Path,id:&str,release_key:&str,company_key:&str)->Result<(String,String)> {
     ensure!(job["release_public_key"].as_str()==Some(release_key) && job["profile_public_key"].as_str()==Some(company_key),"Worker trust pins do not match the company job");
     let release_envelope:SignedEnvelope=serde_json::from_value(job["release"].clone())?;
     let release:Release=release_envelope.verify(&public_key(release_key)?)?;
@@ -53,8 +53,9 @@ async fn build(client:&reqwest::Client,job:&Value,output:&Path,id:&str,release_k
     let work=output.join(format!("work-{id}"));std::fs::create_dir_all(&work)?;
     let installer=work.join(format!("SwanRemoteSupport-install.{}",release.format));
     let agent=work.join("swan-agent.exe");
-    download(client,&release.artifact_url,&installer,&release.sha256).await?;
-    download(client,&release.agent_url,&agent,&release.agent_sha256).await?;
+    let artifact_client=swan_agent::http_client(600,true)?;
+    download(&artifact_client,&release.artifact_url,&installer,&release.sha256).await?;
+    download(&artifact_client,&release.agent_url,&agent,&release.agent_sha256).await?;
     verify_windows(&installer,&release.publisher,&work)?;
     verify_windows(&agent,&release.publisher,&work)?;
     let bootstrap=Bootstrap{schema:SCHEMA,edition:release.edition.clone(),company_id:profile.company_id,management_url:profile.management_url,profile_public_key:company_key.into(),release_public_key:release_key.into()};
@@ -67,14 +68,16 @@ async fn build(client:&reqwest::Client,job:&Value,output:&Path,id:&str,release_k
         ("bootstrap.json",serde_json::to_vec_pretty(&bootstrap)?),
         ("company-profile.json",serde_json::to_vec_pretty(&profile_envelope)?),
         ("release.json",serde_json::to_vec_pretty(&release_envelope)?),
-        ("Install-Company.ps1",include_bytes!("../../../deployment/windows/Install-Company.ps1").to_vec()),
-        ("Open-Technician.ps1",include_bytes!("../../../deployment/windows/Open-Technician.ps1").to_vec()),
-        ("Verify-Package.ps1",include_bytes!("../../../deployment/windows/Verify-Package.ps1").to_vec()),
-        ("LICENSE.txt",include_bytes!("../../../LICENCE").to_vec()),
+        ("Install-Company.ps1",bundle_text(include_bytes!("../../../deployment/windows/Install-Company.ps1"))?),
+        ("Open-Technician.ps1",bundle_text(include_bytes!("../../../deployment/windows/Open-Technician.ps1"))?),
+        ("Verify-Package.ps1",bundle_text(include_bytes!("../../../deployment/windows/Verify-Package.ps1"))?),
+        ("LICENSE.txt",bundle_text(include_bytes!("../../../LICENCE"))?),
     ] {zip.start_file(name,options)?;zip.write_all(&bytes)?;}
     zip.finish()?.sync_all()?;
-    let hash=digest(std::fs::read(&temporary)?);std::fs::rename(&temporary,output.join(&file_name))?;
-    Ok((file_name,hash))
+    let hash=digest(std::fs::read(&temporary)?);
+    let final_name=file_name.replace(".zip",&format!("-{}.zip",&hash[..16]));let target=output.join(&final_name);
+    if target.exists(){ensure!(digest(std::fs::read(&target)?)==hash,"Conflicting immutable artifact");std::fs::remove_file(&temporary)?;}else{std::fs::rename(&temporary,target)?;}
+    Ok((final_name,hash))
 }
 pub async fn download(client:&reqwest::Client,url:&str,path:&Path,hash:&str)->Result<()> {
     https_url(url)?;

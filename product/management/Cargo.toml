@@ -1,4 +1,5 @@
 [package]
+workspace = ".."
 name = "swan-management"
 version.workspace = true
 edition.workspace = true

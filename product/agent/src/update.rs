@@ -21,8 +21,7 @@ async fn download(url:&str,hash:&str,path:&Path)->Result<()> {
     https_url(url)?;
     // Artifact endpoints may redirect to HTTPS object storage. No credentials
     // are attached, and reqwest rejects any redirect to plain HTTP.
-    let client=reqwest::Client::builder().https_only(true).timeout(std::time::Duration::from_secs(600))
-        .redirect(reqwest::redirect::Policy::limited(5)).build()?;
+    let client=http_client(600,true)?;
     let mut response=client.get(url).send().await?.error_for_status()?;
     ensure!(response.content_length().unwrap_or(0)<=512*1024*1024,"Package too large");
     let mut bytes=Vec::new();

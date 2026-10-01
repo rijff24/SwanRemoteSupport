@@ -192,8 +192,10 @@ pub fn https_url(value: &str) -> Result<url::Url> {
     Ok(url)
 }
 pub fn validate_host(value: &str) -> Result<()> {
-    ensure!(!value.is_empty() && value.len() <= 253 && !value.contains("100.82.236.84"), "Invalid or legacy private endpoint");
+    ensure!(!value.is_empty() && value.len() <= 253, "Invalid transport endpoint");
     ensure!(value.bytes().all(|c| c.is_ascii_alphanumeric() || b".-:[]".contains(&c)), "Invalid transport address");
+    let endpoint=url::Url::parse(&format!("tcp://{value}"))?;
+    ensure!(endpoint.host_str().is_some() && endpoint.username().is_empty() && endpoint.password().is_none() && endpoint.query().is_none() && endpoint.fragment().is_none() && ["","/"].contains(&endpoint.path()),"Expected transport hostname and optional port");
     Ok(())
 }
 pub fn public_key(value: &str) -> Result<VerifyingKey> {
@@ -209,6 +211,10 @@ pub fn signing_key_from_hex(value:&str)->Result<SigningKey> {
     Ok(SigningKey::from_bytes(&bytes))
 }
 pub fn digest(bytes: impl AsRef<[u8]>) -> String { hex::encode(Sha256::digest(bytes.as_ref())) }
+pub fn bundle_text(bytes:&[u8])->Result<Vec<u8>> {
+    // Windows and Linux source checkouts must produce identical bundled scripts.
+    Ok(std::str::from_utf8(bytes)?.replace("\r\n","\n").into_bytes())
+}
 pub fn now() -> u64 { std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_secs()).unwrap_or(0) }
 pub fn maintenance_open(start: u8, end: u8, now: u64) -> bool {
     let hour = ((now / 3600) % 24) as u8;

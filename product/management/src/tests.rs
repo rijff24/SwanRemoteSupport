@@ -38,6 +38,7 @@ async fn enrollment_mfa_and_grants_fail_closed() {
     let login=json!({"username":"admin","password":"correct horse battery staple","totp_code":generator.generate((time/30+1)*30)});
     let (status,result)=request(&app,"/api/v1/login","POST",None,login.clone()).await;assert_eq!(status,StatusCode::OK);
     let admin=result["token"].as_str().unwrap();
+    assert_eq!(request(&app,"/api/v1/sessions","GET",None,Value::Null).await.0,StatusCode::UNAUTHORIZED);
     assert_eq!(request(&app,"/api/v1/login","POST",None,login).await.0,StatusCode::UNAUTHORIZED,"MFA codes are single-use");
     let (_,device)=request(&app,"/api/v1/enroll","POST",None,json!({"name":"Customer test PC","rustdesk_id":"123456789","unattended_consent":false})).await;
     let device_id=device["device_id"].as_str().unwrap();let credential=device["device_token"].as_str().unwrap();
@@ -48,6 +49,9 @@ async fn enrollment_mfa_and_grants_fail_closed() {
     let claim=json!({"grant":envelope});
     assert_eq!(request(&app,"/api/v1/grants/claim","POST",Some(credential),claim.clone()).await.0,StatusCode::OK);
     assert_eq!(request(&app,"/api/v1/grants/claim","POST",Some(credential),claim).await.0,StatusCode::FORBIDDEN,"Session ticket is single-use");
+    let (_,history)=request(&app,"/api/v1/sessions","GET",Some(admin),Value::Null).await;
+    assert_eq!(history.as_array().unwrap().len(),1);
+    assert_eq!(history[0]["claimed"],true);
     assert_eq!(request(&app,"/api/v1/grants","POST",Some(admin),json!({"device_id":device_id,"proof_public_key":STANDARD.encode(proof.verifying_key().as_bytes()),"unattended":true})).await.0,StatusCode::FORBIDDEN,"Unattended access needs device consent");
     let (_,new_user)=request(&app,"/api/v1/users","POST",Some(admin),json!({"username":"technician","password":"another long strong password","role":"technician"})).await;
     let tech_secret=new_user["totp_secret"].as_str().unwrap();

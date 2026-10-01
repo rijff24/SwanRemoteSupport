@@ -70,6 +70,8 @@ impl Store {
         db.pragma_update(None,"journal_mode","WAL")?;
         db.pragma_update(None,"foreign_keys","ON")?;
         db.busy_timeout(std::time::Duration::from_secs(5))?;
+        let version:u32=db.pragma_query_value(None,"user_version",|r|r.get(0))?;
+        ensure!(version<=1,"Database was created by a newer server; restore the pre-upgrade backup rather than downgrading it");
         db.execute_batch(include_str!("schema.sql"))?;
         let artifact_dir=directory.join("artifacts");std::fs::create_dir_all(&artifact_dir)?;
         Ok(Self {db:Mutex::new(db),key:SigningKey::from_bytes(&key_bytes),setup_hash,limits:Mutex::new(HashMap::new()),artifact_dir})
@@ -134,6 +136,7 @@ pub fn router(store:Shared)->Router {
         .route("/api/v1/grants/{id}/renew",post(renew))
         .route("/api/v1/grants/{id}/close",post(close_grant))
         .route("/api/v1/audit",get(audit))
+        .route("/api/v1/sessions",get(session_history))
         .route("/api/v1/releases",get(releases).post(import_release))
         .route("/api/v1/releases/{id}/approve",post(approve_release))
         .route("/api/v1/device/update",get(device_update))
@@ -333,6 +336,15 @@ async fn audit(State(s):State<Shared>,headers:HeaderMap)->ApiResult {
     s.user(&headers,true)?;let db=s.db.lock().unwrap();let mut statement=db.prepare("SELECT at,actor,event,target FROM audit ORDER BY id DESC LIMIT 500")?;
     let rows=statement.query_map([],|r|Ok(json!({"at":r.get::<_,u64>(0)?,"actor":r.get::<_,String>(1)?,"event":r.get::<_,String>(2)?,"target":r.get::<_,String>(3)?})))?.collect::<Result<Vec<_>,_>>()?;Ok(Json(json!(rows)))
 }
+async fn session_history(State(s):State<Shared>,headers:HeaderMap)->ApiResult {
+    let user=s.user(&headers,false)?;let db=s.db.lock().unwrap();
+    let administrator:bool=db.query_row("SELECT role='admin' FROM users WHERE id=?1",[&user],|r|r.get(0))?;
+    let mut statement=db.prepare("SELECT g.id,g.body,g.claimed,g.closed,g.lease_until,d.name FROM grants g JOIN devices d ON d.id=g.device_id WHERE (?1=1 OR g.user_id=?2) ORDER BY g.rowid DESC LIMIT 200")?;
+    let rows=statement.query_map(params![administrator,user],|r|Ok((r.get::<_,String>(0)?,r.get::<_,String>(1)?,r.get::<_,bool>(2)?,r.get::<_,bool>(3)?,r.get::<_,u64>(4)?,r.get::<_,String>(5)?)))?.collect::<Result<Vec<_>,_>>()?;
+    let mut result=Vec::new();
+    for(id,body,claimed,closed,lease,name)in rows {let grant:SessionGrant=serde_json::from_str(&body)?;result.push(json!({"id":id,"technician_id":grant.technician_id,"device_id":grant.device_id,"device_name":name,"requested_at":grant.issued_at,"unattended":grant.unattended,"claimed":claimed,"closed":closed,"lease_until":lease}));}
+    Ok(Json(json!(result)))
+}
 #[derive(Deserialize)]
 struct ReleaseImport { envelope:SignedEnvelope, public_key:String }
 async fn import_release(State(s):State<Shared>,headers:HeaderMap,Json(input):Json<ReleaseImport>)->ApiResult {
@@ -389,7 +401,8 @@ async fn create_worker(State(s):State<Shared>,headers:HeaderMap)->ApiResult {
 #[derive(Deserialize)]
 struct BuildRequest { release_id:String }
 async fn create_build(State(s):State<Shared>,headers:HeaderMap,Json(input):Json<BuildRequest>)->ApiResult {
-    let actor=s.user(&headers,true)?;let profile=s.profile()?;
+    let actor=s.user(&headers,true)?;let mut profile=s.profile()?;
+    profile.issued_at=now();profile.expires_at=now()+7*86400;
     let envelope:String=s.db.lock().unwrap().query_row("SELECT envelope FROM releases WHERE id=?1 AND approved=1",[&input.release_id],|r|r.get(0))?;
     let id=Uuid::new_v4().to_string();let body=json!({"release":serde_json::from_str::<Value>(&envelope)?,"profile":SignedEnvelope::sign(&profile,&s.key)?,"profile_public_key":STANDARD.encode(s.key.verifying_key().as_bytes()),"release_public_key":std::env::var("SWAN_RELEASE_PUBLIC_KEY").map_err(|_|bad("Release key not configured"))?});
     s.db.lock().unwrap().execute("INSERT INTO builds(id,body,state) VALUES(?1,?2,'queued')",params![id,body.to_string()])?;s.audit(&actor,"build.queued",&id)?;Ok(Json(json!({"id":id})))
@@ -402,7 +415,7 @@ async fn claim_build(State(s):State<Shared>,headers:HeaderMap)->ApiResult {
     s.worker(&headers)?;let worker=digest(token(&headers)?);
     let mut db=s.db.lock().unwrap();let tx=db.transaction()?;
     // Expired claims are retryable; worker output is named by immutable job ID.
-    tx.execute("UPDATE builds SET state='queued',worker='' WHERE state='running' AND claimed_at<?1",[now().saturating_sub(3600)])?;
+    tx.execute("UPDATE builds SET state='queued',worker='' WHERE state IN ('running','uploaded') AND claimed_at<?1",[now().saturating_sub(3600)])?;
     let row:Option<(String,String)>=tx.query_row("SELECT id,body FROM builds WHERE state='queued' ORDER BY rowid LIMIT 1",[],|r|Ok((r.get(0)?,r.get(1)?))).optional()?;
     if let Some((id,body))=row {tx.execute("UPDATE builds SET state='running',worker=?1,claimed_at=?2 WHERE id=?3",params![worker,now(),id])?;tx.commit()?;Ok(Json(json!({"id":id,"job":serde_json::from_str::<Value>(&body)?})))} else {Ok(Json(Value::Null))}
 }
@@ -410,17 +423,27 @@ async fn claim_build(State(s):State<Shared>,headers:HeaderMap)->ApiResult {
 struct BuildResult { success:bool, artifact_url:String,sha256:String,log:String }
 async fn finish_build(State(s):State<Shared>,headers:HeaderMap,Path(id):Path<String>,Json(input):Json<BuildResult>)->ApiResult {
     s.worker(&headers)?;
-    if input.success && !s.artifact_dir.join(format!("{id}.zip")).is_file() {return Err(bad("Verified artifact upload required"));}
+    if Uuid::parse_str(&id).is_err(){return Err(bad("Invalid build identity"));}
+    let worker=digest(token(&headers)?);
+    let owned:bool=s.db.lock().unwrap().query_row("SELECT EXISTS(SELECT 1 FROM builds WHERE id=?1 AND worker=?2 AND state IN ('running','uploaded'))",params![id,worker],|r|r.get(0))?;
+    if !owned{return Err(denied());}
     if input.log.len()>8192 || (input.success && (https_url(&input.artifact_url).is_err() || input.sha256.len()!=64 || !input.sha256.bytes().all(|b|b.is_ascii_hexdigit()))) {return Err(bad("Invalid build result"));}
+    if input.success {
+        let expected=format!("{}/api/v1/downloads/{id}",s.profile()?.management_url.trim_end_matches('/'));
+        if input.artifact_url!=expected{return Err(bad("Artifact URL must use this company server"));}
+        let bytes=tokio::fs::read(s.artifact_dir.join(format!("{id}.zip"))).await.map_err(|_|bad("Verified artifact upload required"))?;
+        if !digest(bytes).eq_ignore_ascii_case(&input.sha256){return Err(bad("Uploaded artifact hash mismatch"));}
+    }
     let result=json!({"artifact_url":input.artifact_url,"sha256":input.sha256,"log":input.log});
-    let count=s.db.lock().unwrap().execute("UPDATE builds SET state=?1,result=?2 WHERE id=?3 AND worker=?4 AND state='running'",params![if input.success{"completed"}else{"failed"},result.to_string(),id,digest(token(&headers)?)])?;
+    let count=s.db.lock().unwrap().execute("UPDATE builds SET state=?1,result=?2 WHERE id=?3 AND worker=?4 AND (state='uploaded' OR (state='running' AND ?5=0))",params![if input.success{"completed"}else{"failed"},result.to_string(),id,worker,input.success])?;
     if count!=1 {return Err(denied());}Ok(Json(json!({"ok":true})))
 }
 
 async fn upload_artifact(State(s):State<Shared>,Path(id):Path<String>,request:axum::extract::Request)->ApiResult {
     s.worker(request.headers())?;
     if id.len()!=36 || !id.bytes().all(|c|c.is_ascii_hexdigit() || c==b'-'){return Err(bad("Invalid build identity"));}
-    let job:String=s.db.lock().unwrap().query_row("SELECT body FROM builds WHERE id=?1 AND worker=?2 AND state='running'",params![id,digest(token(request.headers())?)],|r|r.get(0))?;
+    let worker=digest(token(request.headers())?);
+    let job:String=s.db.lock().unwrap().query_row("SELECT body FROM builds WHERE id=?1 AND worker=?2 AND state='running'",params![id,worker],|r|r.get(0)).optional()?.ok_or_else(denied)?;
     let bytes=axum::body::to_bytes(request.into_body(),512*1024*1024).await.map_err(|_|bad("Artifact too large"))?;
     let job:Value=serde_json::from_str(&job)?;
     let release_envelope:SignedEnvelope=serde_json::from_value(job["release"].clone())?;
@@ -443,7 +466,7 @@ async fn upload_artifact(State(s):State<Shared>,Path(id):Path<String>,request:ax
         ("Open-Technician.ps1",include_bytes!("../../../deployment/windows/Open-Technician.ps1").as_slice()),
         ("Verify-Package.ps1",include_bytes!("../../../deployment/windows/Verify-Package.ps1").as_slice()),
         ("LICENSE.txt",include_bytes!("../../../LICENCE").as_slice())
-    ] {if read(name)?.as_slice()!=expected{return Err(bad("Bundle script or license mismatch"));}}
+    ] {if read(name)?!=bundle_text(expected)?{return Err(bad("Bundle script or license mismatch"));}}
     let profile:SignedEnvelope=serde_json::from_slice(&read("company-profile.json")?)?;
     if serde_json::to_value(&profile)?!=job["profile"] {return Err(bad("Wrong company profile"));}
     let copied_release:SignedEnvelope=serde_json::from_slice(&read("release.json")?)?;
@@ -451,14 +474,27 @@ async fn upload_artifact(State(s):State<Shared>,Path(id):Path<String>,request:ax
     let bootstrap:swan_agent::Bootstrap=serde_json::from_slice(&read("bootstrap.json")?)?;
     let p:CompanyProfile=profile.verify(&s.key.verifying_key()).map_err(|_|denied())?;
     if bootstrap.company_id!=p.company_id || bootstrap.edition!=release.edition || bootstrap.management_url!=p.management_url || bootstrap.profile_public_key!=STANDARD.encode(s.key.verifying_key().as_bytes()) || bootstrap.release_public_key!=trust {return Err(bad("Bootstrap trust mismatch"));}
-    let temporary=s.artifact_dir.join(format!("{id}.partial"));
-    tokio::fs::write(&temporary,&bytes).await.map_err(|_|bad("Cannot save artifact"))?;
-    tokio::fs::rename(&temporary,s.artifact_dir.join(format!("{id}.zip"))).await.map_err(|_|bad("Cannot publish artifact"))?;
-    Ok(Json(json!({"sha256":digest(&bytes)})))
+    drop(read);drop(zip);
+    let hash=digest(&bytes);
+    tokio::task::spawn_blocking(move || ->Result<(),ApiError>{
+        let mut db=s.db.lock().unwrap();let tx=db.transaction()?;
+        let owned:bool=tx.query_row("SELECT EXISTS(SELECT 1 FROM builds WHERE id=?1 AND worker=?2 AND state='running')",params![id,worker],|r|r.get(0))?;
+        if !owned{return Err(denied());}
+        let temporary=s.artifact_dir.join(format!("{id}.partial"));
+        use std::io::Write;
+        let mut artifact=std::fs::File::create(&temporary).map_err(|_|bad("Cannot save artifact"))?;
+        artifact.write_all(&bytes).map_err(|_|bad("Cannot write artifact"))?;
+        artifact.sync_all().map_err(|_|bad("Cannot flush artifact"))?;drop(artifact);
+        let target=s.artifact_dir.join(format!("{id}.zip"));
+        if target.exists(){std::fs::remove_file(&target).map_err(|_|bad("Cannot replace retry artifact"))?;}
+        std::fs::rename(&temporary,target).map_err(|_|bad("Cannot publish artifact"))?;
+        tx.execute("UPDATE builds SET state='uploaded' WHERE id=?1",[&id])?;tx.commit()?;Ok(())
+    }).await.map_err(|_|bad("Artifact persistence failed"))??;
+    Ok(Json(json!({"sha256":hash})))
 }
 async fn download_artifact(State(s):State<Shared>,Path(id):Path<String>,headers:HeaderMap)->Result<Response,ApiError> {
     if id.len()!=36 || !id.bytes().all(|c|c.is_ascii_hexdigit() || c==b'-'){return Err(bad("Invalid build identity"));}
-    let job:String=s.db.lock().unwrap().query_row("SELECT body FROM builds WHERE id=?1 AND state='completed'",[&id],|r|r.get(0))?;
+    let job:String=s.db.lock().unwrap().query_row("SELECT body FROM builds WHERE id=?1 AND state='completed'",[&id],|r|r.get(0)).optional()?.ok_or(ApiError(StatusCode::NOT_FOUND,"Artifact unavailable"))?;
     let job:Value=serde_json::from_str(&job)?;
     let envelope:SignedEnvelope=serde_json::from_value(job["release"].clone())?;
     let trust=std::env::var("SWAN_RELEASE_PUBLIC_KEY").map_err(|_|bad("Release trust key unavailable"))?;

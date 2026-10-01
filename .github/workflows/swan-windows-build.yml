@@ -10,6 +10,7 @@ env:
   RUST_VERSION: "1.90.0"
   LLVM_VERSION: "15.0.6"
   FLUTTER_VERSION: "3.24.5"
+  FLUTTER_ENGINE_SHA256: "ec8cabf36ee4ff24c8d98de25b00e70781eb03876265aee84d0fe554a110036e"
   VCPKG_COMMIT_ID: "120deac3062162151622ca4860575a33844ba10b"
   VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
   VERSION: "1.4.9"
@@ -70,6 +71,9 @@ jobs:
           flutter doctor -v
           flutter precache --windows
           Invoke-WebRequest -Uri https://github.com/rustdesk/engine/releases/download/main/windows-x64-release.zip -OutFile windows-x64-release.zip
+          if ((Get-FileHash windows-x64-release.zip -Algorithm SHA256).Hash -ne $env:FLUTTER_ENGINE_SHA256) {
+            throw 'Pinned Flutter engine hash mismatch. Review the upstream artifact before changing this pin.'
+          }
           Expand-Archive -Path windows-x64-release.zip -DestinationPath windows-x64-release
           Move-Item -Path windows-x64-release\* -Destination C:\hostedtoolcache\windows\flutter\stable-${{ env.FLUTTER_VERSION }}-x64\bin\cache\artifacts\engine\windows-x64-release\ -Force
 
