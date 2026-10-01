@@ -28,7 +28,7 @@ $running = Get-CimInstance Win32_Process -Filter "Name='qemu-system-x86_64.exe'"
 if ($running | Where-Object { $_.CommandLine -and $_.CommandLine.Contains($disk) }) { throw 'Guest disk is already in use' }
 # Reconstruct fixed arguments; saved metadata must never supply arbitrary QEMU options.
 $arguments = @('-name',$Name,'-machine','q35','-accel',$Accelerator,
-    '-m',$MemoryMiB.ToString(),'-smp','2','-drive',"file=$disk,format=qcow2",
+    '-cpu','max','-m',$MemoryMiB.ToString(),'-smp','2','-drive',"file=$disk,format=qcow2",
     '-cdrom',$iso.FullName,'-boot','order=d','-nic','user,model=e1000',
     '-display','none','-vnc','127.0.0.1:20','-monitor','tcp:127.0.0.1:4444,server=on,wait=off')
 [ordered]@{ accelerator=$Accelerator;started_utc=[DateTime]::UtcNow.ToString('o') } |

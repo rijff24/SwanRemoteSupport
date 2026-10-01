@@ -14,6 +14,10 @@ provide full guest access; close QEMU when the guest is not under test.
 `New-TestVm.ps1` requires an already verified QEMU installation and ISO. It
 refuses existing VM directories. Prefer WHPX after checking it starts on the
 host; TCG is a slower fallback. The host must retain 1.5 GiB available memory.
+The scripts select QEMU's `max` CPU model. A local QMP capability probe confirmed
+SSE4.2 and POPCNT are exposed by that model and absent from the default `qemu64`
+model. Server 2025 requires these instructions; this supplies supported emulated
+instructions rather than bypassing the operating system's hardware checks.
 `New-LocalTestVm.ps1 -EnvironmentFile PATH_TO_PRIVATE_ENV` reads the six
 `SWAN_VM_*` settings from the private environment file without executing them.
 It requires `ISO_PATH.download-complete.json` containing `bytes` and `sha256`,
@@ -59,3 +63,7 @@ unverified matrix row, never as a passing compatibility test.
 The first local WHPX probe reported `Unexpected VP exit code 4`; the isolated
 guest was stopped. Its sparse disk is preserved outside Git. No operating
 system installation or accelerator compatibility is established by that probe.
+The official Server 2025 ISO subsequently downloaded successfully and its size
+and SHA-256 were recorded privately. A TCG guest reached the Windows boot loader.
+The initial TCG attempt used the insufficient default CPU and was restarted
+with the corrected model. No completed Windows installation is recorded yet.

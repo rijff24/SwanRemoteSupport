@@ -26,7 +26,7 @@ $disk = Join-Path $vm 'system.qcow2'
 & $qemuImg create -f qcow2 $disk ($DiskGiB.ToString()+'G')
 if ($LASTEXITCODE -ne 0) { throw 'QEMU disk creation failed' }
 $arguments = @('-name',$Name,'-machine','q35','-accel',$Accelerator,
-    '-m',$MemoryMiB.ToString(),'-smp','2','-drive',"file=$disk,format=qcow2",
+    '-cpu','max','-m',$MemoryMiB.ToString(),'-smp','2','-drive',"file=$disk,format=qcow2",
     '-cdrom',[IO.Path]::GetFullPath($IsoPath),'-boot','order=d',
     '-nic','user,model=e1000','-display','none',
     '-vnc','127.0.0.1:20','-monitor','tcp:127.0.0.1:4444,server=on,wait=off')
