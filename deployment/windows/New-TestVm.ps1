@@ -3,7 +3,7 @@ param(
     [Parameter(Mandatory=$true)][string]$IsoPath,
     [Parameter(Mandatory=$true)][string]$LabDirectory,
     [ValidatePattern('^[a-z0-9-]+$')][string]$Name = 'server-2025',
-    [ValidateSet('whpx','tcg')][string]$Accelerator = 'whpx',
+    [ValidateSet('whpx','whpx-userspace','tcg')][string]$Accelerator = 'whpx',
     [ValidateRange(2048,8192)][int]$MemoryMiB = 4096,
     [ValidateRange(32,128)][int]$DiskGiB = 64
 )
@@ -25,8 +25,10 @@ New-Item -ItemType Directory -Path $vm | Out-Null
 $disk = Join-Path $vm 'system.qcow2'
 & $qemuImg create -f qcow2 $disk ($DiskGiB.ToString()+'G')
 if ($LASTEXITCODE -ne 0) { throw 'QEMU disk creation failed' }
-$arguments = @('-name',$Name,'-machine','q35','-accel',$Accelerator,
-    '-cpu','max','-m',$MemoryMiB.ToString(),'-smp','2','-drive',"file=$disk,format=qcow2",
+$acceleratorOption = if ($Accelerator -eq 'whpx-userspace') { 'whpx,hyperv=off,kernel-irqchip=off' } else { $Accelerator }
+$cpuModel = if ($Accelerator -eq 'tcg') { 'max' } else { 'host' }
+$arguments = @('-name',$Name,'-machine','q35','-accel',$acceleratorOption,
+    '-cpu',$cpuModel,'-m',$MemoryMiB.ToString(),'-smp','2','-drive',"file=$disk,format=qcow2",
     '-cdrom',[IO.Path]::GetFullPath($IsoPath),'-boot','order=d',
     '-nic','user,model=e1000','-display','none',
     '-vnc','127.0.0.1:20','-monitor','tcp:127.0.0.1:4444,server=on,wait=off')
