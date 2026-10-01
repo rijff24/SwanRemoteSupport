@@ -131,6 +131,7 @@ pub fn router(store:Shared)->Router {
         .route("/api/v1/devices/{id}/state",put(device_state))
         .route("/api/v1/device/consent",put(consent))
         .route("/api/v1/device/status",get(device_status))
+        .route("/api/v1/groups/{group}/permissions",get(group_permissions).put(set_group_permissions))
         .route("/api/v1/groups/{group}/users/{user}",put(group_access))
         .route("/api/v1/grants",post(grant))
         .route("/api/v1/grants/claim",post(claim))
@@ -294,6 +295,20 @@ async fn group_access(State(s):State<Shared>,headers:HeaderMap,Path((group,user)
 }
 #[derive(Deserialize)]
 struct GrantRequest { device_id:String, proof_public_key:String, unattended:bool }
+fn device_permissions(db:&Connection,device:&str)->Result<SessionPermissions,ApiError> {
+    let raw:Option<String>=db.query_row("SELECT p.body FROM devices d LEFT JOIN group_permissions p ON p.group_id=d.group_id WHERE d.id=?1",[device],|row|row.get(0))?;
+    Ok(match raw {Some(value)=>serde_json::from_str(&value)?,None=>SessionPermissions::support_default()})
+}
+async fn group_permissions(State(s):State<Shared>,headers:HeaderMap,Path(group):Path<String>)->ApiResult {
+    s.user(&headers,true)?;
+    let raw:Option<String>=s.db.lock().unwrap().query_row("SELECT body FROM group_permissions WHERE group_id=?1",[group],|row|row.get(0)).optional()?;
+    Ok(Json(match raw {Some(value)=>serde_json::from_str(&value)?,None=>serde_json::to_value(SessionPermissions::support_default())?}))
+}
+async fn set_group_permissions(State(s):State<Shared>,headers:HeaderMap,Path(group):Path<String>,Json(policy):Json<SessionPermissions>)->ApiResult {
+    let actor=s.user(&headers,true)?;if group.is_empty() || group.len()>64 {return Err(bad("Invalid group"));}
+    s.db.lock().unwrap().execute("INSERT INTO group_permissions(group_id,body) VALUES(?1,?2) ON CONFLICT(group_id) DO UPDATE SET body=excluded.body",params![group,serde_json::to_string(&policy)?])?;
+    s.audit(&actor,"group.permissions_changed",&group)?;Ok(Json(json!({"ok":true})))
+}
 async fn grant(State(s):State<Shared>,headers:HeaderMap,Json(input):Json<GrantRequest>)->ApiResult {
     let user=s.user(&headers,false)?;s.rate(&format!("grant:{user}"),30)?;
     public_key(&input.proof_public_key).map_err(|_|bad("Invalid proof key"))?;
@@ -301,7 +316,7 @@ async fn grant(State(s):State<Shared>,headers:HeaderMap,Json(input):Json<GrantRe
     let peer:Option<String>=s.db.lock().unwrap().query_row("SELECT d.rustdesk_id FROM devices d JOIN users u ON u.id=?2 WHERE d.id=?1 AND d.state='approved' AND u.disabled=0 AND (?3=0 OR d.unattended=1) AND (u.role='admin' OR EXISTS(SELECT 1 FROM group_access g WHERE g.group_id=d.group_id AND g.user_id=u.id))",params![input.device_id,user,input.unattended],|r|r.get(0)).optional()?;
     let peer=peer.ok_or_else(denied)?;
     if input.unattended && !profile.allow_unattended {return Err(denied());}
-    let grant=SessionGrant { schema:SCHEMA,company_id:profile.company_id,grant_id:Uuid::new_v4().to_string(),technician_id:user.clone(),device_id:input.device_id.clone(),rustdesk_id:peer,proof_public_key:input.proof_public_key,unattended:input.unattended,issued_at:now(),expires_at:now()+60 };
+    let grant=SessionGrant { schema:SCHEMA,company_id:profile.company_id,grant_id:Uuid::new_v4().to_string(),technician_id:user.clone(),device_id:input.device_id.clone(),rustdesk_id:peer,proof_public_key:input.proof_public_key,unattended:input.unattended,permissions:device_permissions(&s.db.lock().unwrap(),&input.device_id)?,issued_at:now(),expires_at:now()+60 };
     s.db.lock().unwrap().execute("INSERT INTO grants(id,user_id,device_id,body,expires_at) VALUES(?1,?2,?3,?4,?5)",params![grant.grant_id,user,input.device_id,serde_json::to_string(&grant)?,grant.expires_at])?;
     s.audit(&user,"session.requested",&grant.grant_id)?;
     Ok(Json(serde_json::to_value(SignedEnvelope::sign(&grant,&s.key)?)?))
@@ -318,6 +333,7 @@ async fn claim(State(s):State<Shared>,headers:HeaderMap,Json(input):Json<Claim>)
     grant.validate(&profile.company_id,&device,&peer,now()).map_err(|_|denied())?;
     let mut db=s.db.lock().unwrap();let tx=db.transaction()?;
     if !active_grant(&tx,&grant.grant_id,&device)? {return Err(denied());}
+    if !device_permissions(&tx,&device)?.allows(&grant.permissions) {return Err(denied());}
     let consent:bool=tx.query_row("SELECT unattended FROM devices WHERE id=?1",[&device],|r|r.get(0))?;
     if grant.unattended && !(consent && profile.allow_unattended) {return Err(denied());}
     if tx.execute("UPDATE grants SET claimed=1,lease_until=?1 WHERE id=?2 AND claimed=0 AND expires_at>?3",params![now()+300,grant.grant_id,now()])?!=1 {return Err(denied());}
@@ -330,6 +346,7 @@ async fn renew(State(s):State<Shared>,headers:HeaderMap,Path(id):Path<String>)->
     if !active_grant(&db,&id,&device)? {return Err(denied());}
     let raw:String=db.query_row("SELECT body FROM grants WHERE id=?1",[&id],|r|r.get(0))?;
     let grant:SessionGrant=serde_json::from_str(&raw)?;
+    if !device_permissions(&db,&device)?.allows(&grant.permissions) {return Err(denied());}
     let consent:bool=db.query_row("SELECT unattended FROM devices WHERE id=?1",[&device],|r|r.get(0))?;
     if grant.unattended && !(consent && profile.allow_unattended){return Err(denied());}
     if db.execute("UPDATE grants SET lease_until=?1 WHERE id=?2 AND claimed=1 AND lease_until>?3 AND closed=0",params![now()+300,id,now()])?!=1 {return Err(denied());}

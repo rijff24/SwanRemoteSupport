@@ -200,7 +200,7 @@ impl AgentState {
         let result:Value=self.client()?.post(self.endpoint("grants/claim")?).bearer_auth(self.device_token.as_ref().context("Not enrolled")?).json(&json!({"grant":login.grant})).send().await?.error_for_status()?.json().await?;
         let expires=result["lease_until"].as_u64().context("Missing lease expiry")?;
         ensure!(expires>now() && expires<=now()+310,"Invalid session lease");
-        Ok(Lease { grant_id:grant.grant_id,unattended:grant.unattended,expires_at:expires,last_renewed:now(),_activity:activity })
+        Ok(Lease { grant_id:grant.grant_id,unattended:grant.unattended,permissions:grant.permissions,expires_at:expires,last_renewed:now(),_activity:activity })
     }
     pub async fn renew(&self,lease:&mut Lease)->Result<()> {
         let profile=self.company_profile()?;
@@ -228,7 +228,7 @@ fn replace_state(temporary:&Path,path:&Path)->Result<()> {
     #[cfg(not(windows))] {std::fs::rename(temporary,path)?;Ok(())}
 }
 
-pub struct Lease { pub grant_id:String,pub unattended:bool,pub expires_at:u64,pub last_renewed:u64,_activity:std::fs::File }
+pub struct Lease { pub grant_id:String,pub unattended:bool,pub permissions:SessionPermissions,pub expires_at:u64,pub last_renewed:u64,_activity:std::fs::File }
 pub fn activity_file(directory:&Path)->Result<std::fs::File> {
     std::fs::create_dir_all(directory)?;
     Ok(std::fs::OpenOptions::new().create(true).read(true).write(true).open(directory.join("activity.lock"))?)

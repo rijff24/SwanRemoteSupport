@@ -451,6 +451,13 @@ const SEND_TIMEOUT_OTHER: u64 = SEND_TIMEOUT_VIDEO * 10;
 const SESSION_TIMEOUT: Duration = Duration::from_secs(30);
 
 impl Connection {
+    #[cfg(feature = "swan_custom")]
+    fn managed_permission_cap(&self,name:&str)->bool {
+        let Some(lease)=self.managed_lease.as_ref() else {return false};
+        if swan_agent::protocol::now()>=lease.expires_at {return false;}
+        let p=&lease.permissions;
+        match name {"keyboard"=>p.keyboard,"clipboard"=>p.clipboard,"audio"=>p.audio,"file"=>p.file,"restart"=>p.restart,"recording"=>p.recording,"block_input"=>p.block_input,"privacy_mode"=>p.privacy_mode,_=>false}
+    }
     pub async fn start(
         addr: SocketAddr,
         stream: super::Stream,
@@ -713,6 +720,8 @@ impl Connection {
                             conn.chat_unanswered = false;
                         }
                         ipc::Data::SwitchPermission{name, enabled} => {
+                            #[cfg(feature = "swan_custom")]
+                            let enabled=enabled && conn.managed_permission_cap(&name);
                             log::info!("Change permission {} -> {}", name, enabled);
                             if &name == "keyboard" {
                                 conn.keyboard = enabled;
@@ -2547,7 +2556,13 @@ impl Connection {
             #[cfg(feature = "swan_custom")]
             if self.managed_lease.is_none() {
                 match crate::managed::claim(&lr.password, &self.hash.challenge, &Config::get_id()).await {
-                    Ok(lease) => self.managed_lease = Some(lease),
+                    Ok(lease) => {
+                        let p=&lease.permissions;
+                        self.keyboard &= p.keyboard;self.clipboard &= p.clipboard;
+                        self.audio &= p.audio;self.file &= p.file;self.restart &= p.restart;
+                        self.recording &= p.recording;self.block_input &= p.block_input;
+                        self.privacy_mode &= p.privacy_mode;self.managed_lease=Some(lease);
+                    },
                     Err(_) => {
                         self.send_login_error("Company session authorization denied").await;
                         return false;

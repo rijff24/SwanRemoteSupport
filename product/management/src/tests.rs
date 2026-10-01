@@ -52,6 +52,14 @@ async fn enrollment_mfa_and_grants_fail_closed() {
     let (status,envelope)=request(&app,"/api/v1/grants","POST",Some(admin),grant_request).await;assert_eq!(status,StatusCode::OK);
     let claim=json!({"grant":envelope});
     assert_eq!(request(&app,"/api/v1/grants/claim","POST",Some(credential),claim.clone()).await.0,StatusCode::OK);
+    let original:SignedEnvelope=serde_json::from_value(envelope.clone()).unwrap();
+    let issued:SessionGrant=serde_json::from_slice(&STANDARD.decode(&original.payload).unwrap()).unwrap();
+    assert!(issued.permissions.keyboard);assert!(!issued.permissions.recording);
+    let mut reduced=SessionPermissions::support_default();reduced.keyboard=false;
+    assert_eq!(request(&app,"/api/v1/groups/customers/permissions","PUT",Some(admin),serde_json::to_value(&reduced).unwrap()).await.0,StatusCode::OK);
+    assert_eq!(request(&app,&format!("/api/v1/grants/{}/renew",issued.grant_id),"POST",Some(credential),Value::Null).await.0,StatusCode::FORBIDDEN,"Reduced capabilities invalidate existing authorization leases");
+    assert_eq!(request(&app,"/api/v1/groups/customers/permissions","PUT",None,serde_json::to_value(&reduced).unwrap()).await.0,StatusCode::UNAUTHORIZED);
+    assert_eq!(request(&app,"/api/v1/groups/customers/permissions","PUT",Some(admin),serde_json::to_value(SessionPermissions::support_default()).unwrap()).await.0,StatusCode::OK);
     assert_eq!(request(&app,"/api/v1/grants/claim","POST",Some(credential),claim).await.0,StatusCode::FORBIDDEN,"Session ticket is single-use");
     let (_,history)=request(&app,"/api/v1/sessions","GET",Some(admin),Value::Null).await;
     assert_eq!(history.as_array().unwrap().len(),1);

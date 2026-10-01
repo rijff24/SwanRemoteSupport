@@ -106,6 +106,22 @@ impl SignedEnvelope {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
+pub struct SessionPermissions {
+    pub keyboard:bool,pub clipboard:bool,pub audio:bool,pub file:bool,
+    pub restart:bool,pub recording:bool,pub block_input:bool,pub privacy_mode:bool,
+}
+impl SessionPermissions {
+    pub fn support_default()->Self {Self{keyboard:true,clipboard:true,audio:true,file:true,restart:true,recording:false,block_input:false,privacy_mode:false}}
+    pub fn allows(&self,requested:&Self)->bool {
+        (!requested.keyboard || self.keyboard) && (!requested.clipboard || self.clipboard) &&
+        (!requested.audio || self.audio) && (!requested.file || self.file) &&
+        (!requested.restart || self.restart) && (!requested.recording || self.recording) &&
+        (!requested.block_input || self.block_input) && (!requested.privacy_mode || self.privacy_mode)
+    }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct SessionGrant {
     pub schema: u32,
     pub company_id: String,
@@ -115,6 +131,7 @@ pub struct SessionGrant {
     pub rustdesk_id: String,
     pub proof_public_key: String,
     pub unattended: bool,
+    pub permissions:SessionPermissions,
     pub issued_at: u64,
     pub expires_at: u64,
 }
@@ -242,7 +259,7 @@ mod tests {
     #[test]
     fn grant_is_target_bound_expiring_and_requires_challenge_proof() {
         let key = SigningKey::from_bytes(&[3;32]);
-        let grant = SessionGrant { schema: 1, company_id: "a".into(), grant_id: "jti".into(), technician_id:"t".into(), device_id:"d".into(), rustdesk_id:"123".into(), proof_public_key: STANDARD.encode(key.verifying_key().as_bytes()), unattended:false, issued_at:100, expires_at:160 };
+        let grant = SessionGrant { schema: 1, company_id: "a".into(), grant_id: "jti".into(), technician_id:"t".into(), device_id:"d".into(), rustdesk_id:"123".into(), proof_public_key: STANDARD.encode(key.verifying_key().as_bytes()), unattended:false, permissions:SessionPermissions::support_default(), issued_at:100, expires_at:160 };
         assert!(grant.validate("a","d","123",101).is_ok());
         assert!(grant.validate("b","d","123",101).is_err());
         assert!(grant.validate("a","d","124",101).is_err());
