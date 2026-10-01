@@ -1,7 +1,7 @@
 use anyhow::{bail, ensure, Context, Result};
 use ed25519_dalek::SigningKey;
 use rand::rngs::OsRng;
-use serde_json::{json,Value};
+use serde_json::json;
 use std::path::PathBuf;
 use swan_agent::*;
 use swan_protocol::*;
@@ -41,6 +41,12 @@ async fn main()->Result<()> {
         #[cfg(windows)]
         "recover-update"=>{let mut state=AgentState::load_for_refresh(&directory)?;state.recover_update(&directory)?;println!("Installed release verified and update state recovered.");}
         #[cfg(windows)]
+        "verify-installed"=>{
+            let state=AgentState::load_for_refresh(&directory)?;
+            swan_agent::update::verify_installed_metadata(&state,&directory)?;
+            println!("Installed executable and pinned release publisher verified.");
+        }
+        #[cfg(windows)]
         "verify-package"=>{
             let state=AgentState::load(&directory)?;
             let metadata=args.get(2).context("Usage: swan-agent verify-package release.json INSTALLER")?;
@@ -59,14 +65,14 @@ async fn main()->Result<()> {
             let username=args.get(2).context("Usage: swan-agent login USERNAME (password and code from SWAN_LOGIN_PASSWORD and SWAN_LOGIN_TOTP)")?;
             let password=std::env::var("SWAN_LOGIN_PASSWORD").context("Set SWAN_LOGIN_PASSWORD for this process only")?;
             let code=std::env::var("SWAN_LOGIN_TOTP").context("Set SWAN_LOGIN_TOTP for this process only")?;
-            let result:Value=state.client()?.post(state.endpoint("login")?).json(&json!({"username":username,"password":password,"totp_code":code})).send().await?.error_for_status()?.json().await?;
+            let token=state.technician_login(username,&password,&code).await?;
             // Explicit CLI exchange for automation. Never write tokens to logs or persistent profile files.
-            println!("{}",result);
+            println!("{}",json!({"token":token}));
         }
         "devices"=>{
             let state=AgentState::load(&directory)?;
             let token=std::env::var("SWAN_TECHNICIAN_TOKEN").context("Set authenticated technician token")?;
-            let devices:Value=state.client()?.get(state.endpoint("devices")?).bearer_auth(token).send().await?.error_for_status()?.json().await?;
+            let devices=state.technician_inventory(&token).await?;
             println!("{}",serde_json::to_string_pretty(&devices)?);
         }
         "connect"=>{

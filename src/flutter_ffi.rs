@@ -2810,6 +2810,15 @@ pub fn main_get_printer_names() -> SyncReturn<String> {
     return SyncReturn("".to_owned());
 }
 
+/// Responses contain display data only. Login tokens and grant proof keys stay
+/// in Rust process memory, shared by this app's Flutter window engines.
+pub fn main_company_request(request:String,sink:StreamSink<String>)->ResultType<()> {
+    #[cfg(feature = "swan_custom")]
+    {return flutter::async_tasks::company_request(request,sink);}
+    #[cfg(not(feature = "swan_custom"))]
+    {let _=request; sink.add("{\"ok\":false,\"error\":\"Managed company edition required\"}".into());Ok(())}
+}
+
 pub fn main_get_common(key: String) -> String {
     #[cfg(feature = "swan_custom")]
     if key == "company-overview" {

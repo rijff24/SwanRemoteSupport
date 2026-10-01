@@ -7,6 +7,7 @@ use std::path::{Path, PathBuf};
 use swan_protocol::*;
 pub use swan_protocol as protocol;
 pub mod update;
+pub mod technician;
 
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -79,6 +80,9 @@ impl AgentState {
         p.validate(&self.bootstrap.company_id,self.accepted_revision,now())?;
         Ok(p)
     }
+    /// Signed cached branding may still be displayed offline. This is never an
+    /// authorization policy; company_profile() remains mandatory for access.
+    pub fn display_profile(&self)->Result<CompanyProfile> {self.cached_profile()}
     fn cached_profile(&self)->Result<CompanyProfile> {
         let p:CompanyProfile=self.profile.verify(&public_key(&self.bootstrap.profile_public_key)?)?;
         // Expiration blocks use, but a previously signed rotation key remains a
@@ -138,6 +142,7 @@ impl AgentState {
         let grant:SignedEnvelope=self.client()?.post(self.endpoint("grants")?).bearer_auth(token).json(&json!({"device_id":device,"proof_public_key":STANDARD.encode(key.verifying_key().as_bytes()),"unattended":unattended})).send().await?.error_for_status()?.json().await?;
         let parsed:SessionGrant=grant.verify(&public_key(&self.bootstrap.profile_public_key)?)?;
         parsed.validate(&self.bootstrap.company_id,device,&parsed.rustdesk_id,now())?;
+        ensure!(parsed.proof_public_key==STANDARD.encode(key.verifying_key().as_bytes()) && parsed.unattended==unattended,"Grant differs from requested proof or consent mode");
         Ok(grant)
     }
     pub async fn claim(&self,login:&ManagedLogin,challenge:&str,peer:&str)->Result<Lease> {
@@ -234,6 +239,7 @@ mod tests {
         let mut profile=state.company_profile().unwrap();profile.expires_at=now()-1;
         state.profile=SignedEnvelope::sign(&profile,&SigningKey::from_bytes(&[7;32])).unwrap();state.save(&directory).unwrap();
         assert!(AgentState::load(&directory).is_err());assert!(AgentState::load_for_refresh(&directory).is_ok());
+        assert_eq!(AgentState::load_for_refresh(&directory).unwrap().display_profile().unwrap().customer.display_name,PRODUCT);
         state.profile.payload=STANDARD.encode(b"{}");std::fs::write(directory.join("managed-state.json"),serde_json::to_vec(&state).unwrap()).unwrap();
         assert!(AgentState::load_for_refresh(&directory).is_err());std::fs::remove_dir_all(directory).unwrap();
     }

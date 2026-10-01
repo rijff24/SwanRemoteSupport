@@ -56,8 +56,8 @@ async fn build(_client:&reqwest::Client,job:&Value,output:&Path,id:&str,release_
     let artifact_client=swan_agent::http_client(600,true)?;
     download(&artifact_client,&release.artifact_url,&installer,&release.sha256).await?;
     download(&artifact_client,&release.agent_url,&agent,&release.agent_sha256).await?;
-    verify_windows(&installer,&release.publisher,&work)?;
-    verify_windows(&agent,&release.publisher,&work)?;
+    verify_windows(&installer,&release,&work)?;
+    verify_windows(&agent,&release,&work)?;
     let bootstrap=Bootstrap{schema:SCHEMA,edition:release.edition.clone(),company_id:profile.company_id,management_url:profile.management_url,profile_public_key:company_key.into(),release_public_key:release_key.into()};
     let file_name=format!("SwanRemoteSupport-{}-{}-{}.zip",if release.edition==Edition::Customer{"Customer"}else{"Technician"},release.version,id);
     let temporary=output.join(format!("{file_name}.partial"));
@@ -88,8 +88,8 @@ pub async fn download(client:&reqwest::Client,url:&str,path:&Path,hash:&str)->Re
     ensure!(digest(&bytes).eq_ignore_ascii_case(hash),"Artifact hash mismatch");
     std::fs::write(path,bytes)?;Ok(())
 }
-fn verify_windows(path:&Path,publisher:&str,directory:&Path)->Result<()> {
+fn verify_windows(path:&Path,release:&Release,directory:&Path)->Result<()> {
     let verifier=directory.join("Verify-Package.ps1");std::fs::write(&verifier,include_bytes!("../../../deployment/windows/Verify-Package.ps1"))?;
-    let status=std::process::Command::new("powershell.exe").args(["-NoProfile","-NonInteractive","-ExecutionPolicy","Bypass","-File"]).arg(verifier).arg("-Path").arg(path).arg("-Publisher").arg(publisher).status()?;
+    let status=std::process::Command::new("powershell.exe").args(["-NoProfile","-NonInteractive","-ExecutionPolicy","Bypass","-File"]).arg(verifier).arg("-Path").arg(path).arg("-Publisher").arg(&release.publisher).arg("-CertificateSha256").arg(&release.publisher_certificate_sha256).status()?;
     ensure!(status.success(),"Artifact signature or publisher rejected");Ok(())
 }

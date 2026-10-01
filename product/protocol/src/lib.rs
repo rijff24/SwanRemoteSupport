@@ -166,6 +166,8 @@ pub struct Release {
     pub agent_url: String,
     pub agent_sha256: String,
     pub publisher: String,
+    pub publisher_certificate_sha256: String,
+    pub windows_versions: Vec<String>,
     pub source_url: String,
     pub format: String,
 }
@@ -176,6 +178,8 @@ impl Release {
         ensure!(["stable", "test"].contains(&self.channel.as_str()) && ["exe", "msi"].contains(&self.format.as_str()), "Invalid release type");
         ensure!(self.sha256.len() == 64 && self.sha256.bytes().all(|x| x.is_ascii_hexdigit()) && !self.publisher.is_empty(), "Invalid artifact identity");
         ensure!(self.installed_sha256.len()==64 && self.installed_sha256.bytes().all(|x|x.is_ascii_hexdigit()),"Invalid installed executable identity");
+        ensure!(self.publisher_certificate_sha256.len()==64 && self.publisher_certificate_sha256.bytes().all(|x|x.is_ascii_hexdigit()),"Invalid publisher certificate identity");
+        ensure!(!self.windows_versions.is_empty() && self.windows_versions.len()<=6 && self.windows_versions.iter().all(|v|WINDOWS_VERSIONS.contains(&v.as_str())),"Invalid Windows compatibility declaration");
         let fields: Vec<_> = self.version.split('.').collect();
         ensure!(fields.len() == 3 && fields.iter().all(|v| !v.is_empty() && v.bytes().all(|c| c.is_ascii_digit())), "Expected numeric major.minor.patch");
         https_url(&self.artifact_url)?;
@@ -185,6 +189,8 @@ impl Release {
         Ok(())
     }
 }
+
+pub const WINDOWS_VERSIONS:&[&str]=&["windows_10","windows_11","server_2016","server_2019","server_2022","server_2025"];
 
 pub fn https_url(value: &str) -> Result<url::Url> {
     let url = url::Url::parse(value)?;
@@ -253,11 +259,13 @@ mod tests {
     }
     #[test]
     fn releases_reject_replay_wrong_edition_expiry_and_missing_installed_identity() {
-        let mut release=Release {schema:1,product:PRODUCT.into(),version:"1.5.0".into(),sequence:2,edition:Edition::Customer,architecture:"x64".into(),channel:"stable".into(),expires_at:200,artifact_url:"https://releases.example/package.exe".into(),sha256:"a".repeat(64),installed_sha256:"b".repeat(64),agent_url:"https://releases.example/agent.exe".into(),agent_sha256:"c".repeat(64),publisher:"Example".into(),source_url:"https://releases.example/source.tar.gz".into(),format:"exe".into()};
+        let mut release=Release {schema:1,product:PRODUCT.into(),version:"1.5.0".into(),sequence:2,edition:Edition::Customer,architecture:"x64".into(),channel:"stable".into(),expires_at:200,artifact_url:"https://releases.example/package.exe".into(),sha256:"a".repeat(64),installed_sha256:"b".repeat(64),agent_url:"https://releases.example/agent.exe".into(),agent_sha256:"c".repeat(64),publisher:"Example".into(),publisher_certificate_sha256:"d".repeat(64),windows_versions:vec!["windows_11".into()],source_url:"https://releases.example/source.tar.gz".into(),format:"exe".into()};
         assert!(release.validate(&Edition::Customer,1,100).is_ok());
         assert!(release.validate(&Edition::Customer,2,100).is_err());
         assert!(release.validate(&Edition::Technician,0,100).is_err());
         assert!(release.validate(&Edition::Customer,0,200).is_err());
-        release.installed_sha256.clear();assert!(release.validate(&Edition::Customer,0,100).is_err());
+        release.windows_versions=vec!["server_core".into()];assert!(release.validate(&Edition::Customer,0,100).is_err());
+        release.windows_versions=vec!["windows_11".into()];release.publisher_certificate_sha256="publisher label".into();assert!(release.validate(&Edition::Customer,0,100).is_err());
+        release.publisher_certificate_sha256="d".repeat(64);release.installed_sha256.clear();assert!(release.validate(&Edition::Customer,0,100).is_err());
     }
 }

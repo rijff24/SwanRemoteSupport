@@ -280,6 +280,8 @@ impl RendezvousMediator {
                     }
                 },
                 _ = timer.tick() => {
+                    #[cfg(feature = "swan_custom")]
+                    if crate::managed::refresh_defaults() {Self::restart();}
                     if SHOULD_EXIT.load(Ordering::SeqCst) {
                         break;
                     }
@@ -459,6 +461,8 @@ impl RendezvousMediator {
                     rz.handle_resp(msg.union, Sink::Stream(&mut conn), &server, &mut update_latency).await?
                 }
                 _ = timer.tick() => {
+                    #[cfg(feature = "swan_custom")]
+                    if crate::managed::refresh_defaults() {Self::restart();}
                     if SHOULD_EXIT.load(Ordering::SeqCst) {
                         break;
                     }

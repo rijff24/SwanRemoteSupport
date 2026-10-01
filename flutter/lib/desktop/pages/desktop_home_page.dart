@@ -5,11 +5,13 @@ import 'dart:convert';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_hbb/common.dart';
 import 'package:flutter_hbb/common/widgets/animated_rotation_widget.dart';
 import 'package:flutter_hbb/common/widgets/custom_password.dart';
 import 'package:flutter_hbb/consts.dart';
 import 'package:flutter_hbb/desktop/pages/connection_page.dart';
+import 'package:flutter_hbb/desktop/pages/company_technician_page.dart';
 import 'package:flutter_hbb/desktop/pages/desktop_setting_page.dart';
 import 'package:flutter_hbb/desktop/pages/desktop_tab_page.dart';
 import 'package:flutter_hbb/desktop/widgets/update_progress.dart';
@@ -50,6 +52,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
   var watchIsInputMonitoring = false;
   var watchIsCanRecordAudio = false;
   Timer? _updateTimer;
+  Timer? _companyRefreshTimer;
   bool isCardClosed = false;
 
   final RxBool _editHover = false.obs;
@@ -60,6 +63,9 @@ class _DesktopHomePageState extends State<DesktopHomePage>
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    if (bind.mainGetAppNameSync() == '$swanManagedAppName Technician' && bind.isOutgoingOnly()) {
+      return const CompanyTechnicianPage();
+    }
     final isIncomingOnly = bind.isIncomingOnly();
     return _buildBlock(
         child: Row(
@@ -88,7 +94,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
           alignment: Alignment.center,
           child: loadPowered(context),
         ),
-      Align(
+      if (!isSwanManagedClient) Align(
         alignment: Alignment.center,
         child: loadLogo(),
       ),
@@ -200,21 +206,28 @@ class _DesktopHomePageState extends State<DesktopHomePage>
         try {
           company = jsonDecode(snapshot.data ?? '{}') as Map<String, dynamic>;
         } catch (_) {}
-        final isReady = company['configured'] == true && company['enrolled'] == true;
-        final statusColor = isReady ? const Color(0xFF0A7D5A) : Colors.orange;
+        final configured = company['configured'] == true && company['enrolled'] == true;
+        final isReady = configured && company['profile_valid'] == true;
+        final color = company['primary_color'] as String? ?? '#007F82';
+        final brandColor = RegExp(r'^#[0-9a-fA-F]{6}$').hasMatch(color)
+            ? Color(0xFF000000 | int.parse(color.substring(1), radix: 16))
+            : const Color(0xFF007F82);
+        final statusColor = isReady ? brandColor : Colors.orange;
         final statusIcon = isReady ? Icons.verified_user : Icons.warning_amber;
         final statusTitle = isReady
             ? (company['unattended'] == true ? 'Unattended support enabled' : 'Customer approval required')
-            : 'Company setup is not complete';
+            : (configured ? 'Company authorization is unavailable' : 'Company setup is not complete');
         final statusText = isReady
             ? 'Only company-authorized technicians can request access. Your company must approve this device before support begins.'
-            : 'Run the company setup included with your download to verify its server and enroll this computer.';
+            : (configured ? 'Cached company branding is shown. A fresh signed configuration is required before support can begin.' : 'Run the company setup included with your download to verify its server and enroll this computer.');
 
         return Padding(
           padding: const EdgeInsets.fromLTRB(20, 16, 16, 8),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              if ((company['logo_svg'] as String? ?? '').isNotEmpty)
+                Padding(padding: const EdgeInsets.only(bottom: 12), child: SvgPicture.string(company['logo_svg'] as String, height: 64, width: 180)),
               Text(
                 company['display_name'] as String? ?? 'Swan Remote Support',
                 style: Theme.of(context).textTheme.titleLarge,
@@ -260,9 +273,9 @@ class _DesktopHomePageState extends State<DesktopHomePage>
               const SizedBox(height: 12),
               if (company['unattended'] == true)
                 TextButton.icon(
-                  onPressed: () {
-                    bind.mainSetCommon(key: 'company-revoke-unattended', value: 'N');
-                    setState(() {});
+                  onPressed: () async {
+                    await bind.mainSetCommon(key: 'company-revoke-unattended', value: 'N');
+                    if (mounted) setState(() {});
                   },
                   icon: const Icon(Icons.shield_outlined),
                   label: const Text('Revoke unattended access'),
@@ -788,6 +801,11 @@ class _DesktopHomePageState extends State<DesktopHomePage>
   @override
   void initState() {
     super.initState();
+    if (bind.mainGetAppNameSync().startsWith(swanManagedAppName)) {
+      _companyRefreshTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+        if (mounted) setState(() {});
+      });
+    }
     _updateTimer = periodic_immediate(const Duration(seconds: 1), () async {
       await gFFI.serverModel.fetchID();
       final error = await bind.mainGetError();
@@ -970,6 +988,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
     _uniLinksSubscription?.cancel();
     Get.delete<RxBool>(tag: 'stop-service');
     _updateTimer?.cancel();
+    _companyRefreshTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
