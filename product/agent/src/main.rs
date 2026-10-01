@@ -28,6 +28,12 @@ async fn main()->Result<()> {
             state.enroll(name,peer,args.iter().any(|a|a=="--unattended-consent")).await?;state.save(&directory)?;
             println!("Device enrolled. Company approval is required before remote access.");
         }
+        "verify-bootstrap"=>{
+            let file=args.get(2).context("Usage: swan-agent verify-bootstrap bootstrap.json")?;
+            let input:Bootstrap=serde_json::from_slice(&std::fs::read(file)?)?;
+            AgentState::load(&directory)?.validate_installer_bootstrap(&input)?;
+            println!("Installer company and trust match existing configuration.");
+        }
         "sync"=>{let mut state=AgentState::load_for_refresh(&directory)?;state.sync().await?;state.save(&directory)?;println!("Profile synchronized.");}
         "watch"=>{loop {match AgentState::load_for_refresh(&directory){Ok(mut state)=>{
             match state.sync().await{Ok(())=>state.save(&directory)?,Err(error)=>eprintln!("Profile refresh failed: {error}")};
@@ -104,7 +110,7 @@ async fn main()->Result<()> {
                 .env("SWAN_SESSION_PROOF_KEY",hex::encode(proof.to_bytes())).spawn()?;
             ensure!(child.wait()?.success(),"Technician application exited unsuccessfully");
         }
-        _=>{println!("Swan Remote Support configuration agent\nCommands: setup, enroll, sync, watch, update, revoke-unattended, allow-unattended --confirm-unattended, login, devices, history, logout, connect\nState directory: {}",directory.display());if command!="help"{bail!("Unknown command");}}
+        _=>{println!("Swan Remote Support configuration agent\nCommands: setup, verify-bootstrap, enroll, sync, watch, update, revoke-unattended, allow-unattended --confirm-unattended, login, devices, history, logout, connect\nState directory: {}",directory.display());if command!="help"{bail!("Unknown command");}}
     }
     Ok(())
 }

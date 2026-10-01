@@ -42,6 +42,13 @@ pub struct AgentState {
     pub last_release_sequence:u64,
 }
 impl AgentState {
+    pub fn validate_installer_bootstrap(&self,input:&Bootstrap)->Result<()> {
+        input.validate()?;let profile=self.company_profile()?;
+        ensure!(input.company_id==self.bootstrap.company_id && input.edition==self.bootstrap.edition,"Installer belongs to another company or edition");
+        ensure!(input.profile_public_key==self.bootstrap.profile_public_key && input.release_public_key==self.bootstrap.release_public_key,"Installer cannot replace configured trust keys");
+        ensure!(input.management_url.trim_end_matches('/')==profile.management_url.trim_end_matches('/'),"Installer endpoint differs from trusted company configuration");
+        Ok(())
+    }
     pub fn load(directory:&Path)->Result<Self> {
         let state=Self::load_for_refresh(directory)?;
         state.company_profile()?;
@@ -260,6 +267,15 @@ mod tests {
         let key=SigningKey::from_bytes(&[7;32]);let public=STANDARD.encode(key.verifying_key().as_bytes());
         let profile=CompanyProfile{schema:1,company_id:"test-company".into(),revision:1,issued_at:now()-1000,expires_at:now()+3600,management_url:"https://support.example.com".into(),rendezvous:"support.example.com".into(),relay:"support.example.com".into(),transport_public_key:public.clone(),customer:Branding::default(),technician:Branding::default(),allow_unattended:true,updates_paused:true,rollout_percent:100,maintenance_start_utc:0,maintenance_end_utc:0,update_channel:"test".into(),next_profile_public_key:None};
         AgentState{bootstrap:Bootstrap{schema:1,edition:Edition::Customer,company_id:profile.company_id.clone(),management_url:profile.management_url.clone(),profile_public_key:public.clone(),release_public_key:public},profile:SignedEnvelope::sign(&profile,&key).unwrap(),accepted_revision:1,device_id:Some("device".into()),device_token:Some(random_token()),unattended_consent:true,consent_revision:0,last_release_sequence:0}
+    }
+    #[test]
+    fn repair_bootstrap_cannot_change_company_edition_or_trust() {
+        let state=fixture();let original=state.bootstrap.clone();
+        assert!(state.validate_installer_bootstrap(&original).is_ok());
+        let mut changed=original.clone();changed.company_id="other-company".into();assert!(state.validate_installer_bootstrap(&changed).is_err());
+        let mut changed=original.clone();changed.edition=Edition::Technician;assert!(state.validate_installer_bootstrap(&changed).is_err());
+        let mut changed=original.clone();changed.management_url="https://other.example.com".into();assert!(state.validate_installer_bootstrap(&changed).is_err());
+        let mut changed=original;changed.profile_public_key=STANDARD.encode(SigningKey::from_bytes(&[12;32]).verifying_key().as_bytes());assert!(state.validate_installer_bootstrap(&changed).is_err());
     }
     #[test]
     fn explicit_consent_changes_survive_older_refreshes() {

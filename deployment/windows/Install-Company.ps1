@@ -32,6 +32,8 @@ if (-not (Test-Path -LiteralPath (Join-Path $editionDirectory 'managed-state.jso
     & $agent setup (Join-Path $root 'bootstrap.json') --accept-company
     if ($LASTEXITCODE -ne 0) { throw 'Company configuration verification failed.' }
 }
+& $agent verify-bootstrap (Join-Path $root 'bootstrap.json')
+if ($LASTEXITCODE -ne 0) { throw 'Installer does not match the configured company, edition or trust keys.' }
 $installers = @(Get-ChildItem -LiteralPath $root -File | Where-Object { $_.Name -match '^SwanRemoteSupport-install\.(exe|msi)$' })
 if ($installers.Count -ne 1) { throw 'Expected one company installer.' }
 & $agent verify-package (Join-Path $root 'release.json') $installers[0].FullName
