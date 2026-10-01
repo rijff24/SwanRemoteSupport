@@ -9,6 +9,18 @@ use std::path::Path;
 #[serde(deny_unknown_fields)]
 struct Receipt { release:SignedEnvelope, previous_sequence:u64, phase:String }
 
+fn require_existing_application(target:&Path)->Result<()> {
+    ensure!(target.is_file(),"Application was removed; automatic updates cannot reinstall it. Run explicit company setup or repair.");
+    Ok(())
+}
+
+#[cfg(windows)]
+fn installed_target(directory:&Path,edition:&Edition)->Result<std::path::PathBuf> {
+    if *edition==Edition::Technician {Ok(directory.join("SwanRemoteSupport-Technician.exe"))}else{
+        Ok(std::path::PathBuf::from(std::env::var_os("ProgramFiles").context("ProgramFiles unavailable")?).join("Swan Remote Support/Swan Remote Support.exe"))
+    }
+}
+
 pub fn validate_release(state:&AgentState,envelope:&SignedEnvelope)->Result<Release> {
     let profile=state.company_profile()?;
     let release:Release=envelope.verify(&public_key(&state.bootstrap.release_public_key)?)?;
@@ -97,6 +109,7 @@ impl AgentState {
     pub async fn update(&mut self,directory:&Path,technician_token:Option<&str>)->Result<bool> {
         #[cfg(not(windows))] {let _=(directory,technician_token);anyhow::bail!("Endpoint updates require Windows");}
         #[cfg(windows)] {
+            require_existing_application(&installed_target(directory,&self.bootstrap.edition)?)?;
             let profile=self.company_profile()?;
             if profile.updates_paused || !maintenance_open(profile.maintenance_start_utc,profile.maintenance_end_utc,now()){return Ok(false);}
             let receipt_path=directory.join("pending-update.json");
@@ -118,6 +131,8 @@ impl AgentState {
             fs2::FileExt::try_lock_exclusive(&activity).context("Update deferred while a session or technician app is active")?;
             // Re-read consent and enrollment immediately before installation.
             let mut latest=AgentState::load(directory)?;
+            // Removal during download must not be turned into a fresh install.
+            require_existing_application(&installed_target(directory,&latest.bootstrap.edition)?)?;
             validate_release(&latest,&envelope)?;
             let receipt=Receipt{release:envelope,previous_sequence:latest.last_release_sequence,phase:"installing".into()};
             let mut options=std::fs::OpenOptions::new();options.create_new(true).write(true);
@@ -146,9 +161,7 @@ impl AgentState {
 
 #[cfg(windows)]
 fn verify_installed(directory:&Path,release:&Release)->Result<()> {
-    let target=if release.edition==Edition::Technician {directory.join("SwanRemoteSupport-Technician.exe")}else{
-        std::path::PathBuf::from(std::env::var_os("ProgramFiles").context("ProgramFiles unavailable")?).join("Swan Remote Support/Swan Remote Support.exe")
-    };
+    let target=installed_target(directory,&release.edition)?;
     ensure!(digest(std::fs::read(&target)?).eq_ignore_ascii_case(&release.installed_sha256),"Installed executable differs from signed release; recovery remains pending");
     let mut installed=release.clone();installed.sha256=release.installed_sha256.clone();verify_publisher(&target,&installed)
 }
@@ -156,6 +169,17 @@ fn verify_installed(directory:&Path,release:&Release)->Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn removed_application_requires_explicit_setup_instead_of_automatic_reinstall() {
+        let folder=std::env::temp_dir().join(format!("swan-removed-{}",random_token()));
+        std::fs::create_dir(&folder).unwrap();let target=folder.join("endpoint.exe");
+        assert!(require_existing_application(&target).is_err());
+        std::fs::write(&target,b"installed test fixture").unwrap();
+        assert!(require_existing_application(&target).is_ok());
+        std::fs::remove_file(&target).unwrap();
+        assert!(require_existing_application(&target).is_err());
+        std::fs::remove_dir(folder).unwrap();
+    }
     #[test]
     fn update_lock_excludes_sessions_and_releases_on_close() {
         let folder=std::env::temp_dir().join(format!("swan-lock-{}",random_token()));
