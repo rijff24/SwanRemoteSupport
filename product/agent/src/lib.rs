@@ -150,8 +150,15 @@ impl AgentState {
     }
     pub async fn enroll(&mut self,name:&str,rustdesk_id:&str,consent:bool)->Result<()> {
         ensure!(self.bootstrap.edition==Edition::Customer,"Only customer edition enrolls devices");
-        ensure!(self.device_id.is_none(),"Already enrolled");
         let profile=self.company_profile()?;
+        if let Some(device)=self.device_id.as_ref() {
+            // Repair validates existing ownership instead of issuing new identity
+            // or changing consent merely because setup was run again.
+            let status:Value=self.client()?.get(self.endpoint("device/status")?).bearer_auth(self.device_token.as_ref().context("Missing enrolled credential")?).send().await?.error_for_status()?.json().await?;
+            ensure!(status["company_id"].as_str()==Some(self.bootstrap.company_id.as_str()) && status["device_id"].as_str()==Some(device.as_str()) && status["rustdesk_id"].as_str()==Some(rustdesk_id),"Repair cannot replace company enrollment or transport identity");
+            ensure!(matches!(status["state"].as_str(),Some("pending"|"approved")),"Device requires company administrator intervention");
+            return Ok(());
+        }
         ensure!(!consent || profile.allow_unattended,"Company has disabled unattended access");
         let result:Value=self.client()?.post(self.endpoint("enroll")?).json(&json!({"name":name,"rustdesk_id":rustdesk_id,"unattended_consent":consent})).send().await?.error_for_status()?.json().await?;
         ensure!(result["company_id"].as_str()==Some(self.bootstrap.company_id.as_str()),"Wrong company enrollment response");

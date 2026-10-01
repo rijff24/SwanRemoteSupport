@@ -42,6 +42,10 @@ async fn enrollment_mfa_and_grants_fail_closed() {
     assert_eq!(request(&app,"/api/v1/login","POST",None,login).await.0,StatusCode::UNAUTHORIZED,"MFA codes are single-use");
     let (_,device)=request(&app,"/api/v1/enroll","POST",None,json!({"name":"Customer test PC","rustdesk_id":"123456789","unattended_consent":false})).await;
     let device_id=device["device_id"].as_str().unwrap();let credential=device["device_token"].as_str().unwrap();
+    let (status,identity)=request(&app,"/api/v1/device/status","GET",Some(credential),Value::Null).await;
+    assert_eq!(status,StatusCode::OK);assert_eq!(identity["device_id"],device_id);assert_eq!(identity["rustdesk_id"],"123456789");assert_eq!(identity["state"],"pending");
+    let (status,_)=request(&app,"/api/v1/device/status","GET",Some("wrong-device-token"),Value::Null).await;
+    assert_eq!(status,StatusCode::UNAUTHORIZED);
     let proof=SigningKey::from_bytes(&[9;32]);let grant_request=json!({"device_id":device_id,"proof_public_key":STANDARD.encode(proof.verifying_key().as_bytes()),"unattended":false});
     assert_eq!(request(&app,"/api/v1/grants","POST",Some(admin),grant_request.clone()).await.0,StatusCode::FORBIDDEN,"Pending devices cannot be accessed");
     assert_eq!(request(&app,&format!("/api/v1/devices/{device_id}/state"),"PUT",Some(admin),json!({"state":"approved","group":"customers"})).await.0,StatusCode::OK);
@@ -64,6 +68,7 @@ async fn enrollment_mfa_and_grants_fail_closed() {
     assert_eq!(request(&app,&format!("/api/v1/groups/customers/users/{}",new_user["id"].as_str().unwrap()),"PUT",Some(admin),Value::Null).await.0,StatusCode::OK);
     let (_,devices)=request(&app,"/api/v1/devices","GET",Some(technician),Value::Null).await;assert_eq!(devices.as_array().unwrap().len(),1);
     assert_eq!(request(&app,&format!("/api/v1/devices/{device_id}/state"),"PUT",Some(admin),json!({"state":"revoked","group":"customers"})).await.0,StatusCode::OK);
+    assert_eq!(request(&app,"/api/v1/device/status","GET",Some(credential),Value::Null).await.0,StatusCode::UNAUTHORIZED,"Repair cannot restore a revoked device");
     assert_eq!(request(&app,"/api/v1/grants","POST",Some(admin),json!({"device_id":device_id,"proof_public_key":STANDARD.encode(proof.verifying_key().as_bytes()),"unattended":false})).await.0,StatusCode::FORBIDDEN);
     drop(app);drop(store);std::fs::remove_dir_all(directory).unwrap();
 }

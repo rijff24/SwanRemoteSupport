@@ -130,6 +130,7 @@ pub fn router(store:Shared)->Router {
         .route("/api/v1/devices",get(devices))
         .route("/api/v1/devices/{id}/state",put(device_state))
         .route("/api/v1/device/consent",put(consent))
+        .route("/api/v1/device/status",get(device_status))
         .route("/api/v1/groups/{group}/users/{user}",put(group_access))
         .route("/api/v1/grants",post(grant))
         .route("/api/v1/grants/claim",post(claim))
@@ -273,6 +274,13 @@ async fn device_state(State(s):State<Shared>,headers:HeaderMap,Path(id):Path<Str
 }
 #[derive(Deserialize)]
 struct Consent { unattended:bool }
+async fn device_status(State(s):State<Shared>,headers:HeaderMap)->ApiResult {
+    // Pending devices may inspect only their own identity, never session APIs.
+    let device:String=s.db.lock().unwrap().query_row("SELECT id FROM devices WHERE token_hash=?1 AND state IN ('pending','approved')",[digest(token(&headers)?)],|row|row.get(0)).optional()?.ok_or_else(unauthorized)?;
+    let company=s.profile()?.company_id;
+    let value=s.db.lock().unwrap().query_row("SELECT rustdesk_id,state FROM devices WHERE id=?1",[&device],|row|Ok(json!({"company_id":company,"device_id":device,"rustdesk_id":row.get::<_,String>(0)?,"state":row.get::<_,String>(1)?})))?;
+    Ok(Json(value))
+}
 async fn consent(State(s):State<Shared>,headers:HeaderMap,Json(input):Json<Consent>)->ApiResult {
     let device=s.device(&headers)?;
     if input.unattended && !s.profile()?.allow_unattended {return Err(denied());}
