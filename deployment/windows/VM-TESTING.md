@@ -14,6 +14,13 @@ provide full guest access; close QEMU when the guest is not under test.
 `New-TestVm.ps1` requires an already verified QEMU installation and ISO. It
 refuses existing VM directories. Prefer WHPX after checking it starts on the
 host; TCG is a slower fallback. The host must retain 1.5 GiB available memory.
+`New-LocalTestVm.ps1 -EnvironmentFile PATH_TO_PRIVATE_ENV` reads the six
+`SWAN_VM_*` settings from the private environment file without executing them.
+It requires `ISO_PATH.download-complete.json` containing `bytes` and `sha256`,
+recorded only after the official HTTPS download exits successfully. It verifies
+the recorded size and hash before creating a guest. This record proves local
+download integrity; it does not replace verification of the Microsoft origin.
+Do not write the completion record while a downloader is still running.
 Windows 11 also requires supported UEFI/Secure Boot and TPM configuration:
 the generic starter script is for Server guests and does not establish Windows
 11 compatibility. Do not bypass Windows 11 hardware requirements for acceptance.
@@ -43,3 +50,7 @@ Official media starting points:
 
 Evaluation expiration or missing supported media must be reported as an
 unverified matrix row, never as a passing compatibility test.
+
+The first local WHPX probe reported `Unexpected VP exit code 4`; the isolated
+guest was stopped. Its sparse disk is preserved outside Git. No operating
+system installation or accelerator compatibility is established by that probe.
