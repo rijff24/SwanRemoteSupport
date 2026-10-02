@@ -51,6 +51,13 @@ async fn main()->Result<()> {
             println!("Update installed: {}",state.update(&directory,token.as_deref()).await?);
         }
         #[cfg(windows)]
+        "record-installation"=>{
+            let file=args.get(2).context("Usage: swan-agent record-installation release.json")?;
+            let envelope:SignedEnvelope=serde_json::from_slice(&std::fs::read(file)?)?;
+            let mut state=AgentState::load(&directory)?;state.record_installation(&directory,&envelope)?;
+            println!("Installed application and agent identities verified; release sequence recorded.");
+        }
+        #[cfg(windows)]
         "recover-update"=>{let mut state=AgentState::load_for_refresh(&directory)?;state.recover_update(&directory)?;println!("Installed release verified and update state recovered.");}
         #[cfg(windows)]
         "verify-installed"=>{

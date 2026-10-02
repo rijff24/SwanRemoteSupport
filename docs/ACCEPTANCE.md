@@ -48,6 +48,14 @@ native support session or a clean-machine installation.
 
 ## Requirements still to demonstrate
 
+Initial setup now verifies installed endpoint and agent hashes/publishers against
+signed release metadata and records the release sequence before enabling the
+customer watcher. Technician setup copies its portable executable, agent and
+launcher to a durable per-user directory and creates a Start menu shortcut;
+launch no longer installs opportunistically from the extracted download. Rust
+compilation/component tests and PowerShell parsing pass. Actual signed setup,
+same-release repair, launcher use and uninstall remain unverified or incomplete.
+
 The built product executables at `20f88e3` additionally passed a fresh-company
 HTTPS lifecycle test with an offline-consent fault injected through the local
 proxy. Revocation remained durable locally during HTTP 503 responses; the

@@ -53,6 +53,8 @@ if ($bootstrap.edition -eq 'customer') {
     & $agent @enrollmentArguments
     if ($LASTEXITCODE -ne 0) { throw 'Device enrollment failed. Access remains blocked.' }
     Copy-Item -LiteralPath $agent -Destination (Join-Path $editionDirectory 'swan-agent.exe') -Force
+    & $agent record-installation (Join-Path $root 'release.json')
+    if ($LASTEXITCODE -ne 0) { throw 'Installed application or configuration agent verification failed. Background updates were not enabled.' }
     $action = New-ScheduledTaskAction -Execute (Join-Path $editionDirectory 'swan-agent.exe') -Argument 'watch'
     $trigger = New-ScheduledTaskTrigger -AtStartup
     $settings = New-ScheduledTaskSettingsSet -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 1) -ExecutionTimeLimit ([TimeSpan]::Zero)
@@ -60,5 +62,23 @@ if ($bootstrap.edition -eq 'customer') {
     Start-ScheduledTask -TaskName 'Swan Company Configuration'
     Write-Host 'Installed and enrolled. Your company must approve the device. Support status and stop controls remain available.'
 } else {
-    Write-Host 'Technician company profile verified. Run Open-Technician.ps1 to sign in and request support sessions.'
+    $releaseEnvelope = Get-Content -LiteralPath (Join-Path $root 'release.json') -Raw | ConvertFrom-Json
+    # The agent already verified this signed metadata and installer before any copy.
+    $release = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($releaseEnvelope.payload)) | ConvertFrom-Json
+    if ($release.format -ne 'exe' -or $release.sha256 -cne $release.installed_sha256) { throw 'Technician setup requires a portable EXE with matching installed identity.' }
+    $portable = Join-Path $editionDirectory 'SwanRemoteSupport-Technician.exe'
+    Copy-Item -LiteralPath $installers[0].FullName -Destination $portable -Force
+    Copy-Item -LiteralPath $agent -Destination (Join-Path $editionDirectory 'swan-agent.exe') -Force
+    & $agent record-installation (Join-Path $root 'release.json')
+    if ($LASTEXITCODE -ne 0) { throw 'Technician installed application or agent verification failed.' }
+    Copy-Item -LiteralPath (Join-Path $root 'Open-Technician.ps1') -Destination (Join-Path $editionDirectory 'Open-Technician.ps1') -Force
+    $shortcutPath = Join-Path ([Environment]::GetFolderPath('Programs')) 'Swan Remote Support Technician.lnk'
+    $shell = New-Object -ComObject WScript.Shell
+    $shortcut = $shell.CreateShortcut($shortcutPath)
+    $shortcut.TargetPath = Join-Path $env:SystemRoot 'System32/WindowsPowerShell/v1.0/powershell.exe'
+    $shortcut.Arguments = '-NoLogo -NoProfile -ExecutionPolicy Bypass -File "' + (Join-Path $editionDirectory 'Open-Technician.ps1') + '"'
+    $shortcut.WorkingDirectory = $editionDirectory
+    $shortcut.IconLocation = $portable
+    $shortcut.Save()
+    Write-Host 'Technician application installed. Use the Start menu shortcut to sign in and request support sessions.'
 }

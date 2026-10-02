@@ -92,11 +92,26 @@ fn save_installed_metadata(directory:&Path,envelope:&SignedEnvelope)->Result<()>
 
 impl AgentState {
     #[cfg(windows)]
+    pub fn record_installation(&mut self,directory:&Path,envelope:&SignedEnvelope)->Result<()> {
+        let activity=activity_file(directory)?;fs2::FileExt::try_lock_exclusive(&activity).context("Installation verification requires all sessions to close")?;
+        let mut latest=AgentState::load(directory)?;
+        let release=validate_release(&latest,envelope)?;
+        verify_compatibility(directory,&release)?;
+        verify_installed(directory,&release)?;
+        let agent=directory.join("swan-agent.exe");
+        ensure!(digest(std::fs::read(&agent)?).eq_ignore_ascii_case(&release.agent_sha256),"Installed configuration agent differs from signed release");
+        let mut agent_release=release.clone();agent_release.sha256=release.agent_sha256.clone();verify_publisher(&agent,&agent_release)?;
+        save_installed_metadata(directory,envelope)?;
+        latest.last_release_sequence=release.sequence;latest.save(directory)?;*self=latest;Ok(())
+    }
+    #[cfg(windows)]
     pub fn recover_update(&mut self,directory:&Path)->Result<()> {
         let activity=activity_file(directory)?;fs2::FileExt::try_lock_exclusive(&activity).context("Recovery requires all sessions to close")?;
         let receipt_path=directory.join("pending-update.json");
         let receipt:Receipt=serde_json::from_slice(&std::fs::read(&receipt_path)?)?;
         let release:Release=receipt.release.verify(&public_key(&self.bootstrap.release_public_key)?)?;
+        ensure!(receipt.phase=="installing","Unknown update recovery phase");
+        release.validate(&self.bootstrap.edition,receipt.previous_sequence,now().min(release.expires_at.saturating_sub(1)))?;
         ensure!(release.edition==self.bootstrap.edition && release.product==PRODUCT && release.schema==SCHEMA,"Wrong recovery release");
         ensure!(self.last_release_sequence==receipt.previous_sequence || self.last_release_sequence==release.sequence,"Recovery sequence conflict");
         verify_installed(directory,&release)?;
