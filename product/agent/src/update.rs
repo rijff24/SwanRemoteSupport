@@ -250,11 +250,23 @@ pub fn powershell_command()->Result<std::process::Command> {
 
 #[cfg(windows)]
 fn verify_publisher(path:&Path,release:&Release)->Result<()> {
-    let script=path.parent().context("Missing update directory")?.join("Verify-Package.ps1");
-    std::fs::write(&script,include_str!("../../../deployment/windows/Verify-Package.ps1"))?;
-    let status=powershell_command()?.args(["-NoLogo","-NoProfile","-NonInteractive","-ExecutionPolicy","Bypass","-File"])
-        .arg(script).arg("-Path").arg(path).arg("-Publisher").arg(&release.publisher).arg("-CertificateSha256").arg(&release.publisher_certificate_sha256).arg("-Sha256").arg(&release.sha256).status()?;
+    // Packages may reside in a read-only deployment share. Execute the embedded
+    // verifier without writing beside the package or trusting a mutable helper.
+    let encoded=publisher_verification_command(path,release)?;
+    let status=powershell_command()?.args(["-NoLogo","-NoProfile","-NonInteractive","-ExecutionPolicy","Bypass","-EncodedCommand"])
+        .arg(encoded).status()?;
     ensure!(status.success(),"Package publisher verification failed");Ok(())
+}
+
+#[cfg(any(windows,test))]
+fn publisher_verification_command(path:&Path,release:&Release)->Result<String> {
+    let literal=|value:&str|format!("'{}'",value.replace('\'',"''"));
+    let command=format!("& {{\n{}\n}} -Path {} -Publisher {} -CertificateSha256 {} -Sha256 {}",
+        include_str!("../../../deployment/windows/Verify-Package.ps1"),
+        literal(path.to_str().context("Package path is not valid Unicode")?),
+        literal(&release.publisher),literal(&release.publisher_certificate_sha256),literal(&release.sha256));
+    let bytes:Vec<u8>=command.encode_utf16().flat_map(u16::to_le_bytes).collect();
+    Ok(STANDARD.encode(bytes))
 }
 
 #[cfg(windows)]

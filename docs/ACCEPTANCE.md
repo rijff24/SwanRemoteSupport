@@ -1,10 +1,57 @@
 # Configurable product acceptance report
 
-Development status, 2 October 2026. **The product is not complete or approved for
+Development status, 3 October 2026. **The product is not complete or approved for
 production publication.** A passing component test is not evidence of a working
 native support session or a clean-machine installation.
 
 ## Evidence obtained
+
+### Windows full-stack company server and technician worker, 3 October
+
+The disposable Windows Server 2016 Standard Evaluation guest (Desktop
+Experience, build 14393) installed the native management service from source
+`6840d910c252d8fb7d5c34ca7dffbc2a2ddffb4b` using the installer at `c27e9b7`.
+Its mandatory publisher verification passed with a private, guest-trusted lab
+code-signing certificate. The installer deployed the pinned rendezvous, relay
+and HTTPS components. Stopping the management service stopped all three owned
+children; restarting it restored service. This does not prove crash recovery
+or product behavior after reboot.
+
+A private HTTPS fixture deliberately disabled automatic CA trust installation.
+TLS 1.2 requests rejected its untrusted certificate, then succeeded after
+explicitly importing its public CA into the guest's root store. Fresh company
+setup, separate customer/technician branding, administrator TOTP login,
+rejection of the consumed setup code, and worker registration passed over
+HTTPS. Host trust, DNS, production services and firewall were not changed.
+
+The real outbound Windows worker consumed an administrator-approved,
+Ed25519-signed test release, downloaded and verified its company-signed
+technician EXE and agent, and uploaded a completed ten-entry installation
+bundle. Anonymous technician download was rejected. An authenticated download
+matched SHA-256
+`8308a3842d1536150585097b019acb77f4219a0cd19246778ff9c743bdfacbc6`.
+The bootstrap contained only schema, edition, company identity, HTTPS endpoint
+and public profile/release verification keys. Credentials and signing private
+keys remain in the isolated lab, outside the repository.
+
+These results prove a technician **EXE bundle generation and access-control
+flow** on that guest. They do not prove installation of that bundle, customer
+package generation, MSI signing, automatic updates, native sessions, public
+Internet reachability, other Windows versions, or production signing approval.
+
+The subsequent standard-user bundle installation passed HTTPS company setup
+and profile pinning, then failed package verification with Windows access
+denied: the agent attempted to write its verifier beside the package in the
+administrator-extracted, read-only bundle directory. The agent now runs its
+embedded verifier as an encoded PowerShell command with quoted literal
+arguments, without creating or trusting a helper in that directory. A rebuilt
+GNU development agent passed package verification under the same standard
+account against the same signed package and read-only directory. Its agent
+suite passed 21 tests with two explicit integration fixtures ignored. This is
+verification regression evidence only: the replacement development agent is
+unsigned, was not published in a bundle, and has not completed installation.
+
+### Earlier component evidence
 
 - Public baseline tag `swan-single-company-baseline-1.4.9` preserves the original
   Swan deployment and build instructions. Its source was not replaced.
