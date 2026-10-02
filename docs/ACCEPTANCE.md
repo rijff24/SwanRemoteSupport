@@ -243,3 +243,13 @@ group removal, inventory and new-grant denial, non-revival after re-grant, prior
 MFA/enrollment/branding checks and offline consent recovery. Exact binary hashes
 and private result records remain in ignored test data. This does not verify
 production certificate deployment, native sessions, signed installers or VMs.
+
+Device revocation/pending transitions and device group moves now close existing
+grants in the same audited transaction, preventing re-approval or moving back
+from reviving them. Unattended consent revocation permanently closes unattended
+grants while preserving attended grants. All 28 workspace tests pass, and the
+expanded API lifecycle additionally verifies re-consent non-revival, attended
+authorization preservation, device re-approval denial and group move/back denial
+including administrator grants. Native session shutdown on lease expiry remains
+unverified. Current native CI was confirmed building the branded client, with
+no terminal result yet.

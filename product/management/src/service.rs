@@ -283,9 +283,15 @@ struct DeviceState { state:String,group:String }
 async fn device_state(State(s):State<Shared>,headers:HeaderMap,Path(id):Path<String>,Json(input):Json<DeviceState>)->ApiResult {
     let actor=s.user(&headers,true)?;
     if !["approved","revoked","pending"].contains(&input.state.as_str()) || input.group.is_empty() || input.group.len()>64 {return Err(bad("Invalid state or group"));}
-    let count=s.db.lock().unwrap().execute("UPDATE devices SET state=?1,group_id=?2 WHERE id=?3",params![input.state,input.group,id])?;
-    if count==0 {return Err(ApiError(StatusCode::NOT_FOUND,"Device not found"));}
-    s.audit(&actor,&format!("device.{}",input.state),&id)?;Ok(Json(json!({"ok":true})))
+    let mut db=s.db.lock().unwrap();let tx=db.transaction()?;
+    let previous_group:Option<String>=tx.query_row("SELECT group_id FROM devices WHERE id=?1",[&id],|row|row.get(0)).optional()?;
+    let previous_group=previous_group.ok_or(ApiError(StatusCode::NOT_FOUND,"Device not found"))?;
+    tx.execute("UPDATE devices SET state=?1,group_id=?2 WHERE id=?3",params![input.state,input.group,id])?;
+    if input.state!="approved" || input.group!=previous_group {
+        tx.execute("UPDATE grants SET closed=1,lease_until=0 WHERE device_id=?1",[&id])?;
+    }
+    tx.execute("INSERT INTO audit(at,actor,event,target) VALUES(?1,?2,?3,?4)",params![now(),actor,format!("device.{}",input.state),id])?;
+    tx.commit()?;Ok(Json(json!({"ok":true})))
 }
 #[derive(Deserialize)]
 struct Consent { unattended:bool,revision:u64 }
@@ -308,6 +314,16 @@ async fn consent(State(s):State<Shared>,headers:HeaderMap,Json(input):Json<Conse
         if input.revision<revision || (input.revision==revision && input.unattended && !enabled) {return Err(ApiError(StatusCode::CONFLICT,"Consent request superseded"));}
         if input.revision==revision && input.unattended==enabled {return Ok(Json(json!({"ok":true})));}
         transaction.execute("UPDATE devices SET unattended=?1 WHERE id=?2",params![input.unattended,device])?;
+        if !input.unattended {
+            let ids={
+                let mut statement=transaction.prepare("SELECT id,body FROM grants WHERE device_id=?1 AND closed=0")?;
+                let rows=statement.query_map([&device],|row|Ok((row.get::<_,String>(0)?,row.get::<_,String>(1)?)))?;
+                let mut ids=Vec::new();
+                for row in rows {let (id,body)=row?;let grant:SessionGrant=serde_json::from_str(&body)?;if grant.unattended {ids.push(id);}}
+                ids
+            };
+            for id in ids {transaction.execute("UPDATE grants SET closed=1,lease_until=0 WHERE id=?1",[id])?;}
+        }
         transaction.execute("INSERT INTO device_consent_revisions(device_id,revision) VALUES(?1,?2) ON CONFLICT(device_id) DO UPDATE SET revision=excluded.revision",params![device,input.revision])?;
         transaction.commit()?;
     }

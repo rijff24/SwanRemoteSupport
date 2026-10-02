@@ -67,10 +67,16 @@ async fn enrollment_mfa_and_grants_fail_closed() {
     assert_eq!(history[0]["claimed"],true);
     assert_eq!(request(&app,"/api/v1/grants","POST",Some(admin),json!({"device_id":device_id,"proof_public_key":STANDARD.encode(proof.verifying_key().as_bytes()),"unattended":true})).await.0,StatusCode::FORBIDDEN,"Unattended access needs device consent");
     assert_eq!(request(&app,"/api/v1/device/consent","PUT",Some(credential),json!({"unattended":true,"revision":1})).await.0,StatusCode::OK);
+    let (_,unattended_envelope)=request(&app,"/api/v1/grants","POST",Some(admin),json!({"device_id":device_id,"proof_public_key":STANDARD.encode(proof.verifying_key().as_bytes()),"unattended":true})).await;
+    let signed:SignedEnvelope=serde_json::from_value(unattended_envelope.clone()).unwrap();
+    let unattended_grant:SessionGrant=serde_json::from_slice(&STANDARD.decode(&signed.payload).unwrap()).unwrap();
+    assert_eq!(request(&app,"/api/v1/grants/claim","POST",Some(credential),json!({"grant":unattended_envelope})).await.0,StatusCode::OK);
     assert_eq!(request(&app,"/api/v1/device/consent","PUT",Some(credential),json!({"unattended":false,"revision":2})).await.0,StatusCode::OK);
     assert_eq!(request(&app,"/api/v1/device/consent","PUT",Some(credential),json!({"unattended":true,"revision":1})).await.0,StatusCode::CONFLICT,"Delayed enable cannot undo revocation");
     assert_eq!(request(&app,"/api/v1/device/consent","PUT",Some(credential),json!({"unattended":true,"revision":2})).await.0,StatusCode::CONFLICT,"Revocation wins same-revision races");
     assert_eq!(request(&app,"/api/v1/device/consent","PUT",Some(credential),json!({"unattended":true,"revision":3})).await.0,StatusCode::OK);
+    assert_eq!(request(&app,&format!("/api/v1/grants/{}/renew",unattended_grant.grant_id),"POST",Some(credential),Value::Null).await.0,StatusCode::FORBIDDEN,"New consent cannot revive old unattended authorization");
+    assert_eq!(request(&app,&format!("/api/v1/grants/{}/renew",issued.grant_id),"POST",Some(credential),Value::Null).await.0,StatusCode::OK,"Unattended revocation must preserve attended authorization");
     assert_eq!(request(&app,"/api/v1/device/consent","PUT",Some(credential),json!({"unattended":false,"revision":2})).await.0,StatusCode::CONFLICT,"Old retry cannot undo newer explicit consent");
     assert_eq!(request(&app,"/api/v1/device/consent","PUT",Some(credential),json!({"unattended":false,"revision":4})).await.0,StatusCode::OK);
     assert_eq!(request(&app,"/api/v1/device/consent","PUT",Some(credential),json!({"unattended":false,"revision":4})).await.0,StatusCode::OK,"Revocation retries are idempotent");
@@ -105,6 +111,16 @@ async fn enrollment_mfa_and_grants_fail_closed() {
     assert_eq!(request(&app,&format!("/api/v1/devices/{device_id}/state"),"PUT",Some(admin),json!({"state":"revoked","group":"customers"})).await.0,StatusCode::OK);
     assert_eq!(request(&app,"/api/v1/device/status","GET",Some(credential),Value::Null).await.0,StatusCode::UNAUTHORIZED,"Repair cannot restore a revoked device");
     assert_eq!(request(&app,"/api/v1/grants","POST",Some(admin),json!({"device_id":device_id,"proof_public_key":STANDARD.encode(proof.verifying_key().as_bytes()),"unattended":false})).await.0,StatusCode::FORBIDDEN);
+    assert_eq!(request(&app,&format!("/api/v1/devices/{device_id}/state"),"PUT",Some(admin),json!({"state":"approved","group":"customers"})).await.0,StatusCode::OK);
+    assert_eq!(request(&app,&format!("/api/v1/grants/{}/renew",issued.grant_id),"POST",Some(credential),Value::Null).await.0,StatusCode::FORBIDDEN,"Re-approval cannot revive authorization from before device revocation");
+    let (_,moved_envelope)=request(&app,"/api/v1/grants","POST",Some(admin),json!({"device_id":device_id,"proof_public_key":STANDARD.encode(proof.verifying_key().as_bytes()),"unattended":false})).await;
+    let signed:SignedEnvelope=serde_json::from_value(moved_envelope.clone()).unwrap();
+    let moved_grant:SessionGrant=serde_json::from_slice(&STANDARD.decode(&signed.payload).unwrap()).unwrap();
+    assert_eq!(request(&app,"/api/v1/grants/claim","POST",Some(credential),json!({"grant":moved_envelope})).await.0,StatusCode::OK);
+    for group in ["another-group","customers"] {
+        assert_eq!(request(&app,&format!("/api/v1/devices/{device_id}/state"),"PUT",Some(admin),json!({"state":"approved","group":group})).await.0,StatusCode::OK);
+        assert_eq!(request(&app,&format!("/api/v1/grants/{}/renew",moved_grant.grant_id),"POST",Some(credential),Value::Null).await.0,StatusCode::FORBIDDEN,"Group moves must invalidate old grants, including administrator grants");
+    }
     drop(app);drop(store);std::fs::remove_dir_all(directory).unwrap();
 }
 
