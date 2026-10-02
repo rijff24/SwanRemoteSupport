@@ -126,7 +126,7 @@ async fn technician_request_inner(request:&str)->ResultType<serde_json::Value> {
         return Ok(json!({"handed_off":false,"started":true}));
     }
     if action=="update-status" {
-        let envelope=state.approved_update(Some(&token)).await?;
+        let envelope=state.approved_update(&directory,Some(&token)).await?;
         let memory=TECHNICIAN.lock().unwrap();
         if memory.generation!=generation || memory.login.is_none(){bail!("Login changed during update discovery");}
         let Some(envelope)=envelope else{return Ok(serde_json::Value::Null);};

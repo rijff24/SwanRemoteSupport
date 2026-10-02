@@ -13,6 +13,8 @@ struct Receipt {
     phase:String,
     #[serde(default)]
     previous_release:Option<SignedEnvelope>,
+    #[serde(default)]
+    rollback_protocol:u32,
 }
 
 fn require_existing_application(target:&Path)->Result<()> {
@@ -48,7 +50,7 @@ pub fn validate_repair_release(state:&AgentState,envelope:&SignedEnvelope,instal
 
 #[cfg(any(windows,test))]
 pub(crate) fn validate_recovery_release(state:&AgentState,envelope:&SignedEnvelope,previous_sequence:u64,phase:&str)->Result<Release> {
-    ensure!(phase=="installing","Unknown update recovery phase");
+    ensure!(matches!(phase,"installing"|"rolling_back"),"Unknown update recovery phase");
     let release:Release=envelope.verify(&public_key(&state.bootstrap.release_public_key)?)?;
     release.validate(&state.bootstrap.edition,previous_sequence,now().min(release.expires_at.saturating_sub(1)))?;
     ensure!(state.last_release_sequence==previous_sequence || state.last_release_sequence==release.sequence,"Recovery sequence conflict");
@@ -61,7 +63,43 @@ fn installation_release(state:&AgentState,directory:&Path,envelope:&SignedEnvelo
     if repair {
         let installed:SignedEnvelope=serde_json::from_slice(&std::fs::read(directory.join("installed-release.json"))?)?;
         validate_repair_release(state,envelope,&installed)
-    }else{validate_release(state,envelope)}
+    }else{
+        let release=validate_release(state,envelope)?;
+        ensure!(release.sequence>failed_release_sequence(state,directory)?,"Failed release is quarantined; approve a newer release");
+        Ok(release)
+    }
+}
+
+#[cfg(any(windows,test))]
+fn validate_pending_receipt(state:&AgentState,receipt:&Receipt)->Result<Release> {
+    ensure!(receipt.rollback_protocol<=1,"Unsupported pending rollback protocol");
+    let release=validate_recovery_release(state,&receipt.release,receipt.previous_sequence,&receipt.phase)?;
+    if let Some(previous)=receipt.previous_release.as_ref(){
+        let old=validate_previous_release(state,previous,receipt.previous_sequence)?;
+        ensure!(old.format==release.format,"Installer format migration requires explicit setup");
+    }
+    if receipt.phase=="rolling_back" {
+        ensure!(state.last_release_sequence==receipt.previous_sequence,"Cannot roll back a committed newer installation");
+        let previous=receipt.previous_release.as_ref().context("Rollback requires previous release metadata")?;
+        ensure!(receipt.rollback_protocol==1 && validate_previous_release(state,previous,receipt.previous_sequence)?.rollback_protocol==1,"Previous release cannot enforce rollback quarantine");
+    }
+    Ok(release)
+}
+
+fn failed_release_sequence(state:&AgentState,directory:&Path)->Result<u64> {
+    let path=directory.join("failed-update.json");
+    let bytes=match std::fs::read(path) {
+        Ok(bytes)=>bytes,
+        Err(error) if error.kind()==std::io::ErrorKind::NotFound=>return Ok(0),
+        Err(error)=>return Err(error).context("Cannot read failed update quarantine"),
+    };
+    let receipt:Receipt=serde_json::from_slice(&bytes)?;
+    ensure!(receipt.phase=="rolled_back" && receipt.rollback_protocol==1,"Invalid failed update quarantine");
+    let release:Release=receipt.release.verify(&public_key(&state.bootstrap.release_public_key)?)?;
+    release.validate(&state.bootstrap.edition,receipt.previous_sequence,now().min(release.expires_at.saturating_sub(1)))?;
+    let previous=receipt.previous_release.context("Failed update lacks previous release")?;
+    ensure!(validate_previous_release(state,&previous,receipt.previous_sequence)?.rollback_protocol==1,"Previous release does not support quarantine");
+    Ok(release.sequence)
 }
 
 async fn download(url:&str,hash:&str,path:&Path)->Result<()> {
@@ -89,6 +127,28 @@ fn publish_download(path:&Path,bytes:&[u8])->Result<()> {
         crate::replace_state(&temporary,path).context("Cannot publish complete download")
     })();
     if result.is_err(){std::fs::remove_file(&temporary).context("Cannot remove failed download staging file")?;}
+    result
+}
+
+#[cfg(any(windows,test))]
+fn publish_initial_receipt(path:&Path,receipt:&Receipt)->Result<()> {
+    use std::io::Write;
+    let temporary=path.parent().context("Missing receipt directory")?.join(format!("swan-receipt-{}.tmp",random_token()));
+    let mut file=std::fs::OpenOptions::new().create_new(true).write(true).open(&temporary)?;
+    let result=(||->Result<()> {
+        file.write_all(&serde_json::to_vec(receipt)?)?;file.sync_all()?;drop(file);
+        #[cfg(windows)] {
+            use std::os::windows::ffi::OsStrExt;
+            use windows_sys::Win32::Storage::FileSystem::{MoveFileExW,MOVEFILE_WRITE_THROUGH};
+            let from:Vec<u16>=temporary.as_os_str().encode_wide().chain(Some(0)).collect();
+            let to:Vec<u16>=path.as_os_str().encode_wide().chain(Some(0)).collect();
+            // Do not replace a receipt another updater already published.
+            if unsafe{MoveFileExW(from.as_ptr(),to.as_ptr(),MOVEFILE_WRITE_THROUGH)}==0 {return Err(std::io::Error::last_os_error().into());}
+        }
+        #[cfg(not(windows))] {std::fs::hard_link(&temporary,path)?;std::fs::remove_file(&temporary)?;}
+        Ok(())
+    })();
+    if result.is_err(){std::fs::remove_file(&temporary).context("Cannot clean failed receipt staging")?;}
     result
 }
 
@@ -219,13 +279,54 @@ fn save_installed_metadata(directory:&Path,envelope:&SignedEnvelope)->Result<()>
     crate::replace_state(&temporary,&directory.join("installed-release.json"))
 }
 
-#[cfg(any(windows,test))]
 pub(crate) fn validate_previous_release(state:&AgentState,envelope:&SignedEnvelope,previous_sequence:u64)->Result<Release> {
     ensure!(previous_sequence>0,"Rollback requires a recorded signed installation");
     let release:Release=envelope.verify(&public_key(&state.bootstrap.release_public_key)?)?;
     release.validate(&state.bootstrap.edition,previous_sequence-1,now().min(release.expires_at.saturating_sub(1)))?;
     ensure!(release.sequence==previous_sequence,"Rollback release differs from previous installation");
     Ok(release)
+}
+
+#[cfg(windows)]
+fn save_receipt(path:&Path,receipt:&Receipt)->Result<()> {
+    publish_download(path,&serde_json::to_vec(receipt)?)
+}
+
+#[cfg(windows)]
+fn agent_rollback_protocol(agent:&Path,directory:&Path)->Result<u32> {
+    let output=std::process::Command::new(agent).arg("rollback-protocol")
+        .env("SWAN_STATE_DIR",directory).env_remove("SWAN_TECHNICIAN_TOKEN")
+        .env_remove("SWAN_SESSION_GRANT").env_remove("SWAN_SESSION_PROOF_KEY")
+        .output().context("Cannot inspect signed previous agent rollback support")?;
+    // Older signed agents may not implement the command. They can still upgrade,
+    // but cannot be automatically restored with an unsupported quarantine format.
+    Ok(if output.status.success() && std::str::from_utf8(&output.stdout)?.trim()=="1" {1}else{0})
+}
+
+#[cfg(windows)]
+fn rollback_portable(state:&AgentState,directory:&Path,folder:&Path,receipt:&Receipt)->Result<()> {
+    ensure!(receipt.rollback_protocol==1 && receipt.phase=="rolling_back","Rollback was not durably prepared");
+    ensure!(state.last_release_sequence==receipt.previous_sequence,"Cannot roll back a committed newer installation");
+    let previous=receipt.previous_release.as_ref().context("Rollback requires a signed previous release")?;
+    let release=validate_previous_release(state,previous,receipt.previous_sequence)?;
+    ensure!(release.rollback_protocol==1 && release.edition==Edition::Technician && release.format=="exe" && release.sha256.eq_ignore_ascii_case(&release.installed_sha256),"Portable rollback requires a compatible portable release and cannot modify MSI or customer registrations");
+    let snapshot=folder.join("rollback");
+    verify_compatibility(directory,&release)?;
+    verify_rollback_snapshot(state,&snapshot,previous,receipt.previous_sequence)?;
+    ensure!(agent_rollback_protocol(&snapshot.join("agent/swan-agent.exe"),directory)?==1,"Previous agent cannot enforce failed-release quarantine");
+    let target=installed_target(directory,&state.bootstrap.edition)?;
+    require_existing_application(&target)?;
+    replace_verified_file(&snapshot.join("endpoint/SwanRemoteSupport-Technician.exe"),&target,&release.installed_sha256)?;
+    replace_verified_file(&snapshot.join("agent/swan-agent.exe"),&directory.join("swan-agent.exe"),&release.agent_sha256)?;
+    verify_installed(directory,&release)?;
+    save_installed_metadata(directory,previous)?;
+    let mut failed=receipt.clone();failed.phase="rolled_back".into();
+    ensure!(receipt.release.verify::<Release>(&public_key(&state.bootstrap.release_public_key)?)?.sequence>=failed_release_sequence(state,directory)?,"Cannot lower failed-release quarantine");
+    // Persist quarantine before unblocking sessions. No enrollment or consent
+    // state is restored, and the installed sequence never advances on failure.
+    save_receipt(&directory.join("failed-update.json"),&failed)?;
+    std::fs::remove_file(directory.join("pending-update.json"))?;
+    Ok(())
 }
 
 #[cfg(windows)]
@@ -243,12 +344,13 @@ fn verify_rollback_snapshot(state:&AgentState,directory:&Path,envelope:&SignedEn
 }
 
 #[cfg(windows)]
-fn prepare_rollback_snapshot(state:&AgentState,directory:&Path,update_sequence:u64)->Result<SignedEnvelope> {
+fn prepare_rollback_snapshot(state:&AgentState,directory:&Path,update:&Release)->Result<SignedEnvelope> {
     let envelope:SignedEnvelope=serde_json::from_slice(&std::fs::read(directory.join("installed-release.json"))?)?;
     let previous=validate_previous_release(state,&envelope,state.last_release_sequence)?;
+    ensure!(previous.format==update.format,"Installer format migration requires explicit setup");
     verify_compatibility(directory,&previous)?;
     verify_installed(directory,&previous)?;
-    let folder=directory.join("updates").join(update_sequence.to_string());
+    let folder=directory.join("updates").join(update.sequence.to_string());
     let destination=folder.join("rollback");
     if destination.exists(){verify_rollback_snapshot(state,&destination,&envelope,state.last_release_sequence)?;return Ok(envelope);}
     let temporary=folder.join(format!("swan-rollback-{}",random_token()));std::fs::create_dir(&temporary)?;
@@ -284,7 +386,7 @@ fn launch_update_helper(directory:&Path,release:&Release)->Result<()> {
 }
 
 impl AgentState {
-    pub async fn approved_update(&self,technician_token:Option<&str>)->Result<Option<SignedEnvelope>> {
+    pub async fn approved_update(&self,directory:&Path,technician_token:Option<&str>)->Result<Option<SignedEnvelope>> {
         let profile=self.company_profile()?;
         if !update_policy_open(self)?{return Ok(None);}
         let (path,token)=if self.bootstrap.edition==Edition::Customer {
@@ -297,7 +399,10 @@ impl AgentState {
         release.validate(&self.bootstrap.edition,0,now())?;
         ensure!(release.channel==profile.update_channel,"Wrong update channel");
         // An already installed release is not an installation request.
-        if release.sequence<=self.last_release_sequence{return Ok(None);}
+        let state=self.clone();let directory=directory.to_owned();
+        let failed=tokio::task::spawn_blocking(move ||failed_release_sequence(&state,&directory)).await.context("Failed-release quarantine check failed")??;
+        let minimum=self.last_release_sequence.max(failed);
+        if release.sequence<=minimum{return Ok(None);}
         validate_release(self,&envelope)?;
         Ok(Some(envelope))
     }
@@ -323,7 +428,7 @@ impl AgentState {
         let activity=activity_file(directory)?;fs2::FileExt::try_lock_exclusive(&activity).context("Recovery requires all sessions to close")?;
         let receipt_path=directory.join("pending-update.json");
         let receipt:Receipt=serde_json::from_slice(&std::fs::read(&receipt_path)?)?;
-        let release=validate_recovery_release(self,&receipt.release,receipt.previous_sequence,&receipt.phase)?;
+        let release=validate_pending_receipt(self,&receipt)?;
         verify_compatibility(directory,&release)?;
         verify_installed(directory,&release)?;
         save_installed_metadata(directory,&receipt.release)?;
@@ -344,10 +449,11 @@ impl AgentState {
         ensure!(!directory.join("pending-install.json").exists(),"Company setup recovery must finish first");
         let latest=AgentState::load_for_refresh(directory)?;
         let receipt:Receipt=serde_json::from_slice(&std::fs::read(&receipt_path)?)?;
+        ensure!(receipt.phase=="installing","Use resume-update to finish pending rollback");
         if let Some(expected)=expected {
             ensure!(serde_json::to_vec(&receipt)?==serde_json::to_vec(expected)?,"Pending update changed during staging recovery");
         }
-        let release=validate_recovery_release(&latest,&receipt.release,receipt.previous_sequence,&receipt.phase)?;
+        let release=validate_pending_receipt(&latest,&receipt)?;
         verify_compatibility(directory,&release)?;
         let attempt=directory.join("updates").join(release.sequence.to_string()).join("last-attempt.txt");
         if !retry_now && attempt.exists(){
@@ -367,7 +473,7 @@ impl AgentState {
             ensure!(!check_directory.join("pending-install.json").exists(),"Company setup recovery must finish first");
             let latest=AgentState::load_for_refresh(&check_directory)?;
             let receipt:Receipt=serde_json::from_slice(&std::fs::read(receipt_path)?)?;
-            let release=validate_recovery_release(&latest,&receipt.release,receipt.previous_sequence,&receipt.phase)?;
+            let release=validate_pending_receipt(&latest,&receipt)?;
             verify_compatibility(&check_directory,&release)?;
             let attempt=check_directory.join("updates").join(release.sequence.to_string()).join("last-attempt.txt");
             if !retry_now && attempt.exists(){
@@ -381,7 +487,9 @@ impl AgentState {
         // No credentials accompany release downloads, including redirects.
         let folder=directory.join("updates").join(release.sequence.to_string());
         tokio::fs::create_dir_all(&folder).await?;
-        restore_staged_download(&folder.join(format!("SwanRemoteSupport-install.{}",release.format)),&release.artifact_url,&release.sha256,&release).await?;
+        if receipt.phase=="installing" {
+            restore_staged_download(&folder.join(format!("SwanRemoteSupport-install.{}",release.format)),&release.artifact_url,&release.sha256,&release).await?;
+        }
         restore_staged_download(&folder.join("swan-agent.exe"),&release.agent_url,&release.agent_sha256,&release).await?;
         let state=self.clone();let directory=directory.to_owned();
         tokio::task::spawn_blocking(move ||state.resume_prepared_update(&directory,retry_now,Some(&receipt))).await.context("Recovery handoff task failed")?
@@ -401,18 +509,23 @@ impl AgentState {
         let receipt_path=directory.join("pending-update.json");
         if !receipt_path.exists(){return Ok(false);}
         ensure!(!directory.join("pending-install.json").exists(),"Company setup recovery must finish first");
-        let receipt:Receipt=serde_json::from_slice(&std::fs::read(&receipt_path)?)?;
+        let mut receipt:Receipt=serde_json::from_slice(&std::fs::read(&receipt_path)?)?;
         let mut latest=AgentState::load_for_refresh(directory)?;
-        let release=validate_recovery_release(&latest,&receipt.release,receipt.previous_sequence,&receipt.phase)?;
+        let release=validate_pending_receipt(&latest,&receipt)?;
         verify_compatibility(directory,&release)?;
         let helper=std::env::current_exe()?;
         let mut agent_release=release.clone();agent_release.sha256=release.agent_sha256.clone();
         ensure!(digest(std::fs::read(&helper)?).eq_ignore_ascii_case(&release.agent_sha256),"Update helper differs from signed release");
         verify_publisher(&helper,&agent_release)?;
         let folder=directory.join("updates").join(release.sequence.to_string());
+        if receipt.phase=="rolling_back" {
+            rollback_portable(&latest,directory,&folder,&receipt)?;
+            *self=latest;return Ok(true);
+        }
         let package=folder.join(format!("SwanRemoteSupport-install.{}",release.format));
         ensure!(digest(std::fs::read(&package)?).eq_ignore_ascii_case(&release.sha256),"Staged installer hash mismatch");
         verify_publisher(&package,&release)?;
+        let installation=(||->Result<()> {
         if let Err(error)=verify_installed(directory,&release) {
             eprintln!("Installed payload requires recovery: {error:#}");
             if let Some(previous)=receipt.previous_release.as_ref(){
@@ -443,6 +556,17 @@ impl AgentState {
             }
         }
         verify_installed(directory,&release)?;
+        Ok(())
+        })();
+        if let Err(error)=installation {
+            let previous=receipt.previous_release.as_ref().map(|envelope|validate_previous_release(&latest,envelope,receipt.previous_sequence)).transpose()?;
+            let can_rollback=receipt.rollback_protocol==1 && latest.last_release_sequence==receipt.previous_sequence && release.edition==Edition::Technician && release.format=="exe" && previous.as_ref().map(|old|old.rollback_protocol==1 && old.format=="exe" && old.sha256.eq_ignore_ascii_case(&old.installed_sha256)).unwrap_or(false);
+            if !can_rollback{return Err(error).context("Update failed; signed recovery remains pending");}
+            eprintln!("Update failed; restoring the verified previous portable release: {error:#}");
+            receipt.phase="rolling_back".into();save_receipt(&receipt_path,&receipt)?;
+            rollback_portable(&latest,directory,&folder,&receipt)?;
+            *self=latest;return Ok(true);
+        }
         save_installed_metadata(directory,&receipt.release)?;
         latest.last_release_sequence=release.sequence;latest.save(directory)?;
         std::fs::remove_file(receipt_path)?;*self=latest;Ok(true)
@@ -460,7 +584,7 @@ impl AgentState {
             // An interrupted installation is deliberately not guessed successful.
             // Keep the signed receipt so recovery can verify the installed build.
             ensure!(!receipt_path.exists(),"Interrupted update requires recovery before another installation");
-            let Some(envelope)=self.approved_update(technician_token).await? else{return Ok(false);};
+            let Some(envelope)=self.approved_update(directory,technician_token).await? else{return Ok(false);};
             let release=validate_release(self,&envelope)?;
             ensure!(release.edition!=Edition::Technician || (release.format=="msi" || (release.format=="exe" && release.installed_sha256.eq_ignore_ascii_case(&release.sha256))),"Technician updates require an MSI or a portable EXE with matching installed identity");
             let folder=directory.join("updates").join(release.sequence.to_string());tokio::fs::create_dir_all(&folder).await?;
@@ -476,24 +600,26 @@ impl AgentState {
             // Downloads may take minutes. Require a fresh signed policy and
             // current server approval before creating an installation receipt.
             self.sync().await?;self.save(directory)?;
-            let Some(current)=self.approved_update(technician_token).await? else{return Ok(false);};
+            let Some(current)=self.approved_update(directory,technician_token).await? else{return Ok(false);};
             if current.payload!=envelope.payload || current.signature!=envelope.signature{return Ok(false);}
             let directory=directory.to_owned();
             let prepared=tokio::task::spawn_blocking(move ||->Result<Option<AgentState>> {
             let activity=activity_file(&directory)?;
             fs2::FileExt::try_lock_exclusive(&activity).context("Update deferred while a session or connection attempt is active")?;
             ensure!(!directory.join("pending-install.json").exists(),"Company setup started while the update was downloading");
+            ensure!(!receipt_path.exists(),"Another update already requires recovery");
             // Re-read consent and enrollment immediately before installation.
             let latest=AgentState::load(&directory)?;
             if !update_policy_open(&latest)?{return Ok(None);}
             // Removal during download must not be turned into a fresh install.
             require_existing_application(&installed_target(&directory,&latest.bootstrap.edition)?)?;
             validate_release(&latest,&envelope)?;
-            let previous_release=prepare_rollback_snapshot(&latest,&directory,release.sequence)?;
-            let receipt=Receipt{release:envelope,previous_sequence:latest.last_release_sequence,phase:"installing".into(),previous_release:Some(previous_release)};
-            let mut options=std::fs::OpenOptions::new();options.create_new(true).write(true);
-            use std::io::Write;
-            let mut file=options.open(&receipt_path)?;file.write_all(&serde_json::to_vec(&receipt)?)?;file.sync_all()?;drop(file);
+            ensure!(release.sequence>failed_release_sequence(&latest,&directory)?,"Failed release is quarantined");
+            let previous_release=prepare_rollback_snapshot(&latest,&directory,&release)?;
+            let previous=validate_previous_release(&latest,&previous_release,latest.last_release_sequence)?;
+            let rollback_protocol=if previous.rollback_protocol==1 {agent_rollback_protocol(&directory.join("updates").join(release.sequence.to_string()).join("rollback/agent/swan-agent.exe"),&directory)?}else{0};
+            let receipt=Receipt{release:envelope,previous_sequence:latest.last_release_sequence,phase:"installing".into(),previous_release:Some(previous_release),rollback_protocol};
+            publish_initial_receipt(&receipt_path,&receipt)?;
             // The signed replacement runs from staging. This caller must exit so
             // Windows releases the old executable before it is overwritten.
             launch_update_helper(&directory,&release)?;
@@ -525,6 +651,60 @@ fn verify_installed(directory:&Path,release:&Release)->Result<()> {
     }
     ensure!(digest(std::fs::read(&target)?).eq_ignore_ascii_case(&release.installed_sha256),"Installed executable differs from signed release; recovery remains pending");
     let mut installed=release.clone();installed.sha256=release.installed_sha256.clone();verify_publisher(&target,&installed)
+}
+
+#[cfg(test)]
+pub(crate) fn test_failed_release_quarantine(state:&AgentState,release:&Release,key:&SigningKey) {
+    let folder=std::env::temp_dir().join(format!("swan-quarantine-test-{}",random_token()));std::fs::create_dir(&folder).unwrap();
+    assert_eq!(failed_release_sequence(state,&folder).unwrap(),0);
+    let mut previous=release.clone();previous.sequence=1;previous.expires_at=now()-1;previous.rollback_protocol=1;
+    let mut failed=release.clone();failed.expires_at=now()-1;
+    let receipt=Receipt{release:SignedEnvelope::sign(&failed,key).unwrap(),previous_sequence:1,phase:"rolled_back".into(),previous_release:Some(SignedEnvelope::sign(&previous,key).unwrap()),rollback_protocol:1};
+    let path=folder.join("failed-update.json");
+    let pending_path=folder.join("pending-update.json");
+    publish_initial_receipt(&pending_path,&receipt).unwrap();
+    let saved=std::fs::read(&pending_path).unwrap();
+    let mut competing=receipt.clone();competing.phase="installing".into();
+    assert!(publish_initial_receipt(&pending_path,&competing).is_err());
+    assert_eq!(std::fs::read(&pending_path).unwrap(),saved,"Never overwrite another durable recovery receipt");
+    assert!(!std::fs::read_dir(&folder).unwrap().any(|entry|entry.unwrap().file_name().to_string_lossy().starts_with("swan-receipt-")));
+    let write=|receipt:&Receipt|std::fs::write(&path,serde_json::to_vec(receipt).unwrap()).unwrap();
+    write(&receipt);assert_eq!(failed_release_sequence(state,&folder).unwrap(),2);
+    assert!(release.validate(&state.bootstrap.edition,failed_release_sequence(state,&folder).unwrap(),now()).is_err(),"The failed sequence cannot be selected again");
+    let mut later=release.clone();later.sequence=3;
+    assert!(later.validate(&state.bootstrap.edition,failed_release_sequence(state,&folder).unwrap(),now()).is_ok());
+    let mut pending=receipt.clone();pending.phase="rolling_back".into();
+    assert!(validate_pending_receipt(state,&pending).is_ok());
+    let mut committed=state.clone();committed.last_release_sequence=2;
+    assert!(validate_pending_receipt(&committed,&pending).is_err());
+    let mut different_format=previous.clone();different_format.format="msi".into();
+    pending.previous_release=Some(SignedEnvelope::sign(&different_format,key).unwrap());
+    assert!(validate_pending_receipt(state,&pending).is_err(),"Automatic rollback must not ignore installer registrations");
+    let mut legacy=previous.clone();legacy.rollback_protocol=0;
+    pending.previous_release=Some(SignedEnvelope::sign(&legacy,key).unwrap());
+    assert!(validate_pending_receipt(state,&pending).is_err(),"Never restore an endpoint lacking quarantine support");
+    pending.previous_release=None;assert!(validate_pending_receipt(state,&pending).is_err());
+    pending.phase="installing".into();pending.rollback_protocol=0;
+    assert!(validate_pending_receipt(state,&pending).is_ok(),"Legacy receipts can still finish forward recovery");
+    pending.rollback_protocol=2;assert!(validate_pending_receipt(state,&pending).is_err());
+    let mut newer=state.clone();newer.last_release_sequence=3;
+    assert_eq!(failed_release_sequence(&newer,&folder).unwrap(),2,"Installing a later release retains failed-release history");
+    let mut foreign=state.clone();foreign.bootstrap.edition=Edition::Technician;
+    assert!(failed_release_sequence(&foreign,&folder).is_err());
+    foreign.bootstrap.edition=state.bootstrap.edition.clone();foreign.bootstrap.release_public_key=STANDARD.encode(SigningKey::from_bytes(&[9;32]).verifying_key().as_bytes());
+    assert!(failed_release_sequence(&foreign,&folder).is_err());
+    let mut bad=receipt.clone();bad.release.signature=STANDARD.encode([0u8;64]);write(&bad);
+    assert!(failed_release_sequence(state,&folder).is_err());
+    let mut bad=receipt.clone();bad.previous_sequence=2;write(&bad);
+    assert!(failed_release_sequence(state,&folder).is_err());
+    let mut bad=receipt.clone();bad.rollback_protocol=0;write(&bad);
+    assert!(failed_release_sequence(state,&folder).is_err());
+    let mut bad=receipt.clone();bad.phase="rolling_back".into();write(&bad);
+    assert!(failed_release_sequence(state,&folder).is_err());
+    std::fs::write(&path,b"interrupted metadata").unwrap();assert!(failed_release_sequence(state,&folder).is_err());
+    std::fs::remove_file(&path).unwrap();std::fs::create_dir(&path).unwrap();
+    assert!(failed_release_sequence(state,&folder).is_err(),"Quarantine I/O failures must not clear suppression");
+    std::fs::remove_dir_all(folder).unwrap();
 }
 
 #[cfg(test)]

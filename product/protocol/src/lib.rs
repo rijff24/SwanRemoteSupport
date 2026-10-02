@@ -218,12 +218,15 @@ pub struct Release {
     pub windows_versions: Vec<String>,
     pub source_url: String,
     pub format: String,
+    #[serde(default)]
+    pub rollback_protocol:u32,
 }
 impl Release {
     pub fn validate(&self, edition: &Edition, minimum_sequence: u64, now: u64) -> Result<()> {
         ensure!(self.schema == SCHEMA && self.product == PRODUCT && &self.edition == edition, "Wrong product or edition");
         ensure!(self.architecture == "x64" && self.sequence > minimum_sequence && self.expires_at > now, "Incompatible, expired or replayed release");
         ensure!(["stable", "test"].contains(&self.channel.as_str()) && ["exe", "msi"].contains(&self.format.as_str()), "Invalid release type");
+        ensure!(self.rollback_protocol<=1,"Unsupported rollback protocol");
         ensure!(self.sha256.len() == 64 && self.sha256.bytes().all(|x| x.is_ascii_hexdigit()) && !self.publisher.is_empty(), "Invalid artifact identity");
         ensure!(self.installed_sha256.len()==64 && self.installed_sha256.bytes().all(|x|x.is_ascii_hexdigit()),"Invalid installed executable identity");
         ensure!(!self.installed_files.is_empty() && self.installed_files.len()<=4096,"Installed payload manifest required");
@@ -355,8 +358,12 @@ mod tests {
     }
     #[test]
     fn releases_reject_replay_wrong_edition_expiry_and_missing_installed_identity() {
-        let mut release=Release {schema:1,product:PRODUCT.into(),version:"1.5.0".into(),sequence:2,edition:Edition::Customer,architecture:"x64".into(),channel:"stable".into(),expires_at:200,artifact_url:"https://releases.example/package.exe".into(),sha256:"a".repeat(64),installed_sha256:"b".repeat(64),installed_files:vec![InstalledFile{path:"Swan Remote Support.exe".into(),sha256:"b".repeat(64)},InstalledFile{path:"librustdesk.dll".into(),sha256:"c".repeat(64)},InstalledFile{path:"flutter_windows.dll".into(),sha256:"d".repeat(64)}],agent_url:"https://releases.example/agent.exe".into(),agent_sha256:"c".repeat(64),publisher:"Example".into(),publisher_certificate_sha256:"d".repeat(64),windows_versions:vec!["windows_11".into()],source_url:"https://releases.example/source.tar.gz".into(),format:"exe".into()};
+        let mut release=Release {schema:1,product:PRODUCT.into(),version:"1.5.0".into(),sequence:2,edition:Edition::Customer,architecture:"x64".into(),channel:"stable".into(),expires_at:200,artifact_url:"https://releases.example/package.exe".into(),sha256:"a".repeat(64),installed_sha256:"b".repeat(64),installed_files:vec![InstalledFile{path:"Swan Remote Support.exe".into(),sha256:"b".repeat(64)},InstalledFile{path:"librustdesk.dll".into(),sha256:"c".repeat(64)},InstalledFile{path:"flutter_windows.dll".into(),sha256:"d".repeat(64)}],agent_url:"https://releases.example/agent.exe".into(),agent_sha256:"c".repeat(64),publisher:"Example".into(),publisher_certificate_sha256:"d".repeat(64),windows_versions:vec!["windows_11".into()],source_url:"https://releases.example/source.tar.gz".into(),format:"exe".into(),rollback_protocol:0};
         assert!(release.validate(&Edition::Customer,1,100).is_ok());
+        let mut legacy=serde_json::to_value(&release).unwrap();legacy.as_object_mut().unwrap().remove("rollback_protocol");
+        assert_eq!(serde_json::from_value::<Release>(legacy).unwrap().rollback_protocol,0);
+        release.rollback_protocol=2;assert!(release.validate(&Edition::Customer,1,100).is_err());
+        release.rollback_protocol=1;assert!(release.validate(&Edition::Customer,1,100).is_ok());
         assert!(release.validate(&Edition::Customer,2,100).is_err());
         assert!(release.validate(&Edition::Technician,0,100).is_err());
         assert!(release.validate(&Edition::Customer,0,200).is_err());

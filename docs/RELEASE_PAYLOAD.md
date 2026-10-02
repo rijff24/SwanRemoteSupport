@@ -7,6 +7,12 @@ The installed main executable hash must also equal `installed_sha256`.
 Technician manifests contain one entry for `SwanRemoteSupport-Technician.exe`;
 that hash covers its complete self-extracting payload.
 
+Release metadata may declare `rollback_protocol: 1` only when both its endpoint
+and configuration agent implement the failed-release quarantine and pending
+rollback format described below. The release signer attests this compatibility;
+do not add the declaration to old binaries. Omitted values default to zero and
+permit forward recovery only. Unsupported protocol numbers are rejected.
+
 Generate release inputs after signing the final binaries:
 
 ```text
@@ -88,7 +94,7 @@ downloads send no company credentials, must match the receipt's hashes and
 pinned publisher, and do not select a newer release. Intact staging remains
 usable offline. Recovery rechecks the unchanged receipt and session exclusion
 before handoff. Permission and other staging I/O errors remain errors rather
-than being treated as missing files. Automatic rollback and canonical-agent
+than being treated as missing files. Complete customer/MSI rollback and canonical-agent
 recovery remain incomplete. Graphical technician update coordination and this
 staging recovery still require native end-to-end verification. Signed clean-machine tests
 are required before claiming interruption or self-update acceptance.
@@ -118,9 +124,34 @@ Mutable branding, identity, credentials and consent are not copied into release
 snapshots or restored to older values. Legacy receipts without a snapshot can
 continue forward recovery, but do not gain rollback evidence retroactively.
 
-This preserves verified rollback inputs; automatic restoration of those inputs,
-Windows service/MSI registration recovery, failed-release suppression and full
-power-loss rollback remain unfinished. Component tests cover complete file
+Portable technician EXE updates now restore those verified inputs after an
+installation or installed-identity failure, provided the previous signed metadata
+declares rollback protocol 1 and the verified previous agent's `rollback-protocol`
+command confirms support. A durable `rolling_back` receipt precedes restoration.
+Automatic upgrades retain the installed EXE/MSI format; changing formats requires
+explicit installation/migration so installer registrations are not silently lost.
+Retries finish that same rollback instead of attempting forward installation;
+rollback does not require the new installer package to remain available. The
+old EXE and agent are replaced through verified atomic staging, and their full
+installed identity is checked before the previous metadata becomes current.
+Deleted applications are not resurrected, and a committed newer installation
+cannot be downgraded by this recovery path. The unchanged state retains the
+previous installed sequence and current company identity and consent.
+
+Before removing the pending receipt, rollback durably records `failed-update.json`
+with the failed and previous signed envelopes. Discovery and fresh installation
+reject sequences at or below that watermark; only a later approved sequence can
+advance. Repair still requires the exact installed release. Invalid quarantine
+metadata, wrong trust or edition, unknown phases/protocols and I/O errors fail
+closed. Quarantine persists through subsequent successful installations. No
+technician login token is passed to or restored by rollback.
+
+Windows service/MSI registration rollback and full power-loss acceptance remain
+unfinished. The portable restoration path is implemented but not yet demonstrated
+with signed installed binaries on clean Windows. Component tests cover complete file
 preservation, rejection of tampered/missing sources and unsafe paths, incomplete
 snapshot cleanup, immutable published snapshots, and previous metadata trust and
-sequence checks. Signed installed-app rehearsals remain required.
+sequence checks. Quarantine/receipt regressions cover replay suppression, eligibility
+of later releases, metadata expiry, old protocol exclusion, wrong edition/key,
+tampering, malformed storage and legacy forward recovery. Signed installed-app
+rehearsals remain required; these tests do not substitute for native rollback.

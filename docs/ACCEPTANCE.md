@@ -83,19 +83,19 @@ remain unverified.
 
 | Requirement | Current evidence and remaining work |
 | --- | --- |
-| Reproducible server, customer, technician and worker builds | Product components pass pinned builds. Native Windows build/package run 36970913876 passed at exact source `7e589ba`; the later manifest/installer-locking build 36973173582 remains in progress. Baseline rebuild and clean-machine installation are not newly proved. |
+| Reproducible server, customer, technician and worker builds | Product components pass pinned builds. Native Windows build/package run 36998413349 passed at exact source `2eec008`. Later native source, including consent/reconnect/version and rollback changes, still needs CI and VM verification. Baseline rebuild and clean-machine installation are not newly proved. |
 | Fresh-company Windows/Linux setup | HTTPS/API setup works. Administrator network settings and server-vantage DNS/TCP/HTTPS company-signature diagnostics are implemented with access tests. Equivalent full setup wizards, transport provisioning, certificate management and external reachability checks remain incomplete; see NETWORK_DIAGNOSTICS.md. |
 | Roles, groups, permissions and revocation | MFA/group/device denial tests pass. Signed capability fields, administrator group policy APIs, and receiver capability bounds are implemented in source. Policy reduction denies lease renewal in component tests. Administration controls, native enforcement and direct-connection bypass tests remain unverified. |
 | Configurable customer and technician apps | Signed profile sync passes. Graphical login/inventory/history, logo/color rendering, contacts, company shortcuts, offline operation and native restart/upgrade preservation remain to verify or complete. |
-| Signed profiles and rotation | Component tests reject tampering, wrong-company, expired and older profiles and untrusted key changes. Trusted cached key/endpoint rotation preserves enrollment in tests. Real HTTPS rotation and installed-app behavior still need verification. |
+| Signed profiles and rotation | Component tests reject tampering, wrong-company, expired and older profiles and untrusted key changes. Trusted cached key/endpoint rotation preserves enrollment in tests. Real isolated HTTPS trusted key rotation, missed-transition rejection and restored rotated trust pass for both CLI agents. Graphical installed-app behavior remains unverified. |
 | Approved managed sessions without password/direct bypass | Grant signature, target, challenge and replay checks pass component/API tests. Actual receiving-device enforcement, direct/relay paths, lease expiry and live revocation are unverified. |
 | Customer approval and unattended consent | API consent denial and durable local revocation tests pass. Real attended prompts, stop/uninstall, unattended opt-in, restart, sign-in screen and UAC are unverified. |
 | Transfer, clipboard, multiple monitors | Native end-to-end tests pending. |
 | Public company transport without Tailscale | Source uses company transport and fails closed before setup. External NAT traversal, relay fallback and negative-access tests pending; no public endpoint has been changed. |
 | Windows worker and public/protected downloads | Queue, worker, fixed bundles and access checks are implemented. A real signed worker job, both EXE/MSI installation products, protected technician download and public customer website installation remain unverified or incomplete. |
 | Signing and exact corresponding source | Certificate/hash/publisher pins and source metadata are implemented. Provider approval, production signatures, company signing integration and production release checks remain gates. |
-| Approved automatic updates | Metadata replay/expiry and session exclusion tests pass. Signed installed manifests now bound customer DLLs/assets and reject unlisted native code in component tests; real signed installation remains unverified. Real rollout, pause/windows, agent replacement, technician executable handoff, interruption repair/retry/rollback and recovery remain incomplete or unverified; see RELEASE_PAYLOAD.md. |
-| Backup, restore and migrations | Encrypted round-trip/tamper checks cover management data, transport trust keys and SQLite state, deployment configuration and an explicit TLS identity. Actual CLI export/restore and a live isolated HTTPS management-server rehearsal preserve signing trust, MFA, accounts, device state and group policy; revoked access remains denied. Restored SQLite quick_check passes. Live transport recovery, complete certificate-service storage, post-backup reconciliation and migration rollback remain unverified or incomplete; see SERVER_BACKUP.md. |
+| Approved automatic updates | Metadata replay/expiry, session exclusion, complete snapshots and signed failed-release quarantine tests pass. Real HTTPS download tamper/interruption rejection passes. Portable technician restoration and resumable rollback are implemented, but signed native restoration is unverified. Customer/MSI rollback, service/installer consistency, full rollout, interruption and clean-machine recovery remain incomplete or unverified; see RELEASE_PAYLOAD.md. |
+| Backup, restore and migrations | Encrypted round-trip/tamper checks cover management, transport trust keys, SQLite, private deployment configuration and complete TLS storage trees. Real CLI export/restore and isolated HTTPS rehearsals preserve signing trust, MFA, accounts, devices, groups, consent and rotated keys; revoked grants remain denied. Restored SQLite quick_check passes. Schema upgrade requires encrypted pre-upgrade backup in component tests. Live transport/ACME renewal, post-backup reconciliation and full migration rollback remain unverified; see SERVER_BACKUP.md. |
 
 ## Clean Windows matrix
 
@@ -544,3 +544,21 @@ previous-release signature/edition/sequence checks after metadata expiry. This i
 verified rollback preparation, not completed automatic rollback: restoration,
 failed-release suppression, MSI/service consistency and native power-loss testing
 remain unfinished.
+
+Portable technician EXE rollback is now implemented for a previous release whose
+signed metadata declares `rollback_protocol: 1` and whose verified agent confirms
+that support. It preserves the old installed sequence, writes a durable pending
+rollback phase before restoring signed snapshot files, verifies the restored
+identity, and publishes a signed-envelope failed-release quarantine before
+removing the pending marker. New discovery/installation suppresses that sequence
+and older ones; later approved releases remain eligible. Current branding,
+enrollment and consent are not restored from software snapshots. Customer/MSI
+restoration and service/registration consistency remain unfinished.
+
+All 39 ordinary product workspace tests pass for this change. The real-HTTPS
+download test is explicitly ignored in that ordinary run. Targeted quarantine
+and receipt tests additionally pass after initial receipt publication became
+atomic and unable to overwrite an existing receipt. The Windows agent build
+passes, and its read-only capability command returns protocol 1 without creating
+company state. Native Rust syntax parses locally; native Rust/Flutter compilation
+and actual signed rollback, reboot/interruption and installer tests remain gates.

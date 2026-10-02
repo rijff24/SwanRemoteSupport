@@ -12,6 +12,7 @@ async fn main()->Result<()> {
     let directory=state_directory();
     let command=args.get(1).map(String::as_str).unwrap_or("help");
     match command {
+        "rollback-protocol"=>println!("1"),
         #[cfg(windows)]
         "remove-configuration-task"|"restore-configuration-task"=>{
             let executable=std::env::current_exe()?;
