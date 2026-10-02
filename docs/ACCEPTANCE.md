@@ -469,3 +469,13 @@ management instances. Schema-1 migration requires an encrypted pre-upgrade
 backup; restored active keys and revisions survive component tests. Eleven
 management tests pass, including rotation, migration and backup recovery.
 Installed-app HTTPS rotation and live migration rollback remain unverified.
+
+An isolated real HTTPS rehearsal with management/agent binaries built at
+7843334 now passes trusted profile-key rotation for both agent editions.
+Enrollment, device token and revoked consent persist; a client missing the
+transition rejects the new key; activation without explicit confirmation fails;
+restart retains the active key. Renewal of a claimed, still-unexpired grant is
+denied after activation. Private results record binary hashes and note the
+uncommitted harness in the worktree. Owned fixture listeners stopped afterward.
+Graphical installed apps, actual session termination, production certificates
+and full migration rollback remain separate unverified acceptance gates.

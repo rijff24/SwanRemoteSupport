@@ -51,3 +51,21 @@ new-key signatures, encrypted restore and pre-upgrade backup recovery. Real
 HTTPS rotation across installed apps, offline machines, interrupted activation,
 live session termination and complete server migration rollback remain release
 acceptance requirements.
+
+## Local HTTPS rehearsal
+
+`node deployment/windows/test-profile-rotation.js PRIVATE_ENV BINARY_DIRECTORY`
+owns fresh management and HTTPS proxy processes for a marked isolated fixture.
+It requires `rotation-fixture.marker`, a fresh data directory without a database,
+private TLS configuration and debug management/agent binaries. Use the local
+test certificate mechanism; do not import a test CA into production trust or
+point this harness at an existing company. All credentials/results stay in the
+protected fixture directory. Processes stop on completion or failure.
+
+The rehearsal passed with binaries built from `7843334`: real HTTPS customer and
+technician agent sync adopted the prepared key, retained enrollment and revoked
+consent, rejected a client that missed the transition, required activation
+confirmation, and preserved the active key through restart. A claimed grant was
+still unexpired when activation denied its renewal. This tests built agents and
+the management authorization API; it does not prove the graphical receiving app
+terminates a live remote session or that production HTTPS deployment passes.
