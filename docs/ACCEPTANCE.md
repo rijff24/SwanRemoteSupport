@@ -84,7 +84,7 @@ remain unverified.
 | Requirement | Current evidence and remaining work |
 | --- | --- |
 | Reproducible server, customer, technician and worker builds | Product components pass pinned builds. Native Windows build/package run 36998413349 passed at exact source `2eec008`. Later native source, including consent/reconnect/version and rollback changes, still needs CI and VM verification. Baseline rebuild and clean-machine installation are not newly proved. |
-| Fresh-company Windows/Linux setup | HTTPS/API setup works. Administrator network settings and server-vantage DNS/TCP/HTTPS company-signature diagnostics are implemented with access tests. Equivalent full setup wizards, transport provisioning, certificate management and external reachability checks remain incomplete; see NETWORK_DIAGNOSTICS.md. |
+| Fresh-company Windows/Linux setup | HTTPS/API setup works. The pinned Linux management image passes actual non-root/read-only fresh company setup, MFA, approval/policy rejection and restart persistence. Administrator network settings and server-vantage DNS/TCP/HTTPS company-signature diagnostics are implemented with access tests. Equivalent full setup wizards, transport provisioning, certificate management and external reachability checks remain incomplete; see NETWORK_DIAGNOSTICS.md. |
 | Roles, groups, permissions and revocation | MFA/group/device denial tests pass. Signed capability fields, administrator group policy APIs, and receiver capability bounds are implemented in source. Policy reduction denies lease renewal in component tests. Administration controls, native enforcement and direct-connection bypass tests remain unverified. |
 | Configurable customer and technician apps | Signed profile sync passes. Graphical login/inventory/history, logo/color rendering, contacts, company shortcuts, offline operation and native restart/upgrade preservation remain to verify or complete. |
 | Signed profiles and rotation | Component tests reject tampering, wrong-company, expired and older profiles and untrusted key changes. Trusted cached key/endpoint rotation preserves enrollment in tests. Real isolated HTTPS trusted key rotation, missed-transition rejection and restored rotated trust pass for both CLI agents. Graphical installed-app behavior remains unverified. |
@@ -770,3 +770,21 @@ loopback port after restart. The harness now refreshes and validates that mappin
 on every start. This intermediate image required an explicit SSL_CERT_FILE test
 environment; the exact `059f675` image and its default certificate environment
 remain pending. This evidence does not prove public HTTPS or native transport.
+
+The Linux management image built from required inputs at exact source `059f675`
+is `sha256:d4308f1b5714a1cd56987af5aa0c3f51db31e64b33c104e2e610638a0786129a`.
+Its management executable hash is
+`db7716c7dc61a13af14de68dbd4e197b30ca8b565966638e9e8303ec069b5d9b`;
+the public certificate bundle matches the pinned builder. The corrected test
+driver, maintained separately from the image build inputs, passed default
+certificate-path checks, non-root/read-only startup, fresh setup, MFA/replay
+rejection, approval/consent policy, graceful SIGTERM and restart persistence.
+The expanded driver then passed actual encrypted management CLI export and
+restore to a separate volume, wrong-password authentication rejection with no
+target writes, private key permissions, retained branding/policy/device/consent,
+fresh MFA login, replay/logout denial and revoked-device rejection. Revocation
+in the restored deployment did not mutate the original volume. No backup
+passphrase was placed in command arguments or Docker container metadata.
+These results prove management-container recovery only. Full transport/TLS
+volume recovery, public HTTPS/ACME, native sessions, installers and the clean
+Windows matrix remain required acceptance gates.

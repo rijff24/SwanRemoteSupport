@@ -69,6 +69,95 @@ def container_base(name):
     return "http://" + port
 
 
+def secret_command(arguments, passphrase, expected_success=True):
+    # Supply only stdin, never a password in Docker arguments or container metadata.
+    result = subprocess.run(["docker", *arguments], input=passphrase + "\n",
+                            capture_output=True, text=True, timeout=90)
+    if (result.returncode == 0) != expected_success:
+        raise RuntimeError("Unexpected encrypted backup/restore command result")
+    if not expected_success and "Backup password incorrect or backup modified" not in result.stderr:
+        raise RuntimeError("Restore failed before demonstrating backup authentication rejection")
+
+
+def restore_management(image, original, source_volume, status, administrator, enrolled, login_body, secret):
+    name = "swan-restore-test-" + uuid.uuid4().hex
+    helper = name + "-helper"
+    volume = name + "-data"
+    created_volume = False
+    created_container = False
+    try:
+        before = request(container_base(original), "/api/v1/profile")
+        passphrase = secrets.token_hex(32)
+        shell = "IFS= read -r SWAN_BACKUP_PASSPHRASE; export SWAN_BACKUP_PASSPHRASE; exec swan-management "
+        secret_command(["exec", "-i", original, "sh", "-ec",
+                        shell + "backup /var/lib/swan/rehearsal.swanbackup"], passphrase)
+        docker("exec", original, "sh", "-ec",
+               'test "$(stat -c %a /var/lib/swan/rehearsal.swanbackup)" = 600; '
+               'test "$(head -c 7 /var/lib/swan/rehearsal.swanbackup)" = SWANBK1')
+        docker("volume", "create", volume)
+        created_volume = True
+        restore = ["run", "--rm", "--name", helper, "-i", "--read-only", "--network", "none",
+                   "--tmpfs", "/tmp", "--security-opt", "no-new-privileges:true",
+                   "--mount", "type=volume,src=" + source_volume + ",dst=/input,readonly",
+                   "--mount", "type=volume,src=" + volume + ",dst=/var/lib/swan",
+                   "--env", "SWAN_DATA_DIR=/var/lib/swan/restored", "--entrypoint", "sh", image,
+                   "-ec", shell + "restore /input/rehearsal.swanbackup"]
+        secret_command(restore, secrets.token_hex(32), expected_success=False)
+        docker("run", "--rm", "--name", helper, "--read-only", "--network", "none",
+               "--mount", "type=volume,src=" + volume + ",dst=/var/lib/swan", "--entrypoint", "sh",
+               image, "-ec", "test ! -e /var/lib/swan/restored")
+        secret_command(restore, passphrase)
+        docker("create", "--name", name, "--read-only", "--tmpfs", "/tmp",
+               "--security-opt", "no-new-privileges:true", "--mount", "type=volume,src=" + volume + ",dst=/var/lib/swan",
+               "--env", "SWAN_DATA_DIR=/var/lib/swan/restored", "--publish", "127.0.0.1::8080", image)
+        created_container = True
+        docker("start", name)
+        base = container_base(name)
+        ready(base)
+        if request(base, "/api/v1/status") != status:
+            raise RuntimeError("Restored company trust or configuration state changed")
+        after = request(base, "/api/v1/profile")
+        prior_profile = json.loads(base64.b64decode(before["payload"], validate=True))
+        restored_profile = json.loads(base64.b64decode(after["payload"], validate=True))
+        for profile in [prior_profile, restored_profile]:
+            profile.pop("issued_at")
+            profile.pop("expires_at")
+        if restored_profile != prior_profile:
+            raise RuntimeError("Restore changed company branding or policy")
+        inventory = request(base, "/api/v1/devices", token=administrator)
+        if len(inventory) != 1 or inventory[0]["id"] != enrolled["device_id"] or inventory[0]["state"] != "approved" or inventory[0]["unattended"] is not False:
+            raise RuntimeError("Restore lost enrollment, approval or consent")
+        docker("exec", name, "sh", "-ec",
+               'test "$(id -u)" = 10001; test "$(stat -c %a /var/lib/swan/restored)" = 700; '
+               'test "$(stat -c %a /var/lib/swan/restored/profile-key.hex)" = 600; '
+               'test "$(stat -c %a /var/lib/swan/restored/setup-token.txt)" = 600')
+        request(base, "/api/v1/login", "POST", body=login_body, expected=401)
+        deadline = time.monotonic() + 65
+        while authenticator(secret, 1) == login_body["totp_code"]:
+            if time.monotonic() >= deadline:
+                raise RuntimeError("No fresh authenticator code available for restore verification")
+            time.sleep(0.2)
+        restored_login = dict(login_body, totp_code=authenticator(secret, 1))
+        token = request(base, "/api/v1/login", "POST", body=restored_login)["token"]
+        request(base, "/api/v1/login", "POST", body=restored_login, expected=401)
+        request(base, "/api/v1/devices/" + enrolled["device_id"] + "/state", "PUT", token, {"state": "revoked", "group": "container-test"})
+        request(base, "/api/v1/device/consent", "PUT", enrolled["device_token"], {"unattended": False, "revision": 1}, expected=401)
+        original_inventory = request(container_base(original), "/api/v1/devices", token=administrator)
+        if len(original_inventory) != 1 or original_inventory[0]["state"] != "approved":
+            raise RuntimeError("Restored deployment mutated the original company volume")
+        request(base, "/api/v1/logout", "POST", token)
+        request(base, "/api/v1/logout", "POST", administrator)
+        request(base, "/api/v1/devices", token=administrator, expected=401)
+        print("PASS: encrypted management backup, wrong-password rejection without writes, restored company/device/consent identity, private keys, MFA/replay and revocation. Transport and TLS backup remain separate tests.")
+    finally:
+        if docker("ps", "-aq", "--filter", "name=^/" + helper + "$"):
+            docker("rm", "--force", helper)
+        if created_container:
+            docker("rm", "--force", name)
+        if created_volume:
+            docker("volume", "rm", volume)
+
+
 def main():
     image = sys.argv[1] if len(sys.argv) == 2 else "swan-management:test"
     name = "swan-company-test-" + uuid.uuid4().hex
@@ -140,6 +229,7 @@ def main():
         inventory = request(base, "/api/v1/devices", token=administrator)
         if len(inventory) != 1 or inventory[0]["id"] != enrolled["device_id"] or inventory[0]["state"] != "approved" or inventory[0]["unattended"] is not False:
             raise RuntimeError("Container restart lost device, permission or consent state")
+        restore_management(image, name, volume, after, administrator, enrolled, login_body, secret)
         request(base, "/api/v1/logout", "POST", administrator)
         request(base, "/api/v1/devices", token=administrator, expected=401)
         print("PASS: non-root/read-only container startup, private storage, company setup, MFA/replay denial, enrollment approval and restart persistence. HTTPS and native transport remain separate tests.")

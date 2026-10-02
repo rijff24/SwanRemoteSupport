@@ -70,7 +70,12 @@ The context test uses tracked public source and synthetic canaries, never local
 credentials. The container test uses uniquely named disposable storage and a
 loopback-only listener. It checks fresh setup, MFA and replay denial, required
 device approval, policy denial, graceful shutdown and persisted company/device
-identity. Credentials stay in memory and the test removes only its own container
-and volume. These are actual Docker checks, but are not evidence for public
+identity. It also uses the real CLI for encrypted management backup and a second
+volume for restore, checking wrong-password rejection before writes, retained
+branding/policy/enrollment/consent, private key permissions, MFA replay denial
+and revocation. Passphrases enter the CLI through stdin and stay out of arguments
+and Docker container metadata. The test removes only its own containers and
+volumes. Management-only restore does not prove transport or TLS-volume recovery.
+These are actual Docker checks, but are not evidence for public
 HTTPS, transport sessions, worker-generated installations, certificate renewal
 or the Windows compatibility matrix. The company-product CI runs both checks.
