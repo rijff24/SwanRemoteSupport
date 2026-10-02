@@ -86,6 +86,12 @@ fn validate_pending_receipt(state:&AgentState,receipt:&Receipt)->Result<Release>
     Ok(release)
 }
 
+#[cfg(any(windows,test))]
+fn validate_completion_receipt(state:&AgentState,receipt:&Receipt)->Result<Release> {
+    ensure!(receipt.phase=="installing","Use resume-update to finish pending rollback");
+    validate_pending_receipt(state,receipt)
+}
+
 fn failed_release_sequence(state:&AgentState,directory:&Path)->Result<u64> {
     let path=directory.join("failed-update.json");
     let bytes=match std::fs::read(path) {
@@ -170,10 +176,28 @@ async fn restore_staged_download(path:&Path,url:&str,hash:&str,release:&Release)
 }
 
 #[cfg(windows)]
+fn system_directory()->Result<std::path::PathBuf> {
+    let mut directory=[0u16;32768];
+    let length=unsafe{windows_sys::Win32::System::SystemInformation::GetSystemDirectoryW(directory.as_mut_ptr(),directory.len() as u32)} as usize;
+    ensure!(length>0 && length<directory.len(),"Cannot resolve trusted Windows system directory");
+    Ok(std::path::PathBuf::from(String::from_utf16(&directory[..length])?))
+}
+
+#[cfg(windows)]
+pub fn powershell_command()->Result<std::process::Command> {
+    let root=system_directory()?.join("WindowsPowerShell/v1.0");
+    let mut command=std::process::Command::new(root.join("powershell.exe"));
+    // PowerShell 7 can pass its module paths through a Rust child to Windows
+    // PowerShell. Use only Windows' built-ins for trust and compatibility checks.
+    command.env("PSModulePath",root.join("Modules"));
+    Ok(command)
+}
+
+#[cfg(windows)]
 fn verify_publisher(path:&Path,release:&Release)->Result<()> {
     let script=path.parent().context("Missing update directory")?.join("Verify-Package.ps1");
     std::fs::write(&script,include_str!("../../../deployment/windows/Verify-Package.ps1"))?;
-    let status=std::process::Command::new("powershell.exe").args(["-NoLogo","-NoProfile","-NonInteractive","-ExecutionPolicy","Bypass","-File"])
+    let status=powershell_command()?.args(["-NoLogo","-NoProfile","-NonInteractive","-ExecutionPolicy","Bypass","-File"])
         .arg(script).arg("-Path").arg(path).arg("-Publisher").arg(&release.publisher).arg("-CertificateSha256").arg(&release.publisher_certificate_sha256).arg("-Sha256").arg(&release.sha256).status()?;
     ensure!(status.success(),"Package publisher verification failed");Ok(())
 }
@@ -221,7 +245,7 @@ fn replace_verified_file(source:&Path,target:&Path,expected_hash:&str)->Result<(
 fn msi_install_command(package:&Path)->Result<std::process::Command> {
     let script=package.parent().context("Missing update directory")?.join("Get-MsiInstallMode.ps1");
     std::fs::write(&script,include_str!("../../../deployment/windows/Get-MsiInstallMode.ps1"))?;
-    let output=std::process::Command::new("powershell.exe")
+    let output=powershell_command()?
         .args(["-NoLogo","-NoProfile","-NonInteractive","-ExecutionPolicy","Bypass","-File"])
         .arg(script).arg("-Package").arg(package).output()?;
     ensure!(output.status.success(),"Unable to determine MSI installation or repair mode");
@@ -252,7 +276,7 @@ pub fn verify_repair_package(state:&AgentState,directory:&Path,envelope:&SignedE
 fn verify_compatibility(directory:&Path,release:&Release)->Result<()> {
     let script=directory.join("Get-WindowsCompatibility.ps1");
     std::fs::write(&script,include_str!("../../../deployment/windows/Get-WindowsCompatibility.ps1"))?;
-    let output=std::process::Command::new("powershell.exe").args(["-NoLogo","-NoProfile","-NonInteractive","-ExecutionPolicy","Bypass","-File"]).arg(script).output()?;
+    let output=powershell_command()?.args(["-NoLogo","-NoProfile","-NonInteractive","-ExecutionPolicy","Bypass","-File"]).arg(script).output()?;
     ensure!(output.status.success(),"Unsupported Windows version or installation type");
     let platform=String::from_utf8(output.stdout)?;
     ensure!(release.windows_versions.iter().any(|v|v==platform.trim()),"Release does not support this Windows version");Ok(())
@@ -290,6 +314,35 @@ pub(crate) fn validate_previous_release(state:&AgentState,envelope:&SignedEnvelo
 #[cfg(windows)]
 fn save_receipt(path:&Path,receipt:&Receipt)->Result<()> {
     publish_download(path,&serde_json::to_vec(receipt)?)
+}
+
+#[cfg(windows)]
+fn installer_cache(directory:&Path,release:&Release)->std::path::PathBuf {
+    directory.join("releases").join(release.sequence.to_string()).join(format!("installer.{}",release.format))
+}
+
+#[cfg(windows)]
+fn retain_installer(source:&Path,target:&Path,release:&Release)->Result<()> {
+    ensure!(std::fs::metadata(source)?.len()<=512*1024*1024,"Installer exceeds cache size limit");
+    ensure!(staged_hash_matches(source,&release.sha256)?,"Installer cache source differs from signed release");
+    verify_publisher(source,release)?;
+    std::fs::create_dir_all(target.parent().context("Missing installer cache directory")?)?;
+    replace_verified_file(source,target,&release.sha256)?;
+    verify_publisher(target,release)
+}
+
+#[cfg(windows)]
+async fn ensure_previous_installer(state:&AgentState,directory:&Path)->Result<()> {
+    let state=state.clone();let installed_directory=directory.to_owned();
+    let release=tokio::task::spawn_blocking(move ||->Result<Release> {
+        let envelope:SignedEnvelope=serde_json::from_slice(&std::fs::read(installed_directory.join("installed-release.json"))?)?;
+        validate_previous_release(&state,&envelope,state.last_release_sequence)
+    }).await.context("Previous installer discovery failed")??;
+    let cache=installer_cache(directory,&release);
+    tokio::fs::create_dir_all(cache.parent().context("Missing installer cache directory")?).await?;
+    // Previously recorded metadata may be expired. It authorizes retaining only
+    // the exact old package bytes, never selecting another software release.
+    restore_staged_download(&cache,&release.artifact_url,&release.sha256,&release).await
 }
 
 #[cfg(windows)]
@@ -340,7 +393,15 @@ fn verify_rollback_snapshot(state:&AgentState,directory:&Path,envelope:&SignedEn
     let executable=if release.edition==Edition::Technician {"SwanRemoteSupport-Technician.exe"}else{"Swan Remote Support.exe"};
     verify_publisher(&directory.join("endpoint").join(executable),&executable_release)?;
     let mut agent_release=release.clone();agent_release.sha256=release.agent_sha256.clone();
-    verify_publisher(&directory.join("agent/swan-agent.exe"),&agent_release)
+    verify_publisher(&directory.join("agent/swan-agent.exe"),&agent_release)?;
+    let package=directory.join("package").join(format!("installer.{}",release.format));
+    // Older snapshots did not preserve installers. Forward recovery remains
+    // available; future MSI rollback must separately require this package.
+    if package.exists(){
+        ensure!(staged_hash_matches(&package,&release.sha256)?,"Rollback installer differs from signed release");
+        verify_publisher(&package,&release)?;
+    }
+    Ok(())
 }
 
 #[cfg(windows)]
@@ -352,12 +413,16 @@ fn prepare_rollback_snapshot(state:&AgentState,directory:&Path,update:&Release)-
     verify_installed(directory,&previous)?;
     let folder=directory.join("updates").join(update.sequence.to_string());
     let destination=folder.join("rollback");
-    if destination.exists(){verify_rollback_snapshot(state,&destination,&envelope,state.last_release_sequence)?;return Ok(envelope);}
+    if destination.exists(){
+        ensure!(destination.join("package").join(format!("installer.{}",previous.format)).is_file(),"Existing rollback snapshot lacks its original installer; explicit recovery is required");
+        verify_rollback_snapshot(state,&destination,&envelope,state.last_release_sequence)?;return Ok(envelope);
+    }
     let temporary=folder.join(format!("swan-rollback-{}",random_token()));std::fs::create_dir(&temporary)?;
     let result=(||->Result<()> {
         let target=installed_target(directory,&state.bootstrap.edition)?;
         crate::payload::snapshot(target.parent().context("Missing installed directory")?,&temporary.join("endpoint"),&previous.installed_files)?;
         crate::payload::snapshot(directory,&temporary.join("agent"),&[InstalledFile{path:"swan-agent.exe".into(),sha256:previous.agent_sha256.clone()}])?;
+        retain_installer(&installer_cache(directory,&previous),&temporary.join("package").join(format!("installer.{}",previous.format)),&previous)?;
         save_installed_metadata(&temporary,&envelope)?;
         verify_rollback_snapshot(state,&temporary,&envelope,state.last_release_sequence)?;
         std::fs::rename(&temporary,&destination).context("Cannot publish complete release rollback snapshot")
@@ -413,7 +478,7 @@ impl AgentState {
         Ok(Some(envelope))
     }
     #[cfg(windows)]
-    pub fn record_installation(&mut self,directory:&Path,envelope:&SignedEnvelope,repair:bool)->Result<()> {
+    pub fn record_installation(&mut self,directory:&Path,envelope:&SignedEnvelope,package:&Path,repair:bool)->Result<()> {
         let activity=activity_file(directory)?;fs2::FileExt::try_lock_exclusive(&activity).context("Installation verification requires all sessions to close")?;
         let mut latest=AgentState::load(directory)?;
         let release=installation_release(&latest,directory,envelope,repair)?;
@@ -424,6 +489,7 @@ impl AgentState {
         }
         verify_compatibility(directory,&release)?;
         verify_installed(directory,&release)?;
+        retain_installer(package,&installer_cache(directory,&release),&release)?;
         save_installed_metadata(directory,envelope)?;
         latest.last_release_sequence=release.sequence;latest.save(directory)?;
         if setup_marker.exists(){std::fs::remove_file(setup_marker)?;}
@@ -434,9 +500,12 @@ impl AgentState {
         let activity=activity_file(directory)?;fs2::FileExt::try_lock_exclusive(&activity).context("Recovery requires all sessions to close")?;
         let receipt_path=directory.join("pending-update.json");
         let receipt:Receipt=serde_json::from_slice(&std::fs::read(&receipt_path)?)?;
-        let release=validate_pending_receipt(self,&receipt)?;
+        let release=validate_completion_receipt(self,&receipt)?;
         verify_compatibility(directory,&release)?;
         verify_installed(directory,&release)?;
+        let cache=installer_cache(directory,&release);
+        let package=if cache.is_file(){cache.clone()}else{directory.join("updates").join(release.sequence.to_string()).join(format!("SwanRemoteSupport-install.{}",release.format))};
+        retain_installer(&package,&cache,&release)?;
         save_installed_metadata(directory,&receipt.release)?;
         // A crashed updater may have installed successfully or saved state before
         // removing the receipt. Exact signed executable identity proves either case.
@@ -455,7 +524,6 @@ impl AgentState {
         ensure!(!directory.join("pending-install.json").exists(),"Company setup recovery must finish first");
         let latest=AgentState::load_for_refresh(directory)?;
         let receipt:Receipt=serde_json::from_slice(&std::fs::read(&receipt_path)?)?;
-        ensure!(receipt.phase=="installing","Use resume-update to finish pending rollback");
         if let Some(expected)=expected {
             ensure!(serde_json::to_vec(&receipt)?==serde_json::to_vec(expected)?,"Pending update changed during staging recovery");
         }
@@ -574,6 +642,7 @@ impl AgentState {
             *self=latest;return Ok(true);
         }
         save_installed_metadata(directory,&receipt.release)?;
+        retain_installer(&package,&installer_cache(directory,&release),&release)?;
         latest.last_release_sequence=release.sequence;latest.save(directory)?;
         std::fs::remove_file(receipt_path)?;*self=latest;Ok(true)
     }
@@ -603,6 +672,7 @@ impl AgentState {
             download(&release.agent_url,&release.agent_sha256,&replacement_agent).await?;
             let mut agent_release=release.clone();agent_release.sha256=release.agent_sha256.clone();
             verify_downloaded_publisher(&replacement_agent,&agent_release).await?;
+            ensure_previous_installer(self,directory).await?;
             // Downloads may take minutes. Require a fresh signed policy and
             // current server approval before creating an installation receipt.
             self.sync().await?;self.save(directory)?;
@@ -648,11 +718,7 @@ fn verify_installed(directory:&Path,release:&Release)->Result<()> {
         let mut files=release.installed_files.clone();
         // RustDesk copies this Windows-owned process for input/privacy support.
         // It varies with Windows updates and is not a project release artifact.
-        let mut system_directory=[0u16;32768];
-        let length=unsafe{windows_sys::Win32::System::SystemInformation::GetSystemDirectoryW(system_directory.as_mut_ptr(),system_directory.len() as u32)} as usize;
-        ensure!(length>0 && length<system_directory.len(),"Cannot resolve trusted Windows system directory");
-        let system_directory=std::path::PathBuf::from(String::from_utf16(&system_directory[..length])?);
-        files.push(InstalledFile{path:"RuntimeBroker_rustdesk.exe".into(),sha256:digest(std::fs::read(system_directory.join("RuntimeBroker.exe"))?)});
+        files.push(InstalledFile{path:"RuntimeBroker_rustdesk.exe".into(),sha256:digest(std::fs::read(system_directory()?.join("RuntimeBroker.exe"))?)});
         crate::payload::verify(target.parent().context("Missing installation directory")?,&files)?;
     }
     ensure!(digest(std::fs::read(&target)?).eq_ignore_ascii_case(&release.installed_sha256),"Installed executable differs from signed release; recovery remains pending");
@@ -664,6 +730,37 @@ pub(crate) fn test_failed_release_quarantine(state:&AgentState,release:&Release,
     let folder=std::env::temp_dir().join(format!("swan-quarantine-test-{}",random_token()));std::fs::create_dir(&folder).unwrap();
     assert_eq!(failed_release_sequence(state,&folder).unwrap(),0);
     let mut previous=release.clone();previous.sequence=1;previous.expires_at=now()-1;previous.rollback_protocol=1;
+    #[cfg(windows)] {
+        let builtins=powershell_command().unwrap().args(["-NoLogo","-NoProfile","-NonInteractive","-Command","$ErrorActionPreference='Stop'; Get-Command Get-FileHash,Get-AuthenticodeSignature | ForEach-Object Name"]).output().unwrap();
+        assert!(builtins.status.success());
+        let commands=String::from_utf8(builtins.stdout).unwrap();
+        assert!(commands.contains("Get-FileHash") && commands.contains("Get-AuthenticodeSignature"));
+        let source=folder.join("unsigned-installer.exe");let target=folder.join("cache/installer.exe");
+        std::fs::write(&source,b"unsigned cache fixture").unwrap();
+        let mut installer=release.clone();installer.sha256=digest(b"unsigned cache fixture");
+        let mut tampered=installer.clone();tampered.sha256=digest(b"different installer");
+        assert!(retain_installer(&source,&target,&tampered).is_err());
+        assert!(!target.exists());
+        assert!(retain_installer(&source,&target,&installer).is_err(),"Correct hashes cannot bypass publisher verification");
+        assert!(!target.exists());
+        // Exercise real Authenticode trust without signing a test program or
+        // executing an installer: copy a Windows-signed OS binary into our fixture.
+        std::fs::copy(system_directory().unwrap().join("cmd.exe"),&source).unwrap();
+        let identity=powershell_command().unwrap().env("SWAN_TEST_TRUST_FIXTURE",&source).args(["-NoLogo","-NoProfile","-NonInteractive","-Command","$ErrorActionPreference='Stop'; $s=Get-AuthenticodeSignature -LiteralPath $env:SWAN_TEST_TRUST_FIXTURE; if($s.Status -ne 'Valid'){throw 'Windows fixture signature unavailable'}; $h=[Security.Cryptography.SHA256]::Create(); try { @{publisher=$s.SignerCertificate.GetNameInfo([Security.Cryptography.X509Certificates.X509NameType]::SimpleName,$false);certificate_hash=[BitConverter]::ToString($h.ComputeHash($s.SignerCertificate.RawData)).Replace('-','')} | ConvertTo-Json -Compress } finally {$h.Dispose()}"]).output().unwrap();
+        assert!(identity.status.success());
+        let identity:Value=serde_json::from_slice(&identity.stdout).unwrap();
+        installer.publisher=identity["publisher"].as_str().unwrap().into();
+        installer.publisher_certificate_sha256=identity["certificate_hash"].as_str().unwrap().into();
+        installer.sha256=digest(std::fs::read(&source).unwrap());
+        retain_installer(&source,&target,&installer).unwrap();
+        assert!(staged_hash_matches(&target,&installer.sha256).unwrap());
+        let mut wrong_publisher=installer.clone();wrong_publisher.publisher="Unapproved publisher".into();
+        assert!(retain_installer(&source,&target,&wrong_publisher).is_err());
+        assert!(staged_hash_matches(&target,&installer.sha256).unwrap(),"Publisher rejection retains the previous complete cache");
+        let mut wrong_certificate=installer.clone();wrong_certificate.publisher_certificate_sha256="0".repeat(64);
+        assert!(retain_installer(&source,&target,&wrong_certificate).is_err());
+        assert!(staged_hash_matches(&target,&installer.sha256).unwrap(),"Certificate rejection retains the previous complete cache");
+    }
     let mut failed=release.clone();failed.expires_at=now()-1;
     let receipt=Receipt{release:SignedEnvelope::sign(&failed,key).unwrap(),previous_sequence:1,phase:"rolled_back".into(),previous_release:Some(SignedEnvelope::sign(&previous,key).unwrap()),rollback_protocol:1};
     let path=folder.join("failed-update.json");
@@ -681,6 +778,7 @@ pub(crate) fn test_failed_release_quarantine(state:&AgentState,release:&Release,
     assert!(later.validate(&state.bootstrap.edition,failed_release_sequence(state,&folder).unwrap(),now()).is_ok());
     let mut pending=receipt.clone();pending.phase="rolling_back".into();
     assert!(validate_pending_receipt(state,&pending).is_ok());
+    assert!(validate_completion_receipt(state,&pending).is_err(),"Completion-only recovery must not override a pending rollback");
     let mut committed=state.clone();committed.last_release_sequence=2;
     assert!(validate_pending_receipt(&committed,&pending).is_err());
     let mut different_format=previous.clone();different_format.format="msi".into();
@@ -692,6 +790,7 @@ pub(crate) fn test_failed_release_quarantine(state:&AgentState,release:&Release,
     pending.previous_release=None;assert!(validate_pending_receipt(state,&pending).is_err());
     pending.phase="installing".into();pending.rollback_protocol=0;
     assert!(validate_pending_receipt(state,&pending).is_ok(),"Legacy receipts can still finish forward recovery");
+    assert!(validate_completion_receipt(state,&pending).is_ok());
     pending.rollback_protocol=2;assert!(validate_pending_receipt(state,&pending).is_err());
     let mut newer=state.clone();newer.last_release_sequence=3;
     assert_eq!(failed_release_sequence(&newer,&folder).unwrap(),2,"Installing a later release retains failed-release history");

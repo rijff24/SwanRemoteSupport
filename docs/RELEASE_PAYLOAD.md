@@ -162,3 +162,29 @@ sequence checks. Quarantine/receipt regressions cover replay suppression, eligib
 of later releases, metadata expiry, old protocol exclusion, wrong edition/key,
 tampering, malformed storage and legacy forward recovery. Signed installed-app
 rehearsals remain required; these tests do not substitute for native rollback.
+
+Initial installation, explicit repair, completed updates and completion-only
+recovery now retain the exact installer under `releases/SEQUENCE/installer.exe`
+or `installer.msi`. Retention rechecks its size, signed hash and publisher before
+and after atomic copying. `record-installation` therefore requires the original
+installer path as well as `release.json`; the company setup wrapper supplies both.
+Installed sequence advancement and removal of recovery markers wait for this
+retention step. New snapshots also preserve the original installer in `package/`.
+Older installed versions without a cache can fetch only their exact previously
+recorded artifact through verified HTTPS before an update is prepared. Expiry
+does not authorize a different package. A missing, corrupt or unverifiable old
+artifact defers the update before installation; keep corresponding release files
+available on company-controlled storage. Retained packages are software artifacts,
+not copies of mutable enrollment or consent. MSI/service restoration still needs
+implementation and signed native tests.
+
+The agent and Windows worker launch Windows PowerShell from the OS-resolved
+system directory and restrict module discovery to its built-in modules. This
+prevents inherited PowerShell 7 module paths from breaking hash/signature checks.
+Local regressions confirm the built-in commands are present and that an unsigned
+installer with a correct hash is rejected without publishing a retained package.
+An actual Windows-signed executable copied into the isolated fixture passes
+positive retention; wrong publisher and certificate pins are rejected while
+retaining the previous complete cache. The fixture is never executed and no
+certificate is installed. This checks Authenticode retention, not a signed Swan
+installer or Windows Installer registration recovery.

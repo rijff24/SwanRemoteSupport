@@ -572,3 +572,34 @@ requests, and stop offering a withdrawn matching release. These checks use valid
 release metadata. The targeted management test and Windows product workspace
 compilation pass. Real signed mixed-format rollout and native upgrades remain
 unverified.
+
+Installer retention now preserves exact hash/publisher-verified installation
+packages during setup, repair and completed update/recovery. New software
+snapshots include the previous installer alongside the verified files, allowing
+future MSI registration restoration to use its actual original package. Missing
+old caches can re-fetch only the exact recorded artifact before update handoff.
+Wrong hashes and unsigned installers are rejected before cache publication in a
+local Windows negative test; actual signed Swan installer retention remains unverified.
+
+The same retention regression subsequently passes a positive Authenticode check
+using a Windows-signed executable copied to the private temporary fixture, with
+the actual publisher and certificate fingerprint. Wrong publisher and certificate
+pins retain the previous valid cache. That executable is never executed and no
+certificate is created or installed. Actual signed Swan installation packages
+and MSI registration recovery remain unverified.
+
+Review also corrected the misplaced installing-only phase check that prevented
+rollback handoff after restart. Completion-only recovery now owns that check;
+pending rollback remains eligible for helper handoff. The shared phase/quarantine
+regression passes, but native reboot/rollback still needs testing. Windows agent
+and worker builds and workspace compilation pass. Their Windows PowerShell
+commands now use the OS system directory and built-in module path; actual built-in
+hash/signature command availability and unsigned-package rejection pass when
+invoked from the PowerShell 7 development environment. Company installer script
+syntax passes. No signed installer, MSI restoration or clean Windows acceptance
+is implied by these component checks.
+
+After these corrections, all 39 ordinary product workspace component tests pass
+again on Windows. The separate HTTPS download test is explicitly ignored in that
+run. This includes actual Authenticode positive retention and wrong-certificate
+rejection for the copied OS fixture, not execution of an installation package.

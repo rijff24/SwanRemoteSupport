@@ -121,8 +121,14 @@ pub async fn download(client:&reqwest::Client,url:&str,path:&Path,hash:&str)->Re
     ensure!(digest(&bytes).eq_ignore_ascii_case(hash),"Artifact hash mismatch");
     tokio::fs::write(path,bytes).await?;Ok(())
 }
+#[cfg(windows)]
 fn verify_windows(path:&Path,release:&Release,directory:&Path)->Result<()> {
     let verifier=directory.join("Verify-Package.ps1");std::fs::write(&verifier,include_bytes!("../../../deployment/windows/Verify-Package.ps1"))?;
-    let status=std::process::Command::new("powershell.exe").args(["-NoProfile","-NonInteractive","-ExecutionPolicy","Bypass","-File"]).arg(verifier).arg("-Path").arg(path).arg("-Publisher").arg(&release.publisher).arg("-CertificateSha256").arg(&release.publisher_certificate_sha256).status()?;
+    let status=swan_agent::update::powershell_command()?.args(["-NoProfile","-NonInteractive","-ExecutionPolicy","Bypass","-File"]).arg(verifier).arg("-Path").arg(path).arg("-Publisher").arg(&release.publisher).arg("-CertificateSha256").arg(&release.publisher_certificate_sha256).status()?;
     ensure!(status.success(),"Artifact signature or publisher rejected");Ok(())
+}
+
+#[cfg(not(windows))]
+fn verify_windows(_path:&Path,_release:&Release,_directory:&Path)->Result<()> {
+    anyhow::bail!("Artifact signature verification requires a Windows worker")
 }

@@ -25,8 +25,7 @@ async fn main()->Result<()> {
             }else{("Restore-Configuration.ps1",include_str!("../../../deployment/windows/Restore-Configuration.ps1"))};
             let script=installed_directory.join(name);
             std::fs::write(&script,contents)?;
-            let powershell=PathBuf::from(std::env::var_os("SystemRoot").context("Missing Windows directory")?).join("System32/WindowsPowerShell/v1.0/powershell.exe");
-            let status=std::process::Command::new(powershell).args(["-NoLogo","-NoProfile","-NonInteractive","-ExecutionPolicy","Bypass","-File"]).arg(&script).arg("-Directory").arg(installed_directory).status()?;
+            let status=swan_agent::update::powershell_command()?.args(["-NoLogo","-NoProfile","-NonInteractive","-ExecutionPolicy","Bypass","-File"]).arg(&script).arg("-Directory").arg(installed_directory).status()?;
             std::fs::remove_file(&script)?;
             ensure!(status.success(),"Company configuration task cleanup failed");
         }
@@ -84,7 +83,7 @@ async fn main()->Result<()> {
             if customer && (matches!(&outcome,Ok(true)) || outcome.is_err()) {
                 let script=directory.join("Restart-Configuration.ps1");
                 std::fs::write(&script,include_str!("../../../deployment/windows/Restart-Configuration.ps1"))?;
-                let status=std::process::Command::new("powershell.exe").args(["-NoLogo","-NoProfile","-NonInteractive","-ExecutionPolicy","Bypass","-File"]).arg(script).arg("-Directory").arg(&directory).status()?;
+                let status=swan_agent::update::powershell_command()?.args(["-NoLogo","-NoProfile","-NonInteractive","-ExecutionPolicy","Bypass","-File"]).arg(script).arg("-Directory").arg(&directory).status()?;
                 if !status.success(){
                     if let Err(error)=&outcome {eprintln!("Update remains pending: {error:#}");}
                     bail!("Configuration task restart failed; inspect the protected update log and resume recovery");
@@ -106,9 +105,14 @@ async fn main()->Result<()> {
         }
         #[cfg(windows)]
         "record-installation"=>{
-            let file=args.get(2).context("Usage: swan-agent record-installation release.json")?;
-            let envelope:SignedEnvelope=serde_json::from_slice(&std::fs::read(file)?)?;
-            let mut state=AgentState::load(&directory)?;state.record_installation(&directory,&envelope,args.iter().any(|value|value=="--repair"))?;
+            let file=PathBuf::from(args.get(2).context("Usage: swan-agent record-installation release.json INSTALLER [--repair]")?);
+            let package=PathBuf::from(args.get(3).context("Missing original installer path")?);
+            let record_directory=directory.clone();let repair=args.iter().any(|value|value=="--repair");
+            tokio::task::spawn_blocking(move ||->Result<()> {
+                let envelope:SignedEnvelope=serde_json::from_slice(&std::fs::read(file)?)?;
+                let mut state=AgentState::load(&record_directory)?;
+                state.record_installation(&record_directory,&envelope,&package,repair)
+            }).await.context("Installation recording task failed")??;
             println!("Installed application and agent identities verified; release sequence recorded.");
         }
         #[cfg(windows)]

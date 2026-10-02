@@ -40,7 +40,7 @@ if ($LASTEXITCODE -ne 0) { throw 'Installer does not match the configured compan
 $installers = @(Get-ChildItem -LiteralPath $root -File | Where-Object { $_.Name -match '^SwanRemoteSupport-install\.(exe|msi)$' })
 if ($installers.Count -ne 1) { throw 'Expected one company installer.' }
 $packageArguments = @('verify-package',(Join-Path $root 'release.json'),$installers[0].FullName)
-$recordArguments = @('record-installation',(Join-Path $root 'release.json'))
+$recordArguments = @('record-installation',(Join-Path $root 'release.json'),$installers[0].FullName)
 if ($Repair) { $packageArguments += '--repair'; $recordArguments += '--repair' }
 & $agent @packageArguments
 if ($LASTEXITCODE -ne 0) { throw 'Installer metadata, hash or publisher validation failed.' }
