@@ -30,16 +30,19 @@ if ($fullStack) {
     foreach ($name in @('Caddy-LICENSE.txt','RustDesk-LICENSE.txt','THIRD-PARTY.txt','server-components.json')) {
         if (-not (Test-Path -LiteralPath (Join-Path $ComponentsDirectory $name) -PathType Leaf)) { throw 'Prepared component license or source notice missing.' }
     }
-    $ports = @(80,443,21115,21116,21117,$Port)
-    if (@(Get-NetTCPConnection -State Listen -ErrorAction SilentlyContinue | Where-Object LocalPort -in $ports).Count -or
-        @(Get-NetUDPEndpoint -LocalPort 21116 -ErrorAction SilentlyContinue).Count) { throw 'A required company server port is already in use. Existing services will not be changed.' }
-    foreach ($rule in @('SwanCompanyServer-TCP','SwanCompanyServer-UDP')) {
-        if (Get-NetFirewallRule -Name $rule -ErrorAction SilentlyContinue) { throw 'Company firewall rule already exists.' }
-    }
+}
+# Enumerate first: filtering cmdlets by a missing port/name can itself report an
+# error. Inspection failures must abort rather than masquerade as a free port.
+$ports = if ($fullStack) { @(80,443,21115,21116,21117,$Port) } else { @($Port) }
+$listeners = @(Get-NetTCPConnection -ErrorAction Stop | Where-Object { $_.State -eq 'Listen' -and $_.LocalPort -in $ports })
+if ($listeners.Count) { throw 'A required company server port is already in use. Existing services will not be changed.' }
+if ($fullStack) {
+    if (@(Get-NetUDPEndpoint -ErrorAction Stop | Where-Object LocalPort -eq 21116).Count) { throw 'Company rendezvous UDP port is already in use.' }
+    if (@(Get-NetFirewallRule -ErrorAction Stop | Where-Object Name -in @('SwanCompanyServer-TCP','SwanCompanyServer-UDP')).Count) { throw 'Company firewall rule already exists.' }
 }
 $installDirectory = Join-Path $env:ProgramFiles 'Swan Company Server'
 $dataDirectory = Join-Path $env:ProgramData 'SwanCompanyServer'
-if (Get-Service -Name SwanCompanyServer -ErrorAction SilentlyContinue) { throw 'Company server already exists. Use the documented backed-up maintenance upgrade procedure.' }
+if (@(Get-Service -ErrorAction Stop | Where-Object Name -eq 'SwanCompanyServer').Count) { throw 'Company server already exists. Use the documented backed-up maintenance upgrade procedure.' }
 if ((Test-Path -LiteralPath $installDirectory) -or (Test-Path -LiteralPath $dataDirectory)) { throw 'Company install/data directory already exists. Preserve it and use the recovery or maintenance procedure.' }
 New-Item -ItemType Directory -Path $installDirectory,$dataDirectory | Out-Null
 & icacls.exe $dataDirectory '/inheritance:r' '/grant:r' '*S-1-5-18:(OI)(CI)F' '*S-1-5-32-544:(OI)(CI)F' | Out-Null
