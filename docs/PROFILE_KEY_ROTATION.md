@@ -69,3 +69,10 @@ confirmation, and preserved the active key through restart. A claimed grant was
 still unexpired when activation denied its renewal. This tests built agents and
 the management authorization API; it does not prove the graphical receiving app
 terminates a live remote session or that production HTTPS deployment passes.
+
+The harness also exports the rotated database, private deployment configuration
+and real local HTTPS storage through the management CLI, then restores them to
+an empty protected directory. The replacement HTTPS proxy uses the restored PFX;
+key/certificate bytes match the originals, the management public signing key and
+device credential survive, and the closed grant remains denied. Local certificate
+storage recovery does not prove ACME renewal or production Caddy recovery.

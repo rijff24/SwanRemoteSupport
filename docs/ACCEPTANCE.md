@@ -479,3 +479,12 @@ denied after activation. Private results record binary hashes and note the
 uncommitted harness in the worktree. Owned fixture listeners stopped afterward.
 Graphical installed apps, actual session termination, production certificates
 and full migration rollback remain separate unverified acceptance gates.
+
+The HTTPS rotation harness now exercises actual management CLI encrypted export
+and restore of rotated company data, private configuration and real HTTPS
+PFX/certificate storage. A replacement HTTPS proxy uses those restored files;
+the active profile key and device credential remain valid and the closed grant
+stays denied. The rehearsal passes again after rebuilding startup and rotation
+operations onto blocking worker threads. Private results record the binary
+hashes and dirty source state; both fixture listeners stop. Live ACME renewal,
+hbbs/hbbr restoration and Windows native acceptance remain unverified.

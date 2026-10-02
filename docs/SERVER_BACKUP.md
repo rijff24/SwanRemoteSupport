@@ -105,3 +105,11 @@ rollback. Those remain acceptance requirements.
 The extended storage component test additionally preserves nested certificate
 private-key and ACME account fixtures through encrypted export and restore.
 It does not demonstrate a running Caddy service restoring or renewing certificates.
+
+The extended HTTPS rotation rehearsal additionally passed actual CLI export and
+restore of a rotated management database, deployment environment and the local
+HTTPS PFX/certificate storage. Its replacement HTTPS proxy serves using the
+restored identity; rotated profile trust, device credentials and closed-grant
+denial survive. Both original/restored fixture processes stop afterward. This
+remains isolated local TLS evidence; ACME renewal and live transport restore
+are still unverified.

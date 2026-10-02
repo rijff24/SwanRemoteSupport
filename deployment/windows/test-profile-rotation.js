@@ -63,8 +63,27 @@ async function main(){
   assert(newProfile.revision>transition.revision);
   const missed=spawnSync(agent,['sync'],{cwd:root,env:{...env,SWAN_STATE_DIR:missedDir},stdio:'ignore',timeout:30000});assert.notEqual(missed.status,0,'A client missing the trusted transition accepted the new key');assert.equal(readState(missedDir).bootstrap.profile_public_key,oldKey);
   await stop(server);start();await ready();agentRun(customerDir,['sync']);assert.equal(readState(customerDir).bootstrap.profile_public_key,activated.profile_public_key);
+  // Export the real local HTTPS identity as storage files, not dummy bytes.
+  // The passphrase exists only in the child-process environment.
+  await stop(server);await stop(proxy);
+  const tlsStorage=path.join(data,'https-storage');fs.mkdirSync(tlsStorage);
+  fs.copyFileSync(settings.SWAN_TEST_TLS_PFX,path.join(tlsStorage,'localhost.pfx'));
+  fs.copyFileSync(caFile,path.join(tlsStorage,'localhost.cer'));
+  const backupPassword=crypto.randomBytes(32).toString('hex'),backup=path.join(data,'rotated-company.swan-backup');
+  run(manager,['backup',backup,'--deployment-env',process.argv[2],'--tls-directory',tlsStorage],{SWAN_BACKUP_PASSPHRASE:backupPassword});
+  const restored=path.join(data,'restored-company');
+  run(manager,['restore',backup],{SWAN_DATA_DIR:restored,SWAN_BACKUP_PASSPHRASE:backupPassword});
+  for(const name of ['localhost.pfx','localhost.cer'])assert.deepEqual(fs.readFileSync(path.join(restored,'tls-storage',name)),fs.readFileSync(path.join(tlsStorage,name)));
+  const restoredSettings={...settings,SWAN_DATA_DIR:restored,SWAN_TEST_TLS_PFX:path.join(restored,'tls-storage','localhost.pfx'),SWAN_TEST_CA_FILE:path.join(restored,'tls-storage','localhost.cer')};
+  const restoredEnvFile=path.join(data,'restored-test.env');fs.writeFileSync(restoredEnvFile,Object.entries(restoredSettings).map(([key,value])=>`${key}=${value}`).join('\n')+'\n');
+  server=spawn(manager,[],{cwd:root,env:{...env,...restoredSettings},stdio:'ignore'});
+  proxy=spawn(process.execPath,[path.join(__dirname,'local-https.js'),restoredEnvFile],{cwd:root,env,stdio:'ignore'});
+  assert.equal((await ready()).profile_public_key,activated.profile_public_key);
+  assert.equal((await request('device/status','GET',original.device_token)).status,200,'Restored device credential lost ownership');
+  assert.equal((await request(`grants/${grantBody.grant_id}/renew`,'POST',original.device_token)).status,403,'Restore revived the closed grant');
+  agentRun(customerDir,['sync']);assert.equal(readState(customerDir).bootstrap.profile_public_key,activated.profile_public_key);
   const sha256=file=>crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
-  fs.writeFileSync(path.join(data,'rotation-result.json'),JSON.stringify({passed:true,at:new Date().toISOString(),source_commit:run('git',['rev-parse','HEAD']).trim(),source_dirty:run('git',['status','--porcelain']).trim().length>0,management_sha256:sha256(manager),agent_sha256:sha256(agent),checks:['HTTPS trusted transition','customer and technician key rotation','identity and revoked consent preserved','missed-transition client rejected','activation confirmation required','claimed unexpired grant renewal denied','restart persistence'],native_endpoint_tested:false},null,2));
+  fs.writeFileSync(path.join(data,'rotation-result.json'),JSON.stringify({passed:true,at:new Date().toISOString(),source_commit:run('git',['rev-parse','HEAD']).trim(),source_dirty:run('git',['status','--porcelain']).trim().length>0,management_sha256:sha256(manager),agent_sha256:sha256(agent),checks:['HTTPS trusted transition','customer and technician key rotation','identity and revoked consent preserved','missed-transition client rejected','activation confirmation required','claimed unexpired grant renewal denied','restart persistence','encrypted CLI export and restore of rotated company and TLS storage','restored HTTPS identity and device credential','restored grant stays closed'],native_endpoint_tested:false},null,2));
   console.log('PASS: real HTTPS profile-key rotation with built customer/technician agents. Native apps and live sessions remain unverified.');
 }
 main().catch(error=>{console.error(error.message);process.exitCode=1;}).finally(async()=>{await stop(server);await stop(proxy);});
