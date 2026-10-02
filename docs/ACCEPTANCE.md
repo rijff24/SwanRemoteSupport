@@ -924,3 +924,28 @@ Enumeration is checked before filtering, so a missing named resource is not
 confused with an inspection failure. Windows PowerShell 5.1 and PowerShell 7
 parse the updated installer; read-only host endpoint and firewall enumeration
 succeeded. No privileged installation or host configuration was performed.
+
+The Windows build artifact above was downloaded and verified against GitHub's
+published archive digest
+`d61e9589d671d10db286cf7007e6cf2c3e58627b34ce1df75c184c8420509d87`.
+Safe extraction validated entry paths, duplicates, sizes and ZIP CRCs; all four
+EXE/MSI checksums match the included checksums. Read-only MSI inspection confirms
+both packages report version `1.5.0`, `x64;1033` and their distinct stable upgrade
+codes. The customer MSI SHA-256 is
+`b8268332cd61d26c37fd4a2aa8c56fa9c84648b5dd7dc9484a0b04b3d216f47d`;
+the technician MSI SHA-256 is
+`e997dc9afa490155b9bf9be1c54645cea1ff9fe5a2d73d3e2461454d3bbd8184`.
+Both remain unsigned and were not installed on the host.
+
+A separate fresh Server 2016 Standard Evaluation Desktop Experience VM accepted
+private unattended media and completed file preparation, then failed while
+processing the `specialize` pass. Its disk is preserved for read-only setup-log
+diagnosis. This is a lab provisioning failure, not a product installation result;
+the Windows compatibility row remains unverified.
+Read-only inspection of its Panther logs identified `Microsoft-Windows-Deployment`
+`RunSynchronousCommand/Path` as the invalid value (`0x80220005`). The setup
+command was 280 characters; Microsoft's documented limit is
+[259 characters](https://learn.microsoft.com/en-us/windows-hardware/customize/desktop/unattend/microsoft-windows-deployment-runsynchronous-runsynchronouscommand-path).
+A new private provisioning seed uses a 192-character command and validates this
+bound before generation. The failed disk remained hardware read-only throughout
+diagnosis. The corrected seed still requires an actual successful installation.
