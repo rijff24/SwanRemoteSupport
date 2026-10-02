@@ -54,6 +54,22 @@ artifact and installed executable hashes are distinct signed fields. MSI
 installation uses the canonical per-user folder and requires full installed
 application/agent verification before the pending receipt is cleared.
 
+Failed MSI updates can now enter durable technician rollback when the previous
+signed release and agent both support rollback protocol 1. Recovery requires the
+retained original MSI and complete verified snapshot. It checks the current
+user's edition-specific upgrade family and cached product identities before
+removing only the exact failed ProductCode, then installs or repairs the verified
+previous package. Unexpected registrations stop recovery. Interrupted removal
+or restoration leaves the signed receipt pending for retry; no company identity
+or consent is restored from software snapshots. Hash, publisher, installed-file
+and agent checks must pass before quarantining the failed release and clearing
+the receipt. Customer MSI/service rollback remains separate unfinished work.
+
+`Restore-TechnicianMsi.ps1 -InspectOnly` performs read-only identity and
+registration planning and exits before invoking Windows Installer. It is a
+diagnostic, not evidence that native rollback succeeds. Production recovery
+uses the signed agent's prior hash/publisher checks and does not select this mode.
+
 ## Evidence and remaining work
 
 An actual unsigned MSI was built locally with WiX `5.0.2+aa65968c` from the
@@ -66,8 +82,8 @@ PowerShell parsing pass.
 
 Clean-machine installation, company setup, repair, versioned major upgrades,
 uninstall cleanup, signed automatic MSI updates and interruption rollback remain
-unverified. Customer MSI authoring and end-to-end company publication remain
-incomplete. The bare MSI launch conditions do not replace the signed agent's
+unverified. Customer MSI authoring is available separately; end-to-end company
+publication remains unverified. The bare MSI launch conditions do not replace the signed agent's
 Windows compatibility preflight. Advertised Windows compatibility requires the
 full acceptance matrix.
 

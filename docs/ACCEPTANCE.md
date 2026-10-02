@@ -614,3 +614,17 @@ wrong version and confirming unchanged artifact hashes. Synthetic checks also
 reject malformed product identifiers and non-x64 packages. These identity-only
 fixture tests do not bypass publication signature requirements. Agent and worker
 Windows builds pass; signed installation and native MSI rollback remain gates.
+
+Technician rollback now includes MSI registration recovery using the verified
+previous installer. Recovery validates edition-specific related registrations
+and their cached product identities before narrowly removing the failed product
+and reinstalling or repairing the previous one. Unexpected registrations fail
+closed. Durable rollback retries re-fetch only the exact signed failed MSI when
+its staged copy is missing, because its ProductCode is needed for narrow removal.
+Previous software identity must verify before failed-release quarantine clears
+session exclusion; enrollment and consent remain current. All 21 ordinary agent
+tests pass (two fixture tests excluded); the actual technician MSI read-only
+planning fixture separately passes, including incorrect previous-version
+rejection and no installer execution. Script syntax and Windows compilation
+pass. Native MSI rollback, reboot/interruption, customer service rollback and
+the complete clean Windows matrix remain unverified.
