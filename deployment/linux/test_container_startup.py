@@ -84,6 +84,8 @@ def main():
         if docker("exec", name, "id", "-u") != "10001":
             raise RuntimeError("Management container must run as the service account")
         docker("exec", name, "sh", "-ec",
+               'test "$SSL_CERT_FILE" = /etc/ssl/certs/ca-certificates.crt; '
+               'test -s "$SSL_CERT_FILE"; test -r "$SSL_CERT_FILE"; '
                'test "$(stat -c %a /var/lib/swan)" = 700; '
                'test "$(stat -c %a /var/lib/swan/profile-key.hex)" = 600; '
                'test "$(stat -c %a /var/lib/swan/setup-token.txt)" = 600; '

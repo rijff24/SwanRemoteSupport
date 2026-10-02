@@ -52,9 +52,11 @@ inputs explicitly when changing the embedded source.
 The Rust builder, Debian runtime, Caddy HTTPS proxy and RustDesk transport images
 are pinned by manifest digest.
 Update those digests deliberately and rerun these checks when applying base-image
-security updates. Debian packages installed during the build still come from its
-configured repositories; the complete image is not claimed to be bit-for-bit
-reproducible across different build dates.
+security updates. The runtime copies its public certificate trust bundle from
+the pinned builder, rather than installing packages from live repositories.
+Rustls reads that bundle through `SSL_CERT_FILE`; HTTPS certificate verification
+remains enabled. Bit-for-bit reproducibility still requires a separate rebuild
+comparison and is not established by the deployment tests.
 
 From the repository root, with a working Linux Docker engine:
 
