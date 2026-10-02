@@ -736,3 +736,10 @@ all 38 required public inputs were included and all 11 synthetic private-data
 canaries were excluded. Older Docker required root exclusion rules and explicit
 child exclusions after directory allowances; both shipped ignore files now agree.
 The complete management image and container lifecycle rehearsal remain pending.
+
+At source `9988038`, the complete Windows GNU product-workspace test run passed
+41 tests with zero failures. Two explicitly fixture-dependent tests were skipped:
+the isolated HTTPS download-recovery harness and read-only MSI identity check.
+These skips do not prove those requirements at this source. The agent suite
+exercised actual read-only Authenticode checks and expected rejection paths;
+no native installer, service installation or desktop session was executed.
