@@ -65,6 +65,14 @@ async fn enrollment_mfa_and_grants_fail_closed() {
     assert_eq!(history.as_array().unwrap().len(),1);
     assert_eq!(history[0]["claimed"],true);
     assert_eq!(request(&app,"/api/v1/grants","POST",Some(admin),json!({"device_id":device_id,"proof_public_key":STANDARD.encode(proof.verifying_key().as_bytes()),"unattended":true})).await.0,StatusCode::FORBIDDEN,"Unattended access needs device consent");
+    assert_eq!(request(&app,"/api/v1/device/consent","PUT",Some(credential),json!({"unattended":true,"revision":1})).await.0,StatusCode::OK);
+    assert_eq!(request(&app,"/api/v1/device/consent","PUT",Some(credential),json!({"unattended":false,"revision":2})).await.0,StatusCode::OK);
+    assert_eq!(request(&app,"/api/v1/device/consent","PUT",Some(credential),json!({"unattended":true,"revision":1})).await.0,StatusCode::CONFLICT,"Delayed enable cannot undo revocation");
+    assert_eq!(request(&app,"/api/v1/device/consent","PUT",Some(credential),json!({"unattended":true,"revision":2})).await.0,StatusCode::CONFLICT,"Revocation wins same-revision races");
+    assert_eq!(request(&app,"/api/v1/device/consent","PUT",Some(credential),json!({"unattended":true,"revision":3})).await.0,StatusCode::OK);
+    assert_eq!(request(&app,"/api/v1/device/consent","PUT",Some(credential),json!({"unattended":false,"revision":2})).await.0,StatusCode::CONFLICT,"Old retry cannot undo newer explicit consent");
+    assert_eq!(request(&app,"/api/v1/device/consent","PUT",Some(credential),json!({"unattended":false,"revision":4})).await.0,StatusCode::OK);
+    assert_eq!(request(&app,"/api/v1/device/consent","PUT",Some(credential),json!({"unattended":false,"revision":4})).await.0,StatusCode::OK,"Revocation retries are idempotent");
     let (_,new_user)=request(&app,"/api/v1/users","POST",Some(admin),json!({"username":"technician","password":"another long strong password","role":"technician"})).await;
     let tech_secret=new_user["totp_secret"].as_str().unwrap();
     let tech_generator=TOTP::new(Algorithm::SHA1,6,1,30,Secret::Encoded(tech_secret.into()).to_bytes().unwrap()).unwrap();

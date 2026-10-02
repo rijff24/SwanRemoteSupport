@@ -90,6 +90,7 @@ impl AgentState {
             ensure!(existing.accepted_revision<=self.accepted_revision,"A newer profile has already been saved");
             saved.last_release_sequence=saved.last_release_sequence.max(existing.last_release_sequence);
             if let Some(id)=existing.device_id.as_ref(){
+                ensure!(consent_change!=Some(true) || self.consent_revision==existing.consent_revision,"Consent changed while enable request was pending; confirm again");
                 ensure!(consent_change.is_some() || self.consent_revision<=existing.consent_revision,"Consent revision changes require explicit customer consent");
                 ensure!(self.device_id.as_ref().map(|value|value==id).unwrap_or(true),"Cannot replace enrolled device identity");
                 ensure!(self.device_token.as_ref().map(|value|Some(value)==existing.device_token.as_ref()).unwrap_or(true),"Cannot replace enrolled device credential");
@@ -177,7 +178,8 @@ impl AgentState {
         // Local revoke takes effect even if the server is unavailable.
         if !enabled {self.unattended_consent=false;}
         ensure!(!enabled || self.company_profile()?.allow_unattended,"Company disallows unattended support");
-        self.client()?.put(self.endpoint("device/consent")?).bearer_auth(self.device_token.as_ref().context("Not enrolled")?).json(&json!({"unattended":enabled})).send().await?.error_for_status()?;
+        let revision=if enabled {self.consent_revision.checked_add(1).context("Consent revision exhausted")?}else{self.consent_revision};
+        self.client()?.put(self.endpoint("device/consent")?).bearer_auth(self.device_token.as_ref().context("Not enrolled")?).json(&json!({"unattended":enabled,"revision":revision})).send().await?.error_for_status()?;
         self.unattended_consent=enabled;Ok(())
     }
     pub async fn request_grant(&self,token:&str,device:&str,unattended:bool,key:&SigningKey)->Result<SignedEnvelope> {
@@ -287,6 +289,7 @@ mod tests {
         let current=AgentState::load(&directory).unwrap();assert!(current.unattended_consent);assert_eq!(current.consent_revision,2);
         state.set_local_consent(&directory,false).unwrap();current.save(&directory).unwrap();
         assert!(!AgentState::load(&directory).unwrap().unattended_consent);
+        assert!(current.clone().set_local_consent(&directory,true).is_err(),"An enable response from before revocation must not reenable access");
         std::fs::remove_dir_all(directory).unwrap();
     }
     #[test]

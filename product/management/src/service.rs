@@ -274,7 +274,7 @@ async fn device_state(State(s):State<Shared>,headers:HeaderMap,Path(id):Path<Str
     s.audit(&actor,&format!("device.{}",input.state),&id)?;Ok(Json(json!({"ok":true})))
 }
 #[derive(Deserialize)]
-struct Consent { unattended:bool }
+struct Consent { unattended:bool,revision:u64 }
 async fn device_status(State(s):State<Shared>,headers:HeaderMap)->ApiResult {
     // Pending devices may inspect only their own identity, never session APIs.
     let device:String=s.db.lock().unwrap().query_row("SELECT id FROM devices WHERE token_hash=?1 AND state IN ('pending','approved')",[digest(token(&headers)?)],|row|row.get(0)).optional()?.ok_or_else(unauthorized)?;
@@ -285,7 +285,18 @@ async fn device_status(State(s):State<Shared>,headers:HeaderMap)->ApiResult {
 async fn consent(State(s):State<Shared>,headers:HeaderMap,Json(input):Json<Consent>)->ApiResult {
     let device=s.device(&headers)?;
     if input.unattended && !s.profile()?.allow_unattended {return Err(denied());}
-    s.db.lock().unwrap().execute("UPDATE devices SET unattended=?1 WHERE id=?2",params![input.unattended,device])?;
+    if input.revision>i64::MAX as u64 {return Err(bad("Invalid consent revision"));}
+    {
+        let mut db=s.db.lock().unwrap();let transaction=db.transaction()?;
+        let revision:u64=transaction.query_row("SELECT revision FROM device_consent_revisions WHERE device_id=?1",[&device],|row|row.get(0)).optional()?.unwrap_or(0);
+        let enabled:bool=transaction.query_row("SELECT unattended FROM devices WHERE id=?1",[&device],|row|row.get(0))?;
+        // Equal revisions are idempotent; revocation wins conflicting requests.
+        if input.revision<revision || (input.revision==revision && input.unattended && !enabled) {return Err(ApiError(StatusCode::CONFLICT,"Consent request superseded"));}
+        if input.revision==revision && input.unattended==enabled {return Ok(Json(json!({"ok":true})));}
+        transaction.execute("UPDATE devices SET unattended=?1 WHERE id=?2",params![input.unattended,device])?;
+        transaction.execute("INSERT INTO device_consent_revisions(device_id,revision) VALUES(?1,?2) ON CONFLICT(device_id) DO UPDATE SET revision=excluded.revision",params![device,input.revision])?;
+        transaction.commit()?;
+    }
     s.audit(&device,"device.consent_changed",&device)?;Ok(Json(json!({"ok":true})))
 }
 async fn group_access(State(s):State<Shared>,headers:HeaderMap,Path((group,user)):Path<(String,String)>)->ApiResult {

@@ -37,6 +37,12 @@ async fn main()->Result<()> {
         "sync"=>{let mut state=AgentState::load_for_refresh(&directory)?;state.sync().await?;state.save(&directory)?;println!("Profile synchronized.");}
         "watch"=>{loop {match AgentState::load_for_refresh(&directory){Ok(mut state)=>{
             match state.sync().await{Ok(())=>state.save(&directory)?,Err(error)=>eprintln!("Profile refresh failed: {error}")};
+            // Reload after refresh: another process may have changed consent.
+            // Server revisions reject delayed requests from an older choice.
+            let mut current=AgentState::load_for_refresh(&directory)?;
+            if current.bootstrap.edition==Edition::Customer && current.device_id.is_some() && !current.unattended_consent {
+                if let Err(error)=current.consent(false).await {eprintln!("Consent revocation synchronization deferred: {error}");}
+            }
             if state.bootstrap.edition==Edition::Customer {if let Err(error)=state.update(&directory,None).await {eprintln!("Update deferred: {error}");}}
         },Err(error)=>eprintln!("Configuration unavailable: {error}")};tokio::time::sleep(std::time::Duration::from_secs(300)).await;}}
         "update"=>{

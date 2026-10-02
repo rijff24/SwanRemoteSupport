@@ -9,7 +9,7 @@ native support session or a clean-machine installation.
 - Public baseline tag `swan-single-company-baseline-1.4.9` preserves the original
   Swan deployment and build instructions. Its source was not replaced.
 - Seventeen product tests pass on the local Windows development host, including
-  enrollment/trust preservation across stale writes, trusted key rotation, refusal to automatically reinstall a removed endpoint, and explicit consent changes surviving older refreshes.
+  enrollment/trust preservation across stale writes, trusted key rotation, refusal to automatically reinstall a removed endpoint, and explicit consent changes surviving older refreshes. Consent API tests also reject delayed enable requests and older revocation retries; same-revision revocation takes precedence.
   The preceding eleven-test component source passed tests and release compilation on
   [Windows 2022 and Ubuntu 24.04 CI](https://github.com/rijff24/SwanRemoteSupport/actions/runs/36856716860)
   at commit `411269b`.
@@ -62,7 +62,7 @@ native support session or a clean-machine installation.
 | Windows worker and public/protected downloads | Queue, worker, fixed bundles and access checks are implemented. A real signed worker job, both EXE/MSI installation products, protected technician download and public customer website installation remain unverified or incomplete. |
 | Signing and exact corresponding source | Certificate/hash/publisher pins and source metadata are implemented. Provider approval, production signatures, company signing integration and production release checks remain gates. |
 | Approved automatic updates | Metadata replay/expiry and session exclusion tests pass. Real rollout, pause/windows, full payload/agent identity preservation, technician executable handoff, interruption repair/retry/rollback and recovery remain incomplete or unverified. |
-| Backup, restore and migrations | Encrypted management round-trip/tamper checks pass. Full deployment/transport key coverage, server restore rehearsal and migration rollback remain incomplete or unverified. |
+| Backup, restore and migrations | Encrypted round-trip/tamper checks cover management data, transport trust keys and SQLite state, deployment configuration and an explicit TLS identity. Protected Windows restore passes component tests. Live server restore, complete certificate-service storage and migration rollback remain unverified or incomplete; see SERVER_BACKUP.md. |
 
 ## Clean Windows matrix
 
