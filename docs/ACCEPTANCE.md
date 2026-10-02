@@ -344,3 +344,9 @@ parsing passes; the existing 32 component tests remain the last workspace
 evidence. This new GUI path still needs native compilation and a real offline
 interrupted-installation test. The QEMU process is confirmed live; no completed
 clean Windows installation is demonstrated and VirtualBox remains uninstalled.
+
+Automatic updater Windows compatibility checks, publisher verification, pending
+recovery and final receipt/helper handoff now run in blocking workers. Final
+session exclusion is acquired and released wholly within one worker, without
+holding its file lock across an async wait. All 32 workspace tests pass. Native
+GUI executor responsiveness and signed update handoff remain unverified.

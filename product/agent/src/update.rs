@@ -80,6 +80,12 @@ fn verify_publisher(path:&Path,release:&Release)->Result<()> {
     ensure!(status.success(),"Package publisher verification failed");Ok(())
 }
 
+#[cfg(windows)]
+async fn verify_downloaded_publisher(path:&Path,release:&Release)->Result<()> {
+    let path=path.to_owned();let release=release.clone();
+    tokio::task::spawn_blocking(move ||verify_publisher(&path,&release)).await.context("Publisher verification task failed")?
+}
+
 pub(crate) fn update_policy_open(state:&AgentState)->Result<bool> {
     let profile=state.company_profile()?;
     Ok(!profile.updates_paused && maintenance_open(profile.maintenance_start_utc,profile.maintenance_end_utc,now()))
@@ -322,7 +328,10 @@ impl AgentState {
         #[cfg(not(windows))] {let _=(directory,technician_token);anyhow::bail!("Endpoint updates require Windows");}
         #[cfg(windows)] {
             ensure!(!directory.join("pending-install.json").exists(),"Company setup recovery is required before automatic updates");
-            if directory.join("pending-update.json").exists(){return self.resume_pending_update(directory,false);}
+            if directory.join("pending-update.json").exists(){
+                let state=self.clone();let directory=directory.to_owned();
+                return tokio::task::spawn_blocking(move ||state.resume_pending_update(&directory,false)).await.context("Update recovery task failed")?;
+            }
             require_existing_application(&installed_target(directory,&self.bootstrap.edition)?)?;
             if !update_policy_open(self)?{return Ok(false);}
             let receipt_path=directory.join("pending-update.json");
@@ -333,27 +342,30 @@ impl AgentState {
             let release=validate_release(self,&envelope)?;
             ensure!(release.edition!=Edition::Technician || (release.format=="msi" || (release.format=="exe" && release.installed_sha256.eq_ignore_ascii_case(&release.sha256))),"Technician updates require an MSI or a portable EXE with matching installed identity");
             let folder=directory.join("updates").join(release.sequence.to_string());std::fs::create_dir_all(&folder)?;
-            verify_compatibility(&folder,&release)?;
+            let check_folder=folder.clone();let check_release=release.clone();
+            tokio::task::spawn_blocking(move ||verify_compatibility(&check_folder,&check_release)).await.context("Compatibility verification task failed")??;
             let package=folder.join(format!("SwanRemoteSupport-install.{}",release.format));
             download(&release.artifact_url,&release.sha256,&package).await?;
-            verify_publisher(&package,&release)?;
+            verify_downloaded_publisher(&package,&release).await?;
             let replacement_agent=folder.join("swan-agent.exe");
             download(&release.agent_url,&release.agent_sha256,&replacement_agent).await?;
             let mut agent_release=release.clone();agent_release.sha256=release.agent_sha256.clone();
-            verify_publisher(&replacement_agent,&agent_release)?;
+            verify_downloaded_publisher(&replacement_agent,&agent_release).await?;
             // Downloads may take minutes. Require a fresh signed policy and
             // current server approval before creating an installation receipt.
             self.sync().await?;self.save(directory)?;
             let Some(current)=self.approved_update(technician_token).await? else{return Ok(false);};
             if current.payload!=envelope.payload || current.signature!=envelope.signature{return Ok(false);}
-            let activity=activity_file(directory)?;
+            let directory=directory.to_owned();
+            let prepared=tokio::task::spawn_blocking(move ||->Result<Option<AgentState>> {
+            let activity=activity_file(&directory)?;
             fs2::FileExt::try_lock_exclusive(&activity).context("Update deferred while a session or connection attempt is active")?;
             ensure!(!directory.join("pending-install.json").exists(),"Company setup started while the update was downloading");
             // Re-read consent and enrollment immediately before installation.
-            let latest=AgentState::load(directory)?;
-            if !update_policy_open(&latest)?{return Ok(false);}
+            let latest=AgentState::load(&directory)?;
+            if !update_policy_open(&latest)?{return Ok(None);}
             // Removal during download must not be turned into a fresh install.
-            require_existing_application(&installed_target(directory,&latest.bootstrap.edition)?)?;
+            require_existing_application(&installed_target(&directory,&latest.bootstrap.edition)?)?;
             validate_release(&latest,&envelope)?;
             let receipt=Receipt{release:envelope,previous_sequence:latest.last_release_sequence,phase:"installing".into()};
             let mut options=std::fs::OpenOptions::new();options.create_new(true).write(true);
@@ -361,8 +373,10 @@ impl AgentState {
             let mut file=options.open(&receipt_path)?;file.write_all(&serde_json::to_vec(&receipt)?)?;file.sync_all()?;drop(file);
             // The signed replacement runs from staging. This caller must exit so
             // Windows releases the old executable before it is overwritten.
-            launch_update_helper(directory,&release)?;
-            *self=latest;Ok(true)
+            launch_update_helper(&directory,&release)?;
+            Ok(Some(latest))
+            }).await.context("Update handoff task failed")??;
+            if let Some(latest)=prepared {*self=latest;Ok(true)}else{Ok(false)}
         }
     }
 }
