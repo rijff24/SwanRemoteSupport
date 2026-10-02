@@ -25,7 +25,7 @@ pub struct Branding {
 }
 impl Default for Branding {
     fn default() -> Self {
-        Self { display_name: PRODUCT.into(), primary_color: "#004B6E".into(),
+        Self { display_name: PRODUCT.into(), primary_color: "#007F82".into(),
             logo_svg: include_str!("../../../branding/swan-support-mark.svg").into(),
             support_url: String::new(),
             consent_text: "Only allow remote support from a technician you trust. You can stop support or revoke ongoing access at any time.".into() }

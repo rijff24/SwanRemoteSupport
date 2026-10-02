@@ -119,6 +119,8 @@ pub fn router(store:Shared)->Router {
         .route("/app.js",get(||async{([(header::CONTENT_TYPE,"text/javascript; charset=utf-8")],include_str!("../web/app.js"))}))
         .route("/style.css",get(||async{([(header::CONTENT_TYPE,"text/css")],include_str!("../web/style.css"))}))
         .route("/health",get(||async{Json(json!({"status":"ok","product":PRODUCT}))}))
+        .route("/swan-support-mark.svg",get(||async{([(header::CONTENT_TYPE,"image/svg+xml")],include_str!("../../../branding/swan-support-mark.svg"))}))
+        .route("/api/v1/default-branding",get(||async{Json(Branding::default())}))
         .route("/api/v1/status",get(status))
         .route("/api/v1/setup",post(setup))
         .route("/api/v1/login",post(login))

@@ -82,7 +82,7 @@ remain unverified.
 
 | Requirement | Current evidence and remaining work |
 | --- | --- |
-| Reproducible server, customer, technician and worker builds | Product components pass pinned builds. Native x64 build/package remains pending; baseline rebuild is not newly proved. |
+| Reproducible server, customer, technician and worker builds | Product components pass pinned builds. Native Windows build/package run 36970913876 passed at exact source `7e589ba`; the later manifest/installer-locking build 36973173582 remains in progress. Baseline rebuild and clean-machine installation are not newly proved. |
 | Fresh-company Windows/Linux setup | HTTPS/API setup works. Administrator network settings and server-vantage DNS/TCP/HTTPS company-signature diagnostics are implemented with access tests. Equivalent full setup wizards, transport provisioning, certificate management and external reachability checks remain incomplete; see NETWORK_DIAGNOSTICS.md. |
 | Roles, groups, permissions and revocation | MFA/group/device denial tests pass. Signed capability fields, administrator group policy APIs, and receiver capability bounds are implemented in source. Policy reduction denies lease renewal in component tests. Administration controls, native enforcement and direct-connection bypass tests remain unverified. |
 | Configurable customer and technician apps | Signed profile sync passes. Graphical login/inventory/history, logo/color rendering, contacts, company shortcuts, offline operation and native restart/upgrade preservation remain to verify or complete. |
@@ -114,3 +114,9 @@ See [VM testing](../deployment/windows/VM-TESTING.md) and
 [local HTTPS testing](../deployment/windows/LOCAL-TESTING.md). Test credentials,
 signing keys, certificates with private keys, VM images and raw operational logs
 must remain outside public source. The project provides no shared company VPS.
+
+First-run branding now reads the protocol defaults from the management service,
+including the bundled swan/gear SVG and teal primary color. The server keeps its
+Swan wordmark and mark; existing company profiles are not rewritten. Product
+workspace tests (23) and administration JavaScript syntax checks pass. Graphical
+rendering and installed-app behavior remain to verify.
