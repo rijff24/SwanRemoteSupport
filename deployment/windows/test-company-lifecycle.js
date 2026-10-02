@@ -2,7 +2,7 @@
 // This does not substitute for native remote desktop or clean-machine tests.
 const fs=require('node:fs'), path=require('node:path'), https=require('node:https');
 const crypto=require('node:crypto'), assert=require('node:assert/strict');
-const {spawnSync}=require('node:child_process');
+const {spawnSync,spawn}=require('node:child_process');
 const root=path.resolve(__dirname,'../..');
 const envFile=process.argv[2];
 if(!envFile)throw new Error('Pass a private local-test.env file for a fresh isolated server');
@@ -15,7 +15,8 @@ for(const line of fs.readFileSync(envFile,'utf8').split(/\r?\n/)){
 assert.match(settings.SWAN_LISTEN??'',/^127\.0\.0\.1:\d+$/);
 assert(settings.SWAN_DATA_DIR,'A separate test data directory is required');
 const data=path.resolve(settings.SWAN_DATA_DIR);
-const agent=path.join(root,'product/target/debug/swan-agent.exe');
+const binaryDirectory=process.argv[3]?path.resolve(process.argv[3]):path.join(root,'product/target/debug');
+const agent=path.join(binaryDirectory,'swan-agent.exe');
 const ca=new crypto.X509Certificate(fs.readFileSync(path.join(data,'localhost.cer'))).toString();
 const port=Number(settings.SWAN_TEST_TLS_PORT);assert(Number.isInteger(port)&&port>=1024&&port<=65535);
 const base=`https://localhost:${port}`;
@@ -62,7 +63,25 @@ async function main(){
   assert.equal((await api(`groups/test-customers/users/${technician.id}`,'PUT',admin,{})).status,200);
   assert.equal(JSON.parse(runAgent(techDir,['devices'],auth)).length,1);
   runAgent(customerDir,['allow-unattended','--confirm-unattended']);assert.equal(state(customerDir).unattended_consent,true);
-  runAgent(customerDir,['revoke-unattended']);assert.equal(state(customerDir).unattended_consent,false);
+  if(settings.SWAN_TEST_FAULTS==='1') {
+    assert.equal((await api('grants','POST',admin,{...ticket,unattended:true})).status,200,'Enabled consent did not authorize unattended request');
+    const outage=path.join(data,'simulate-offline');fs.writeFileSync(outage,'local test outage');
+    try {runAgent(customerDir,['revoke-unattended']);assert.equal(state(customerDir).unattended_consent,false,'Offline revoke was not durable');}
+    finally {fs.unlinkSync(outage);}
+    assert.equal((await api('grants','POST',admin,{...ticket,unattended:true})).status,200,'Outage did not leave server consent unsynchronized');
+    const watcher=spawn(agent,['watch'],{env:{...process.env,SWAN_STATE_DIR:customerDir,SWAN_TEST_CA_FILE:path.join(data,'localhost.cer')},stdio:'ignore'});
+    let synchronized=false;
+    try {
+      const deadline=Date.now()+20000;
+      while(Date.now()<deadline){
+        if((await api('grants','POST',admin,{...ticket,unattended:true})).status===403){synchronized=true;break;}
+        assert.equal(watcher.exitCode,null,'Background watcher exited before recovery');
+        await new Promise(resolve=>setTimeout(resolve,200));
+      }
+      assert(synchronized,'Background watcher did not synchronize offline revocation');
+      assert.equal(state(customerDir).unattended_consent,false,'Recovery restored revoked consent');
+    } finally {if(watcher.exitCode===null)watcher.kill();}
+  } else {runAgent(customerDir,['revoke-unattended']);assert.equal(state(customerDir).unattended_consent,false);}
   const policy=(await api('groups/test-customers/permissions','GET',admin)).body;
   assert.equal(policy.recording,false);policy.keyboard=false;
   assert.equal((await api('groups/test-customers/permissions','PUT',technicianLogin.token,policy)).status,401,'Technician changed group policy');
@@ -82,7 +101,7 @@ async function main(){
   runAgent(techDir,['logout'],auth);assert.equal((await api('devices','GET',technicianLogin.token)).status,401,'Logged-out credential still authorized');
   const source=spawnSync('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8'});
   const dirty=spawnSync('git',['status','--porcelain'],{cwd:root,encoding:'utf8'});
-  fs.writeFileSync(path.join(data,'lifecycle-result.json'),JSON.stringify({passed:true,at:new Date().toISOString(),source_commit:source.status===0?source.stdout.trim():'unknown',source_dirty:dirty.status===0?dirty.stdout.trim().length>0:null,agent_sha256:crypto.createHash('sha256').update(fs.readFileSync(agent)).digest('hex'),management_sha256:crypto.createHash('sha256').update(fs.readFileSync(path.join(root,'product/target/debug/swan-management.exe'))).digest('hex'),checks:['HTTPS certificate validation','fresh company setup','built agent bootstrap and enrollment','pending approval denial','technician MFA login and group inventory','technician session history','logout revokes credentials','unattended consent denial','grant replay denial','signed branding sync','device revocation']},null,2));
+  fs.writeFileSync(path.join(data,'lifecycle-result.json'),JSON.stringify({passed:true,at:new Date().toISOString(),source_commit:source.status===0?source.stdout.trim():'unknown',source_dirty:dirty.status===0?dirty.stdout.trim().length>0:null,agent_sha256:crypto.createHash('sha256').update(fs.readFileSync(agent)).digest('hex'),management_sha256:crypto.createHash('sha256').update(fs.readFileSync(path.join(binaryDirectory,'swan-management.exe'))).digest('hex'),offline_revocation_recovery:settings.SWAN_TEST_FAULTS==='1',checks:['HTTPS certificate validation','fresh company setup','built agent bootstrap and enrollment','pending approval denial','technician MFA login and group inventory','technician session history','logout revokes credentials','unattended consent denial','grant replay denial','signed branding sync','device revocation']},null,2));
   console.log('PASS: real local HTTPS company lifecycle and built-agent checks. Native sessions and installers remain separate tests.');
 }
 main().catch(error=>{console.error(error.message);process.exitCode=1;});

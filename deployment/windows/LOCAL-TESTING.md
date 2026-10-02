@@ -1,5 +1,19 @@
 # Local company-server testing
 
+For offline-consent recovery tests, set `SWAN_TEST_FAULTS=1` in the private test
+environment file. The loopback HTTPS proxy responds with HTTP 503 while a file
+named `simulate-offline` exists inside that test data directory. There is no
+HTTP control endpoint. The lifecycle script creates and removes this file,
+checks durable local revocation while offline, then starts the real agent
+watcher and verifies that recovered server authorization denies unattended
+grants. Use this only with the isolated local test proxy.
+
+An optional second script argument selects a separately built executable
+directory: `node deployment/windows/test-company-lifecycle.js PRIVATE_ENV_FILE
+PRIVATE_BINARY_DIRECTORY`. This permits testing newer agent/server builds
+without replacing running test or production executables. Recorded hashes use
+that directory.
+
 Each company runs its own management, rendezvous, relay and Windows build worker. The project does not operate a shared hosting or signing service.
 
 Copy `local-test.env.example` to `local-test.env`, build `product/Cargo.toml`, then run `Start-LocalTest.ps1` from the repository root. The launcher reads named settings as data and binds management to loopback. `local-test.env` and `swan-data/` are ignored by Git. The data directory contains the database, private profile-signing key and setup token; its Windows ACL permits the current user, administrators and SYSTEM.

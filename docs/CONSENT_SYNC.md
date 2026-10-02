@@ -30,5 +30,8 @@ not a production compatibility promise. The additive consent-revision table
 is included in management database backups.
 
 Component tests cover ordering, same-revision conflicts, idempotency, and stale
-local enable responses. Offline network recovery and native Windows controls
-still require end-to-end acceptance tests.
+local enable responses. A real isolated HTTPS test with built agent/server
+executables also passes: simulated outage, durable local revocation, unchanged
+server consent during the outage, and background synchronization denying
+unattended grants after recovery. This uses a test transport ID; native Windows
+controls and actual unattended sessions remain unverified.

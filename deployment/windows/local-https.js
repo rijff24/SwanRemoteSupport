@@ -20,6 +20,10 @@ const server = https.createServer({
   passphrase: settings.SWAN_TEST_TLS_PASSWORD,
   minVersion: 'TLSv1.2',
 }, (request, response) => {
+  // Explicit, local-only test fault. No HTTP endpoint can control this switch.
+  if (settings.SWAN_TEST_FAULTS === '1' && fs.existsSync(require('node:path').join(settings.SWAN_DATA_DIR,'simulate-offline'))) {
+    response.writeHead(503,{'content-type':'application/json'});response.end('{"error":"Isolated test outage"}');return;
+  }
   const upstream = http.request({hostname:'127.0.0.1', port:upstreamPort,
     path:request.url, method:request.method, headers:{...request.headers, host:`localhost:${upstreamPort}`}}, result => {
     response.writeHead(result.statusCode, result.headers); result.pipe(response);

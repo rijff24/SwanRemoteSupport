@@ -48,6 +48,14 @@ native support session or a clean-machine installation.
 
 ## Requirements still to demonstrate
 
+The built product executables at `20f88e3` additionally passed a fresh-company
+HTTPS lifecycle test with an offline-consent fault injected through the local
+proxy. Revocation remained durable locally during HTTP 503 responses; the
+server retained its older choice until the real agent watcher synchronized it,
+then denied unattended grant requests. Executable hashes, exact harness source
+dirty-state and the recovery result are recorded privately. Native sessions
+remain unverified.
+
 | Requirement | Current evidence and remaining work |
 | --- | --- |
 | Reproducible server, customer, technician and worker builds | Product components pass pinned builds. Native x64 build/package remains pending; baseline rebuild is not newly proved. |
