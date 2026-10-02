@@ -22,18 +22,29 @@ native support session or a clean-machine installation.
   test uses a test RustDesk ID and proves **no native remote desktop behavior**.
 - Flutter bridge generation passed for the technician request stream. Native
   Rust parsing and changed PowerShell parsing passed. The graphical technician
-  interface and in-memory ticket broker still need native compilation and use.
+  interface and in-memory ticket broker compile in the shared endpoint source;
+  native use remains unverified.
 - Native lockfile resolution at `75632a2` adds managed-agent dependencies while
   preserving every pre-existing package version, checksum and Git commit. A
-  pinned Windows x64 build passed native Rust compilation but failed Flutter
-  compilation because the technician page lacked its platform bridge import.
-  That import is now corrected; a successful endpoint build is still required.
+  [pinned Windows x64 build at `c78a471`](https://github.com/rijff24/SwanRemoteSupport/actions/runs/36873808239)
+  passed Rust/Flutter compilation, unsigned customer package generation, and
+  product-component compilation. It predates the capability-policy changes.
+  A new build at `31b13aa` also produces a distinct technician portable artifact;
+  its outcome remains pending.
+- A fresh-company HTTPS test at `71ebbec` passed with rebuilt agent and server
+  executables. It additionally verifies enrollment-preserving repair, rejection
+  of a changed transport identity, explicit consent opt-in/revocation,
+  administrator-only group policy changes, capability fields in signed grants,
+  and denied lease renewal after policy reduction. This is API/agent evidence,
+  not proof of native receiver enforcement or installer repair.
 - Existing RustDesk, hbbs and hbbr services remained running. Only the isolated
   development management process was rebuilt and restarted.
 - Windows hypervisor API probing reports an available hypervisor. QEMU 11.1.0
   passed its published SHA-512 checksum and runs from the separate local lab.
-  Official Server 2025 evaluation media is still downloading. No evaluation
-  guest installation has passed yet.
+  Official Server 2025 evaluation media downloaded successfully; its size and
+  SHA-256 are recorded outside Git. Guest boot attempts and failures are
+  documented in `deployment/windows/VM-TESTING.md`. No evaluation guest
+  installation has passed yet.
 
 ## Requirements still to demonstrate
 
