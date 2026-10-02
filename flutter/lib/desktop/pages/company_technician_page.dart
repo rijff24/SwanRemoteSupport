@@ -29,10 +29,13 @@ class _CompanyTechnicianPageState extends State<CompanyTechnicianPage> {
   bool _recoveryPending = false;
   String? _approvedUpdate;
   Timer? _refreshTimer;
+  Timer? _updateTimer;
+  bool _pollingUpdate = false;
+  bool _updateRunning = false;
 
   Future<dynamic> _request(Map<String, dynamic> input) async {
     final text = await bind.mainCompanyRequest(request: jsonEncode(input))
-        .first.timeout(input['action'] == 'update' || input['action'] == 'resume-update'
+        .first.timeout(input['action'] == 'resume-update'
             ? const Duration(minutes: 25) : const Duration(seconds: 25));
     final response = jsonDecode(text) as Map<String, dynamic>;
     if (response['ok'] != true) {
@@ -47,6 +50,23 @@ class _CompanyTechnicianPageState extends State<CompanyTechnicianPage> {
     try { await action(); }
     catch (error) { if (mounted) setState(() { _error = error.toString(); }); }
     finally { if (mounted) setState(() { _busy = false; }); }
+  }
+
+  Future<void> _pollUpdate() async {
+    if (_pollingUpdate || !mounted || !Platform.isWindows) return;
+    _pollingUpdate = true;
+    try {
+      final progress = await _request({'action': 'update-progress'}) as Map<String, dynamic>;
+      if (progress['handed_off'] == true) exit(0);
+      if (mounted) setState(() {
+        _updateRunning = progress['running'] == true;
+        if (progress['failed'] == true && !_recoveryPending) {
+          _updateError = 'Software update was deferred or could not finish. It will retry automatically.';
+        }
+      });
+    } catch (_) {
+      if (mounted) setState(() { _updateError = 'Software update status is unavailable.'; });
+    } finally { _pollingUpdate = false; }
   }
 
   Future<void> _refresh() async {
@@ -135,11 +155,13 @@ class _CompanyTechnicianPageState extends State<CompanyTechnicianPage> {
     _refreshTimer = Timer.periodic(const Duration(seconds: 60), (_) {
       if (mounted && !_busy) _run(_refresh);
     });
+    _updateTimer = Timer.periodic(const Duration(seconds: 1), (_) { _pollUpdate(); });
   }
 
   @override
   void dispose() {
     _refreshTimer?.cancel();
+    _updateTimer?.cancel();
     _username.dispose(); _password.dispose(); _code.dispose();
     super.dispose();
   }
@@ -161,6 +183,7 @@ class _CompanyTechnicianPageState extends State<CompanyTechnicianPage> {
         CompanyContactLinks(company: _company),
         if (_approvedUpdate != null) Text('Company-approved update available: $_approvedUpdate'),
         if (_updateError.isNotEmpty) Text(_updateError),
+        if (_updateRunning) const Text('Preparing company-approved software update…'),
         const SizedBox(height: 16),
         if (_busy) const LinearProgressIndicator(),
         if (_error.isNotEmpty) Padding(padding: const EdgeInsets.symmetric(vertical: 12),

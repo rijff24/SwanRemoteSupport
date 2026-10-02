@@ -383,3 +383,13 @@ native receipt and file-lock enforcement remains authoritative. Native Rust
 parsing and diff checks pass. Flutter compilation, rendering and responsiveness
 during long downloads remain unverified. The branding native run is confirmed
 live in dependency installation; later native runs remain queued.
+
+Technician update preparation now runs as one native background task instead
+of holding the refresh request open through downloads/signature verification.
+The UI polls public running/failed/handoff flags independently, keeps login
+credentials in Rust, and closes only after verified handoff. Recovery avoids
+launching another helper while that task is active. Final native session locks,
+fresh server approval and pending receipts remain installation gates. Rust
+parsing and diff checks pass; source inspection confirms the task uses the
+existing persistent Tokio runner. Native compilation, task responsiveness and
+GUI/session races still require end-to-end validation.

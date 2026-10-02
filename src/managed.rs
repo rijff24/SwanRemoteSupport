@@ -10,6 +10,9 @@ struct TechnicianMemory {
     generation:u64,
     login:Option<TechnicianLogin>,
     tickets:std::collections::HashMap<String,PendingTicket>,
+    update_running:bool,
+    update_handed_off:bool,
+    update_failed:bool,
 }
 hbb_common::lazy_static::lazy_static! {
     static ref TECHNICIAN:std::sync::Mutex<TechnicianMemory>=Default::default();
@@ -33,11 +36,17 @@ async fn technician_request_inner(request:&str)->ResultType<serde_json::Value> {
     let directory=swan_agent::state_directory();
     let state=AgentState::load_for_refresh(&directory)?;
     if state.bootstrap.edition!=Edition::Technician {bail!("Technician edition required");}
+    if action=="update-progress" {
+        let memory=TECHNICIAN.lock().unwrap();
+        return Ok(json!({"running":memory.update_running,"handed_off":memory.update_handed_off,"failed":memory.update_failed}));
+    }
     #[cfg(all(windows,feature="flutter"))]
     if action=="resume-update" {
         // Recovery can finish an already authorized installation offline. It
         // cannot select a new release and does not require a reusable login.
         let pending=directory.join("pending-update.json").exists();
+        {let memory=TECHNICIAN.lock().unwrap();
+            if memory.update_running || memory.update_handed_off{return Ok(json!({"handed_off":memory.update_handed_off,"pending":pending}));}}
         if !pending || !crate::flutter::sessions::get_sessions().is_empty(){return Ok(json!({"handed_off":false,"pending":pending}));}
         let handed_off=hbb_common::tokio::task::spawn_blocking(move ||state.resume_pending_update(&directory,false)).await??;
         return Ok(json!({"handed_off":handed_off,"pending":true}));
@@ -80,14 +89,24 @@ async fn technician_request_inner(request:&str)->ResultType<serde_json::Value> {
         // Include disconnected/reconnecting windows, not just authenticated
         // sessions. The file lock and pending receipt guard other processes.
         if !crate::flutter::sessions::get_sessions().is_empty(){return Ok(json!({"handed_off":false}));}
-        {let memory=TECHNICIAN.lock().unwrap();if memory.generation!=generation || memory.login.is_none(){bail!("Login changed before update");}}
-        let mut state=state;
-        let handed_off=state.update(&directory,Some(&token)).await?;
-        if handed_off {
-            let mut memory=TECHNICIAN.lock().unwrap();
-            memory.generation=memory.generation.wrapping_add(1);memory.login=None;memory.tickets.clear();
+        {let mut memory=TECHNICIAN.lock().unwrap();
+            if memory.generation!=generation || memory.login.is_none(){bail!("Login changed before update");}
+            if memory.update_running || memory.update_handed_off{return Ok(json!({"handed_off":memory.update_handed_off}));}
+            memory.update_running=true;memory.update_failed=false;
         }
-        return Ok(json!({"handed_off":handed_off}));
+        let mut state=state;
+        hbb_common::tokio::spawn(async move {
+            // Authentication remains in native memory. Final server approval,
+            // receipt creation and session exclusion remain inside the updater.
+            let result=state.update(&directory,Some(&token)).await;
+            let mut memory=TECHNICIAN.lock().unwrap();
+            memory.update_running=false;memory.update_failed=result.is_err();
+            memory.update_handed_off=matches!(result,Ok(true));
+            if memory.update_handed_off {
+                memory.generation=memory.generation.wrapping_add(1);memory.login=None;memory.tickets.clear();
+            }
+        });
+        return Ok(json!({"handed_off":false,"started":true}));
     }
     if action=="update-status" {
         let envelope=state.approved_update(Some(&token)).await?;
