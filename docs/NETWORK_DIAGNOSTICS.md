@@ -28,3 +28,12 @@ Component tests cover a real loopback TCP listener/closed port, address parsing,
 zero-port rejection and administrator access restrictions. Full external
 reachability, native transport trust, NAT traversal and relay behavior remain
 acceptance requirements.
+
+A fresh-company HTTPS lifecycle run at `d6f1665` also passed against actual built
+agent and management executables. It verifies the management HTTPS certificate
+and company signature, rejects unauthenticated checks, ignores request-body
+targets in favor of saved configuration, and reports external/UDP reachability
+as unverified. The debug server uses an explicit local DER certificate through
+the private `SWAN_TEST_CA_FILE` setting; release builds ignore this test setting.
+Exact executable hashes and clean source state are recorded privately. Its test
+transport ID is not a native remote-session test.

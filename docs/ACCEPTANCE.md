@@ -55,6 +55,13 @@ native support session or a clean-machine installation.
 
 ## Requirements still to demonstrate
 
+A fresh-company HTTPS lifecycle run at `d6f1665` passed with clean source and
+newly built executables. It additionally verifies saved-target network
+diagnostics, management certificate/company-signature validation, and refusal
+to claim external or UDP reachability. Enrollment, permissions, branding and
+offline-consent recovery checks also passed in that run; native transport and
+clean-machine installation remain unverified.
+
 Initial setup now verifies installed endpoint and agent hashes/publishers against
 signed release metadata and records the release sequence before enabling the
 customer watcher. Technician setup copies its portable executable, agent and
