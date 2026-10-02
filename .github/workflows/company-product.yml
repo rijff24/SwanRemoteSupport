@@ -7,6 +7,9 @@ on:
     paths: ['product/**', 'deployment/**', '.dockerignore', '.github/workflows/company-product.yml']
 permissions:
   contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'workflow_dispatch' && github.run_id || github.ref }}
+  cancel-in-progress: ${{ github.event_name != 'workflow_dispatch' }}
 jobs:
   verify:
     strategy:
