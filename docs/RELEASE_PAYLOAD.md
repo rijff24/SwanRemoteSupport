@@ -66,3 +66,14 @@ and previous agent/portable executable are retained in the protected update
 staging directory. Automatic rollback, damaged-stage re-download and graphical
 technician update coordination remain incomplete. Signed clean-machine tests
 are required before claiming interruption or self-update acceptance.
+
+Recovery validation is shared by completion, retry and helper execution. Its
+regression tests reject wrong keys/editions, tampering, conflicting sequences
+and unknown phases, including the case where a crash occurred after sequence
+persistence. Automatic retries use a durable five-minute attempt delay. Explicit
+`resume-update` requests retry immediately while retaining all trust and locking
+checks. A failed helper requests restart of the matching customer task, provided
+its installed agent still has a valid signature; pending receipts continue to
+block sessions. Corrupt or missing canonical agents still require recovery from
+a verified staged helper or explicit setup/repair. Actual scheduled-task and
+power-loss behavior remain unverified.

@@ -12,5 +12,6 @@ do {
     if ([DateTime]::UtcNow -ge $deadline) { throw 'Previous configuration task has not exited.' }
     Start-Sleep -Milliseconds 100
 } while ($true)
+if ((Get-AuthenticodeSignature -LiteralPath $expectedAgent).Status -ne 'Valid') { throw 'Installed agent cannot be restarted until its signature is valid.' }
 $task | Enable-ScheduledTask | Out-Null
 $task | Start-ScheduledTask

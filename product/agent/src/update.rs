@@ -40,6 +40,15 @@ pub fn validate_repair_release(state:&AgentState,envelope:&SignedEnvelope,instal
     Ok(release)
 }
 
+#[cfg(any(windows,test))]
+pub(crate) fn validate_recovery_release(state:&AgentState,envelope:&SignedEnvelope,previous_sequence:u64,phase:&str)->Result<Release> {
+    ensure!(phase=="installing","Unknown update recovery phase");
+    let release:Release=envelope.verify(&public_key(&state.bootstrap.release_public_key)?)?;
+    release.validate(&state.bootstrap.edition,previous_sequence,now().min(release.expires_at.saturating_sub(1)))?;
+    ensure!(state.last_release_sequence==previous_sequence || state.last_release_sequence==release.sequence,"Recovery sequence conflict");
+    Ok(release)
+}
+
 #[cfg(windows)]
 fn installation_release(state:&AgentState,directory:&Path,envelope:&SignedEnvelope,repair:bool)->Result<Release> {
     ensure!(!directory.join("pending-update.json").exists(),"Resolve pending update recovery before setup or repair");
@@ -125,6 +134,11 @@ fn launch_update_helper(directory:&Path,release:&Release)->Result<()> {
     let helper=folder.join("swan-agent.exe");
     ensure!(digest(std::fs::read(&helper)?).eq_ignore_ascii_case(&release.agent_sha256),"Staged update helper hash mismatch");
     let mut agent_release=release.clone();agent_release.sha256=release.agent_sha256.clone();verify_publisher(&helper,&agent_release)?;
+    use std::io::Write;
+    let attempt=folder.join(format!("last-attempt-{}.tmp",random_token()));
+    let mut file=std::fs::OpenOptions::new().create_new(true).write(true).open(&attempt)?;
+    file.write_all(now().to_string().as_bytes())?;file.sync_all()?;drop(file);
+    crate::replace_state(&attempt,&folder.join("last-attempt.txt"))?;
     let log=std::fs::OpenOptions::new().create(true).append(true).open(folder.join("apply-update.log"))?;
     std::process::Command::new(helper).arg("apply-update").env("SWAN_STATE_DIR",directory).env_remove("SWAN_TECHNICIAN_TOKEN")
         .creation_flags(0x08000000).stdin(std::process::Stdio::null())
@@ -155,11 +169,7 @@ impl AgentState {
         let activity=activity_file(directory)?;fs2::FileExt::try_lock_exclusive(&activity).context("Recovery requires all sessions to close")?;
         let receipt_path=directory.join("pending-update.json");
         let receipt:Receipt=serde_json::from_slice(&std::fs::read(&receipt_path)?)?;
-        let release:Release=receipt.release.verify(&public_key(&self.bootstrap.release_public_key)?)?;
-        ensure!(receipt.phase=="installing","Unknown update recovery phase");
-        release.validate(&self.bootstrap.edition,receipt.previous_sequence,now().min(release.expires_at.saturating_sub(1)))?;
-        ensure!(release.edition==self.bootstrap.edition && release.product==PRODUCT && release.schema==SCHEMA,"Wrong recovery release");
-        ensure!(self.last_release_sequence==receipt.previous_sequence || self.last_release_sequence==release.sequence,"Recovery sequence conflict");
+        let release=validate_recovery_release(self,&receipt.release,receipt.previous_sequence,&receipt.phase)?;
         verify_compatibility(directory,&release)?;
         verify_installed(directory,&release)?;
         save_installed_metadata(directory,&receipt.release)?;
@@ -169,18 +179,20 @@ impl AgentState {
         std::fs::remove_file(receipt_path)?;Ok(())
     }
     #[cfg(windows)]
-    pub fn resume_pending_update(&self,directory:&Path)->Result<bool> {
+    pub fn resume_pending_update(&self,directory:&Path,retry_now:bool)->Result<bool> {
         let activity=activity_file(directory)?;fs2::FileExt::try_lock_exclusive(&activity).context("Update recovery already running or sessions remain active")?;
         let receipt_path=directory.join("pending-update.json");
         if !receipt_path.exists(){return Ok(false);}
         ensure!(!directory.join("pending-install.json").exists(),"Company setup recovery must finish first");
         let latest=AgentState::load_for_refresh(directory)?;
         let receipt:Receipt=serde_json::from_slice(&std::fs::read(&receipt_path)?)?;
-        let release:Release=receipt.release.verify(&public_key(&latest.bootstrap.release_public_key)?)?;
-        ensure!(receipt.phase=="installing","Unknown update recovery phase");
-        release.validate(&latest.bootstrap.edition,receipt.previous_sequence,now().min(release.expires_at.saturating_sub(1)))?;
-        ensure!(latest.last_release_sequence==receipt.previous_sequence || latest.last_release_sequence==release.sequence,"Recovery sequence conflict");
+        let release=validate_recovery_release(&latest,&receipt.release,receipt.previous_sequence,&receipt.phase)?;
         verify_compatibility(directory,&release)?;
+        let attempt=directory.join("updates").join(release.sequence.to_string()).join("last-attempt.txt");
+        if !retry_now && attempt.exists(){
+            let previous=std::fs::read_to_string(attempt)?.parse::<u64>().context("Invalid update retry timestamp")?;
+            if now().saturating_sub(previous)<300{return Ok(false);}
+        }
         launch_update_helper(directory,&release)?;Ok(true)
     }
     #[cfg(windows)]
@@ -200,10 +212,7 @@ impl AgentState {
         ensure!(!directory.join("pending-install.json").exists(),"Company setup recovery must finish first");
         let receipt:Receipt=serde_json::from_slice(&std::fs::read(&receipt_path)?)?;
         let mut latest=AgentState::load_for_refresh(directory)?;
-        let release:Release=receipt.release.verify(&public_key(&latest.bootstrap.release_public_key)?)?;
-        ensure!(receipt.phase=="installing","Unknown update recovery phase");
-        release.validate(&latest.bootstrap.edition,receipt.previous_sequence,now().min(release.expires_at.saturating_sub(1)))?;
-        ensure!(latest.last_release_sequence==receipt.previous_sequence || latest.last_release_sequence==release.sequence,"Recovery sequence conflict");
+        let release=validate_recovery_release(&latest,&receipt.release,receipt.previous_sequence,&receipt.phase)?;
         verify_compatibility(directory,&release)?;
         let helper=std::env::current_exe()?;
         let mut agent_release=release.clone();agent_release.sha256=release.agent_sha256.clone();
@@ -213,7 +222,8 @@ impl AgentState {
         let package=folder.join(format!("SwanRemoteSupport-install.{}",release.format));
         ensure!(digest(std::fs::read(&package)?).eq_ignore_ascii_case(&release.sha256),"Staged installer hash mismatch");
         verify_publisher(&package,&release)?;
-        if verify_installed(directory,&release).is_err() {
+        if let Err(error)=verify_installed(directory,&release) {
+            eprintln!("Installed payload requires recovery: {error:#}");
             if latest.bootstrap.edition==Edition::Technician {
                 ensure!(release.format=="exe" && release.sha256.eq_ignore_ascii_case(&release.installed_sha256),"Technician updates require a portable EXE");
                 let target=installed_target(directory,&latest.bootstrap.edition)?;
@@ -251,7 +261,7 @@ impl AgentState {
         #[cfg(not(windows))] {let _=(directory,technician_token);anyhow::bail!("Endpoint updates require Windows");}
         #[cfg(windows)] {
             ensure!(!directory.join("pending-install.json").exists(),"Company setup recovery is required before automatic updates");
-            if directory.join("pending-update.json").exists(){return self.resume_pending_update(directory);}
+            if directory.join("pending-update.json").exists(){return self.resume_pending_update(directory,false);}
             require_existing_application(&installed_target(directory,&self.bootstrap.edition)?)?;
             let profile=self.company_profile()?;
             if profile.updates_paused || !maintenance_open(profile.maintenance_start_utc,profile.maintenance_end_utc,now()){return Ok(false);}

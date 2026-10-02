@@ -283,6 +283,31 @@ mod tests {
         let mut changed=original;changed.profile_public_key=STANDARD.encode(SigningKey::from_bytes(&[12;32]).verifying_key().as_bytes());assert!(state.validate_installer_bootstrap(&changed).is_err());
     }
     #[test]
+    fn update_recovery_rejects_tampering_sequence_conflicts_and_new_install_replay(){
+        let mut state=fixture();state.last_release_sequence=1;
+        let key=SigningKey::from_bytes(&[7;32]);
+        let mut release=Release{schema:1,product:PRODUCT.into(),version:"1.5.0".into(),sequence:2,edition:Edition::Customer,architecture:"x64".into(),channel:"test".into(),expires_at:now()+3600,artifact_url:"https://releases.example/package.exe".into(),sha256:"a".repeat(64),installed_sha256:"b".repeat(64),installed_files:vec![InstalledFile{path:"Swan Remote Support.exe".into(),sha256:"b".repeat(64)},InstalledFile{path:"librustdesk.dll".into(),sha256:"c".repeat(64)},InstalledFile{path:"flutter_windows.dll".into(),sha256:"d".repeat(64)}],agent_url:"https://releases.example/agent.exe".into(),agent_sha256:"c".repeat(64),publisher:"Example".into(),publisher_certificate_sha256:"d".repeat(64),windows_versions:vec!["windows_11".into()],source_url:"https://releases.example/source.tar.gz".into(),format:"exe".into()};
+        let envelope=SignedEnvelope::sign(&release,&key).unwrap();
+        assert!(update::validate_recovery_release(&state,&envelope,1,"installing").is_ok());
+        assert!(update::validate_recovery_release(&state,&envelope,0,"installing").is_err());
+        assert!(update::validate_recovery_release(&state,&envelope,2,"installing").is_err());
+        assert!(update::validate_recovery_release(&state,&envelope,1,"unknown").is_err());
+        let mut tampered=envelope.clone();tampered.signature=STANDARD.encode([0u8;64]);
+        assert!(update::validate_recovery_release(&state,&tampered,1,"installing").is_err());
+        let foreign=SignedEnvelope::sign(&release,&SigningKey::from_bytes(&[9;32])).unwrap();
+        assert!(update::validate_recovery_release(&state,&foreign,1,"installing").is_err());
+        state.last_release_sequence=3;
+        assert!(update::validate_recovery_release(&state,&envelope,1,"installing").is_err());
+        state.last_release_sequence=2;
+        assert!(update::validate_recovery_release(&state,&envelope,1,"installing").is_ok(),"Recovery can finish after the sequence was saved before a crash");
+        state.last_release_sequence=1;release.expires_at=now()-1;
+        let expired=SignedEnvelope::sign(&release,&key).unwrap();
+        assert!(update::validate_recovery_release(&state,&expired,1,"installing").is_ok(),"Previously selected interrupted work can finish");
+        assert!(update::validate_release(&state,&expired).is_err(),"Expired metadata cannot start a new update");
+        state.bootstrap.edition=Edition::Technician;
+        assert!(update::validate_recovery_release(&state,&expired,1,"installing").is_err());
+    }
+    #[test]
     fn explicit_repair_accepts_only_exact_pinned_release_without_weakening_updates() {
         let mut state=fixture();let key=SigningKey::from_bytes(&[7;32]);
         let mut release=Release{schema:1,product:PRODUCT.into(),version:"1.5.0".into(),sequence:2,edition:Edition::Customer,architecture:"x64".into(),channel:"test".into(),expires_at:now()+3600,artifact_url:"https://releases.example/package.exe".into(),sha256:"a".repeat(64),installed_sha256:"b".repeat(64),installed_files:vec![InstalledFile{path:"Swan Remote Support.exe".into(),sha256:"b".repeat(64)},InstalledFile{path:"librustdesk.dll".into(),sha256:"c".repeat(64)},InstalledFile{path:"flutter_windows.dll".into(),sha256:"d".repeat(64)}],agent_url:"https://releases.example/agent.exe".into(),agent_sha256:"c".repeat(64),publisher:"Example".into(),publisher_certificate_sha256:"d".repeat(64),windows_versions:vec!["windows_11".into()],source_url:"https://releases.example/source.tar.gz".into(),format:"exe".into()};

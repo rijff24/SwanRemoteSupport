@@ -53,22 +53,26 @@ async fn main()->Result<()> {
         #[cfg(windows)]
         "resume-update"=>{
             let state=AgentState::load_for_refresh(&directory)?;
-            println!("Update recovery handed off: {}",state.resume_pending_update(&directory)?);
+            println!("Update recovery handed off: {}",state.resume_pending_update(&directory,true)?);
         }
         #[cfg(windows)]
         "apply-update"=>{
             let update_directory=directory.clone();
-            let completed=tokio::task::spawn_blocking(move ||->anyhow::Result<bool>{
+            let customer=AgentState::load_for_refresh(&directory)?.bootstrap.edition==Edition::Customer;
+            let outcome=tokio::task::spawn_blocking(move ||->anyhow::Result<bool>{
                 let mut state=AgentState::load_for_refresh(&update_directory)?;
                 state.apply_pending_update(&update_directory)
-            }).await??;
-            println!("Installed release verified: {completed}");
-            if completed && AgentState::load_for_refresh(&directory)?.bootstrap.edition==Edition::Customer {
+            }).await.context("Update helper task failed").and_then(|result|result);
+            if customer && (matches!(&outcome,Ok(true)) || outcome.is_err()) {
                 let script=directory.join("Restart-Configuration.ps1");
                 std::fs::write(&script,include_str!("../../../deployment/windows/Restart-Configuration.ps1"))?;
                 let status=std::process::Command::new("powershell.exe").args(["-NoLogo","-NoProfile","-NonInteractive","-ExecutionPolicy","Bypass","-File"]).arg(script).arg("-Directory").arg(&directory).status()?;
-                ensure!(status.success(),"Update installed but configuration task restart failed");
+                if !status.success(){
+                    if let Err(error)=&outcome {eprintln!("Update remains pending: {error:#}");}
+                    bail!("Configuration task restart failed; inspect the protected update log and resume recovery");
+                }
             }
+            println!("Installed release verified: {}",outcome?);
         }
         #[cfg(windows)]
         "record-installation"=>{
