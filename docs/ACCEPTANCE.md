@@ -760,3 +760,13 @@ version and recovery-plan checks, including wrong-identity rejection and unchang
 package bytes. These checks close the ordinary suite's two skipped fixture tests
 for their stated scope; they do not establish current native MSI installation,
 trusted production signing, service/task changes or upgrade restoration.
+
+The first Linux management image built and its intermediate container rehearsal
+passed fresh company setup, non-root/read-only execution, private storage, MFA
+and replay rejection, pending enrollment and unattended-policy rejection, clean
+SIGTERM shutdown, persisted company/device/consent state and logout denial.
+The rehearsal exposed a test bug: Docker changed its dynamically assigned
+loopback port after restart. The harness now refreshes and validates that mapping
+on every start. This intermediate image required an explicit SSL_CERT_FILE test
+environment; the exact `059f675` image and its default certificate environment
+remain pending. This evidence does not prove public HTTPS or native transport.

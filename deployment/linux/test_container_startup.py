@@ -62,6 +62,13 @@ def ready(base):
     raise RuntimeError("Management container did not become healthy")
 
 
+def container_base(name):
+    port = docker("port", name, "8080/tcp")
+    if re.fullmatch(r"127\.0\.0\.1:[0-9]+", port) is None:
+        raise RuntimeError("Lab container was not restricted to loopback")
+    return "http://" + port
+
+
 def main():
     image = sys.argv[1] if len(sys.argv) == 2 else "swan-management:test"
     name = "swan-company-test-" + uuid.uuid4().hex
@@ -76,10 +83,7 @@ def main():
                "--publish", "127.0.0.1::8080", image)
         started = True
         docker("start", name)
-        port = docker("port", name, "8080/tcp")
-        if re.fullmatch(r"127\.0\.0\.1:[0-9]+", port) is None:
-            raise RuntimeError("Lab container was not restricted to loopback")
-        base = "http://" + port
+        base = container_base(name)
         ready(base)
         if docker("exec", name, "id", "-u") != "10001":
             raise RuntimeError("Management container must run as the service account")
@@ -128,6 +132,7 @@ def main():
         if docker("inspect", "--format", "{{.State.ExitCode}}", name) != "0":
             raise RuntimeError("Management did not shut down cleanly on Docker SIGTERM")
         docker("start", name)
+        base = container_base(name)
         ready(base)
         after = request(base, "/api/v1/status")
         if after["configured"] is not True or after["profile_public_key"] != status["profile_public_key"]:
