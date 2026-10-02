@@ -603,3 +603,14 @@ After these corrections, all 39 ordinary product workspace component tests pass
 again on Windows. The separate HTTPS download test is explicitly ignored in that
 run. This includes actual Authenticode positive retention and wrong-certificate
 rejection for the copied OS fixture, not execution of an installation package.
+
+MSI installation, repair, update commands and Windows worker packaging now
+check the package database identity after signature validation. The edition's
+fixed UpgradeCode, canonical ProductCode, exact signed ProductVersion and x64
+summary template must match. The database is opened read-only; inspection does
+not run installer actions. Explicit fixture tests passed against the actual
+unsigned customer and technician 1.4.9 MSIs, rejecting the opposite edition and
+wrong version and confirming unchanged artifact hashes. Synthetic checks also
+reject malformed product identifiers and non-x64 packages. These identity-only
+fixture tests do not bypass publication signature requirements. Agent and worker
+Windows builds pass; signed installation and native MSI rollback remain gates.

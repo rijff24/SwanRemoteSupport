@@ -125,7 +125,9 @@ pub async fn download(client:&reqwest::Client,url:&str,path:&Path,hash:&str)->Re
 fn verify_windows(path:&Path,release:&Release,directory:&Path)->Result<()> {
     let verifier=directory.join("Verify-Package.ps1");std::fs::write(&verifier,include_bytes!("../../../deployment/windows/Verify-Package.ps1"))?;
     let status=swan_agent::update::powershell_command()?.args(["-NoProfile","-NonInteractive","-ExecutionPolicy","Bypass","-File"]).arg(verifier).arg("-Path").arg(path).arg("-Publisher").arg(&release.publisher).arg("-CertificateSha256").arg(&release.publisher_certificate_sha256).status()?;
-    ensure!(status.success(),"Artifact signature or publisher rejected");Ok(())
+    ensure!(status.success(),"Artifact signature or publisher rejected");
+    if release.format=="msi" {swan_agent::update::verify_msi_release_identity(path,release)?;}
+    Ok(())
 }
 
 #[cfg(not(windows))]

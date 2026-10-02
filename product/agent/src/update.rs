@@ -242,7 +242,47 @@ fn replace_verified_file(source:&Path,target:&Path,expected_hash:&str)->Result<(
 }
 
 #[cfg(windows)]
-fn msi_install_command(package:&Path)->Result<std::process::Command> {
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct MsiIdentity {product_code:String,upgrade_code:String,product_version:String,template:String}
+
+#[cfg(windows)]
+fn validate_msi_identity(identity:&MsiIdentity,edition:&Edition,version:&str)->Result<()> {
+    let guid=|value:&str|value.len()==38 && value.starts_with('{') && value.ends_with('}') && value.bytes().enumerate().all(|(index,byte)|match index {0|37=>true,9|14|19|24=>byte==b'-',_=>byte.is_ascii_hexdigit()});
+    ensure!(guid(&identity.product_code) && guid(&identity.upgrade_code),"Invalid MSI product or upgrade identity");
+    let upgrade=if *edition==Edition::Customer {"{32A585D7-9A78-4AD2-AF72-D0266EFC709D}"}else{"{A4374699-436F-4917-9A4E-223F62A9E634}"};
+    ensure!(identity.upgrade_code.eq_ignore_ascii_case(upgrade),"MSI belongs to another product or edition");
+    ensure!(identity.product_version==version,"MSI version differs from signed release");
+    ensure!(identity.template.split(';').next()==Some("x64"),"MSI must target Windows x64");
+    Ok(())
+}
+
+#[cfg(windows)]
+fn read_msi_identity(package:&Path)->Result<MsiIdentity> {
+    let script=package.parent().context("Missing MSI directory")?.join("Get-MsiIdentity.ps1");
+    std::fs::write(&script,include_str!("../../../deployment/windows/Get-MsiIdentity.ps1"))?;
+    let output=powershell_command()?.args(["-NoLogo","-NoProfile","-NonInteractive","-ExecutionPolicy","Bypass","-File"]).arg(script).arg("-Package").arg(package).output()?;
+    ensure!(output.status.success(),"Cannot inspect MSI identity without installation");
+    let identity:MsiIdentity=serde_json::from_slice(&output.stdout)?;
+    Ok(identity)
+}
+
+#[cfg(windows)]
+fn verify_msi_identity(package:&Path,release:&Release)->Result<MsiIdentity> {
+    ensure!(release.format=="msi","Expected a signed MSI release");
+    let identity=read_msi_identity(package)?;
+    validate_msi_identity(&identity,&release.edition,&release.version)?;
+    Ok(identity)
+}
+
+#[cfg(windows)]
+pub fn verify_msi_release_identity(package:&Path,release:&Release)->Result<()> {
+    verify_msi_identity(package,release)?;Ok(())
+}
+
+#[cfg(windows)]
+fn msi_install_command(package:&Path,release:&Release)->Result<std::process::Command> {
+    verify_msi_identity(package,release)?;
     let script=package.parent().context("Missing update directory")?.join("Get-MsiInstallMode.ps1");
     std::fs::write(&script,include_str!("../../../deployment/windows/Get-MsiInstallMode.ps1"))?;
     let output=powershell_command()?
@@ -261,7 +301,9 @@ pub fn verify_package(state:&AgentState,directory:&Path,envelope:&SignedEnvelope
     let release=installation_release(state,directory,envelope,false)?;
     verify_compatibility(path.parent().context("Missing package directory")?,&release)?;
     ensure!(digest(std::fs::read(path)?).eq_ignore_ascii_case(&release.sha256),"Installer hash differs from signed metadata");
-    verify_publisher(path,&release)
+    verify_publisher(path,&release)?;
+    if release.format=="msi" {verify_msi_identity(path,&release)?;}
+    Ok(())
 }
 
 #[cfg(windows)]
@@ -269,7 +311,9 @@ pub fn verify_repair_package(state:&AgentState,directory:&Path,envelope:&SignedE
     let release=installation_release(state,directory,envelope,true)?;
     verify_compatibility(path.parent().context("Missing package directory")?,&release)?;
     ensure!(digest(std::fs::read(path)?).eq_ignore_ascii_case(&release.sha256),"Repair installer hash differs from signed metadata");
-    verify_publisher(path,&release)
+    verify_publisher(path,&release)?;
+    if release.format=="msi" {verify_msi_identity(path,&release)?;}
+    Ok(())
 }
 
 #[cfg(windows)]
@@ -612,12 +656,12 @@ impl AgentState {
                 let previous=folder.join("previous-technician.exe");
                 if !previous.exists(){std::fs::copy(&target,&previous)?;}
                 if release.format=="msi" {
-                    let status=msi_install_command(&package)?.arg(format!("INSTALLFOLDER={}",directory.display())).status()?;
+                    let status=msi_install_command(&package,&release)?.arg(format!("INSTALLFOLDER={}",directory.display())).status()?;
                     ensure!(matches!(status.code(),Some(0|3010)),"Technician MSI installation failed; retain signed recovery receipt");
                 }else{replace_verified_file(&package,&target,&release.installed_sha256)?;}
             }else{
                 require_existing_application(&installed_target(directory,&latest.bootstrap.edition)?)?;
-                let mut command=if release.format=="msi" {msi_install_command(&package)?}else{let mut c=std::process::Command::new(&package);c.args(["--silent-install","printer=0"]);c};
+                let mut command=if release.format=="msi" {msi_install_command(&package,&release)?}else{let mut c=std::process::Command::new(&package);c.args(["--silent-install","printer=0"]);c};
                 let status=command.status()?;
                 ensure!(matches!(status.code(),Some(0|3010)),"Installation failed; retain signed recovery receipt");
             }
@@ -731,6 +775,12 @@ pub(crate) fn test_failed_release_quarantine(state:&AgentState,release:&Release,
     assert_eq!(failed_release_sequence(state,&folder).unwrap(),0);
     let mut previous=release.clone();previous.sequence=1;previous.expires_at=now()-1;previous.rollback_protocol=1;
     #[cfg(windows)] {
+        let mut identity=MsiIdentity{product_code:"{00112233-4455-6677-8899-AABBCCDDEEFF}".into(),upgrade_code:"{32A585D7-9A78-4AD2-AF72-D0266EFC709D}".into(),product_version:release.version.clone(),template:"x64;1033".into()};
+        validate_msi_identity(&identity,&Edition::Customer,&release.version).unwrap();
+        assert!(validate_msi_identity(&identity,&Edition::Technician,&release.version).is_err());
+        assert!(validate_msi_identity(&identity,&Edition::Customer,"99.0.0").is_err());
+        identity.template="Intel;1033".into();assert!(validate_msi_identity(&identity,&Edition::Customer,&release.version).is_err());
+        identity.template="x64;1033".into();identity.product_code="invalid product".into();assert!(validate_msi_identity(&identity,&Edition::Customer,&release.version).is_err());
         let builtins=powershell_command().unwrap().args(["-NoLogo","-NoProfile","-NonInteractive","-Command","$ErrorActionPreference='Stop'; Get-Command Get-FileHash,Get-AuthenticodeSignature | ForEach-Object Name"]).output().unwrap();
         assert!(builtins.status.success());
         let commands=String::from_utf8(builtins.stdout).unwrap();
@@ -815,6 +865,21 @@ pub(crate) fn test_failed_release_quarantine(state:&AgentState,release:&Release,
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[cfg(windows)]
+    #[test]
+    #[ignore="Requires an explicitly selected isolated MSI artifact; reads its database without installation"]
+    fn real_msi_identity_matches_release_policy_without_installation(){
+        let package=std::path::PathBuf::from(std::env::var_os("SWAN_TEST_MSI_PACKAGE").expect("Set private fixture MSI path"));
+        let edition=match std::env::var("SWAN_TEST_MSI_EDITION").unwrap().as_str(){"customer"=>Edition::Customer,"technician"=>Edition::Technician,_=>panic!("Explicit fixture edition required")};
+        let version=std::env::var("SWAN_TEST_MSI_VERSION").expect("Explicit fixture version required");
+        let hash=digest(std::fs::read(&package).unwrap());
+        let identity=read_msi_identity(&package).unwrap();
+        validate_msi_identity(&identity,&edition,&version).unwrap();
+        let wrong=if edition==Edition::Customer {Edition::Technician}else{Edition::Customer};
+        assert!(validate_msi_identity(&identity,&wrong,&version).is_err());
+        assert!(validate_msi_identity(&identity,&edition,"99.0.0").is_err());
+        assert_eq!(hash,digest(std::fs::read(package).unwrap()),"Read-only MSI inspection must not change its bytes");
+    }
     #[tokio::test]
     #[ignore="Requires the isolated loopback HTTPS download-recovery harness"]
     async fn https_download_recovery_preserves_staging_on_tamper_and_interruption(){
