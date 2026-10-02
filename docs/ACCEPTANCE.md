@@ -358,3 +358,11 @@ withdrawal stopping update selection, edition/channel separation, pause and
 zero-percent rollout. Web JavaScript syntax passes. Browser interaction and real
 HTTP withdrawal during client downloads remain unverified. Previously generated
 bundles and already-started installation recovery are not removed by withdrawal.
+
+Release withdrawal now also fails matching queued/running/uploaded build jobs
+within its transaction and refuses new downloads of completed bundles while
+approval is absent. Existing files are retained; already downloaded copies and
+started installation recovery are unaffected. Build creation keeps its approval
+check and queue insertion under the same database lock. All eight management
+tests pass, including three job states and completed-bundle download denial.
+Worker/network race fault injection and browser behavior remain unverified.

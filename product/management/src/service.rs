@@ -487,9 +487,10 @@ struct BuildRequest { release_id:String }
 async fn create_build(State(s):State<Shared>,headers:HeaderMap,Json(input):Json<BuildRequest>)->ApiResult {
     let actor=s.user(&headers,true)?;let mut profile=s.profile()?;
     profile.issued_at=now();profile.expires_at=now()+7*86400;
-    let envelope:String=s.db.lock().unwrap().query_row("SELECT envelope FROM releases WHERE id=?1 AND approved=1",[&input.release_id],|r|r.get(0))?;
+    let db=s.db.lock().unwrap();
+    let envelope:String=db.query_row("SELECT envelope FROM releases WHERE id=?1 AND approved=1",[&input.release_id],|r|r.get(0))?;
     let id=Uuid::new_v4().to_string();let body=json!({"release":serde_json::from_str::<Value>(&envelope)?,"profile":SignedEnvelope::sign(&profile,&s.key)?,"profile_public_key":STANDARD.encode(s.key.verifying_key().as_bytes()),"release_public_key":std::env::var("SWAN_RELEASE_PUBLIC_KEY").map_err(|_|bad("Release key not configured"))?});
-    s.db.lock().unwrap().execute("INSERT INTO builds(id,body,state) VALUES(?1,?2,'queued')",params![id,body.to_string()])?;s.audit(&actor,"build.queued",&id)?;Ok(Json(json!({"id":id})))
+    db.execute("INSERT INTO builds(id,body,state) VALUES(?1,?2,'queued')",params![id,body.to_string()])?;drop(db);s.audit(&actor,"build.queued",&id)?;Ok(Json(json!({"id":id})))
 }
 async fn builds(State(s):State<Shared>,headers:HeaderMap)->ApiResult {
     s.user(&headers,true)?;let db=s.db.lock().unwrap();let mut stmt=db.prepare("SELECT id,state,result FROM builds ORDER BY rowid DESC LIMIT 100")?;
@@ -518,6 +519,7 @@ mod worker_completion_tests {
         let release=Release{schema:1,product:"swan-remote-support".into(),version:"2.0.0".into(),sequence:1,edition:Edition::Technician,architecture:"x86_64".into(),channel:"stable".into(),expires_at:now()+3600,artifact_url:"https://releases.example/install.msi".into(),sha256:"a".repeat(64),installed_sha256:"b".repeat(64),installed_files:vec![],agent_url:"https://releases.example/agent.exe".into(),agent_sha256:"c".repeat(64),publisher:"Example".into(),publisher_certificate_sha256:"d".repeat(64),windows_versions:vec!["windows_11".into()],source_url:"https://releases.example/source.tar.gz".into(),format:"msi".into()};
         let envelope=SignedEnvelope::sign(&release,&store.key).unwrap();
         let admin_token=random_token();let technician_token=random_token();
+        let completed=Uuid::new_v4().to_string();
         {
             let db=store.db.lock().unwrap();
             db.execute("INSERT INTO profile VALUES(1,?1)",[serde_json::to_string(&profile).unwrap()]).unwrap();
@@ -526,6 +528,9 @@ mod worker_completion_tests {
                 db.execute("INSERT INTO sessions VALUES(?1,?2,?3)",params![digest(credential),id,now()+3600]).unwrap();
             }
             db.execute("INSERT INTO releases VALUES('release',?1,?2,1)",params![serde_json::to_string(&release).unwrap(),serde_json::to_string(&envelope).unwrap()]).unwrap();
+            let job=json!({"release":envelope}).to_string();
+            for state in ["queued","running","uploaded"] {db.execute("INSERT INTO builds(id,body,state) VALUES(?1,?2,?1)",params![state,job]).unwrap();}
+            db.execute("INSERT INTO builds(id,body,state) VALUES(?1,?2,'completed')",params![completed,job]).unwrap();
         }
         let headers=|credential:&str| {let mut h=HeaderMap::new();h.insert(header::AUTHORIZATION,format!("Bearer {credential}").parse().unwrap());h};
         assert!(!select_update(&store,"technician",Edition::Technician).ok().unwrap().0.is_null());
@@ -543,6 +548,8 @@ mod worker_completion_tests {
         assert!(withdraw_release(State(store.clone()),headers(&admin_token),Path("release".into())).await.is_ok());
         assert!(select_update(&store,"technician",Edition::Technician).ok().unwrap().0.is_null());
         assert!(withdraw_release(State(store.clone()),headers(&admin_token),Path("missing".into())).await.is_err());
+        let cancelled:i64=store.db.lock().unwrap().query_row("SELECT COUNT(*) FROM builds WHERE state='failed'",[],|r|r.get(0)).unwrap();assert_eq!(cancelled,3);
+        assert!(matches!(download_artifact(State(store.clone()),Path(completed),HeaderMap::new()).await,Err(ApiError(StatusCode::NOT_FOUND,_))));
         let audit:i64=store.db.lock().unwrap().query_row("SELECT COUNT(*) FROM audit WHERE event='release.withdrawn'",[],|r|r.get(0)).unwrap();assert_eq!(audit,1);
         drop(store);std::fs::remove_dir_all(directory).unwrap();
     }
@@ -587,6 +594,16 @@ async fn withdraw_release(State(s):State<Shared>,headers:HeaderMap,Path(id):Path
     let user=s.user(&headers,true)?;
     let mut db=s.db.lock().unwrap();let tx=db.transaction()?;
     if tx.execute("UPDATE releases SET approved=0 WHERE id=?1",[&id])?!=1{return Err(bad("Unknown release"));}
+    let envelope:String=tx.query_row("SELECT envelope FROM releases WHERE id=?1",[&id],|r|r.get(0))?;
+    let envelope:Value=serde_json::from_str(&envelope)?;
+    let jobs={let mut statement=tx.prepare("SELECT id,body FROM builds WHERE state IN ('queued','running','uploaded')")?;
+        let rows=statement.query_map([],|r|Ok((r.get::<_,String>(0)?,r.get::<_,String>(1)?)))?.collect::<Result<Vec<_>,_>>()?;rows};
+    for (job,body) in jobs {
+        if serde_json::from_str::<Value>(&body)?["release"]==envelope {
+            let result=json!({"artifact_url":"","sha256":"","log":"Release approval withdrawn"});
+            tx.execute("UPDATE builds SET state='failed',result=?1 WHERE id=?2",params![result.to_string(),job])?;
+        }
+    }
     tx.execute("INSERT INTO audit(at,actor,event,target) VALUES(?1,?2,'release.withdrawn',?3)",params![now(),user,id])?;
     tx.commit()?;Ok(Json(json!({"ok":true})))
 }
@@ -701,6 +718,8 @@ async fn download_artifact(State(s):State<Shared>,Path(id):Path<String>,headers:
     let job:String=s.db.lock().unwrap().query_row("SELECT body FROM builds WHERE id=?1 AND state='completed'",[&id],|r|r.get(0)).optional()?.ok_or(ApiError(StatusCode::NOT_FOUND,"Artifact unavailable"))?;
     let job:Value=serde_json::from_str(&job)?;
     let envelope:SignedEnvelope=serde_json::from_value(job["release"].clone())?;
+    let approved:bool=s.db.lock().unwrap().query_row("SELECT EXISTS(SELECT 1 FROM releases WHERE approved=1 AND envelope=?1)",[serde_json::to_string(&envelope)?],|r|r.get(0))?;
+    if !approved{return Err(ApiError(StatusCode::NOT_FOUND,"Release approval withdrawn"));}
     let trust=std::env::var("SWAN_RELEASE_PUBLIC_KEY").map_err(|_|bad("Release trust key unavailable"))?;
     let release:Release=envelope.verify(&public_key(&trust)?).map_err(|_|denied())?;
     if release.edition==Edition::Technician{s.user(&headers,false)?;}
