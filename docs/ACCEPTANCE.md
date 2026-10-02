@@ -803,3 +803,19 @@ its uniquely named containers, volumes and network. Production recipes, DNS,
 firewall and host trust stores were not modified for this rehearsal.
 These results do not prove UDP or external NAT traversal, native remote-session
 authorization, public ACME issuance/renewal or full transport/TLS-volume restore.
+
+The extended Linux stack rehearsal now passes complete encrypted CLI export of
+management, actual transport keys/database, private deployment settings and
+Caddy certificate storage, followed by restore into separate volumes. Incorrect
+passwords fail before target writes; recovered transport keys, environment and
+every TLS file match the originals. Replacement management, rendezvous, relay
+and HTTPS containers start using the restored data. The original CA validates
+HTTPS, company profile signatures and transport identity persist, and fresh
+MFA login, replay/logout denial, pending enrollment, consent and device
+revocation pass. The restarted original retains its pending device after the
+replacement revokes its own copy. The compiled management image still uses
+exact required source inputs at `059f675`; only excluded test drivers changed.
+This establishes isolated component recovery, including actual transport and
+TLS storage. It does not establish public ACME, external traversal, authorized
+remote desktop sessions, populated transport-peer recovery, migration rollback,
+native Windows installation or the compatibility matrix.

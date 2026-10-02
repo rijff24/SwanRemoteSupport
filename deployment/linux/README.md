@@ -89,5 +89,15 @@ must reject the connection. It verifies real signed profiles, tamper/wrong-key
 rejection, setup, MFA/enrollment/logout and retained company/transport trust
 after restart. Native NAT-test replies prove local rendezvous protocol readiness;
 they do not demonstrate NAT traversal or an authorized remote desktop session.
-Public ACME, UDP, external direct/relay tests and full transport/TLS restore
-remain separate gates. The company-product CI runs all three checks.
+The test also stops the components, exports management, actual transport keys
+and database, private deployment settings and Caddy storage into one encrypted
+archive, then restores into separate volumes. A wrong password must fail before
+creating restore files. Replacement services must retain the original HTTPS
+CA, signed company profile, transport identity, enrollment and consent. MFA
+replay, logged-out credentials and revoked device access remain denied; revoking
+a device in the replacement must leave the original deployment unchanged.
+Private keys remain inside volumes and the backup passphrase enters through
+stdin. Empty storage directories need not appear in the archive; every original
+TLS file must match the recovered copy.
+Public ACME, UDP and external direct/relay sessions remain separate gates.
+The company-product CI runs all three checks.

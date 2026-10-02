@@ -113,3 +113,15 @@ restored identity; rotated profile trust, device credentials and closed-grant
 denial survive. Both original/restored fixture processes stop afterward. This
 remains isolated local TLS evidence; ACME renewal and live transport restore
 are still unverified.
+
+The Linux `test_container_stack.py` rehearsal now additionally restores actual
+pinned RustDesk transport keys/database and Caddy storage, alongside management
+and private deployment settings, from one encrypted archive. It starts replacement
+management, rendezvous, relay and HTTPS containers on separate volumes. The
+original CA still validates HTTPS, signed company configuration and transport
+identity remain unchanged, and enrollment, consent, MFA replay protection,
+logout and device revocation survive. The original deployment starts again and
+retains its pending device despite revocation in the replacement. Private key
+contents never leave the volumes. This supersedes the earlier local transport
+restore limitation above; remote desktop sessions, public ACME renewal,
+post-backup reconciliation and migration rollback remain unverified.

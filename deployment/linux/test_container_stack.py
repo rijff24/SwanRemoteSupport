@@ -25,15 +25,20 @@ from test_container_startup import authenticator, docker, secret_command
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 
 
-def complete_backup(image, prefix, volumes, lab):
+def complete_backup(image, prefix, volumes, lab, proxy_image, transport_image, context, https_port,
+                    signed, status, administrator, enrolled, login, secret):
     """Export stopped components and authenticate a restore into a fresh volume.
 
     Private keys stay inside Docker volumes; the passphrase travels over stdin.
-    This checks archive recovery, not replacement-service startup.
+    Restart replacement services using the original HTTPS and transport trust.
     """
     management, transport, tls, _ = volumes
     restored = prefix + "-archive-restore"
     docker("volume", "create", restored)
+    replacement_volumes = []
+    replacement_containers = []
+    network = prefix + "-recovered"
+    network_created = False
     password = secrets.token_hex(32)
     common = ["run", "--rm", "-i", "--user", "0", "--read-only", "--network", "none",
               "--tmpfs", "/tmp", "--security-opt", "no-new-privileges:true"]
@@ -68,7 +73,86 @@ def complete_backup(image, prefix, volumes, lab):
             "find /tls -type f -exec sh -ec 'for file do relative=${file#/tls/}; cmp -s \"$file\" \"/restore/restored/tls-storage/$relative\" || exit 1; done' sh {} +; test $(find /tls -type f | wc -l) = $(find /restore/restored/tls-storage -type f | wc -l); "
             "test $(stat -c %a /restore/restored) = 700 || { echo directory-mode >&2; exit 1; }; "
             "test $(stat -c %a /restore/restored/transport-id_ed25519) = 600 || { echo key-mode >&2; exit 1; }")
+        for role in ["transport", "tls", "proxy"]:
+            volume = prefix + "-recovered-" + role
+            docker("volume", "create", volume)
+            replacement_volumes.append(volume)
+        recovered_transport, recovered_tls, recovered_proxy = replacement_volumes
+        docker("run", "--rm", "--user", "0", "--read-only", "--network", "none",
+            "--mount", "type=volume,src=" + restored + ",dst=/restore",
+            "--mount", "type=volume,src=" + recovered_transport + ",dst=/transport",
+            "--mount", "type=volume,src=" + recovered_tls + ",dst=/tls",
+            "--entrypoint", "sh", image, "-ec",
+            "cp /restore/restored/transport-id_ed25519 /transport/id_ed25519; "
+            "cp /restore/restored/transport-id_ed25519.pub /transport/id_ed25519.pub; "
+            "if test -f /restore/restored/transport-db.sqlite3; then cp /restore/restored/transport-db.sqlite3 /transport/db_v2.sqlite3; fi; "
+            "chmod 700 /transport /tls; chmod 600 /transport/*; "
+            "cp -a /restore/restored/tls-storage/. /tls/; "
+            "chown swan:swan /restore/restored /restore/restored/management.sqlite3 /restore/restored/profile-key.hex /restore/restored/setup-token.txt")
+        docker("network", "create", network)
+        network_created = True
+        names = {role: network + "-" + role for role in ["management", "hbbs", "hbbr", "https"]}
+        docker("create", "--name", names["management"], "--network", network, "--network-alias", "management",
+               "--read-only", "--tmpfs", "/tmp", "--security-opt", "no-new-privileges:true",
+               "--mount", "type=volume,src=" + restored + ",dst=/var/lib/swan",
+               "--env", "SWAN_DATA_DIR=/var/lib/swan/restored", image)
+        replacement_containers.append(names["management"])
+        for role, services, command in [("hbbs", ["21115", "21116"], ["hbbs", "-r", "hbbr:21117", "-k", "_"]),
+                                         ("hbbr", ["21117"], ["hbbr", "-k", "_"])]:
+            arguments = ["create", "--name", names[role], "--network", network, "--network-alias", role,
+                         "--mount", "type=volume,src=" + recovered_transport + ",dst=/root"]
+            for service in services:
+                arguments += ["--publish", "127.0.0.1::" + service + "/tcp"]
+            docker(*arguments, transport_image, *command)
+            replacement_containers.append(names[role])
+        docker("create", "--name", names["https"], "--network", network, "--read-only", "--tmpfs", "/tmp",
+               "--security-opt", "no-new-privileges:true", "--env", "SWAN_HOST=localhost",
+               "--mount", "type=bind,src=" + str(lab / "Caddyfile") + ",dst=/etc/caddy/Caddyfile,readonly",
+               "--mount", "type=volume,src=" + recovered_tls + ",dst=/data",
+               "--mount", "type=volume,src=" + recovered_proxy + ",dst=/config",
+               "--publish", "127.0.0.1:" + str(https_port) + ":443/tcp", proxy_image)
+        replacement_containers.append(names["https"])
+        for role in ["management", "hbbs", "hbbr", "https"]:
+            docker("start", names[role])
+        endpoint = Endpoint(names["https"], context)
+        endpoint.ready()
+        recovered = verify_profile(endpoint.request("/api/v1/profile"), status["profile_public_key"], lab)
+        for key in signed:
+            if key not in ["issued_at", "expires_at"] and recovered[key] != signed[key]:
+                raise RuntimeError("Replacement changed trusted company profile")
+        public_file(names["hbbs"], "/root/id_ed25519.pub", lab / "recovered-transport.pub")
+        if (lab / "recovered-transport.pub").read_bytes() != (lab / "transport.pub").read_bytes():
+            raise RuntimeError("Replacement changed transport identity")
+        for service in ["21115/tcp", "21116/tcp"]:
+            nat_probe(port(names["hbbs"], service))
+        with socket.create_connection(("127.0.0.1", port(names["hbbr"], "21117/tcp")), timeout=5):
+            pass
+        endpoint.request("/api/v1/devices", token=administrator, expected=401)
+        endpoint.request("/api/v1/login", "POST", body=login, expected=401)
+        deadline = time.monotonic() + 65
+        while authenticator(secret, 1) == login["totp_code"]:
+            if time.monotonic() >= deadline:
+                raise RuntimeError("No fresh MFA code available for replacement")
+            time.sleep(0.2)
+        fresh_login = dict(login, totp_code=authenticator(secret, 1))
+        token = endpoint.request("/api/v1/login", "POST", body=fresh_login)["token"]
+        endpoint.request("/api/v1/login", "POST", body=fresh_login, expected=401)
+        inventory = endpoint.request("/api/v1/devices", token=token)
+        if len(inventory) != 1 or inventory[0]["id"] != enrolled["device_id"] or inventory[0]["state"] != "pending" or inventory[0]["unattended"]:
+            raise RuntimeError("Replacement lost enrollment or customer consent")
+        endpoint.request("/api/v1/devices/" + enrolled["device_id"] + "/state", "PUT", token,
+                         {"state": "revoked", "group": "recovery-test"})
+        endpoint.request("/api/v1/device/consent", "PUT", enrolled["device_token"],
+                         {"unattended": True, "revision": 1}, expected=401)
+        endpoint.request("/api/v1/logout", "POST", token)
+        endpoint.request("/api/v1/devices", token=token, expected=401)
     finally:
+        for name in reversed(replacement_containers):
+            docker("rm", "--force", name)
+        if network_created:
+            docker("network", "rm", network)
+        for volume in reversed(replacement_volumes):
+            docker("volume", "rm", volume)
         docker("volume", "rm", restored)
 
 
@@ -307,7 +391,8 @@ def main():
             endpoint.request("/api/v1/devices", token=administrator, expected=401)
             for role in ["https", "management", "hbbs", "hbbr"]:
                 docker("stop", "--time", "10", names[role])
-            complete_backup(image, prefix, volumes, lab)
+            complete_backup(image, prefix, volumes, lab, proxy_image, transport_image, context, https_port,
+                            signed, status, administrator, enrolled, login, secret)
             for role in ["management", "hbbs", "hbbr", "https"]:
                 docker("start", names[role])
             endpoint = Endpoint(names["https"], context)
@@ -320,7 +405,13 @@ def main():
             endpoint.request("/api/v1/devices", token=administrator, expected=401)
             for service in ["21115/tcp", "21116/tcp"]:
                 nat_probe(port(names["hbbs"], service))
-            print("PASS: pinned HTTPS/rendezvous/relay startup, local native NAT-test responses, explicit CA validation and untrusted rejection, actual profile signatures, MFA/enrollment/logout over HTTPS, trust persistence. Native sessions, UDP traversal, public ACME and external reachability remain unverified.")
+            original_login = dict(login, totp_code=authenticator(secret, 1))
+            original_token = endpoint.request("/api/v1/login", "POST", body=original_login)["token"]
+            original_inventory = endpoint.request("/api/v1/devices", token=original_token)
+            if len(original_inventory) != 1 or original_inventory[0]["id"] != enrolled["device_id"] or original_inventory[0]["state"] != "pending":
+                raise RuntimeError("Replacement revocation mutated original deployment")
+            endpoint.request("/api/v1/logout", "POST", original_token)
+            print("PASS: pinned HTTPS/rendezvous/relay startup, local native NAT-test responses, explicit CA validation and untrusted rejection, actual profile signatures, MFA/enrollment/logout over HTTPS, complete encrypted archive recovery and replacement startup with original trust. Native sessions, UDP traversal, public ACME and external reachability remain unverified.")
     finally:
         for name in reversed(containers):
             docker("rm", "--force", name)
