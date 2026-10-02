@@ -458,7 +458,7 @@ fn agent_rollback_protocol(agent:&Path,directory:&Path)->Result<u32> {
 #[cfg(windows)]
 fn supports_rollback(previous:&Release,failed:&Release)->bool {
     previous.rollback_protocol==1 && previous.edition==failed.edition && previous.format==failed.format &&
-        (previous.format=="msi" || (previous.edition==Edition::Technician && previous.format=="exe" && previous.sha256.eq_ignore_ascii_case(&previous.installed_sha256)))
+        (previous.format=="msi" || (previous.format=="exe" && (previous.edition==Edition::Customer || previous.sha256.eq_ignore_ascii_case(&previous.installed_sha256))))
 }
 
 #[cfg(windows)]
@@ -488,12 +488,21 @@ fn rollback_release(state:&AgentState,directory:&Path,folder:&Path,receipt:&Rece
             .arg("-PreviousPackage").arg(&package).arg("-NextProductCode").arg(next_identity.product_code).arg("-NextVersion").arg(&failed_release.version)
             .arg("-PreviousProductCode").arg(previous_identity.product_code).arg("-PreviousVersion").arg(&release.version).arg("-Directory").arg(target.parent().context("Missing installation directory")?).arg("-Edition").arg(if release.edition==Edition::Customer {"customer"}else{"technician"}).status()?;
         ensure!(status.success(),"MSI rollback remains pending; explicit recovery or restart may be required");
+    }else if release.edition==Edition::Customer {
+        let package=snapshot.join("package/installer.exe");
+        ensure!(staged_hash_matches(&package,&release.sha256)?,"Previous EXE installer is unavailable for complete customer recovery");
+        verify_publisher(&package,&release)?;
+        let script=folder.join("Restore-CustomerExe.ps1");
+        std::fs::write(&script,include_str!("../../../deployment/windows/Restore-CustomerExe.ps1"))?;
+        let status=powershell_command()?.args(["-NoLogo","-NoProfile","-NonInteractive","-ExecutionPolicy","Bypass","-File"]).arg(script).arg("-Package").arg(package).arg("-Directory").arg(target.parent().context("Missing customer installation directory")?).status()?;
+        ensure!(status.success(),"Customer EXE restoration remains pending");
     }else{
         require_existing_application(&target)?;
         replace_verified_file(&snapshot.join("endpoint/SwanRemoteSupport-Technician.exe"),&target,&release.installed_sha256)?;
     }
     replace_verified_file(&snapshot.join("agent/swan-agent.exe"),&directory.join("swan-agent.exe"),&release.agent_sha256)?;
     verify_installed(directory,&release)?;
+    ensure!(!directory.join("pending-uninstall").exists(),"Explicit uninstall cancelled recovery before completion");
     if release.edition==Edition::Customer {
         let script=folder.join("Restore-Configuration.ps1");
         std::fs::write(&script,include_str!("../../../deployment/windows/Restore-Configuration.ps1"))?;
@@ -925,7 +934,8 @@ pub(crate) fn test_failed_release_quarantine(state:&AgentState,release:&Release,
         old.rollback_protocol=0;assert!(!supports_rollback(&old,&failed));old.rollback_protocol=1;
         old.format="exe".into();assert!(!supports_rollback(&old,&failed));
         failed.format="exe".into();old.installed_sha256=old.sha256.clone();assert!(supports_rollback(&old,&failed));
-        old.edition=Edition::Customer;failed.edition=Edition::Customer;assert!(!supports_rollback(&old,&failed));
+        old.edition=Edition::Customer;failed.edition=Edition::Customer;assert!(supports_rollback(&old,&failed));
+        old.rollback_protocol=0;assert!(!supports_rollback(&old,&failed));
         let mut identity=MsiIdentity{product_code:"{00112233-4455-6677-8899-AABBCCDDEEFF}".into(),upgrade_code:"{32A585D7-9A78-4AD2-AF72-D0266EFC709D}".into(),product_version:release.version.clone(),template:"x64;1033".into()};
         validate_msi_identity(&identity,&Edition::Customer,&release.version).unwrap();
         assert!(validate_msi_identity(&identity,&Edition::Technician,&release.version).is_err());

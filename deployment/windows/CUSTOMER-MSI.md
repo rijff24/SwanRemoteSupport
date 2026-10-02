@@ -82,8 +82,9 @@ only its owned SYSTEM configuration task, deferring startup until recovery
 finishes. Enrollment and consent files remain current. Unexpected registration,
 service or task ownership leaves recovery pending. A separate staged recovery
 task now implements startup and periodic retry across removal of the installed
-agent; see [update recovery](UPDATE-RECOVERY.md). Customer EXE/service rollback
-remains unfinished. This path has component and read-only planning evidence only; native
+agent; see [update recovery](UPDATE-RECOVERY.md). A separate EXE path now
+implements customer service restoration while refusing MSI-managed or unrelated
+installations. These paths have component and read-only planning evidence only; native
 signed installation, removal, restore and restart remain acceptance gates.
 
 References: [WiX service installation](https://docs.firegiant.com/wix/schema/wxs/serviceinstall/)

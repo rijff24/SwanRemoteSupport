@@ -53,6 +53,25 @@ signed metadata, artifact identity and package checks still precede installation
 
 ## Verification boundary
 
+Customer EXE rollback now reinstalls only the retained previous hash/publisher-
+verified package after complete snapshot and previous-agent capability checks.
+It rejects an MSI upgrade-family registration, MSI product marker, wrong
+uninstall registration, or another installation's service. The restored service
+must run automatically; installed endpoint/agent files verify before metadata
+and failed-release quarantine are published. Identity, keys and consent remain
+current. Explicit customer EXE uninstall runs a fixed encoded cancellation
+script inside its elevated uninstall batch before service/file removal, stopping
+only its owned configuration task. Recovery rechecks cancellation before
+completion.
+
+Native service/process command generation now quotes stable names containing
+spaces. SYSTEM installation uses the OS command processor directly. Silent
+portable packages wait for the extracted install process and propagate its exit
+status; GUI launch keeps its existing asynchronous behavior. The standalone wait
+module's Windows child lifecycle tests pass, including failed exit and missing
+executable handling. Native app/packer syntax parses, but current full native
+compilation and signed installer execution have not yet passed.
+
 Windows agent/worker compilation, agent component tests, read-only task planning,
 Scheduled Task object creation and ownership/cancellation regressions pass.
 Unsigned customer and technician packaging rehearsals using historical 1.4.9

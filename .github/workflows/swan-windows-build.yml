@@ -172,6 +172,10 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Customer MSI recovery service guard checks failed.' }
           & "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe" -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File deployment/windows/test_update_recovery_task.ps1
           if ($LASTEXITCODE -ne 0) { throw 'Update recovery task ownership checks failed.' }
+          rustc --edition 2021 --test libs/portable/src/install_wait.rs -o portable-install-wait-tests.exe
+          if ($LASTEXITCODE -ne 0) { throw 'Portable installer wait tests did not compile.' }
+          ./portable-install-wait-tests.exe
+          if ($LASTEXITCODE -ne 0) { throw 'Portable installer completion tests failed.' }
           python3 deployment/windows/generate-payload-manifest.py --edition customer --source swan-client --output artifacts/customer-installed-files.unsigned.json
           python3 deployment/windows/generate-payload-manifest.py --edition technician --source artifacts/SwanRemoteSupport-${{ env.VERSION }}-technician-x64-unsigned.exe --output artifacts/technician-installed-files.unsigned.json
 

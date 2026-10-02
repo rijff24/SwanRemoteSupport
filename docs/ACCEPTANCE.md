@@ -683,3 +683,23 @@ unsigned uninstalled technician package and selects installation without running
 it. Company bundles now include the inspector, and installer execution resolves
 the OS system directory. Actual Swan-signed setup, MSI repair, cancelled-update
 uninstall/reinstall and complete clean Windows acceptance remain unverified.
+
+Customer EXE rollback now uses its retained verified original package, refuses
+MSI-managed and unrelated registrations/services, verifies automatic service
+startup and full installed identity, then applies the existing quarantine without
+restoring enrollment or consent. Explicit EXE uninstall embeds a fixed encoded
+cancellation/task-ownership script in its elevated uninstall batch; no profile
+field provides commands. Stable native service/process names containing spaces
+are quoted. SYSTEM install command execution avoids the interactive elevation
+route. Silent portable packages now wait for their extracted installer and
+propagate its exit status instead of racing installed-file verification.
+
+Targeted signed recovery regressions and Windows agent/worker builds pass. Pure
+service ownership tests pass for both MSI and EXE scripts without querying or
+modifying services. Three standalone Windows portable-wait tests pass, including
+actual child completion/failure and launch failure; these test the exact wait
+module used by the packer, not a packaged application install. New scripts and
+native Rust syntax parse. Full current native app/packer compilation, EXE
+uninstall/service restoration, signed rollback, reboot and clean Windows matrix
+acceptance remain unverified. No native uninstall/cancellation script, installer
+or service operation executed on this development host.
