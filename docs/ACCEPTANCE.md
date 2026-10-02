@@ -393,3 +393,12 @@ fresh server approval and pending receipts remain installation gates. Rust
 parsing and diff checks pass; source inspection confirms the task uses the
 existing persistent Tokio runner. Native compilation, task responsiveness and
 GUI/session races still require end-to-end validation.
+
+Consumed native technician ticket handles now retain bounded, login-generation
+bound reconnection context without grants or proof keys. A reconnect requests a
+new server grant and ephemeral proof key, verifies the original device/peer and
+consent mode, and rejects logout or login changes. Attended sessions still need
+customer approval; reconnection never upgrades them to unattended access.
+Logout/login/update handoff clear the context. Native Rust parsing and diff
+checks pass. Reboot reconnection, concurrent-window behavior, revocation during
+reconnect and full native compilation remain unverified.

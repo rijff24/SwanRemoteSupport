@@ -142,8 +142,8 @@ class _CompanyTechnicianPageState extends State<CompanyTechnicianPage> {
     final response = await _request({'action': 'connect', 'device_id': device['id'],
       'unattended': unattended}) as Map<String, dynamic>;
     if (!mounted) return;
-    // Only a one-use local handle enters the window API; signed grants and
-    // challenge proof keys stay in Rust memory and are bound to the target.
+    // Only an opaque native request handle enters the window API. Reconnects
+    // need fresh target-bound grants; signing proof keys stay in Rust memory.
     await connect(context, response['rustdesk_id'] as String,
         password: response['ticket_handle'] as String);
   }

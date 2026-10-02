@@ -3483,7 +3483,7 @@ pub async fn handle_hash(
     #[cfg(feature = "swan_custom")]
     {
         let target = lc.read().unwrap().id.clone();
-        match crate::managed::login(&hash.challenge, &target, password_preset) {
+        match crate::managed::login(&hash.challenge, &target, password_preset).await {
             Ok(proof) => send_login(lc, String::new(), String::new(), proof, peer).await,
             Err(_) => interface.msgbox("error", "Company authorization required", "Sign in and request a new session from the company technician device list.", ""),
         }

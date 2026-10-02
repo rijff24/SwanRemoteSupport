@@ -5,11 +5,14 @@ use swan_agent::{protocol::{self, Edition, ManagedLogin, SignedEnvelope}, AgentS
 
 struct TechnicianLogin {token:String,company:String,username:String}
 struct PendingTicket {envelope:SignedEnvelope,key_hex:String,expires_at:u64,company:String,peer:String}
+#[derive(Clone)]
+struct ReconnectRequest {device:String,unattended:bool,company:String,peer:String,generation:u64,expires_at:u64}
 #[derive(Default)]
 struct TechnicianMemory {
     generation:u64,
     login:Option<TechnicianLogin>,
     tickets:std::collections::HashMap<String,PendingTicket>,
+    reconnects:std::collections::HashMap<String,ReconnectRequest>,
     update_running:bool,
     update_handed_off:bool,
     update_failed:bool,
@@ -63,7 +66,7 @@ async fn technician_request_inner(request:&str)->ResultType<serde_json::Value> {
         let username=input["username"].as_str().ok_or_else(||anyhow!("Missing username"))?;
         let password=input["password"].as_str().ok_or_else(||anyhow!("Missing password"))?;
         let code=input["code"].as_str().ok_or_else(||anyhow!("Missing code"))?;
-        let generation={let mut memory=TECHNICIAN.lock().unwrap();memory.generation=memory.generation.wrapping_add(1);memory.login=None;memory.tickets.clear();memory.generation};
+        let generation={let mut memory=TECHNICIAN.lock().unwrap();memory.generation=memory.generation.wrapping_add(1);memory.login=None;memory.tickets.clear();memory.reconnects.clear();memory.generation};
         let token=state.technician_login(username,password,code).await?;
         let accepted={let mut memory=TECHNICIAN.lock().unwrap();
             if memory.generation==generation {memory.login=Some(TechnicianLogin{token:token.clone(),company:state.bootstrap.company_id.clone(),username:username.into()});true}else{false}
@@ -77,7 +80,7 @@ async fn technician_request_inner(request:&str)->ResultType<serde_json::Value> {
         (login.token.clone(),memory.generation)
     };
     if action=="logout" {
-        {let mut memory=TECHNICIAN.lock().unwrap();memory.generation=memory.generation.wrapping_add(1);memory.login=None;memory.tickets.clear();}
+        {let mut memory=TECHNICIAN.lock().unwrap();memory.generation=memory.generation.wrapping_add(1);memory.login=None;memory.tickets.clear();memory.reconnects.clear();}
         // Local logout is immediate even if the server cannot receive revocation.
         state.technician_logout(&token).await?;
         return Ok(json!({"logged_in":false}));
@@ -103,7 +106,7 @@ async fn technician_request_inner(request:&str)->ResultType<serde_json::Value> {
             memory.update_running=false;memory.update_failed=result.is_err();
             memory.update_handed_off=matches!(result,Ok(true));
             if memory.update_handed_off {
-                memory.generation=memory.generation.wrapping_add(1);memory.login=None;memory.tickets.clear();
+                memory.generation=memory.generation.wrapping_add(1);memory.login=None;memory.tickets.clear();memory.reconnects.clear();
             }
         });
         return Ok(json!({"handed_off":false,"started":true}));
@@ -123,10 +126,13 @@ async fn technician_request_inner(request:&str)->ResultType<serde_json::Value> {
         let mut memory=TECHNICIAN.lock().unwrap();
         if memory.generation!=generation || memory.login.is_none(){bail!("Login changed during authorization");}
         memory.tickets.retain(|_,ticket|ticket.expires_at>protocol::now());
+        memory.reconnects.retain(|_,request|request.expires_at>protocol::now());
         if memory.tickets.len()>=32 {bail!("Too many pending connections");}
+        if memory.reconnects.len()>=1024 {bail!("Too many connection requests; sign in again");}
         // The proof is consumed inside native handle_hash, never sent to Dart,
         // command-line arguments, another app instance or IPC configuration.
         let handle=format!("SWT1.{}",protocol::random_token());
+        memory.reconnects.insert(handle.clone(),ReconnectRequest{device:device.into(),unattended:grant.unattended,company:grant.company_id.clone(),peer:grant.rustdesk_id.clone(),generation,expires_at:protocol::now()+86400});
         memory.tickets.insert(handle.clone(),PendingTicket{envelope,key_hex:hex::encode(key.to_bytes()),expires_at:grant.expires_at,company:grant.company_id,peer:grant.rustdesk_id.clone()});
         return Ok(json!({"rustdesk_id":grant.rustdesk_id,"ticket_handle":handle}));
     }
@@ -185,26 +191,41 @@ pub async fn renew(lease:&mut Lease)->ResultType<()> {
     state.renew(lease).await?;Ok(())
 }
 
-pub fn login(challenge:&str,target:&str,local_ticket:&str)->ResultType<Vec<u8>> {
+pub async fn login(challenge:&str,target:&str,local_ticket:&str)->ResultType<Vec<u8>> {
     // The outgoing connection loop retains its own shared lock through close.
     // Recheck pending installation here as well before consuming a proof ticket.
-    let _activity=swan_agent::lock_session(&swan_agent::state_directory())?;
+    {let _activity=swan_agent::lock_session(&swan_agent::state_directory())?;}
     let state=AgentState::load(&swan_agent::state_directory())?;
     if state.bootstrap.edition!=Edition::Technician {hbb_common::bail!("Technician edition required");}
     // The opaque handle identifies one window's pending request. It contains
     // no grant or proof key and cannot overwrite another request to this peer.
     let pending=if local_ticket.is_empty(){None}else{
         if !local_ticket.starts_with("SWT1."){hbb_common::bail!("Managed ticket required; legacy passwords are disabled");}
-        Some(TECHNICIAN.lock().unwrap().tickets.remove(local_ticket).ok_or_else(||hbb_common::anyhow::anyhow!("Ticket missing or already consumed"))?)
+        TECHNICIAN.lock().unwrap().tickets.remove(local_ticket)
     };
     let (envelope,key)=if let Some(ticket)=pending {
         if ticket.company!=state.bootstrap.company_id || ticket.peer!=target || ticket.expires_at<=protocol::now(){hbb_common::bail!("Expired or wrong-target ticket");}
         (ticket.envelope,protocol::signing_key_from_hex(&ticket.key_hex)?)
+    }else if !local_ticket.is_empty(){
+        // A consumed proof is never replayed. Reconnection requires current
+        // native login and a new target-bound server grant and proof key.
+        let (request,token)={let memory=TECHNICIAN.lock().unwrap();
+            let request=memory.reconnects.get(local_ticket).ok_or_else(||hbb_common::anyhow::anyhow!("Unknown connection request"))?.clone();
+            let login=memory.login.as_ref().ok_or_else(||hbb_common::anyhow::anyhow!("Login required for reconnection"))?;
+            if request.company!=state.bootstrap.company_id || login.company!=request.company || request.peer!=target || request.generation!=memory.generation || request.expires_at<=protocol::now(){hbb_common::bail!("Expired or wrong-target reconnection");}
+            (request,login.token.clone())
+        };
+        let key=protocol::signing_key_from_hex(&protocol::random_token())?;
+        let (envelope,grant)=state.technician_ticket(&token,&request.device,request.unattended,&key).await?;
+        {let memory=TECHNICIAN.lock().unwrap();if memory.generation!=request.generation || memory.login.is_none(){hbb_common::bail!("Login changed during reconnection");}}
+        if grant.device_id!=request.device || grant.unattended!=request.unattended{hbb_common::bail!("Wrong reconnection grant");}
+        (envelope,key)
     }else{
         (serde_json::from_str(&std::env::var("SWAN_SESSION_GRANT")?)?,protocol::signing_key_from_hex(&std::env::var("SWAN_SESSION_PROOF_KEY")?)?)
     };
     let grant:protocol::SessionGrant=envelope.verify(&protocol::public_key(&state.bootstrap.profile_public_key)?)?;
     grant.validate(&state.bootstrap.company_id,&grant.device_id,target,protocol::now())?;
+    let _activity=swan_agent::lock_session(&swan_agent::state_directory())?;
     // A ticket stolen from a connection cannot be used without this ephemeral proof key.
     Ok(ManagedLogin::prove(envelope,&key,challenge).to_wire()?)
 }
