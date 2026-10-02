@@ -419,3 +419,12 @@ claim success after an error/timeout. Consent buttons prevent overlapping UI
 requests. Existing consent revision checks still reject a delayed enable after
 revocation. Rust parsing and diff checks pass. Full Windows service IPC, offline
 revocation feedback, persistence failures and UI rendering remain unverified.
+
+An independent official Windows Server 2016 evaluation VM is now provisioned
+and running with a separate 64 GB disk, 2 GB memory, one CPU and user NAT without
+forwarded ports. Its fresh screenshot confirms the Windows Setup language page.
+The evaluation download completed with recorded origin/hash; private VM metadata
+and screenshots remain outside the repository. The existing Server 2025 VM is
+still running at its boot screen and was not restarted. No clean Windows install
+or product installation has passed yet. Native build 37002003558 is queued at
+0c71544, covering the acknowledged customer-consent source.
