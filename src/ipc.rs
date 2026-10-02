@@ -885,35 +885,25 @@ async fn handle(data: Data, stream: &mut Connection) {
             }
             Some(value) => {
                 #[cfg(feature = "swan_custom")]
-                if name == "company-allow-unattended" && value == "Y" {
-                    let directory=swan_agent::state_directory();
-                    match swan_agent::AgentState::load(&directory) {
-                        Ok(mut state)=>{
-                            match state.consent(true).await {
-                                Ok(())=>if let Err(error)=state.set_local_consent(&directory,true){log::error!("Cannot persist explicit unattended consent: {}",error);},
-                                Err(error)=>log::warn!("Company did not accept unattended consent: {}",error),
-                            }
-                        }
-                        Err(error)=>log::error!("Cannot load current company policy: {}",error),
-                    }
-                    return;
-                }
-                #[cfg(feature = "swan_custom")]
-                if name == "company-revoke-unattended" && value == "N" {
-                    match swan_agent::AgentState::load_for_refresh(&swan_agent::state_directory()) {
-                        Ok(mut state) => {
-                            match state.set_local_consent(&swan_agent::state_directory(),false) {
-                                Ok(()) => {
-                                    // Revocation is already durable locally even if the API is offline.
-                                    if let Err(error) = state.consent(false).await {
-                                        log::warn!("Server consent synchronization failed: {}", error);
-                                    }
-                                }
-                                Err(error) => log::error!("Cannot persist consent revocation: {}", error),
-                            }
-                        }
-                        Err(error) => log::error!("Cannot load company consent: {}", error),
-                    }
+                if (name == "company-allow-unattended" && value == "Y") || (name == "company-revoke-unattended" && value == "N") {
+                    let enabled=name=="company-allow-unattended";
+                    let result=async {
+                        let directory=swan_agent::state_directory();
+                        let mut state=if enabled{swan_agent::AgentState::load(&directory)?}else{swan_agent::AgentState::load_for_refresh(&directory)?};
+                        let synced=if enabled {
+                            state.consent(true).await?;
+                            state.set_local_consent(&directory,true)?;true
+                        }else{
+                            state.set_local_consent(&directory,false)?;
+                            match state.consent(false).await {Ok(())=>true,Err(error)=>{log::warn!("Server consent synchronization failed: {}",error);false}}
+                        };
+                        Ok::<_,hbb_common::anyhow::Error>(serde_json::json!({"ok":true,"unattended":enabled,"server_synced":synced}))
+                    }.await;
+                    let response=match result {
+                        Ok(response)=>response,
+                        Err(error)=>{log::error!("Cannot persist company consent: {}",error);serde_json::json!({"ok":false})}
+                    };
+                    allow_err!(stream.send(&Data::Config((name,Some(response.to_string())))).await);
                     return;
                 }
                 let mut updated = true;
@@ -1543,6 +1533,20 @@ async fn get_config_async(name: &str, ms_timeout: u64) -> ResultType<Option<Stri
         }
     }
     return Ok(None);
+}
+
+#[cfg(feature = "swan_custom")]
+pub async fn set_company_consent(enabled:bool)->ResultType<serde_json::Value> {
+    let name=if enabled{"company-allow-unattended"}else{"company-revoke-unattended"};
+    let mut connection=connect(1000, "").await?;
+    connection.send(&Data::Config((name.into(),Some(if enabled{"Y"}else{"N"}.into())))).await?;
+    if let Some(Data::Config((returned,Some(value))))=connection.next_timeout(20_000).await? {
+        if returned==name {
+            let response:serde_json::Value=serde_json::from_str(&value)?;
+            if response["ok"]==true && response["unattended"]==enabled{return Ok(response);}
+        }
+    }
+    bail!("Company consent change was not confirmed")
 }
 
 pub async fn set_config_async(name: &str, value: String) -> ResultType<()> {

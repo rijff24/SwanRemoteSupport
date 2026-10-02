@@ -54,6 +54,30 @@ class _DesktopHomePageState extends State<DesktopHomePage>
   var watchIsCanRecordAudio = false;
   Timer? _updateTimer;
   Timer? _companyRefreshTimer;
+  bool _companyConsentBusy = false;
+
+  Future<void> _changeCompanyConsent(bool enabled) async {
+    if (_companyConsentBusy) return;
+    setState(() { _companyConsentBusy = true; });
+    String message;
+    try {
+      final text = await bind.mainCompanyRequest(request: jsonEncode({
+        'action': 'customer-consent', 'enabled': enabled,
+      })).first.timeout(const Duration(seconds: 25));
+      final response = jsonDecode(text) as Map<String, dynamic>;
+      if (response['ok'] != true) throw StateError('Consent not confirmed');
+      final data = response['data'] as Map<String, dynamic>;
+      if (data['unattended'] != enabled) throw StateError('Consent not confirmed');
+      message = enabled ? 'Unattended access enabled.'
+          : data['server_synced'] == true ? 'Unattended access revoked.'
+          : 'Unattended access revoked on this computer. Server synchronization is pending.';
+    } catch (_) {
+      message = 'The consent change was not confirmed. Check the support status before relying on it.';
+    } finally {
+      if (mounted) setState(() { _companyConsentBusy = false; });
+    }
+    if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+  }
   bool isCardClosed = false;
 
   final RxBool _editHover = false.obs;
@@ -280,16 +304,13 @@ class _DesktopHomePageState extends State<DesktopHomePage>
               CompanyContactLinks(company: company),
               if (company['unattended'] == true)
                 TextButton.icon(
-                  onPressed: () async {
-                    await bind.mainSetCommon(key: 'company-revoke-unattended', value: 'N');
-                    if (mounted) setState(() {});
-                  },
+                  onPressed: _companyConsentBusy ? null : () => _changeCompanyConsent(false),
                   icon: const Icon(Icons.shield_outlined),
                   label: const Text('Revoke unattended access'),
                 ),
               if (isReady && company['unattended'] != true && company['allow_unattended'] == true)
                 TextButton.icon(
-                  onPressed: () async {
+                  onPressed: _companyConsentBusy ? null : () async {
                     final accepted = await showDialog<bool>(
                       context: context,
                       builder: (dialogContext) => AlertDialog(
@@ -302,11 +323,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
                       ),
                     );
                     if (accepted != true || !mounted) return;
-                    await bind.mainSetCommon(key: 'company-allow-unattended', value: 'Y');
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Consent change requested. Unattended access stays disabled until the company accepts it.')));
-                      setState(() {});
-                    }
+                    await _changeCompanyConsent(true);
                   },
                   icon: const Icon(Icons.shield_outlined),
                   label: const Text('Allow unattended support'),

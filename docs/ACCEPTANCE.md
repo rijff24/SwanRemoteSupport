@@ -410,3 +410,12 @@ use their separate native path. These guards apply only to the managed build,
 preserving baseline source behavior. Rust parsing and diff checks pass. Native
 compilation, saved-settings inspection and negative legacy-UI tests remain
 unverified; receiver-side signed authorization remains the access boundary.
+
+Customer consent changes now use acknowledged asynchronous service IPC through
+the existing company request bridge. Enable acknowledges only after server
+acceptance and local persistence. Revoke persists locally first, then reports
+whether server sync succeeded; the UI distinguishes pending sync and refuses to
+claim success after an error/timeout. Consent buttons prevent overlapping UI
+requests. Existing consent revision checks still reject a delayed enable after
+revocation. Rust parsing and diff checks pass. Full Windows service IPC, offline
+revocation feedback, persistence failures and UI rendering remain unverified.

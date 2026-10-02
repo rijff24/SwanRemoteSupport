@@ -36,6 +36,10 @@ async fn technician_request_inner(request:&str)->ResultType<serde_json::Value> {
     if request.len()>8192 {bail!("Request too large");}
     let input:serde_json::Value=serde_json::from_str(request)?;
     let action=input["action"].as_str().ok_or_else(||anyhow!("Missing action"))?;
+    if action=="customer-consent" {
+        let enabled=input["enabled"].as_bool().ok_or_else(||anyhow!("Missing consent choice"))?;
+        return crate::ipc::set_company_consent(enabled).await;
+    }
     let directory=swan_agent::state_directory();
     let state=AgentState::load_for_refresh(&directory)?;
     if state.bootstrap.edition!=Edition::Technician {bail!("Technician edition required");}
