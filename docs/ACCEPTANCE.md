@@ -93,6 +93,17 @@ enrollment recovery; it does not prove Internet transport, reboot, desktop
 sessions, UAC, automatic-update recovery, fresh signed installation on another
 guest, or compatibility on the other advertised Windows versions.
 
+The installed signed customer agent also fetched branding revision two over
+HTTPS without reinstallation. Device identity/credential, consent and software
+sequence stayed unchanged. With the owned company service stopped, the agent
+validated its cached profile and installed release; the service was restored
+afterward. Separate protected copies of state rejected a tampered profile
+signature, an older genuinely signed profile, and a mismatched company identity.
+The actual installed state remained unchanged by those negative tests. This
+proves agent cache behavior while management is unavailable, not visual branding
+in Flutter, operation on a completely disconnected network, or offline permission
+to establish a support session.
+
 ### Earlier component evidence
 
 - Public baseline tag `swan-single-company-baseline-1.4.9` preserves the original
