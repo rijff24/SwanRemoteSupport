@@ -1,6 +1,6 @@
 use anyhow::ensure;
 use argon2::{password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString}, Argon2};
-use axum::{extract::{DefaultBodyLimit, Path, State}, http::{header, HeaderMap, StatusCode}, response::{Html, IntoResponse, Response}, routing::{get, post, put}, Json, Router};
+use axum::{extract::{DefaultBodyLimit, Path, Query, State}, http::{header, HeaderMap, StatusCode}, response::{Html, IntoResponse, Response}, routing::{get, post, put}, Json, Router};
 use base64::{engine::general_purpose::STANDARD, Engine};
 use ed25519_dalek::SigningKey;
 use rand::rngs::OsRng;
@@ -506,13 +506,17 @@ fn list_json(s:&Store,sql:&str,approved:bool)->ApiResult {
     for (id,raw,approved) in rows {values.push(json!({"id":id,"data":serde_json::from_str::<Value>(&raw)?,"approved":approved}));}
     Ok(Json(json!(values)))
 }
-async fn device_update(State(s):State<Shared>,headers:HeaderMap)->ApiResult {
-    let device=s.device(&headers)?;select_update(&s,&device,Edition::Customer)
+#[derive(Default,Deserialize)]
+#[serde(deny_unknown_fields)]
+struct UpdateQuery {format:Option<String>}
+async fn device_update(State(s):State<Shared>,headers:HeaderMap,Query(query):Query<UpdateQuery>)->ApiResult {
+    let device=s.device(&headers)?;select_update(&s,&device,Edition::Customer,query.format.as_deref())
 }
-async fn technician_update(State(s):State<Shared>,headers:HeaderMap)->ApiResult {
-    let user=s.user(&headers,false)?;select_update(&s,&user,Edition::Technician)
+async fn technician_update(State(s):State<Shared>,headers:HeaderMap,Query(query):Query<UpdateQuery>)->ApiResult {
+    let user=s.user(&headers,false)?;select_update(&s,&user,Edition::Technician,query.format.as_deref())
 }
-fn select_update(s:&Store,device:&str,edition:Edition)->ApiResult {
+fn select_update(s:&Store,device:&str,edition:Edition,format:Option<&str>)->ApiResult {
+    if format.map(|format|!["exe","msi"].contains(&format)).unwrap_or(false){return Err(bad("Invalid installer format"));}
     let profile=s.profile()?;
     let cohort=u8::from_str_radix(&digest(&device)[..2],16).map_err(|_|bad("Invalid device"))? as u32 * 100 / 256;
     if profile.updates_paused || cohort>=profile.rollout_percent as u32 || !maintenance_open(profile.maintenance_start_utc,profile.maintenance_end_utc,now()) {return Ok(Json(Value::Null));}
@@ -520,7 +524,7 @@ fn select_update(s:&Store,device:&str,edition:Edition)->ApiResult {
     let rows=stmt.query_map([],|r|Ok((r.get::<_,String>(0)?,r.get::<_,String>(1)?)))?.collect::<Result<Vec<_>,_>>()?;
     let mut best:Option<(u64,Value)>=None;
     for (body,envelope) in rows {let release:Release=serde_json::from_str(&body)?;
-        if release.edition==edition && release.channel==profile.update_channel && release.expires_at>now() && best.as_ref().map(|b|b.0<release.sequence).unwrap_or(true) {best=Some((release.sequence,serde_json::from_str(&envelope)?));}}
+        if release.edition==edition && format.map(|format|release.format==format).unwrap_or(true) && release.channel==profile.update_channel && release.expires_at>now() && best.as_ref().map(|b|b.0<release.sequence).unwrap_or(true) {best=Some((release.sequence,serde_json::from_str(&envelope)?));}}
     Ok(Json(best.map(|v|v.1).unwrap_or(Value::Null)))
 }
 async fn create_worker(State(s):State<Shared>,headers:HeaderMap)->ApiResult {
@@ -599,7 +603,7 @@ mod worker_completion_tests {
         let store=std::sync::Arc::new(Store::open(&directory).unwrap());
         let public=STANDARD.encode(store.key.verifying_key().as_bytes());
         let profile=CompanyProfile{schema:1,company_id:"release-test".into(),revision:1,issued_at:now()-1,expires_at:now()+3600,management_url:"https://support.example.com".into(),rendezvous:"support.example.com".into(),relay:"support.example.com".into(),transport_public_key:public,customer:Default::default(),technician:Default::default(),allow_unattended:false,updates_paused:false,rollout_percent:100,maintenance_start_utc:0,maintenance_end_utc:0,update_channel:"stable".into(),next_profile_public_key:None};
-        let release=Release{schema:1,product:"swan-remote-support".into(),version:"2.0.0".into(),sequence:1,edition:Edition::Technician,architecture:"x86_64".into(),channel:"stable".into(),expires_at:now()+3600,artifact_url:"https://releases.example/install.msi".into(),sha256:"a".repeat(64),installed_sha256:"b".repeat(64),installed_files:vec![],agent_url:"https://releases.example/agent.exe".into(),agent_sha256:"c".repeat(64),publisher:"Example".into(),publisher_certificate_sha256:"d".repeat(64),windows_versions:vec!["windows_11".into()],source_url:"https://releases.example/source.tar.gz".into(),format:"msi".into(),rollback_protocol:0};
+        let release=Release{schema:1,product:PRODUCT.into(),version:"2.0.0".into(),sequence:1,edition:Edition::Technician,architecture:"x64".into(),channel:"stable".into(),expires_at:now()+3600,artifact_url:"https://releases.example/install.msi".into(),sha256:"a".repeat(64),installed_sha256:"b".repeat(64),installed_files:vec![InstalledFile{path:"SwanRemoteSupport-Technician.exe".into(),sha256:"b".repeat(64)}],agent_url:"https://releases.example/agent.exe".into(),agent_sha256:"c".repeat(64),publisher:"Example".into(),publisher_certificate_sha256:"d".repeat(64),windows_versions:vec!["windows_11".into()],source_url:"https://releases.example/source.tar.gz".into(),format:"msi".into(),rollback_protocol:0};
         let envelope=SignedEnvelope::sign(&release,&store.key).unwrap();
         let admin_token=random_token();let technician_token=random_token();
         let completed=Uuid::new_v4().to_string();
@@ -620,20 +624,33 @@ mod worker_completion_tests {
         }
         persist_verified_artifact(&store,&in_flight,&worker,b"previously validated bundle").ok().unwrap();
         let headers=|credential:&str| {let mut h=HeaderMap::new();h.insert(header::AUTHORIZATION,format!("Bearer {credential}").parse().unwrap());h};
-        assert!(!select_update(&store,"technician",Edition::Technician).ok().unwrap().0.is_null());
-        assert!(select_update(&store,"device",Edition::Customer).ok().unwrap().0.is_null());
+        assert!(!select_update(&store,"technician",Edition::Technician,None).ok().unwrap().0.is_null());
+        assert!(select_update(&store,"device",Edition::Customer,None).ok().unwrap().0.is_null());
+        let mut portable=release.clone();portable.sequence=2;portable.format="exe".into();portable.sha256=portable.installed_sha256.clone();
+        release.validate(&Edition::Technician,0,now()).unwrap();portable.validate(&Edition::Technician,0,now()).unwrap();
+        let portable_envelope=SignedEnvelope::sign(&portable,&store.key).unwrap();
+        store.db.lock().unwrap().execute("INSERT INTO releases VALUES('portable-release',?1,?2,1)",params![serde_json::to_string(&portable).unwrap(),serde_json::to_string(&portable_envelope).unwrap()]).unwrap();
+        assert_eq!(select_update(&store,"technician",Edition::Technician,Some("msi")).ok().unwrap().0,serde_json::to_value(&envelope).unwrap());
+        assert_eq!(select_update(&store,"technician",Edition::Technician,Some("exe")).ok().unwrap().0,serde_json::to_value(&portable_envelope).unwrap());
+        assert_eq!(select_update(&store,"technician",Edition::Technician,None).ok().unwrap().0,serde_json::to_value(&portable_envelope).unwrap());
+        assert!(select_update(&store,"technician",Edition::Technician,Some("zip")).is_err());
+        assert!(technician_update(State(store.clone()),HeaderMap::new(),Query(UpdateQuery{format:Some("exe".into())})).await.is_err());
+        assert!(device_update(State(store.clone()),HeaderMap::new(),Query(UpdateQuery{format:Some("msi".into())})).await.is_err());
+        assert_eq!(technician_update(State(store.clone()),headers(&technician_token),Query(UpdateQuery{format:Some("msi".into())})).await.ok().unwrap().0,serde_json::to_value(&envelope).unwrap());
+        store.db.lock().unwrap().execute("UPDATE releases SET approved=0 WHERE id='portable-release'",[]).unwrap();
+        assert!(select_update(&store,"technician",Edition::Technician,Some("exe")).ok().unwrap().0.is_null());
         let save_policy=|policy:&CompanyProfile| {store.db.lock().unwrap().execute("UPDATE profile SET body=?1 WHERE id=1",[serde_json::to_string(policy).unwrap()]).unwrap();};
         let mut paused=profile.clone();paused.updates_paused=true;save_policy(&paused);
-        assert!(select_update(&store,"technician",Edition::Technician).ok().unwrap().0.is_null());
+        assert!(select_update(&store,"technician",Edition::Technician,None).ok().unwrap().0.is_null());
         let mut staged=profile.clone();staged.rollout_percent=0;save_policy(&staged);
-        assert!(select_update(&store,"technician",Edition::Technician).ok().unwrap().0.is_null());
+        assert!(select_update(&store,"technician",Edition::Technician,None).ok().unwrap().0.is_null());
         let mut channel=profile.clone();channel.update_channel="test".into();save_policy(&channel);
-        assert!(select_update(&store,"technician",Edition::Technician).ok().unwrap().0.is_null());
+        assert!(select_update(&store,"technician",Edition::Technician,None).ok().unwrap().0.is_null());
         save_policy(&profile);
         assert!(withdraw_release(State(store.clone()),headers(&technician_token),Path("release".into())).await.is_err());
-        assert!(!select_update(&store,"technician",Edition::Technician).ok().unwrap().0.is_null());
+        assert!(!select_update(&store,"technician",Edition::Technician,None).ok().unwrap().0.is_null());
         assert!(withdraw_release(State(store.clone()),headers(&admin_token),Path("release".into())).await.is_ok());
-        assert!(select_update(&store,"technician",Edition::Technician).ok().unwrap().0.is_null());
+        assert!(select_update(&store,"technician",Edition::Technician,None).ok().unwrap().0.is_null());
         assert!(withdraw_release(State(store.clone()),headers(&admin_token),Path("missing".into())).await.is_err());
         let cancelled:i64=store.db.lock().unwrap().query_row("SELECT COUNT(*) FROM builds WHERE state='failed'",[],|r|r.get(0)).unwrap();assert_eq!(cancelled,4);
         assert!(persist_verified_artifact(&store,&in_flight,&worker,b"late replacement").is_err());

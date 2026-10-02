@@ -562,3 +562,13 @@ atomic and unable to overwrite an existing receipt. The Windows agent build
 passes, and its read-only capability command returns protocol 1 without creating
 company state. Native Rust syntax parses locally; native Rust/Flutter compilation
 and actual signed rollback, reboot/interruption and installer tests remain gates.
+
+Update discovery now filters approved releases by the installed EXE/MSI format.
+Clients derive the query from the verified signed installed-release envelope and
+independently reject a mismatched server response. Server component regressions
+select the older matching MSI despite a newer EXE, select the EXE when requested,
+retain legacy unfiltered discovery, reject unsupported formats and unauthenticated
+requests, and stop offering a withdrawn matching release. These checks use valid
+release metadata. The targeted management test and Windows product workspace
+compilation pass. Real signed mixed-format rollout and native upgrades remain
+unverified.

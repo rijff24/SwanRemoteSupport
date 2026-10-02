@@ -392,12 +392,18 @@ impl AgentState {
         let (path,token)=if self.bootstrap.edition==Edition::Customer {
             ("device/update",self.device_token.as_deref().context("Not enrolled")?)
         }else{("user/update",technician_token.context("Technician authentication required")?)};
-        let value:Value=self.client()?.get(self.endpoint(path)?).bearer_auth(token).send().await?.error_for_status()?.json().await?;
+        let state=self.clone();let installed_directory=directory.to_owned();
+        let format=tokio::task::spawn_blocking(move ||->Result<String> {
+            let installed:SignedEnvelope=serde_json::from_slice(&std::fs::read(installed_directory.join("installed-release.json"))?)?;
+            Ok(validate_previous_release(&state,&installed,state.last_release_sequence)?.format)
+        }).await.context("Installed release discovery failed")??;
+        let value:Value=self.client()?.get(self.endpoint(path)?).query(&[("format",&format)]).bearer_auth(token).send().await?.error_for_status()?.json().await?;
         if value.is_null(){return Ok(None);}
         let envelope:SignedEnvelope=serde_json::from_value(value)?;
         let release:Release=envelope.verify(&public_key(&self.bootstrap.release_public_key)?)?;
         release.validate(&self.bootstrap.edition,0,now())?;
         ensure!(release.channel==profile.update_channel,"Wrong update channel");
+        ensure!(release.format==format,"Server offered an installer format migration; explicit setup is required");
         // An already installed release is not an installation request.
         let state=self.clone();let directory=directory.to_owned();
         let failed=tokio::task::spawn_blocking(move ||failed_release_sequence(&state,&directory)).await.context("Failed-release quarantine check failed")??;

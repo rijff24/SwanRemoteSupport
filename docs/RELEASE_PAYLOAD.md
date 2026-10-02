@@ -130,6 +130,13 @@ declares rollback protocol 1 and the verified previous agent's `rollback-protoco
 command confirms support. A durable `rolling_back` receipt precedes restoration.
 Automatic upgrades retain the installed EXE/MSI format; changing formats requires
 explicit installation/migration so installer registrations are not silently lost.
+Clients derive that format from their exact signed installed-release metadata
+and send `format=exe` or `format=msi` when requesting an approved update. The
+management server selects the latest approved, unexpired release matching that
+format, edition and channel, while still applying rollout and maintenance policy.
+Legacy requests without a format retain discovery compatibility. New clients
+also reject a mismatched response, including one from an older server that ignores
+the format query. Missing or invalid installed metadata requires explicit repair.
 Retries finish that same rollback instead of attempting forward installation;
 rollback does not require the new installer package to remain available. The
 old EXE and agent are replaced through verified atomic staging, and their full
