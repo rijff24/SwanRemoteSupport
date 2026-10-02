@@ -42,11 +42,18 @@ and restore; backing up only the management volume is insufficient.
 
 ## Build and deployment checks
 
-The management Dockerfile has its own deny-by-default build context. It admits
+The root and management Dockerfile both carry matching deny-by-default context
+rules, including explicit child exclusions for older Docker engines. They admit
 the named Cargo manifests, source, embedded scripts and branding assets while
 excluding local environment files, keys, databases, installers and caches from
 the build daemon and intermediate layers. Add newly required public build
 inputs explicitly when changing the embedded source.
+
+The Rust builder and Debian runtime images are pinned by manifest digest.
+Update those digests deliberately and rerun these checks when applying base-image
+security updates. Debian packages installed during the build still come from its
+configured repositories; the complete image is not claimed to be bit-for-bit
+reproducible across different build dates.
 
 From the repository root, with a working Linux Docker engine:
 

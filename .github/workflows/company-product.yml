@@ -2,9 +2,9 @@ name: Company product components
 on:
   workflow_dispatch:
   push:
-    paths: ['product/**', 'deployment/**', '.github/workflows/company-product.yml']
+    paths: ['product/**', 'deployment/**', '.dockerignore', '.github/workflows/company-product.yml']
   pull_request:
-    paths: ['product/**', 'deployment/**', '.github/workflows/company-product.yml']
+    paths: ['product/**', 'deployment/**', '.dockerignore', '.github/workflows/company-product.yml']
 permissions:
   contents: read
 jobs:
