@@ -37,6 +37,12 @@ class CustomerMsiTests(unittest.TestCase):
             copy = tree.find(".//w:CopyFile", ns)
             self.assertEqual(copy.attrib["SourceDirectory"], "System64Folder")
             self.assertEqual(copy.attrib["DestinationName"], "RuntimeBroker_rustdesk.exe")
+            registration = tree.find(".//w:Component[@Id='CustomerMsiRegistration']/w:RegistryValue", ns)
+            self.assertEqual(registration.attrib["Root"], "HKLM")
+            self.assertEqual(registration.attrib["Value"], "[ProductCode]")
+            self.assertEqual(registration.attrib["Key"], "Software\\SwanRemoteSupport\\Customer")
+            location = tree.find(".//w:SetProperty[@Id='ARPINSTALLLOCATION']", ns)
+            self.assertEqual(location.attrib["Value"], "[INSTALLFOLDER]")
             installed_files = tree.findall(".//w:File", ns)
             self.assertEqual(len(installed_files), len(files)+1)
 

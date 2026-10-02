@@ -39,6 +39,7 @@ def author(source, agent, version):
     element(package, "MajorUpgrade", DowngradeErrorMessage="A newer Swan Remote Support version is already installed.", Schedule="afterInstallInitialize")
     element(package, "MediaTemplate", EmbedCab="yes")
     element(package, "Property", Id="ARPNOMODIFY", Value="1")
+    element(package, "SetProperty", Id="ARPINSTALLLOCATION", Value="[INSTALLFOLDER]", After="CostFinalize", Sequence="execute")
     for prop, name, key in [("WINDOWSBUILD", "CurrentBuildNumber", "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion"),
                             ("INSTALLATIONTYPE", "InstallationType", "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion"),
                             ("OSARCH", "PROCESSOR_ARCHITECTURE", "SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment")]:
@@ -79,6 +80,9 @@ def author(source, agent, version):
         element(component, "File", Id=identifier("F", "LICENSE.txt"), Name="LICENSE.txt", Source=str(license_path), KeyPath="yes")
         element(feature, "ComponentRef", Id=component_id)
         files.append({"path": "LICENSE.txt", "sha256": hashlib.sha256(license_path.read_bytes()).hexdigest()})
+    registration = element(install, "Component", Id="CustomerMsiRegistration", Guid=str(uuid.uuid5(UPGRADE, "msi-registration")).upper(), Bitness="always64")
+    element(registration, "RegistryValue", Root="HKLM", Key="Software\\SwanRemoteSupport\\Customer", Name="ProductCode", Type="string", Value="[ProductCode]", KeyPath="yes")
+    element(feature, "ComponentRef", Id="CustomerMsiRegistration")
     data = element(package, "StandardDirectory", Id="CommonAppDataFolder")
     state = element(data, "Directory", Id="STATEFOLDER", Name="SwanRemoteSupport")
     component = element(state, "Component", Id="ConfigurationAgent", Guid=str(uuid.uuid5(UPGRADE, "configuration-agent")).upper(), Bitness="always64")

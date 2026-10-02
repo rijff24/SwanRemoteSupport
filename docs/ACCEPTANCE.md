@@ -159,3 +159,11 @@ through `/fvamus`, while retaining the exact pinned-release trust gate. Native
 x64 compatibility preflight and technician MSI launch conditions now reject
 ARM64; the preflight identifies the current host as windows_11. Clean-machine
 repair and ARM64 rejection still require runtime validation on those guests.
+
+Customer MSI registration now records its current product code and installation
+location. The customer app validates that registration against the installed
+Windows Installer product before requesting removal, resolves the Windows-owned
+msiexec executable directly, and refuses malformed registrations. Three MSI
+authoring tests and Rust parsing pass. Native compilation and clean-guest
+uninstall, service removal and complete scheduled-task/state cleanup remain
+unverified or incomplete.

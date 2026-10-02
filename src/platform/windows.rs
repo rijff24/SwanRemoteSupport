@@ -1286,7 +1286,34 @@ fn get_subkey(name: &str, wow: bool) -> String {
     }
 }
 
+#[cfg(feature = "swan_custom")]
+fn swan_msi_product_code() -> ResultType<Option<String>> {
+    if crate::get_app_name()!="Swan Remote Support" {return Ok(None);}
+    let machine=RegKey::predef(HKEY_LOCAL_MACHINE);
+    let registration=match machine.open_subkey(r"Software\SwanRemoteSupport\Customer") {
+        Ok(key)=>key,
+        Err(error) if error.kind()==std::io::ErrorKind::NotFound=>return Ok(None),
+        Err(error)=>return Err(error.into()),
+    };
+    let code:String=registration.get_value("ProductCode")?;
+    let bytes=code.as_bytes();
+    if bytes.len()!=38 || bytes[0]!=b'{' || bytes[37]!=b'}' || !bytes[1..37].iter().enumerate().all(|(index,byte)| {
+        if [8,13,18,23].contains(&index){*byte==b'-'}else{byte.is_ascii_hexdigit()}
+    }) {bail!("Invalid Swan MSI product identity");}
+    let uninstall=machine.open_subkey(format!(r"Software\Microsoft\Windows\CurrentVersion\Uninstall\{code}"))?;
+    let installer:u32=uninstall.get_value("WindowsInstaller")?;
+    let name:String=uninstall.get_value("DisplayName")?;
+    if installer!=1 || name!="Swan Remote Support" {bail!("Swan MSI identity does not match the installed product");}
+    Ok(Some(code))
+}
+
 fn get_valid_subkey() -> String {
+    #[cfg(feature = "swan_custom")]
+    match swan_msi_product_code() {
+        Ok(Some(code))=>return get_subkey(&code,false),
+        Ok(None)=>{},
+        Err(error)=>log::error!("Swan MSI registration could not be verified: {error}"),
+    }
     let subkey = get_subkey(IS1, false);
     if !get_reg_of(&subkey, "InstallLocation").is_empty() {
         return subkey;
@@ -1798,6 +1825,15 @@ fn get_before_uninstall(kill_self: bool) -> String {
 /// is included in the generated uninstall script. If `uninstall_printer` is `false`, the printer
 /// related command is omitted from the script.
 fn get_uninstall(kill_self: bool, uninstall_printer: bool) -> String {
+    #[cfg(feature = "swan_custom")]
+    match swan_msi_product_code() {
+        Ok(Some(code))=>return format!("msiexec.exe /x {code} /passive /norestart"),
+        Ok(None)=>{},
+        Err(error)=>{
+            log::error!("Refusing uninstall with invalid Swan MSI registration: {error}");
+            return "echo Swan MSI registration is invalid. Use Windows installed apps to remove the package.\r\nexit /b 1".into();
+        }
+    }
     let reg_uninstall_string = get_reg("UninstallString");
     if reg_uninstall_string.to_lowercase().contains("msiexec.exe") {
         return reg_uninstall_string;
@@ -1833,6 +1869,28 @@ fn get_uninstall(kill_self: bool, uninstall_printer: bool) -> String {
 }
 
 pub fn uninstall_me(kill_self: bool) -> ResultType<()> {
+    #[cfg(feature = "swan_custom")]
+    if let Some(code) = swan_msi_product_code()? {
+        // Resolve the Windows-owned executable without PATH or environment lookup.
+        let mut directory = vec![0u16; 32768];
+        let length = unsafe {
+            winapi::um::sysinfoapi::GetSystemDirectoryW(
+                directory.as_mut_ptr(), directory.len() as u32,
+            )
+        } as usize;
+        if length == 0 || length >= directory.len() {
+            bail!("Unable to resolve the Windows Installer executable");
+        }
+        let executable = PathBuf::from(OsString::from_wide(&directory[..length]))
+            .join("msiexec.exe");
+        if !run_uac(&executable.to_string_lossy(), &format!("/x {code} /passive /norestart"))? {
+            bail!("Windows Installer was not started; uninstall was cancelled or failed");
+        }
+        if kill_self {
+            std::process::exit(0);
+        }
+        return Ok(());
+    }
     run_cmds(get_uninstall(kill_self, true), true, "uninstall")
 }
 
