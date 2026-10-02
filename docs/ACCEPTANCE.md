@@ -202,3 +202,11 @@ response retry, conflict and revocation, with saved-result integrity checked.
 The worker retries completion reporting up to three times for transport errors,
 server failures or rate limits; Windows compilation passes. Signed upload retry
 and full network-fault recovery still require implementation and verification.
+
+Artifact upload persistence now accepts an identical retry from the owning
+worker while the job is uploaded, and refuses changed bytes, another worker
+or uploads after completion. The storage regression test checks preserved
+bytes and state; all 28 product workspace tests pass. The worker uses bounded
+transient retries with a cloned buffered request body. This is storage-level
+evidence, not a signed end-to-end worker fault test. QEMU reports running but
+a fresh Server 2025 screenshot still shows boot; clean installation is unproven.

@@ -470,6 +470,20 @@ struct BuildResult { success:bool, artifact_url:String,sha256:String,log:String 
 #[cfg(test)]
 mod worker_completion_tests {
     use super::*;
+    #[test]
+    fn uploaded_artifact_retry_preserves_bytes_and_owner() {
+        let directory=std::env::temp_dir().join(format!("swan-upload-retry-{}",random_token()));
+        let store=Store::open(&directory).unwrap();let id=Uuid::new_v4().to_string();
+        store.db.lock().unwrap().execute("INSERT INTO builds(id,body,state,worker) VALUES(?1,'{}','running','owner')",[&id]).unwrap();
+        assert!(persist_verified_artifact(&store,&id,"owner",b"validated bundle").is_ok());
+        assert!(persist_verified_artifact(&store,&id,"owner",b"validated bundle").is_ok());
+        assert!(persist_verified_artifact(&store,&id,"owner",b"different bundle").is_err());
+        assert!(persist_verified_artifact(&store,&id,"other-worker",b"validated bundle").is_err());
+        assert_eq!(std::fs::read(store.artifact_dir.join(format!("{id}.zip"))).unwrap(),b"validated bundle");
+        store.db.lock().unwrap().execute("UPDATE builds SET state='completed' WHERE id=?1",[&id]).unwrap();
+        assert!(persist_verified_artifact(&store,&id,"owner",b"validated bundle").is_err());
+        drop(store);std::fs::remove_dir_all(directory).unwrap();
+    }
     #[tokio::test]
     async fn lost_completion_response_retries_without_changing_terminal_result() {
         let directory=std::env::temp_dir().join(format!("swan-worker-retry-{}",random_token()));
@@ -527,7 +541,7 @@ async fn upload_artifact(State(s):State<Shared>,Path(id):Path<String>,request:ax
     s.worker(request.headers())?;
     if id.len()!=36 || !id.bytes().all(|c|c.is_ascii_hexdigit() || c==b'-'){return Err(bad("Invalid build identity"));}
     let worker=digest(token(request.headers())?);
-    let job:String=s.db.lock().unwrap().query_row("SELECT body FROM builds WHERE id=?1 AND worker=?2 AND state='running'",params![id,worker],|r|r.get(0)).optional()?.ok_or_else(denied)?;
+    let job:String=s.db.lock().unwrap().query_row("SELECT body FROM builds WHERE id=?1 AND worker=?2 AND state IN ('running','uploaded')",params![id,worker],|r|r.get(0)).optional()?.ok_or_else(denied)?;
     let bytes=axum::body::to_bytes(request.into_body(),512*1024*1024).await.map_err(|_|bad("Artifact too large"))?;
     let job:Value=serde_json::from_str(&job)?;
     let release_envelope:SignedEnvelope=serde_json::from_value(job["release"].clone())?;
@@ -560,21 +574,33 @@ async fn upload_artifact(State(s):State<Shared>,Path(id):Path<String>,request:ax
     if bootstrap.company_id!=p.company_id || bootstrap.edition!=release.edition || bootstrap.management_url!=p.management_url || bootstrap.profile_public_key!=STANDARD.encode(s.key.verifying_key().as_bytes()) || bootstrap.release_public_key!=trust {return Err(bad("Bootstrap trust mismatch"));}
     drop(read);drop(zip);
     let hash=digest(&bytes);
-    tokio::task::spawn_blocking(move || ->Result<(),ApiError>{
+    tokio::task::spawn_blocking(move || persist_verified_artifact(&s,&id,&worker,&bytes))
+        .await.map_err(|_|bad("Artifact persistence failed"))??;
+    Ok(Json(json!({"sha256":hash})))
+}
+
+// Called only after bundle validation, under a blocking task.
+fn persist_verified_artifact(s:&Store,id:&str,worker:&str,bytes:&[u8])->Result<(),ApiError> {
         let mut db=s.db.lock().unwrap();let tx=db.transaction()?;
-        let owned:bool=tx.query_row("SELECT EXISTS(SELECT 1 FROM builds WHERE id=?1 AND worker=?2 AND state='running')",params![id,worker],|r|r.get(0))?;
-        if !owned{return Err(denied());}
+        let state:Option<String>=tx.query_row("SELECT state FROM builds WHERE id=?1 AND worker=?2",params![id,worker],|r|r.get(0)).optional()?;
+        let target=s.artifact_dir.join(format!("{id}.zip"));
+        match state.as_deref() {
+            Some("uploaded")=>{
+                let saved=std::fs::read(&target).map_err(|_|bad("Uploaded artifact missing"))?;
+                if digest(saved)!=digest(bytes){return Err(bad("Conflicting artifact retry"));}
+                return Ok(());
+            },
+            Some("running")=>{},
+            _=>return Err(denied()),
+        }
         let temporary=s.artifact_dir.join(format!("{id}.partial"));
         use std::io::Write;
         let mut artifact=std::fs::File::create(&temporary).map_err(|_|bad("Cannot save artifact"))?;
         artifact.write_all(&bytes).map_err(|_|bad("Cannot write artifact"))?;
         artifact.sync_all().map_err(|_|bad("Cannot flush artifact"))?;drop(artifact);
-        let target=s.artifact_dir.join(format!("{id}.zip"));
         if target.exists(){std::fs::remove_file(&target).map_err(|_|bad("Cannot replace retry artifact"))?;}
         std::fs::rename(&temporary,target).map_err(|_|bad("Cannot publish artifact"))?;
         tx.execute("UPDATE builds SET state='uploaded' WHERE id=?1",[&id])?;tx.commit()?;Ok(())
-    }).await.map_err(|_|bad("Artifact persistence failed"))??;
-    Ok(Json(json!({"sha256":hash})))
 }
 async fn download_artifact(State(s):State<Shared>,Path(id):Path<String>,headers:HeaderMap)->Result<Response,ApiError> {
     if id.len()!=36 || !id.bytes().all(|c|c.is_ascii_hexdigit() || c==b'-'){return Err(bad("Invalid build identity"));}
