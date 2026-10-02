@@ -31,3 +31,5 @@ jobs:
         run: docker build --file deployment/linux/Dockerfile --tag swan-management:test .
       - name: Exercise fresh company setup and persistence in the deployment image
         run: python3 deployment/linux/test_container_startup.py swan-management:test
+      - name: Rehearse pinned HTTPS and transport components with an isolated test CA
+        run: python3 deployment/linux/test_container_stack.py swan-management:test

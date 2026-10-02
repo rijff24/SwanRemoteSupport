@@ -58,12 +58,13 @@ Rustls reads that bundle through `SSL_CERT_FILE`; HTTPS certificate verification
 remains enabled. Bit-for-bit reproducibility still requires a separate rebuild
 comparison and is not established by the deployment tests.
 
-From the repository root, with a working Linux Docker engine:
+From the repository root, with a working Linux Docker engine and OpenSSL:
 
 ```sh
 python3 deployment/linux/test_build_context.py
 docker build --file deployment/linux/Dockerfile --tag swan-management:test .
 python3 deployment/linux/test_container_startup.py swan-management:test
+python3 deployment/linux/test_container_stack.py swan-management:test
 ```
 
 The context test uses tracked public source and synthetic canaries, never local
@@ -78,4 +79,15 @@ and Docker container metadata. The test removes only its own containers and
 volumes. Management-only restore does not prove transport or TLS-volume recovery.
 These are actual Docker checks, but are not evidence for public
 HTTPS, transport sessions, worker-generated installations, certificate renewal
-or the Windows compatibility matrix. The company-product CI runs both checks.
+or the Windows compatibility matrix.
+
+The component-stack test runs the pinned Caddy and RustDesk images on a private
+Docker network with loopback-only published ports. It adds an internal test
+issuer to a disposable copy of the proxy recipe, disables trust-store
+installation, and verifies HTTPS using that CA explicitly. Default system trust
+must reject the connection. It verifies real signed profiles, tamper/wrong-key
+rejection, setup, MFA/enrollment/logout and retained company/transport trust
+after restart. Native NAT-test replies prove local rendezvous protocol readiness;
+they do not demonstrate NAT traversal or an authorized remote desktop session.
+Public ACME, UDP, external direct/relay tests and full transport/TLS restore
+remain separate gates. The company-product CI runs all three checks.

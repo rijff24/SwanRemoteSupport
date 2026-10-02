@@ -788,3 +788,18 @@ passphrase was placed in command arguments or Docker container metadata.
 These results prove management-container recovery only. Full transport/TLS
 volume recovery, public HTTPS/ACME, native sessions, installers and the clean
 Windows matrix remain required acceptance gates.
+
+The pinned Caddy `2.10.2` and RustDesk server `1.1.15` images now pass an actual
+isolated component-stack rehearsal with the exact `059f675` management image.
+The proxy recipe uses a disposable internal issuer with trust installation
+disabled; HTTPS validates through an explicit test CA, while default system
+trust rejects it. Fresh company setup, MFA replay rejection, pending enrollment
+and logout denial pass through HTTPS. OpenSSL verifies actual management profile
+signatures and rejects modified payloads and wrong keys. Both rendezvous TCP
+ports return real native TestNatResponse messages before and after restart;
+relay TCP accepts a local connection. Company signing identity, transport public
+key and the configured HTTPS endpoint survive restart. The test removes only
+its uniquely named containers, volumes and network. Production recipes, DNS,
+firewall and host trust stores were not modified for this rehearsal.
+These results do not prove UDP or external NAT traversal, native remote-session
+authorization, public ACME issuance/renewal or full transport/TLS-volume restore.
