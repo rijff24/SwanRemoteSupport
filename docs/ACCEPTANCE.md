@@ -167,3 +167,8 @@ msiexec executable directly, and refuses malformed registrations. Three MSI
 authoring tests and Rust parsing pass. Native compilation and clean-guest
 uninstall, service removal and complete scheduled-task/state cleanup remain
 unverified or incomplete.
+
+Native CI run 36982373150 compiled the apps but failed MSI packaging because
+the WiX extractor emitted COM return values alongside its executable path.
+Those values are now suppressed. A real pinned-package extraction verifies
+exactly one string result and WiX version 5.0.2; the CI rerun remains pending.

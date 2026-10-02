@@ -15,15 +15,15 @@ $database = $installer.OpenDatabase($Package,0)
 $directories = @{}
 $components = @{}
 $view = $database.OpenView('SELECT `Directory`,`Directory_Parent`,`DefaultDir` FROM `Directory`')
-$view.Execute()
+$null = $view.Execute()
 while ($row = $view.Fetch()) { $directories[$row.StringData(1)] = @($row.StringData(2),$row.StringData(3)) }
-$view.Close()
+$null = $view.Close()
 $view = $database.OpenView('SELECT `Component`,`Directory_` FROM `Component`')
-$view.Execute()
+$null = $view.Execute()
 while ($row = $view.Fetch()) { $components[$row.StringData(1)] = $row.StringData(2) }
-$view.Close()
+$null = $view.Close()
 $view = $database.OpenView('SELECT `File`,`Component_`,`FileName` FROM `File`')
-$view.Execute()
+$null = $view.Execute()
 while ($row = $view.Fetch()) {
     $parts = [Collections.Generic.List[string]]::new()
     $directory = $components[$row.StringData(2)]
@@ -42,7 +42,7 @@ while ($row = $view.Fetch()) {
     New-Item -ItemType Directory -Force ([IO.Path]::GetDirectoryName($destination)) | Out-Null
     Copy-Item -LiteralPath (Join-Path $raw $row.StringData(1)) -Destination $destination
 }
-$view.Close()
+$null = $view.Close()
 $tool = Join-Path $OutputDirectory 'bin/wix.exe'
 $signature = Get-AuthenticodeSignature -LiteralPath $tool
 if ($signature.Status -ne 'Valid' -or $signature.SignerCertificate.Subject -notmatch 'CN=WiX Toolset \(\.NET Foundation\)') { throw 'Extracted WiX publisher verification failed.' }
