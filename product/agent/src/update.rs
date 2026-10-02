@@ -121,6 +121,31 @@ fn prepare_installation_marker(directory:&Path,envelope:&SignedEnvelope)->Result
 }
 
 #[cfg(any(windows,test))]
+fn replace_failed_installation_marker(state:&AgentState,directory:&Path,envelope:&SignedEnvelope)->Result<()> {
+    let path=directory.join("pending-install.json");
+    let bytes=std::fs::read(&path).context("Explicit setup replacement requires a pending setup")?;
+    let stored:SignedEnvelope=serde_json::from_slice(&bytes)?;
+    if stored.payload==envelope.payload && stored.signature==envelope.signature {return Ok(());}
+    let key=public_key(&state.bootstrap.release_public_key)?;
+    let previous:Release=stored.verify(&key)?;
+    previous.validate(&state.bootstrap.edition,state.last_release_sequence,now().min(previous.expires_at.saturating_sub(1)))?;
+    let replacement:Release=envelope.verify(&key)?;
+    replacement.validate(&state.bootstrap.edition,previous.sequence,now())?;
+    let archive=directory.join("cancelled-setups");std::fs::create_dir_all(&archive)?;
+    let target=archive.join(format!("{}-{}.json",previous.sequence,digest(&bytes)));
+    if target.exists(){ensure!(std::fs::read(&target)?==bytes,"Conflicting cancelled setup evidence");}
+    else{publish_initial_bytes(&target,&bytes)?;}
+    // Retain the original receipt before atomically replacing the blocking marker.
+    // A crash before replacement leaves the old setup blocked; after replacement
+    // it leaves the new setup blocked until full installation verification.
+    let temporary=directory.join(format!("swan-setup-{}.tmp",random_token()));
+    publish_initial_bytes(&temporary,&serde_json::to_vec(envelope)?)?;
+    let result=crate::replace_state(&temporary,&path);
+    if result.is_err() && temporary.exists(){std::fs::remove_file(&temporary)?;}
+    result
+}
+
+#[cfg(any(windows,test))]
 fn validate_pending_receipt(state:&AgentState,receipt:&Receipt)->Result<Release> {
     ensure!(receipt.rollback_protocol<=1,"Unsupported pending rollback protocol");
     let release=validate_recovery_release(state,&receipt.release,receipt.previous_sequence,&receipt.phase)?;
@@ -616,10 +641,16 @@ fn launch_update_helper(directory:&Path,release:&Release)->Result<()> {
 impl AgentState {
     #[cfg(windows)]
     pub fn prepare_installation(&self,directory:&Path,envelope:&SignedEnvelope,package:&Path,repair:bool)->Result<()> {
+        self.prepare_installation_with_recovery(directory,envelope,package,repair,false)
+    }
+    #[cfg(windows)]
+    pub fn prepare_installation_with_recovery(&self,directory:&Path,envelope:&SignedEnvelope,package:&Path,repair:bool,replace_failed_setup:bool)->Result<()> {
+        ensure!(!repair || !replace_failed_setup,"Repair cannot replace another pending setup");
         let activity=activity_file(directory)?;fs2::FileExt::try_lock_exclusive(&activity).context("Explicit setup requires all sessions and update helpers to close")?;
         let state=AgentState::load(directory)?;
         if repair {verify_repair_package(&state,directory,envelope,package)?;}else{verify_package(&state,directory,envelope,package)?;}
-        prepare_installation_marker(directory,envelope)?;
+        if replace_failed_setup {replace_failed_installation_marker(&state,directory,envelope)?;}
+        else{prepare_installation_marker(directory,envelope)?;}
         archive_cancelled_update(&state,directory)?;
         Ok(())
     }
@@ -1081,6 +1112,22 @@ pub(crate) fn test_failed_release_quarantine(state:&AgentState,release:&Release,
     let mut competing=setup.clone();competing.sequence=4;
     assert!(prepare_installation_marker(&cancellation_folder,&SignedEnvelope::sign(&competing,key).unwrap()).is_err());
     assert_eq!(std::fs::read(cancellation_folder.join("pending-install.json")).unwrap(),marker_bytes);
+    let foreign_key=SigningKey::from_bytes(&[250;32]);
+    assert!(replace_failed_installation_marker(state,&cancellation_folder,&SignedEnvelope::sign(&competing,&foreign_key).unwrap()).is_err());
+    let mut older=competing.clone();older.sequence=2;
+    assert!(replace_failed_installation_marker(state,&cancellation_folder,&SignedEnvelope::sign(&older,key).unwrap()).is_err());
+    let mut wrong_edition=competing.clone();wrong_edition.edition=if state.bootstrap.edition==Edition::Customer {Edition::Technician}else{Edition::Customer};
+    assert!(replace_failed_installation_marker(state,&cancellation_folder,&SignedEnvelope::sign(&wrong_edition,key).unwrap()).is_err());
+    assert_eq!(std::fs::read(cancellation_folder.join("pending-install.json")).unwrap(),marker_bytes);
+    let newer=SignedEnvelope::sign(&competing,key).unwrap();
+    replace_failed_installation_marker(state,&cancellation_folder,&newer).unwrap();
+    let retained=cancellation_folder.join("cancelled-setups").join(format!("3-{}.json",digest(&marker_bytes)));
+    assert_eq!(std::fs::read(retained).unwrap(),marker_bytes);
+    let replaced:SignedEnvelope=serde_json::from_slice(&std::fs::read(cancellation_folder.join("pending-install.json")).unwrap()).unwrap();
+    assert_eq!(replaced.payload,newer.payload);
+    assert!(lock_session(&cancellation_folder).is_err(),"Replacement setup must still block support");
+    assert_eq!(std::fs::read(cancellation_folder.join("managed-state.json")).unwrap(),original_state);
+    std::fs::write(cancellation_folder.join("pending-install.json"),&marker_bytes).unwrap();
     prepare_installation_marker(&cancellation_folder,&setup_envelope).unwrap();
     archive_cancelled_update(state,&cancellation_folder).unwrap();
     let archive=cancellation_folder.join("updates/2/cancelled-update.json");

@@ -51,6 +51,48 @@ suite passed 21 tests with two explicit integration fixtures ignored. This is
 verification regression evidence only: the replacement development agent is
 unsigned, was not published in a bundle, and has not completed installation.
 
+### Customer package signing, installation and explicit setup recovery
+
+On the same Server 2016 guest, the worker generated a customer MSI bundle and
+the server served it without authentication. Its downloaded hash matched the
+worker result. Signing only that MSI container was deliberately insufficient:
+setup enrolled the device but final installed-publisher verification rejected
+the unsigned embedded customer executable. The durable setup marker remained
+and the configuration task was not enabled; this was a failed acceptance test,
+not a successful installation.
+
+The customer executable was then signed and timestamped in the guest. The
+other native files were compared with the original 96-file source manifest
+before export. Pinned WiX built a lab-only replacement MSI with that signed
+executable and the signed agent. The host used the explicit test-input build
+mode because the private signing root was installed only in the guest; no
+host trust bypass was introduced. The replacement MSI was separately signed,
+timestamped and verified in the guest, imported as signed test metadata,
+approved, bundled by the worker, and downloaded publicly. Its bundle SHA-256
+was `2e7a4fe91820f2b67b2220cdc545fab3434a85987e966e51fdd6eab1941cf27d`.
+Package version 1.5.1 is a private fixture built from the unchanged native
+`6840d91` payload with a newly signed executable, not a published software release.
+
+Explicit recovery now requires a strictly newer, same-edition release from the
+pinned issuer, retains the original failed setup receipt, and atomically replaces
+the blocking marker under session/update exclusion. Tests reject another issuer,
+another edition and an older sequence while retaining state and the old marker.
+The actual guest recovery used a separately rebuilt, unsigned GNU development
+agent to exercise this new preparation command, followed by the worker bundle's
+normal installer and its signed agent. This is not yet proof of the new
+`-ReplaceFailedSetup` switch in a newly generated native release bundle.
+
+The corrected company installation completed all package, installed-payload
+and publisher checks. Both native customer and company services run, and the
+SYSTEM `watch` task runs from its exact installed agent path. The setup marker
+cleared, sequence two was recorded, and the original failed receipt was retained.
+Device identity, device credential, consent revision and default attended-only
+consent were unchanged. The server still reports the device as pending approval.
+The guest has no Tailscale service. This proves local company installation and
+enrollment recovery; it does not prove Internet transport, reboot, desktop
+sessions, UAC, automatic-update recovery, fresh signed installation on another
+guest, or compatibility on the other advertised Windows versions.
+
 ### Earlier component evidence
 
 - Public baseline tag `swan-single-company-baseline-1.4.9` preserves the original

@@ -135,13 +135,14 @@ async fn main()->Result<()> {
         }
         #[cfg(windows)]
         "prepare-installation"=>{
-            let file=PathBuf::from(args.get(2).context("Usage: swan-agent prepare-installation release.json INSTALLER [--repair]")?);
+            let file=PathBuf::from(args.get(2).context("Usage: swan-agent prepare-installation release.json INSTALLER [--repair | --replace-failed-setup]")?);
             let package=PathBuf::from(args.get(3).context("Missing original installer path")?);
             let prepare_directory=directory.clone();let repair=args.iter().any(|value|value=="--repair");
+            let replace_failed_setup=args.iter().any(|value|value=="--replace-failed-setup");
             tokio::task::spawn_blocking(move ||->Result<()> {
                 let envelope:SignedEnvelope=serde_json::from_slice(&std::fs::read(file)?)?;
                 let state=AgentState::load(&prepare_directory)?;
-                state.prepare_installation(&prepare_directory,&envelope,&package,repair)
+                state.prepare_installation_with_recovery(&prepare_directory,&envelope,&package,repair,replace_failed_setup)
             }).await.context("Explicit installation preparation failed")??;
             println!("Verified setup prepared; any cancelled update evidence was retained.");
         }

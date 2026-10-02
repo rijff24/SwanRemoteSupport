@@ -40,6 +40,17 @@ configuration input without embedding credentials. The bare MSI does not enroll
 or silently select a company. Full deployment must use the company setup flow;
 new devices stay unavailable until approved.
 
+If setup failed after creating its durable installation marker, retry the same
+bundle first. To replace it with a corrected, newer signed release, run that
+bundle's `Install-Company.ps1 -ReplaceFailedSetup` with the usual company-domain
+confirmation. This explicit recovery retains the original signed receipt under
+the protected state directory's `cancelled-setups` folder. It requires the pinned
+release issuer, matching edition and a strictly newer sequence; it keeps support
+blocked until the replacement's complete installed identity is verified. It does
+not waive package signing or permit replacement during an active session/update.
+Use `-Repair` for an already recorded release; it cannot be combined with
+`-ReplaceFailedSetup`.
+
 ## Evidence and remaining verification
 
 A real unsigned package was built from the hash-verified native `31b13aa`

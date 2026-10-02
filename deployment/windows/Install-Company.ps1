@@ -1,5 +1,5 @@
 [CmdletBinding()]
-param([switch]$UnattendedConsent,[switch]$Repair,[string]$BootstrapPath,[string]$ConfirmedCompanyDomain)
+param([switch]$UnattendedConsent,[switch]$Repair,[switch]$ReplaceFailedSetup,[string]$BootstrapPath,[string]$ConfirmedCompanyDomain)
 $ErrorActionPreference = 'Stop'
 $root = $PSScriptRoot
 if (-not $BootstrapPath) { $BootstrapPath = Join-Path $root 'bootstrap.json' }
@@ -46,6 +46,7 @@ if ($Repair) { $packageArguments += '--repair'; $recordArguments += '--repair' }
 if ($LASTEXITCODE -ne 0) { throw 'Installer metadata, hash or publisher validation failed.' }
 $prepareArguments = @('prepare-installation',(Join-Path $root 'release.json'),$installers[0].FullName)
 if ($Repair) { $prepareArguments += '--repair' }
+if ($ReplaceFailedSetup) { $prepareArguments += '--replace-failed-setup' }
 & $agent @prepareArguments
 if ($LASTEXITCODE -ne 0) { throw 'Cannot prepare explicit installation or preserve cancelled update evidence.' }
 $systemDirectory = [Environment]::GetFolderPath('System')
