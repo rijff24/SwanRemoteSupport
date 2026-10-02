@@ -225,12 +225,15 @@ impl AgentState {
         if let Err(error)=verify_installed(directory,&release) {
             eprintln!("Installed payload requires recovery: {error:#}");
             if latest.bootstrap.edition==Edition::Technician {
-                ensure!(release.format=="exe" && release.sha256.eq_ignore_ascii_case(&release.installed_sha256),"Technician updates require a portable EXE");
+                ensure!(release.format=="msi" || (release.format=="exe" && release.sha256.eq_ignore_ascii_case(&release.installed_sha256)),"Technician updates require an MSI or a portable EXE");
                 let target=installed_target(directory,&latest.bootstrap.edition)?;
                 require_existing_application(&target)?;
                 let previous=folder.join("previous-technician.exe");
                 if !previous.exists(){std::fs::copy(&target,&previous)?;}
-                std::fs::copy(&package,&target)?;
+                if release.format=="msi" {
+                    let status=std::process::Command::new("msiexec.exe").arg("/i").arg(&package).args(["/qn","/norestart"]).arg(format!("INSTALLFOLDER={}",directory.display())).status()?;
+                    ensure!(matches!(status.code(),Some(0|3010)),"Technician MSI installation failed; retain signed recovery receipt");
+                }else{std::fs::copy(&package,&target)?;}
             }else{
                 require_existing_application(&installed_target(directory,&latest.bootstrap.edition)?)?;
                 let mut command=if release.format=="msi" {let mut c=std::process::Command::new("msiexec.exe");c.arg("/i").arg(&package).args(["/qn","/norestart"]);c}else{let mut c=std::process::Command::new(&package);c.args(["--silent-install","printer=0"]);c};
@@ -274,7 +277,7 @@ impl AgentState {
             if value.is_null(){return Ok(false);}
             let envelope:SignedEnvelope=serde_json::from_value(value)?;
             let release=validate_release(self,&envelope)?;
-            ensure!(release.edition!=Edition::Technician || (release.format=="exe" && release.installed_sha256.eq_ignore_ascii_case(&release.sha256)),"Technician updates require a portable EXE with matching installed identity");
+            ensure!(release.edition!=Edition::Technician || (release.format=="msi" || (release.format=="exe" && release.installed_sha256.eq_ignore_ascii_case(&release.sha256))),"Technician updates require an MSI or a portable EXE with matching installed identity");
             let folder=directory.join("updates").join(release.sequence.to_string());std::fs::create_dir_all(&folder)?;
             verify_compatibility(&folder,&release)?;
             let package=folder.join(format!("SwanRemoteSupport-install.{}",release.format));

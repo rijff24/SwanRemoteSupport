@@ -138,3 +138,10 @@ Recovery trust regression checks and shared validation pass with 25 Windows
 product workspace tests. Durable retry delay and failed-helper task restart are
 implemented in source and PowerShell parsing passes. These checks do not prove
 signed installation, power-loss recovery or rollback on clean Windows guests.
+
+Technician MSI authoring and a pinned WiX extraction/build recipe now produce
+an actual unsigned package locally. MSI tables and build-input hashes were
+inspected; no installer ran on the host. Technician setup/update support MSI
+containers and explicit external bootstrap input. Clean-guest install/upgrade,
+signing, customer MSI and complete uninstall cleanup remain acceptance gates;
+see deployment/windows/TECHNICIAN-MSI.md.

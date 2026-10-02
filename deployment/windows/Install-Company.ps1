@@ -1,14 +1,17 @@
 [CmdletBinding()]
-param([switch]$UnattendedConsent,[switch]$Repair)
+param([switch]$UnattendedConsent,[switch]$Repair,[string]$BootstrapPath,[string]$ConfirmedCompanyDomain)
 $ErrorActionPreference = 'Stop'
 $root = $PSScriptRoot
-$bootstrap = Get-Content -LiteralPath (Join-Path $root 'bootstrap.json') -Raw | ConvertFrom-Json
+if (-not $BootstrapPath) { $BootstrapPath = Join-Path $root 'bootstrap.json' }
+$BootstrapPath = [IO.Path]::GetFullPath($BootstrapPath)
+$bootstrap = Get-Content -LiteralPath $BootstrapPath -Raw | ConvertFrom-Json
 if ($bootstrap.edition -notin @('customer','technician')) { throw 'Unknown package edition.' }
 $domain = [uri]$bootstrap.management_url
 if ($domain.Scheme -ne 'https' -or $domain.UserInfo -or -not $domain.Host) { throw 'A company HTTPS endpoint is required.' }
 Write-Host "Company server: $($domain.AbsoluteUri)"
 Write-Host 'Confirm this is the support company you intended to install. The company must approve your device before remote access.'
-if ((Read-Host 'Type the company server hostname to confirm') -cne $domain.Host) { throw 'Company verification cancelled.' }
+if (-not $ConfirmedCompanyDomain) { $ConfirmedCompanyDomain = Read-Host 'Type the company server hostname to confirm' }
+if ($ConfirmedCompanyDomain -cne $domain.Host) { throw 'Company verification cancelled.' }
 if ($UnattendedConsent) {
     Write-Host 'Unattended access allows approved company technicians to connect while you are absent, including the sign-in screen.'
     if ((Read-Host 'Type ALLOW ONGOING SUPPORT to consent') -cne 'ALLOW ONGOING SUPPORT') { throw 'Ongoing-access consent not granted.' }
@@ -29,10 +32,10 @@ if ($bootstrap.edition -eq 'customer') {
 }
 $env:SWAN_STATE_DIR = $editionDirectory
 if (-not (Test-Path -LiteralPath (Join-Path $editionDirectory 'managed-state.json'))) {
-    & $agent setup (Join-Path $root 'bootstrap.json') --accept-company
+    & $agent setup $BootstrapPath --accept-company
     if ($LASTEXITCODE -ne 0) { throw 'Company configuration verification failed.' }
 }
-& $agent verify-bootstrap (Join-Path $root 'bootstrap.json')
+& $agent verify-bootstrap $BootstrapPath
 if ($LASTEXITCODE -ne 0) { throw 'Installer does not match the configured company, edition or trust keys.' }
 $installers = @(Get-ChildItem -LiteralPath $root -File | Where-Object { $_.Name -match '^SwanRemoteSupport-install\.(exe|msi)$' })
 if ($installers.Count -ne 1) { throw 'Expected one company installer.' }
@@ -87,9 +90,14 @@ if ($bootstrap.edition -eq 'customer') {
     $releaseEnvelope = Get-Content -LiteralPath (Join-Path $root 'release.json') -Raw | ConvertFrom-Json
     # The agent already verified this signed metadata and installer before any copy.
     $release = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($releaseEnvelope.payload)) | ConvertFrom-Json
-    if ($release.format -ne 'exe' -or $release.sha256 -cne $release.installed_sha256) { throw 'Technician setup requires a portable EXE with matching installed identity.' }
     $portable = Join-Path $editionDirectory 'SwanRemoteSupport-Technician.exe'
-    Copy-Item -LiteralPath $installers[0].FullName -Destination $portable -Force
+    if ($release.format -eq 'msi') {
+        $process = Start-Process -FilePath 'msiexec.exe' -ArgumentList @('/i',('"' + $installers[0].FullName + '"'),'/passive','/norestart',('INSTALLFOLDER="' + $editionDirectory + '"')) -PassThru -Wait -WindowStyle Hidden
+        if ($process.ExitCode -notin @(0,3010)) { throw "Technician MSI installation failed ($($process.ExitCode))." }
+        if (-not (Test-Path -LiteralPath $portable)) { throw 'Technician MSI did not install the expected executable.' }
+    } elseif ($release.format -eq 'exe' -and $release.sha256 -ceq $release.installed_sha256) {
+        Copy-Item -LiteralPath $installers[0].FullName -Destination $portable -Force
+    } else { throw 'Technician setup requires an MSI or a portable EXE with matching installed identity.' }
     Copy-Item -LiteralPath $agent -Destination (Join-Path $editionDirectory 'swan-agent.exe') -Force
 }
 } finally {
