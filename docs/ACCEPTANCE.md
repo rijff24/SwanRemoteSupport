@@ -172,3 +172,9 @@ Native CI run 36982373150 compiled the apps but failed MSI packaging because
 the WiX extractor emitted COM return values alongside its executable path.
 Those values are now suppressed. A real pinned-package extraction verifies
 exactly one string result and WiX version 5.0.2; the CI rerun remains pending.
+
+All 25 existing product workspace tests passed on Windows after the MSI
+registration change. Shared key parsing additionally rejects weak Ed25519
+public keys; six protocol tests pass, including rejection of identity and
+zero encodings and acceptance of a generated key. Native packaging-fix CI
+run 36992817681 was confirmed queued; completion is not yet established.

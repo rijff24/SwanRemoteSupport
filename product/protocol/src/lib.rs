@@ -254,7 +254,9 @@ pub fn transport_socket(value:&str,default_port:u16)->Result<(String,u16)> {
 }
 pub fn public_key(value: &str) -> Result<VerifyingKey> {
     let bytes: [u8; 32] = STANDARD.decode(value)?.try_into().map_err(|_| anyhow::anyhow!("Expected 32-byte key"))?;
-    Ok(VerifyingKey::from_bytes(&bytes)?)
+    let key = VerifyingKey::from_bytes(&bytes)?;
+    ensure!(!key.is_weak(), "Weak configuration or session proof key");
+    Ok(key)
 }
 pub fn random_token() -> String {
     use rand::RngCore;
@@ -278,6 +280,15 @@ pub fn maintenance_open(start: u8, end: u8, now: u64) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn public_keys_reject_small_order_points() {
+        let mut identity = [0u8; 32];
+        identity[0] = 1;
+        assert!(public_key(&STANDARD.encode(identity)).is_err());
+        assert!(public_key(&STANDARD.encode([0u8; 32])).is_err());
+        let signing = SigningKey::from_bytes(&[42u8; 32]);
+        assert!(public_key(&STANDARD.encode(signing.verifying_key().to_bytes())).is_ok());
+    }
     #[test]
     fn signed_payload_rejects_tampering_and_wrong_key() {
         let key = SigningKey::from_bytes(&[7;32]);
