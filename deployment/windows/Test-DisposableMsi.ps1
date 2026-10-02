@@ -26,8 +26,8 @@ if ([IO.Path]::GetExtension($packagePath) -ine '.msi' -or (Get-FileHash -Literal
 $msi=& (Join-Path $PSScriptRoot 'Get-MsiIdentity.ps1') -Package $packagePath | ConvertFrom-Json
 $upgrade=if($Edition -eq 'customer'){'{32A585D7-9A78-4AD2-AF72-D0266EFC709D}'}else{'{A4374699-436F-4917-9A4E-223F62A9E634}'}
 if ($msi.upgrade_code -ine $upgrade -or $msi.template -notmatch '^x64;' -or $msi.product_code -notmatch '^\{[A-Fa-f0-9-]{36}\}$') { throw 'Unexpected MSI edition or architecture.' }
-$compatibility=& (Join-Path $PSScriptRoot 'Get-WindowsCompatibility.ps1')
-if ($LASTEXITCODE -ne 0) { throw 'Unsupported guest operating system.' }
+$compatibility=(& (Join-Path ([Environment]::GetFolderPath('System')) 'WindowsPowerShell/v1.0/powershell.exe') -NoProfile -NonInteractive -File (Join-Path $PSScriptRoot 'Get-WindowsCompatibility.ps1') | Out-String).Trim()
+if ($LASTEXITCODE -ne 0 -or $compatibility -notmatch '^(windows_10|windows_11|server_2016|server_2019|server_2022|server_2025)$') { throw 'Unsupported guest operating system.' }
 $install=if($Edition -eq 'customer'){Join-Path $env:ProgramFiles 'Swan Remote Support'}else{Join-Path $env:LOCALAPPDATA 'SwanRemoteSupport-Technician'}
 $main=Join-Path $install $(if($Edition -eq 'customer'){'Swan Remote Support.exe'}else{'SwanRemoteSupport-Technician.exe'})
 $agent=if($Edition -eq 'customer'){Join-Path $env:ProgramData 'SwanRemoteSupport/swan-agent.exe'}else{Join-Path $install 'swan-agent.exe'}
@@ -72,7 +72,7 @@ if($Phase -eq 'repair' -and $Edition -eq 'customer'){
 $operation=if($Phase -eq 'install'){'/i'}elseif($Phase -eq 'repair'){'/fvamus'}else{'/x'}
 $log=Join-Path $resultRoot 'msi.log'
 $process=Start-Process -FilePath (Join-Path ([Environment]::GetFolderPath('System')) 'msiexec.exe') -ArgumentList @($operation,('"'+$packagePath+'"'),'/qn','/norestart','/l*v',('"'+$log+'"')) -WindowStyle Hidden -Wait -PassThru
-$report=[ordered]@{edition=$Edition;phase=$Phase;source=$SourceRevision;package_sha256=$PackageSha256.ToLowerInvariant();msi=$msi;platform=$compatibility;os=(Get-CimInstance Win32_OperatingSystem | Select-Object Caption,Version,BuildNumber,OSArchitecture);exit_code=$process.ExitCode;reboot_required=($process.ExitCode -eq 3010);passed=$false;scope='Bare MSI lifecycle only; no company enrollment, publisher, update or session acceptance'}
+$report=[ordered]@{edition=$Edition;phase=$Phase;source=$SourceRevision;runner_sha256=(Get-FileHash -LiteralPath $PSCommandPath -Algorithm SHA256).Hash.ToLowerInvariant();package_sha256=$PackageSha256.ToLowerInvariant();agent_sha256=$AgentSha256.ToLowerInvariant();msi=$msi;platform=$compatibility;os=(Get-CimInstance Win32_OperatingSystem | Select-Object Caption,Version,BuildNumber,OSArchitecture);exit_code=$process.ExitCode;reboot_required=($process.ExitCode -eq 3010);passed=$false;scope='Bare MSI lifecycle only; no company enrollment, publisher, update or session acceptance'}
 try{
     if($process.ExitCode -notin @(0,3010)){throw "MSI phase failed ($($process.ExitCode)); inspect private log."}
     if($Phase -eq 'uninstall'){
