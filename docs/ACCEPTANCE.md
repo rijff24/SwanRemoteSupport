@@ -289,3 +289,12 @@ wrong-input-hash rejection pass against a real unsigned agent with no source
 change or output. No actual signature was made. Provider/certificate signing,
 worker consumption, signed installs/updates and release-issuer migration remain
 unverified or incomplete; see deployment/windows/COMPANY-SIGNING.md.
+
+Technician approved-release discovery now uses its authenticated Rust session
+and shares signature, edition, channel, expiry and sequence validation with the
+installer. The GUI receives only public release identity; bearer credentials
+remain in Rust. Installed sequences are not offered again, and pause/maintenance
+policy applies. All 29 workspace tests and native Rust parsing pass. Flutter
+compilation and end-to-end authenticated discovery remain unverified. This is
+discovery only: automatic GUI shutdown, session-safe installation handoff and
+full interrupted-update recovery/rollback remain incomplete.

@@ -162,6 +162,23 @@ fn launch_update_helper(directory:&Path,release:&Release)->Result<()> {
 }
 
 impl AgentState {
+    pub async fn approved_update(&self,technician_token:Option<&str>)->Result<Option<SignedEnvelope>> {
+        let profile=self.company_profile()?;
+        if profile.updates_paused || !maintenance_open(profile.maintenance_start_utc,profile.maintenance_end_utc,now()){return Ok(None);}
+        let (path,token)=if self.bootstrap.edition==Edition::Customer {
+            ("device/update",self.device_token.as_deref().context("Not enrolled")?)
+        }else{("user/update",technician_token.context("Technician authentication required")?)};
+        let value:Value=self.client()?.get(self.endpoint(path)?).bearer_auth(token).send().await?.error_for_status()?.json().await?;
+        if value.is_null(){return Ok(None);}
+        let envelope:SignedEnvelope=serde_json::from_value(value)?;
+        let release:Release=envelope.verify(&public_key(&self.bootstrap.release_public_key)?)?;
+        release.validate(&self.bootstrap.edition,0,now())?;
+        ensure!(release.channel==profile.update_channel,"Wrong update channel");
+        // An already installed release is not an installation request.
+        if release.sequence<=self.last_release_sequence{return Ok(None);}
+        validate_release(self,&envelope)?;
+        Ok(Some(envelope))
+    }
     #[cfg(windows)]
     pub fn record_installation(&mut self,directory:&Path,envelope:&SignedEnvelope,repair:bool)->Result<()> {
         let activity=activity_file(directory)?;fs2::FileExt::try_lock_exclusive(&activity).context("Installation verification requires all sessions to close")?;
@@ -287,10 +304,7 @@ impl AgentState {
             // An interrupted installation is deliberately not guessed successful.
             // Keep the signed receipt so recovery can verify the installed build.
             ensure!(!receipt_path.exists(),"Interrupted update requires recovery before another installation");
-            let (path,token)=if self.bootstrap.edition==Edition::Customer {("device/update",self.device_token.as_deref().context("Not enrolled")?)}else{("user/update",technician_token.context("Technician authentication required")?)};
-            let value:Value=self.client()?.get(self.endpoint(path)?).bearer_auth(token).send().await?.error_for_status()?.json().await?;
-            if value.is_null(){return Ok(false);}
-            let envelope:SignedEnvelope=serde_json::from_value(value)?;
+            let Some(envelope)=self.approved_update(technician_token).await? else{return Ok(false);};
             let release=validate_release(self,&envelope)?;
             ensure!(release.edition!=Edition::Technician || (release.format=="msi" || (release.format=="exe" && release.installed_sha256.eq_ignore_ascii_case(&release.sha256))),"Technician updates require an MSI or a portable EXE with matching installed identity");
             let folder=directory.join("updates").join(release.sequence.to_string());std::fs::create_dir_all(&folder)?;

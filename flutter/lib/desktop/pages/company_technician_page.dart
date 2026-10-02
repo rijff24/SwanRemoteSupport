@@ -24,6 +24,7 @@ class _CompanyTechnicianPageState extends State<CompanyTechnicianPage> {
   bool _loggedIn = false;
   bool _busy = false;
   String _error = '';
+  String? _approvedUpdate;
   Timer? _refreshTimer;
 
   Future<dynamic> _request(Map<String, dynamic> input) async {
@@ -54,8 +55,10 @@ class _CompanyTechnicianPageState extends State<CompanyTechnicianPage> {
     final loggedIn = status['logged_in'] == true;
     final devices = loggedIn ? await _request({'action': 'devices'}) as List<dynamic> : <dynamic>[];
     final history = loggedIn ? await _request({'action': 'history'}) as List<dynamic> : <dynamic>[];
+    final update = loggedIn ? await _request({'action': 'update-status'}) : null;
     if (mounted) setState(() {
       _company = company; _loggedIn = loggedIn; _devices = devices; _history = history;
+      _approvedUpdate = update is Map ? update['version'] as String? : null;
     });
   }
 
@@ -115,6 +118,7 @@ class _CompanyTechnicianPageState extends State<CompanyTechnicianPage> {
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: brandColor)),
         Text(_company['domain'] as String? ?? 'Company setup required'),
         CompanyContactLinks(company: _company),
+        if (_approvedUpdate != null) Text('Company-approved update available: $_approvedUpdate'),
         const SizedBox(height: 16),
         if (_busy) const LinearProgressIndicator(),
         if (_error.isNotEmpty) Padding(padding: const EdgeInsets.symmetric(vertical: 12),

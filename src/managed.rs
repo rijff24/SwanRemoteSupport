@@ -66,6 +66,14 @@ async fn technician_request_inner(request:&str)->ResultType<serde_json::Value> {
     }
     if action=="devices" {return Ok(state.technician_inventory(&token).await?);}
     if action=="history" {return Ok(state.technician_history(&token).await?);}
+    if action=="update-status" {
+        let envelope=state.approved_update(Some(&token)).await?;
+        let memory=TECHNICIAN.lock().unwrap();
+        if memory.generation!=generation || memory.login.is_none(){bail!("Login changed during update discovery");}
+        let Some(envelope)=envelope else{return Ok(serde_json::Value::Null);};
+        let release:swan_agent::protocol::Release=envelope.verify(&protocol::public_key(&state.bootstrap.release_public_key)?)?;
+        return Ok(json!({"version":release.version,"sequence":release.sequence,"channel":release.channel}));
+    }
     if action=="connect" {
         let device=input["device_id"].as_str().ok_or_else(||anyhow!("Missing device"))?;
         let key=protocol::signing_key_from_hex(&protocol::random_token())?;
