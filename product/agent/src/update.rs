@@ -80,6 +80,34 @@ fn verify_publisher(path:&Path,release:&Release)->Result<()> {
     ensure!(status.success(),"Package publisher verification failed");Ok(())
 }
 
+#[cfg(any(windows,test))]
+fn replace_verified_file(source:&Path,target:&Path,expected_hash:&str)->Result<()> {
+    use std::io::Write;
+    // Stage on the destination volume so replacement never streams bytes into
+    // the currently installed executable. Verify the exact bytes being staged.
+    let bytes=std::fs::read(source)?;
+    ensure!(digest(&bytes).eq_ignore_ascii_case(expected_hash),"Replacement executable hash mismatch");
+    let temporary=target.parent().context("Missing replacement directory")?.join(format!("swan-replacement-{}.tmp",random_token()));
+    let mut file=std::fs::OpenOptions::new().create_new(true).write(true).open(&temporary)?;
+    let result=(||->Result<()> {
+        file.write_all(&bytes)?;file.sync_all()?;drop(file);
+        let deadline=std::time::Instant::now()+std::time::Duration::from_secs(30);
+        loop {
+            match crate::replace_state(&temporary,target) {
+                Ok(())=>return Ok(()),
+                Err(error)=>{
+                    let sharing_conflict=error.downcast_ref::<std::io::Error>().map(|e|matches!(e.raw_os_error(),Some(5|32|33))).unwrap_or(false);
+                    if cfg!(windows) && sharing_conflict && std::time::Instant::now()<deadline {
+                        std::thread::sleep(std::time::Duration::from_millis(100));
+                    }else{return Err(error).context("Executable replacement failed; previous file retained");}
+                }
+            }
+        }
+    })();
+    if result.is_err(){let _=std::fs::remove_file(&temporary);}
+    result
+}
+
 #[cfg(windows)]
 fn msi_install_command(package:&Path)->Result<std::process::Command> {
     let script=package.parent().context("Missing update directory")?.join("Get-MsiInstallMode.ps1");
@@ -265,7 +293,7 @@ impl AgentState {
                 if release.format=="msi" {
                     let status=msi_install_command(&package)?.arg(format!("INSTALLFOLDER={}",directory.display())).status()?;
                     ensure!(matches!(status.code(),Some(0|3010)),"Technician MSI installation failed; retain signed recovery receipt");
-                }else{std::fs::copy(&package,&target)?;}
+                }else{replace_verified_file(&package,&target,&release.installed_sha256)?;}
             }else{
                 require_existing_application(&installed_target(directory,&latest.bootstrap.edition)?)?;
                 let mut command=if release.format=="msi" {msi_install_command(&package)?}else{let mut c=std::process::Command::new(&package);c.args(["--silent-install","printer=0"]);c};
@@ -277,14 +305,7 @@ impl AgentState {
             if !agent_already_current {
                 let previous=folder.join("previous-agent.exe");
                 if installed_agent.exists() && !previous.exists(){std::fs::copy(&installed_agent,&previous)?;}
-                let deadline=std::time::Instant::now()+std::time::Duration::from_secs(30);
-                loop {
-                    match std::fs::copy(&helper,&installed_agent) {
-                        Ok(_)=>break,
-                        Err(error) if matches!(error.raw_os_error(),Some(5|32|33)) && std::time::Instant::now()<deadline=>std::thread::sleep(std::time::Duration::from_millis(100)),
-                        Err(error)=>return Err(error).context("Agent replacement failed; retain update receipt"),
-                    }
-                }
+                replace_verified_file(&helper,&installed_agent,&release.agent_sha256).context("Agent replacement failed; retain update receipt")?;
             }
         }
         verify_installed(directory,&release)?;
@@ -362,6 +383,23 @@ fn verify_installed(directory:&Path,release:&Release)->Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn executable_replacement_verifies_staged_bytes_and_preserves_previous_on_failure(){
+        let folder=std::env::temp_dir().join(format!("swan-replacement-test-{}",random_token()));
+        std::fs::create_dir(&folder).unwrap();
+        let source=folder.join("source.exe");let target=folder.join("installed.exe");
+        std::fs::write(&source,b"complete replacement").unwrap();std::fs::write(&target,b"previous executable").unwrap();
+        assert!(replace_verified_file(&source,&target,&digest(b"wrong content")).is_err());
+        assert_eq!(std::fs::read(&target).unwrap(),b"previous executable");
+        replace_verified_file(&source,&target,&digest(b"complete replacement")).unwrap();
+        assert_eq!(std::fs::read(&target).unwrap(),b"complete replacement");
+        assert_eq!(std::fs::read(&source).unwrap(),b"complete replacement");
+        let directory_target=folder.join("directory.exe");std::fs::create_dir(&directory_target).unwrap();
+        assert!(replace_verified_file(&source,&directory_target,&digest(b"complete replacement")).is_err());
+        assert!(directory_target.is_dir());
+        assert!(!std::fs::read_dir(&folder).unwrap().any(|entry|entry.unwrap().file_name().to_string_lossy().starts_with("swan-replacement-")));
+        std::fs::remove_dir_all(folder).unwrap();
+    }
     #[test]
     fn interrupted_setup_blocks_sessions_until_recovered(){
         let folder=std::env::temp_dir().join(format!("swan-pending-install-{}",random_token()));

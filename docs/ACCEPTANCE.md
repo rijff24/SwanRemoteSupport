@@ -307,3 +307,12 @@ checks the installation guard before consuming its ticket. All 30 workspace
 tests pass, including simultaneous independent locks and Windows installer byte
 lock exclusion. Native Rust parsing passes. Native connection lifecycle and
 GUI shutdown/restart during signed installation still require end-to-end tests.
+
+Portable technician and configuration-agent replacements now write and flush a
+complete, hash-verified staging file on the destination volume before replacing
+the installed file. Replacement failures retain the previous destination and
+remove staging files; Windows sharing conflicts use a bounded retry. All 31
+workspace tests pass, including hash rejection, successful replacement, unchanged
+source and failed-replacement cleanup on Windows. This reduces partial-write
+failure exposure; power-loss testing, signed executable replacement, MSI rollback
+and complete interrupted-upgrade recovery remain unverified or incomplete.
