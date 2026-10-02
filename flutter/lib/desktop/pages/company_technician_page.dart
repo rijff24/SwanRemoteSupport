@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_hbb/common.dart';
@@ -29,7 +30,8 @@ class _CompanyTechnicianPageState extends State<CompanyTechnicianPage> {
 
   Future<dynamic> _request(Map<String, dynamic> input) async {
     final text = await bind.mainCompanyRequest(request: jsonEncode(input))
-        .first.timeout(const Duration(seconds: 25));
+        .first.timeout(input['action'] == 'update'
+            ? const Duration(minutes: 25) : const Duration(seconds: 25));
     final response = jsonDecode(text) as Map<String, dynamic>;
     if (response['ok'] != true) {
       throw Exception(response['error'] ?? 'Company request failed');
@@ -55,6 +57,13 @@ class _CompanyTechnicianPageState extends State<CompanyTechnicianPage> {
     final loggedIn = status['logged_in'] == true;
     final devices = loggedIn ? await _request({'action': 'devices'}) as List<dynamic> : <dynamic>[];
     final history = loggedIn ? await _request({'action': 'history'}) as List<dynamic> : <dynamic>[];
+    if (mounted && loggedIn && Platform.isWindows) {
+      final result = await _request({'action': 'update'}) as Map<String, dynamic>;
+      // Rust writes the signed recovery receipt and starts the verified helper
+      // before acknowledging handoff. New sessions are then blocked natively.
+      // Run this even without new metadata so an interrupted handoff can retry.
+      if (result['handed_off'] == true) exit(0);
+    }
     final update = loggedIn ? await _request({'action': 'update-status'}) : null;
     if (mounted) setState(() {
       _company = company; _loggedIn = loggedIn; _devices = devices; _history = history;

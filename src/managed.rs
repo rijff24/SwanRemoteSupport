@@ -66,6 +66,20 @@ async fn technician_request_inner(request:&str)->ResultType<serde_json::Value> {
     }
     if action=="devices" {return Ok(state.technician_inventory(&token).await?);}
     if action=="history" {return Ok(state.technician_history(&token).await?);}
+    #[cfg(all(windows,feature="flutter"))]
+    if action=="update" {
+        // Include disconnected/reconnecting windows, not just authenticated
+        // sessions. The file lock and pending receipt guard other processes.
+        if !crate::flutter::sessions::get_sessions().is_empty(){return Ok(json!({"handed_off":false}));}
+        {let memory=TECHNICIAN.lock().unwrap();if memory.generation!=generation || memory.login.is_none(){bail!("Login changed before update");}}
+        let mut state=state;
+        let handed_off=state.update(&directory,Some(&token)).await?;
+        if handed_off {
+            let mut memory=TECHNICIAN.lock().unwrap();
+            memory.generation=memory.generation.wrapping_add(1);memory.login=None;memory.tickets.clear();
+        }
+        return Ok(json!({"handed_off":handed_off}));
+    }
     if action=="update-status" {
         let envelope=state.approved_update(Some(&token)).await?;
         let memory=TECHNICIAN.lock().unwrap();

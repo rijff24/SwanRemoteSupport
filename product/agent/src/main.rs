@@ -72,7 +72,19 @@ async fn main()->Result<()> {
                     bail!("Configuration task restart failed; inspect the protected update log and resume recovery");
                 }
             }
-            println!("Installed release verified: {}",outcome?);
+            let installed=outcome?;
+            if !customer && installed {
+                use std::os::windows::process::CommandExt;
+                // Installation verified the pinned executable and publisher.
+                // Restart with company state only; technicians sign in again.
+                std::process::Command::new(directory.join("SwanRemoteSupport-Technician.exe"))
+                    .env("SWAN_STATE_DIR",&directory).env_remove("SWAN_TECHNICIAN_TOKEN")
+                    .env_remove("SWAN_SESSION_GRANT").env_remove("SWAN_SESSION_PROOF_KEY")
+                    .creation_flags(0x08000000).stdin(std::process::Stdio::null())
+                    .stdout(std::process::Stdio::null()).stderr(std::process::Stdio::null()).spawn()
+                    .context("Updated technician application could not restart")?;
+            }
+            println!("Installed release verified: {}",installed);
         }
         #[cfg(windows)]
         "record-installation"=>{

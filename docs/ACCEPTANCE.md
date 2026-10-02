@@ -316,3 +316,12 @@ workspace tests pass, including hash rejection, successful replacement, unchange
 source and failed-replacement cleanup on Windows. This reduces partial-write
 failure exposure; power-loss testing, signed executable replacement, MSI rollback
 and complete interrupted-upgrade recovery remain unverified or incomplete.
+
+Technician refresh now requests automatic update handoff through its Rust login.
+Open connection windows defer the request; native locks and signed recovery
+receipts coordinate other processes. The GUI closes only after a verified helper
+has been launched, and the helper restarts the verified technician executable
+without credentials after success. Existing pending handoffs use bounded retry.
+All 31 workspace tests and native Rust parsing pass. GUI compilation, signed
+end-to-end shutdown/install/restart, offline pending recovery and full rollback
+remain unverified or incomplete; this flow is not yet release acceptance.
