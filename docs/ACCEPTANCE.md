@@ -325,3 +325,12 @@ without credentials after success. Existing pending handoffs use bounded retry.
 All 31 workspace tests and native Rust parsing pass. GUI compilation, signed
 end-to-end shutdown/install/restart, offline pending recovery and full rollback
 remain unverified or incomplete; this flow is not yet release acceptance.
+
+New update installation now refreshes signed company configuration and queries
+current release approval after downloads. Withdrawn or changed selections defer
+handoff; the newest saved pause/maintenance policy is checked again under session
+exclusion before writing the receipt. All 32 workspace tests pass, including a
+persisted signed-policy change that pauses or moves the window after an older
+snapshot was eligible. Real HTTP withdrawal during downloads and signed Windows
+installation still require end-to-end evidence. Existing installation receipts
+retain recovery semantics rather than starting a new policy-controlled upgrade.

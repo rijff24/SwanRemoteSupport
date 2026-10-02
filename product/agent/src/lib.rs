@@ -274,6 +274,24 @@ mod tests {
         AgentState{bootstrap:Bootstrap{schema:1,edition:Edition::Customer,company_id:profile.company_id.clone(),management_url:profile.management_url.clone(),profile_public_key:public.clone(),release_public_key:public},profile:SignedEnvelope::sign(&profile,&key).unwrap(),accepted_revision:1,device_id:Some("device".into()),device_token:Some(random_token()),unattended_consent:true,consent_revision:0,last_release_sequence:0}
     }
     #[test]
+    fn refreshed_update_policy_can_pause_a_previously_eligible_installation() {
+        let directory=std::env::temp_dir().join(format!("swan-update-policy-{}",random_token()));
+        let key=SigningKey::from_bytes(&[7;32]);let mut state=fixture();
+        let mut profile=state.company_profile().unwrap();profile.updates_paused=false;
+        state.profile=SignedEnvelope::sign(&profile,&key).unwrap();state.save(&directory).unwrap();
+        let downloading=state.clone();assert!(update::update_policy_open(&downloading).unwrap());
+        profile.revision+=1;profile.updates_paused=true;
+        state.accepted_revision=profile.revision;state.profile=SignedEnvelope::sign(&profile,&key).unwrap();state.save(&directory).unwrap();
+        assert!(!update::update_policy_open(&AgentState::load(&directory).unwrap()).unwrap());
+        profile.revision+=1;profile.updates_paused=false;
+        let hour=((now()/3600)%24) as u8;
+        profile.maintenance_start_utc=(hour+2)%24;profile.maintenance_end_utc=(hour+3)%24;
+        state.accepted_revision=profile.revision;state.profile=SignedEnvelope::sign(&profile,&key).unwrap();state.save(&directory).unwrap();
+        assert!(!update::update_policy_open(&AgentState::load(&directory).unwrap()).unwrap());
+        assert!(update::update_policy_open(&downloading).unwrap());
+        std::fs::remove_dir_all(directory).unwrap();
+    }
+    #[test]
     fn repair_bootstrap_cannot_change_company_edition_or_trust() {
         let state=fixture();let original=state.bootstrap.clone();
         assert!(state.validate_installer_bootstrap(&original).is_ok());

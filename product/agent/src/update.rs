@@ -80,6 +80,11 @@ fn verify_publisher(path:&Path,release:&Release)->Result<()> {
     ensure!(status.success(),"Package publisher verification failed");Ok(())
 }
 
+pub(crate) fn update_policy_open(state:&AgentState)->Result<bool> {
+    let profile=state.company_profile()?;
+    Ok(!profile.updates_paused && maintenance_open(profile.maintenance_start_utc,profile.maintenance_end_utc,now()))
+}
+
 #[cfg(any(windows,test))]
 fn replace_verified_file(source:&Path,target:&Path,expected_hash:&str)->Result<()> {
     use std::io::Write;
@@ -192,7 +197,7 @@ fn launch_update_helper(directory:&Path,release:&Release)->Result<()> {
 impl AgentState {
     pub async fn approved_update(&self,technician_token:Option<&str>)->Result<Option<SignedEnvelope>> {
         let profile=self.company_profile()?;
-        if profile.updates_paused || !maintenance_open(profile.maintenance_start_utc,profile.maintenance_end_utc,now()){return Ok(None);}
+        if !update_policy_open(self)?{return Ok(None);}
         let (path,token)=if self.bootstrap.edition==Edition::Customer {
             ("device/update",self.device_token.as_deref().context("Not enrolled")?)
         }else{("user/update",technician_token.context("Technician authentication required")?)};
@@ -319,8 +324,7 @@ impl AgentState {
             ensure!(!directory.join("pending-install.json").exists(),"Company setup recovery is required before automatic updates");
             if directory.join("pending-update.json").exists(){return self.resume_pending_update(directory,false);}
             require_existing_application(&installed_target(directory,&self.bootstrap.edition)?)?;
-            let profile=self.company_profile()?;
-            if profile.updates_paused || !maintenance_open(profile.maintenance_start_utc,profile.maintenance_end_utc,now()){return Ok(false);}
+            if !update_policy_open(self)?{return Ok(false);}
             let receipt_path=directory.join("pending-update.json");
             // An interrupted installation is deliberately not guessed successful.
             // Keep the signed receipt so recovery can verify the installed build.
@@ -337,11 +341,17 @@ impl AgentState {
             download(&release.agent_url,&release.agent_sha256,&replacement_agent).await?;
             let mut agent_release=release.clone();agent_release.sha256=release.agent_sha256.clone();
             verify_publisher(&replacement_agent,&agent_release)?;
+            // Downloads may take minutes. Require a fresh signed policy and
+            // current server approval before creating an installation receipt.
+            self.sync().await?;self.save(directory)?;
+            let Some(current)=self.approved_update(technician_token).await? else{return Ok(false);};
+            if current.payload!=envelope.payload || current.signature!=envelope.signature{return Ok(false);}
             let activity=activity_file(directory)?;
             fs2::FileExt::try_lock_exclusive(&activity).context("Update deferred while a session or connection attempt is active")?;
             ensure!(!directory.join("pending-install.json").exists(),"Company setup started while the update was downloading");
             // Re-read consent and enrollment immediately before installation.
             let latest=AgentState::load(directory)?;
+            if !update_policy_open(&latest)?{return Ok(false);}
             // Removal during download must not be turned into a fresh install.
             require_existing_application(&installed_target(directory,&latest.bootstrap.edition)?)?;
             validate_release(&latest,&envelope)?;
