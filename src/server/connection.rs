@@ -2581,6 +2581,11 @@ impl Connection {
             }
             match lr.union {
                 Some(login_request::Union::FileTransfer(ft)) => {
+                    #[cfg(feature = "swan_custom")]
+                    if !self.managed_permission_cap("file") {
+                        self.send_login_error("Company grant denies file transfer").await;
+                        return false;
+                    }
                     if !Self::permission(
                         keys::OPTION_ENABLE_FILE_TRANSFER,
                         &self.control_permissions,
@@ -5400,6 +5405,12 @@ impl Connection {
     }
 
     fn authorized_scope_violation(&self, msg: &Message) -> Option<&'static str> {
+        #[cfg(feature = "swan_custom")]
+        match msg.union.as_ref() {
+            Some(message::Union::FileAction(_)) | Some(message::Union::FileResponse(_)) if !self.managed_permission_cap("file") => return Some("Company grant denies file transfer"),
+            Some(message::Union::Cliprdr(_)) if !self.managed_permission_cap("file") || !self.managed_permission_cap("clipboard") => return Some("Company grant denies clipboard file transfer"),
+            _=>{}
+        }
         let Some(conn_type) = self.authed_conn_type() else {
             return (!Self::is_connection_housekeeping_message(msg)).then_some("session.auth_type");
         };
