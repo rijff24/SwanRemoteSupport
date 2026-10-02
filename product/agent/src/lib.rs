@@ -7,6 +7,7 @@ use std::path::{Path, PathBuf};
 use swan_protocol::*;
 pub use swan_protocol as protocol;
 pub mod update;
+pub mod payload;
 pub mod technician;
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -282,7 +283,7 @@ mod tests {
     #[test]
     fn explicit_repair_accepts_only_exact_pinned_release_without_weakening_updates() {
         let mut state=fixture();let key=SigningKey::from_bytes(&[7;32]);
-        let mut release=Release{schema:1,product:PRODUCT.into(),version:"1.5.0".into(),sequence:2,edition:Edition::Customer,architecture:"x64".into(),channel:"test".into(),expires_at:now()+3600,artifact_url:"https://releases.example/package.exe".into(),sha256:"a".repeat(64),installed_sha256:"b".repeat(64),agent_url:"https://releases.example/agent.exe".into(),agent_sha256:"c".repeat(64),publisher:"Example".into(),publisher_certificate_sha256:"d".repeat(64),windows_versions:vec!["windows_11".into()],source_url:"https://releases.example/source.tar.gz".into(),format:"exe".into()};
+        let mut release=Release{schema:1,product:PRODUCT.into(),version:"1.5.0".into(),sequence:2,edition:Edition::Customer,architecture:"x64".into(),channel:"test".into(),expires_at:now()+3600,artifact_url:"https://releases.example/package.exe".into(),sha256:"a".repeat(64),installed_sha256:"b".repeat(64),installed_files:vec![InstalledFile{path:"Swan Remote Support.exe".into(),sha256:"b".repeat(64)},InstalledFile{path:"librustdesk.dll".into(),sha256:"c".repeat(64)},InstalledFile{path:"flutter_windows.dll".into(),sha256:"d".repeat(64)}],agent_url:"https://releases.example/agent.exe".into(),agent_sha256:"c".repeat(64),publisher:"Example".into(),publisher_certificate_sha256:"d".repeat(64),windows_versions:vec!["windows_11".into()],source_url:"https://releases.example/source.tar.gz".into(),format:"exe".into()};
         let pinned=SignedEnvelope::sign(&release,&key).unwrap();
         assert!(update::validate_repair_release(&state,&pinned,&pinned).is_err(),"Unrecorded installation cannot use repair");
         state.last_release_sequence=2;

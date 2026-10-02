@@ -153,6 +153,13 @@ jobs:
           sha256sum SwanRemoteSupport-*.exe | tee SHA256SUMS.txt
           popd
 
+      - name: Generate unsigned installed payload manifests
+        shell: pwsh
+        run: |
+          python3 -m unittest discover -s deployment/windows -p test_payload_manifest.py
+          python3 deployment/windows/generate-payload-manifest.py --edition customer --source swan-client --output artifacts/customer-installed-files.unsigned.json
+          python3 deployment/windows/generate-payload-manifest.py --edition technician --source artifacts/SwanRemoteSupport-${{ env.VERSION }}-technician-x64-unsigned.exe --output artifacts/technician-installed-files.unsigned.json
+
       - name: Build company management and distribution components
         shell: pwsh
         run: |
@@ -174,4 +181,6 @@ jobs:
             artifacts/Install-Company.ps1
             artifacts/Open-Technician.ps1
             artifacts/Verify-Package.ps1
+            artifacts/Get-WindowsCompatibility.ps1
+            artifacts/*-installed-files.unsigned.json
             artifacts/LICENCE

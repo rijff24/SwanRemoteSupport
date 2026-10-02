@@ -205,6 +205,19 @@ impl AgentState {
 #[cfg(windows)]
 fn verify_installed(directory:&Path,release:&Release)->Result<()> {
     let target=installed_target(directory,&release.edition)?;
+    // Portable technician state also contains the agent and updater. Its single
+    // packed EXE is verified separately; customer files share an install root.
+    if release.edition==Edition::Customer {
+        let mut files=release.installed_files.clone();
+        // RustDesk copies this Windows-owned process for input/privacy support.
+        // It varies with Windows updates and is not a project release artifact.
+        let mut system_directory=[0u16;32768];
+        let length=unsafe{windows_sys::Win32::System::SystemInformation::GetSystemDirectoryW(system_directory.as_mut_ptr(),system_directory.len() as u32)} as usize;
+        ensure!(length>0 && length<system_directory.len(),"Cannot resolve trusted Windows system directory");
+        let system_directory=std::path::PathBuf::from(String::from_utf16(&system_directory[..length])?);
+        files.push(InstalledFile{path:"RuntimeBroker_rustdesk.exe".into(),sha256:digest(std::fs::read(system_directory.join("RuntimeBroker.exe"))?)});
+        crate::payload::verify(target.parent().context("Missing installation directory")?,&files)?;
+    }
     ensure!(digest(std::fs::read(&target)?).eq_ignore_ascii_case(&release.installed_sha256),"Installed executable differs from signed release; recovery remains pending");
     let mut installed=release.clone();installed.sha256=release.installed_sha256.clone();verify_publisher(&target,&installed)
 }

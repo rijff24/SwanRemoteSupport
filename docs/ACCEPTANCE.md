@@ -8,7 +8,7 @@ native support session or a clean-machine installation.
 
 - Public baseline tag `swan-single-company-baseline-1.4.9` preserves the original
   Swan deployment and build instructions. Its source was not replaced.
-- Eighteen product tests pass on the local Windows development host, including
+- Twenty product tests pass on the local Windows development host, including
   enrollment/trust preservation across stale writes, trusted key rotation, refusal to automatically reinstall a removed endpoint, and explicit consent changes surviving older refreshes. Consent API tests also reject delayed enable requests and older revocation retries; same-revision revocation takes precedence.
   The preceding eleven-test component source passed tests and release compilation on
   [Windows 2022 and Ubuntu 24.04 CI](https://github.com/rijff24/SwanRemoteSupport/actions/runs/36856716860)
@@ -81,7 +81,7 @@ remain unverified.
 | Public company transport without Tailscale | Source uses company transport and fails closed before setup. External NAT traversal, relay fallback and negative-access tests pending; no public endpoint has been changed. |
 | Windows worker and public/protected downloads | Queue, worker, fixed bundles and access checks are implemented. A real signed worker job, both EXE/MSI installation products, protected technician download and public customer website installation remain unverified or incomplete. |
 | Signing and exact corresponding source | Certificate/hash/publisher pins and source metadata are implemented. Provider approval, production signatures, company signing integration and production release checks remain gates. |
-| Approved automatic updates | Metadata replay/expiry and session exclusion tests pass. Real rollout, pause/windows, full payload/agent identity preservation, technician executable handoff, interruption repair/retry/rollback and recovery remain incomplete or unverified. |
+| Approved automatic updates | Metadata replay/expiry and session exclusion tests pass. Signed installed manifests now bound customer DLLs/assets and reject unlisted native code in component tests; real signed installation remains unverified. Real rollout, pause/windows, agent replacement, technician executable handoff, interruption repair/retry/rollback and recovery remain incomplete or unverified; see RELEASE_PAYLOAD.md. |
 | Backup, restore and migrations | Encrypted round-trip/tamper checks cover management data, transport trust keys and SQLite state, deployment configuration and an explicit TLS identity. Actual CLI export/restore and a live isolated HTTPS management-server rehearsal preserve signing trust, MFA, accounts, device state and group policy; revoked access remains denied. Restored SQLite quick_check passes. Live transport recovery, complete certificate-service storage, post-backup reconciliation and migration rollback remain unverified or incomplete; see SERVER_BACKUP.md. |
 
 ## Clean Windows matrix

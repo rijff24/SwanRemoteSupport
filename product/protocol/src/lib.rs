@@ -168,6 +168,21 @@ impl ManagedLogin {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
+pub struct InstalledFile { pub path:String,pub sha256:String }
+impl InstalledFile {
+    pub fn validate(&self)->Result<()> {
+        ensure!(!self.path.is_empty() && self.path.len()<=240 && self.sha256.len()==64 && self.sha256.bytes().all(|byte|byte.is_ascii_hexdigit()),"Invalid installed file identity");
+        for component in self.path.split('/') {
+            ensure!(!component.is_empty() && component!="." && component!=".." && !component.ends_with(['.',' ']) && component.bytes().all(|byte|byte.is_ascii_alphanumeric() || b" _-.@+".contains(&byte)),"Unsafe installed file path");
+            let stem=component.split('.').next().unwrap_or("").to_ascii_uppercase();
+            ensure!(!["CON","PRN","AUX","NUL","COM1","COM2","COM3","COM4","COM5","COM6","COM7","COM8","COM9","LPT1","LPT2","LPT3","LPT4","LPT5","LPT6","LPT7","LPT8","LPT9"].contains(&stem.as_str()),"Reserved installed file path");
+        }
+        Ok(())
+    }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Release {
     pub schema: u32,
     pub product: String,
@@ -180,6 +195,7 @@ pub struct Release {
     pub artifact_url: String,
     pub sha256: String,
     pub installed_sha256: String,
+    pub installed_files:Vec<InstalledFile>,
     pub agent_url: String,
     pub agent_sha256: String,
     pub publisher: String,
@@ -195,6 +211,14 @@ impl Release {
         ensure!(["stable", "test"].contains(&self.channel.as_str()) && ["exe", "msi"].contains(&self.format.as_str()), "Invalid release type");
         ensure!(self.sha256.len() == 64 && self.sha256.bytes().all(|x| x.is_ascii_hexdigit()) && !self.publisher.is_empty(), "Invalid artifact identity");
         ensure!(self.installed_sha256.len()==64 && self.installed_sha256.bytes().all(|x|x.is_ascii_hexdigit()),"Invalid installed executable identity");
+        ensure!(!self.installed_files.is_empty() && self.installed_files.len()<=4096,"Installed payload manifest required");
+        let mut paths=std::collections::HashSet::new();
+        for file in &self.installed_files {file.validate()?;ensure!(!file.path.eq_ignore_ascii_case("RuntimeBroker_rustdesk.exe"),"Windows-owned helper cannot be supplied by project release metadata");ensure!(paths.insert(file.path.to_ascii_lowercase()),"Duplicate installed file path");}
+        let executable=if self.edition==Edition::Technician {"SwanRemoteSupport-Technician.exe"}else{"Swan Remote Support.exe"};
+        ensure!(self.installed_files.iter().any(|file|file.path.eq_ignore_ascii_case(executable) && file.sha256.eq_ignore_ascii_case(&self.installed_sha256)),"Manifest must contain the installed executable identity");
+        if self.edition==Edition::Customer {
+            for library in ["librustdesk.dll","flutter_windows.dll"]{ensure!(paths.contains(library),"Customer payload manifest lacks a required native library");}
+        }else{ensure!(self.installed_files.len()==1,"Portable technician payload must identify its complete packed executable");}
         ensure!(self.publisher_certificate_sha256.len()==64 && self.publisher_certificate_sha256.bytes().all(|x|x.is_ascii_hexdigit()),"Invalid publisher certificate identity");
         ensure!(!self.windows_versions.is_empty() && self.windows_versions.len()<=6 && self.windows_versions.iter().all(|v|WINDOWS_VERSIONS.contains(&v.as_str())),"Invalid Windows compatibility declaration");
         let fields: Vec<_> = self.version.split('.').collect();
@@ -275,8 +299,15 @@ mod tests {
         assert!(!maintenance_open(22,3,12*3600)); assert!(maintenance_open(0,0,12*3600));
     }
     #[test]
+    fn installed_file_paths_reject_windows_aliases_and_traversal() {
+        for path in ["../outside.dll","/absolute.dll","C:/outside.dll","data\\outside.dll","file.dll:stream","file.dll.","data//file.dll","CON.txt","data/LPT1.dll","data/../file.dll"] {
+            assert!(InstalledFile{path:path.into(),sha256:"a".repeat(64)}.validate().is_err(),"Accepted unsafe path {path}");
+        }
+        assert!(InstalledFile{path:"data/flutter_assets/fonts/MaterialIcons-Regular.otf".into(),sha256:"a".repeat(64)}.validate().is_ok());
+    }
+    #[test]
     fn releases_reject_replay_wrong_edition_expiry_and_missing_installed_identity() {
-        let mut release=Release {schema:1,product:PRODUCT.into(),version:"1.5.0".into(),sequence:2,edition:Edition::Customer,architecture:"x64".into(),channel:"stable".into(),expires_at:200,artifact_url:"https://releases.example/package.exe".into(),sha256:"a".repeat(64),installed_sha256:"b".repeat(64),agent_url:"https://releases.example/agent.exe".into(),agent_sha256:"c".repeat(64),publisher:"Example".into(),publisher_certificate_sha256:"d".repeat(64),windows_versions:vec!["windows_11".into()],source_url:"https://releases.example/source.tar.gz".into(),format:"exe".into()};
+        let mut release=Release {schema:1,product:PRODUCT.into(),version:"1.5.0".into(),sequence:2,edition:Edition::Customer,architecture:"x64".into(),channel:"stable".into(),expires_at:200,artifact_url:"https://releases.example/package.exe".into(),sha256:"a".repeat(64),installed_sha256:"b".repeat(64),installed_files:vec![InstalledFile{path:"Swan Remote Support.exe".into(),sha256:"b".repeat(64)},InstalledFile{path:"librustdesk.dll".into(),sha256:"c".repeat(64)},InstalledFile{path:"flutter_windows.dll".into(),sha256:"d".repeat(64)}],agent_url:"https://releases.example/agent.exe".into(),agent_sha256:"c".repeat(64),publisher:"Example".into(),publisher_certificate_sha256:"d".repeat(64),windows_versions:vec!["windows_11".into()],source_url:"https://releases.example/source.tar.gz".into(),format:"exe".into()};
         assert!(release.validate(&Edition::Customer,1,100).is_ok());
         assert!(release.validate(&Edition::Customer,2,100).is_err());
         assert!(release.validate(&Edition::Technician,0,100).is_err());
