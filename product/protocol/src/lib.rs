@@ -9,6 +9,14 @@ use sha2::{Digest, Sha256};
 pub const SCHEMA: u32 = 1;
 pub const PRODUCT: &str = "Swan Remote Support";
 pub const WIRE_PREFIX: &[u8] = b"SWAN1:";
+// Worker output and server upload validation must use the same trusted recipe.
+pub const COMPANY_BUNDLE_TEXT_FILES:[(&str,&[u8]);5]=[
+    ("Install-Company.ps1",include_bytes!("../../../deployment/windows/Install-Company.ps1")),
+    ("Get-MsiInstallMode.ps1",include_bytes!("../../../deployment/windows/Get-MsiInstallMode.ps1")),
+    ("Open-Technician.ps1",include_bytes!("../../../deployment/windows/Open-Technician.ps1")),
+    ("Verify-Package.ps1",include_bytes!("../../../deployment/windows/Verify-Package.ps1")),
+    ("LICENSE.txt",include_bytes!("../../../LICENCE")),
+];
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]

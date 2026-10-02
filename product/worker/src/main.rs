@@ -89,8 +89,7 @@ async fn build(_client:&reqwest::Client,job:&Value,output:&Path,id:&str,release_
 }
 
 fn package_verified(output:PathBuf,id:&str,work:PathBuf,installer:PathBuf,agent:PathBuf,release:Release,profile:CompanyProfile,release_envelope:SignedEnvelope,profile_envelope:SignedEnvelope,release_key:&str,company_key:&str)->Result<(String,String)> {
-    verify_windows(&installer,&release,&work)?;
-    verify_windows(&agent,&release,&work)?;
+    verify_artifacts(&installer,&agent,&release.format,|path,check_msi|verify_windows(path,&release,&work,check_msi))?;
     let bootstrap=Bootstrap{schema:SCHEMA,edition:release.edition.clone(),company_id:profile.company_id,management_url:profile.management_url,profile_public_key:company_key.into(),release_public_key:release_key.into()};
     let file_name=format!("SwanRemoteSupport-{}-{}-{}.zip",if release.edition==Edition::Customer{"Customer"}else{"Technician"},release.version,id);
     let temporary=output.join(format!("{file_name}.partial"));
@@ -101,12 +100,8 @@ fn package_verified(output:PathBuf,id:&str,work:PathBuf,installer:PathBuf,agent:
         ("bootstrap.json",serde_json::to_vec_pretty(&bootstrap)?),
         ("company-profile.json",serde_json::to_vec_pretty(&profile_envelope)?),
         ("release.json",serde_json::to_vec_pretty(&release_envelope)?),
-        ("Install-Company.ps1",bundle_text(include_bytes!("../../../deployment/windows/Install-Company.ps1"))?),
-        ("Get-MsiInstallMode.ps1",bundle_text(include_bytes!("../../../deployment/windows/Get-MsiInstallMode.ps1"))?),
-        ("Open-Technician.ps1",bundle_text(include_bytes!("../../../deployment/windows/Open-Technician.ps1"))?),
-        ("Verify-Package.ps1",bundle_text(include_bytes!("../../../deployment/windows/Verify-Package.ps1"))?),
-        ("LICENSE.txt",bundle_text(include_bytes!("../../../LICENCE"))?),
     ] {zip.start_file(name,options)?;zip.write_all(&bytes)?;}
+    for (name,bytes) in COMPANY_BUNDLE_TEXT_FILES {zip.start_file(name,options)?;zip.write_all(&bundle_text(bytes)?)?;}
     zip.finish()?.sync_all()?;
     let hash=digest(std::fs::read(&temporary)?);
     let final_name=file_name.replace(".zip",&format!("-{}.zip",&hash[..16]));let target=output.join(&final_name);
@@ -122,16 +117,41 @@ pub async fn download(client:&reqwest::Client,url:&str,path:&Path,hash:&str)->Re
     ensure!(digest(&bytes).eq_ignore_ascii_case(hash),"Artifact hash mismatch");
     tokio::fs::write(path,bytes).await?;Ok(())
 }
+fn verify_artifacts(installer:&Path,agent:&Path,format:&str,mut verify:impl FnMut(&Path,bool)->Result<()>)->Result<()> {
+    verify(installer,format=="msi")?;
+    verify(agent,false)
+}
 #[cfg(windows)]
-fn verify_windows(path:&Path,release:&Release,directory:&Path)->Result<()> {
+fn verify_windows(path:&Path,release:&Release,directory:&Path,check_msi:bool)->Result<()> {
     let verifier=directory.join("Verify-Package.ps1");std::fs::write(&verifier,include_bytes!("../../../deployment/windows/Verify-Package.ps1"))?;
     let status=swan_agent::update::powershell_command()?.args(["-NoProfile","-NonInteractive","-ExecutionPolicy","Bypass","-File"]).arg(verifier).arg("-Path").arg(path).arg("-Publisher").arg(&release.publisher).arg("-CertificateSha256").arg(&release.publisher_certificate_sha256).status()?;
     ensure!(status.success(),"Artifact signature or publisher rejected");
-    if release.format=="msi" {swan_agent::update::verify_msi_release_identity(path,release)?;}
+    if check_msi {swan_agent::update::verify_msi_release_identity(path,release)?;}
     Ok(())
 }
 
 #[cfg(not(windows))]
-fn verify_windows(_path:&Path,_release:&Release,_directory:&Path)->Result<()> {
+fn verify_windows(_path:&Path,_release:&Release,_directory:&Path,_check_msi:bool)->Result<()> {
     anyhow::bail!("Artifact signature verification requires a Windows worker")
+}
+
+#[cfg(test)]
+mod verification_tests {
+    use super::*;
+
+    #[test]
+    fn both_artifacts_require_trust_but_only_msi_installer_requires_msi_identity() {
+        let agent=Path::new("swan-agent.exe");
+        for format in ["exe","msi"] {
+            let installer=PathBuf::from(format!("installer.{format}"));
+            let mut checked=Vec::new();
+            verify_artifacts(&installer,agent,format,|path,msi|{checked.push((path.to_owned(),msi));Ok(())}).unwrap();
+            assert_eq!(checked,vec![(installer.clone(),format=="msi"),(agent.to_owned(),false)]);
+            for rejected in [&installer,agent] {
+                assert!(verify_artifacts(&installer,agent,format,|path,_|{
+                    ensure!(path!=rejected,"Untrusted artifact");Ok(())
+                }).is_err());
+            }
+        }
+    }
 }

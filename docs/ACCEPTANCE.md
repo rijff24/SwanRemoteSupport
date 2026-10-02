@@ -723,3 +723,16 @@ Linux engine is usable. Existing Docker data was not reset. The new CI job must
 pass before claiming this Linux deployment evidence. Public HTTPS, native
 transport, full backup/restore/migration recovery, real package installation and
 the complete clean Windows matrix remain separate acceptance gates.
+
+Distribution validation now accepts the complete ten-file worker recipe for both
+editions and EXE/MSI formats. It rejects changed scripts, hidden duplicate ZIP
+entries, inconsistent archive headers, altered metadata and wrong company trust.
+The worker verifies both artifact signatures and applies MSI identity checks only
+to the installer. Nineteen management/protocol tests and the worker verification
+regression pass; these fixtures do not demonstrate signed native installation.
+
+A disposable Debian 12 VM now runs Docker. Its real scratch-export check passed:
+all 38 required public inputs were included and all 11 synthetic private-data
+canaries were excluded. Older Docker required root exclusion rules and explicit
+child exclusions after directory allowances; both shipped ignore files now agree.
+The complete management image and container lifecycle rehearsal remain pending.

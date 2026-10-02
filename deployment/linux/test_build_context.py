@@ -67,9 +67,13 @@ def main():
         context = lab / "context"
         context.mkdir()
         required = prepare_fixture(context)
-        probe = lab / "probe.Dockerfile"
+        rules = ROOT / "deployment/linux/Dockerfile.dockerignore"
+        if (ROOT / ".dockerignore").read_text(encoding="utf-8") != rules.read_text(encoding="utf-8"):
+            raise RuntimeError("Root and Dockerfile-specific context exclusions must agree")
+        shutil.copyfile(ROOT / ".dockerignore", context / ".dockerignore")
+        probe = context / "probe.Dockerfile"
         probe.write_text("FROM scratch\nCOPY . /\n", encoding="utf-8")
-        shutil.copyfile(ROOT / "deployment/linux/Dockerfile.dockerignore", pathlib.Path(str(probe) + ".dockerignore"))
+        shutil.copyfile(rules, pathlib.Path(str(probe) + ".dockerignore"))
         output = lab / "export"
         subprocess.run(
             ["docker", "build", "--file", str(probe), "--output", "type=local,dest=" + str(output), str(context)],

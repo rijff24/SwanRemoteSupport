@@ -561,6 +561,82 @@ struct BuildResult { success:bool, artifact_url:String,sha256:String,log:String 
 mod worker_completion_tests {
     use super::*;
     #[test]
+    fn worker_bundle_requires_complete_exact_recipe_and_company_trust() {
+        // Inert bytes exercise the upload contract; no installer or signing
+        // provider is invoked, and these fixtures are never published.
+        fn archive(entries:&[(String,Vec<u8>)])->Vec<u8> {
+            use std::io::Write;
+            let mut writer=zip::ZipWriter::new(std::io::Cursor::new(Vec::new()));
+            let options=zip::write::SimpleFileOptions::default().compression_method(zip::CompressionMethod::Deflated);
+            for (name,bytes) in entries {writer.start_file(name,options).unwrap();writer.write_all(bytes).unwrap();}
+            writer.finish().unwrap().into_inner()
+        }
+        let company=SigningKey::from_bytes(&[23;32]);let project=SigningKey::from_bytes(&[24;32]);
+        let company_public=STANDARD.encode(company.verifying_key().as_bytes());
+        let trust=STANDARD.encode(project.verifying_key().as_bytes());
+        let profile=CompanyProfile{schema:SCHEMA,company_id:"bundle-test".into(),revision:1,issued_at:now()-1,expires_at:now()+3600,management_url:"https://support.example.com".into(),rendezvous:"support.example.com".into(),relay:"support.example.com".into(),transport_public_key:company_public.clone(),customer:Default::default(),technician:Default::default(),allow_unattended:false,updates_paused:true,rollout_percent:0,maintenance_start_utc:0,maintenance_end_utc:0,update_channel:"test".into(),next_profile_public_key:None};
+        let signed_profile=SignedEnvelope::sign(&profile,&company).unwrap();
+        for edition in [Edition::Customer,Edition::Technician] {for format in ["exe","msi"] {
+            let installer=b"inert installer fixture";let agent=b"inert agent fixture";
+            let executable=if edition==Edition::Customer {"Swan Remote Support.exe"}else{"SwanRemoteSupport-Technician.exe"};
+            let mut installed_files=vec![InstalledFile{path:executable.into(),sha256:digest(installer)}];
+            if edition==Edition::Customer {for name in ["librustdesk.dll","flutter_windows.dll"] {installed_files.push(InstalledFile{path:name.into(),sha256:digest(b"inert library fixture")});}}
+            let release=Release{schema:SCHEMA,product:PRODUCT.into(),version:"2.0.0".into(),sequence:1,edition:edition.clone(),architecture:"x64".into(),channel:"test".into(),expires_at:now()+3600,artifact_url:format!("https://releases.example/install.{format}"),sha256:digest(installer),installed_sha256:digest(installer),installed_files,agent_url:"https://releases.example/agent.exe".into(),agent_sha256:digest(agent),publisher:"Inert fixture".into(),publisher_certificate_sha256:"d".repeat(64),windows_versions:vec!["windows_11".into()],source_url:"https://releases.example/source.tar.gz".into(),format:format.into(),rollback_protocol:1};
+            release.validate(&edition,0,now()).unwrap();
+            let signed_release=SignedEnvelope::sign(&release,&project).unwrap();
+            let job=json!({"profile":signed_profile,"release":signed_release});
+            let bootstrap=swan_agent::Bootstrap{schema:SCHEMA,edition:edition.clone(),company_id:profile.company_id.clone(),management_url:profile.management_url.clone(),profile_public_key:company_public.clone(),release_public_key:trust.clone()};
+            let mut entries=vec![
+                (format!("SwanRemoteSupport-install.{format}"),installer.to_vec()),("swan-agent.exe".into(),agent.to_vec()),
+                ("bootstrap.json".into(),serde_json::to_vec_pretty(&bootstrap).unwrap()),
+                ("company-profile.json".into(),serde_json::to_vec_pretty(&signed_profile).unwrap()),
+                ("release.json".into(),serde_json::to_vec_pretty(&signed_release).unwrap()),
+            ];
+            for (name,bytes) in COMPANY_BUNDLE_TEXT_FILES {entries.push((name.into(),bundle_text(bytes).unwrap()));}
+            assert_eq!(entries.len(),10);
+            let verify=|bytes:&[u8]|validate_worker_bundle(bytes,&job,&release,&company.verifying_key(),&trust).is_ok();
+            let valid=archive(&entries);assert!(verify(&valid),"Complete {edition:?}/{format} bundle was rejected");
+            let helper=entries.iter().position(|(name,_)|name=="Get-MsiInstallMode.ps1").unwrap();
+            let mut altered=entries.clone();altered[helper].1=b"altered script".to_vec();assert!(!verify(&archive(&altered)));
+            let mut missing=entries.clone();missing.remove(helper);assert!(!verify(&archive(&missing)));
+            let mut extra=entries.clone();extra.push(("extra.dll".into(),b"unexpected".to_vec()));assert!(!verify(&archive(&extra)));
+            let mut renamed=entries.clone();renamed[helper].0="Get-MsiInstallM0de.ps1".into();assert!(!verify(&archive(&renamed)));
+            let mut binary=entries.clone();binary[0].1=b"different installer".to_vec();assert!(!verify(&archive(&binary)));
+            for index in [3,4] {
+                let mut hidden=entries.clone();let mut metadata:Value=serde_json::from_slice(&hidden[index].1).unwrap();
+                metadata["technician_token"]=json!("inert secret canary");hidden[index].1=serde_json::to_vec_pretty(&metadata).unwrap();
+                assert!(!verify(&archive(&hidden)),"Unsigned fields cannot enter public bundles");
+            }
+            let mut duplicate_json=entries.clone();
+            let mut metadata=b"{\"payload\":\"inert secret canary\",".to_vec();
+            metadata.extend_from_slice(&duplicate_json[3].1[1..]);duplicate_json[3].1=metadata;
+            assert!(!verify(&archive(&duplicate_json)),"Duplicate JSON keys cannot hide discarded metadata");
+            for (field,value) in [("company_id",json!("wrong-company")),("schema",json!(2)),("management_url",json!("https://wrong.example.com")),("edition",json!(if edition==Edition::Customer {"technician"}else{"customer"}))] {
+                let mut wrong=entries.clone();let mut metadata:Value=serde_json::from_slice(&wrong[2].1).unwrap();metadata[field]=value;
+                // Serialize through Bootstrap so the fixture keeps the worker's field order.
+                let bootstrap:swan_agent::Bootstrap=serde_json::from_value(metadata).unwrap();wrong[2].1=serde_json::to_vec_pretty(&bootstrap).unwrap();
+                assert!(!verify(&archive(&wrong)),"Wrong bootstrap {field} accepted");
+            }
+            let mut local_name=valid.clone();local_name[30]=b'X';assert!(!verify(&local_name),"Local and central filenames must agree");
+            let mut truncated=valid.clone();truncated.pop();assert!(!verify(&truncated));
+            let mut prefixed=b"MZ".to_vec();prefixed.extend_from_slice(&valid);assert!(!verify(&prefixed));
+            // zip 2.4.2 hides duplicate names behind its unique-name map. Build
+            // a distinct alias, then change both header names to the real helper.
+            let alias=b"Get-MsiInstallM0de.ps1";let canonical=b"Get-MsiInstallMode.ps1";
+            let mut duplicate=entries.clone();duplicate.push((String::from_utf8(alias.to_vec()).unwrap(),entries[helper].1.clone()));
+            let mut duplicate=archive(&duplicate);
+            for offset in 0..=duplicate.len()-alias.len() {if &duplicate[offset..offset+alias.len()]==alias {duplicate[offset..offset+alias.len()].copy_from_slice(canonical);}}
+            assert_eq!(zip::ZipArchive::new(std::io::Cursor::new(&duplicate)).unwrap().len(),10,"Regression must exercise hidden physical duplicates");
+            assert!(!verify(&duplicate));
+            let footer=duplicate.len()-22;duplicate[footer+8..footer+12].copy_from_slice(&[10,0,10,0]);
+            assert!(!verify(&duplicate),"Forged entry counts cannot hide duplicate records");
+            let mut expired=profile.clone();expired.expires_at=now();let expired=SignedEnvelope::sign(&expired,&company).unwrap();
+            let mut expired_entries=entries.clone();expired_entries[3].1=serde_json::to_vec_pretty(&expired).unwrap();
+            let expired_job=json!({"profile":expired,"release":signed_release});
+            assert!(validate_worker_bundle(&archive(&expired_entries),&expired_job,&release,&company.verifying_key(),&trust).is_err());
+        }}
+    }
+    #[test]
     fn legacy_schema_migration_requires_encrypted_backup_and_keeps_original_key() {
         let directory=std::env::temp_dir().join(format!("swan-key-migration-{}",random_token()));
         let initial=Store::open(&directory).unwrap();let public=initial.key.verifying_key();
@@ -773,35 +849,77 @@ async fn upload_artifact(State(s):State<Shared>,Path(id):Path<String>,request:ax
     let trust=std::env::var("SWAN_RELEASE_PUBLIC_KEY").map_err(|_|bad("Release key not configured"))?;
     let release:Release=release_envelope.verify(&public_key(&trust)?).map_err(|_|denied())?;
     release.validate(&release.edition,0,now()).map_err(|_|bad("Expired release"))?;
-    // Verify content without extracting any paths. Download bundles cannot inject executables or setup scripts.
-    let mut zip=zip::ZipArchive::new(std::io::Cursor::new(&bytes)).map_err(|_|bad("Invalid ZIP artifact"))?;
-    if zip.len()!=9 {return Err(bad("Unexpected bundle contents"));}
-    use std::io::Read;
-    let mut read=|name:&str|->Result<Vec<u8>,ApiError>{
-        let file=zip.by_name(name).map_err(|_|bad("Missing bundle file"))?;
-        if file.size()>512*1024*1024{return Err(bad("Bundle entry too large"));}
-        let mut output=Vec::new();file.take(512*1024*1024+1).read_to_end(&mut output).map_err(|_|bad("Unreadable bundle"))?;
-        if output.len()>512*1024*1024{return Err(bad("Bundle entry too large"));}Ok(output)
-    };
-    if digest(read(&format!("SwanRemoteSupport-install.{}",release.format))?)!=release.sha256.to_lowercase() || digest(read("swan-agent.exe")?)!=release.agent_sha256.to_lowercase(){return Err(bad("Bundle binary hash mismatch"));}
-    for (name,expected) in [
-        ("Install-Company.ps1",include_bytes!("../../../deployment/windows/Install-Company.ps1").as_slice()),
-        ("Open-Technician.ps1",include_bytes!("../../../deployment/windows/Open-Technician.ps1").as_slice()),
-        ("Verify-Package.ps1",include_bytes!("../../../deployment/windows/Verify-Package.ps1").as_slice()),
-        ("LICENSE.txt",include_bytes!("../../../LICENCE").as_slice())
-    ] {if read(name)?!=bundle_text(expected)?{return Err(bad("Bundle script or license mismatch"));}}
-    let profile:SignedEnvelope=serde_json::from_slice(&read("company-profile.json")?)?;
-    if serde_json::to_value(&profile)?!=job["profile"] {return Err(bad("Wrong company profile"));}
-    let copied_release:SignedEnvelope=serde_json::from_slice(&read("release.json")?)?;
-    if serde_json::to_value(&copied_release)?!=job["release"] {return Err(bad("Wrong release metadata"));}
-    let bootstrap:swan_agent::Bootstrap=serde_json::from_slice(&read("bootstrap.json")?)?;
-    let p:CompanyProfile=profile.verify(&s.key.verifying_key()).map_err(|_|denied())?;
-    if bootstrap.company_id!=p.company_id || bootstrap.edition!=release.edition || bootstrap.management_url!=p.management_url || bootstrap.profile_public_key!=STANDARD.encode(s.key.verifying_key().as_bytes()) || bootstrap.release_public_key!=trust {return Err(bad("Bootstrap trust mismatch"));}
-    drop(read);drop(zip);
-    let hash=digest(&bytes);
-    tokio::task::spawn_blocking(move || persist_verified_artifact(&s,&id,&worker,&bytes))
+    let company_key=s.key.verifying_key();
+    let hash=tokio::task::spawn_blocking(move || {
+        validate_worker_bundle(&bytes,&job,&release,&company_key,&trust)?;
+        let hash=digest(&bytes);
+        persist_verified_artifact(&s,&id,&worker,&bytes)?;
+        Ok::<_,ApiError>(hash)
+    })
         .await.map_err(|_|bad("Artifact persistence failed"))??;
     Ok(Json(json!({"sha256":hash})))
+}
+
+fn validate_bundle_zip_layout(bytes:&[u8],count:usize)->Result<(),ApiError> {
+    // Admit the worker's bounded, seek-written ZIP32 recipe only. zip 2.4.2
+    // deduplicates central-directory names, so ZipArchive::len alone cannot
+    // establish that an archive has exactly the expected physical entries.
+    let range=|offset:usize,length:usize|->Result<&[u8],ApiError>{
+        bytes.get(offset..offset.checked_add(length).ok_or_else(||bad("Invalid ZIP bounds"))?).ok_or_else(||bad("Invalid ZIP bounds"))
+    };
+    let word=|offset:usize|->Result<usize,ApiError>{let data=range(offset,2)?;Ok(u16::from_le_bytes([data[0],data[1]]) as usize)};
+    let dword=|offset:usize|->Result<usize,ApiError>{let data=range(offset,4)?;Ok(u32::from_le_bytes([data[0],data[1],data[2],data[3]]) as usize)};
+    let end=bytes.len().checked_sub(22).ok_or_else(||bad("Incomplete ZIP footer"))?;
+    if range(end,4)?!=b"PK\x05\x06" || word(end+4)?!=0 || word(end+6)?!=0 || word(end+8)?!=count || word(end+10)?!=count || word(end+20)?!=0 {return Err(bad("Unexpected ZIP footer"));}
+    let start=dword(end+16)?;
+    if start.checked_add(dword(end+12)?)!=Some(end) {return Err(bad("Invalid ZIP directory bounds"));}
+    let mut central=start;let mut local=0;let mut names=std::collections::HashSet::new();
+    for _ in 0..count {
+        let header=range(central,46)?;
+        if &header[..4]!=b"PK\x01\x02" || word(central+30)?!=0 || word(central+32)?!=0 || word(central+34)?!=0 || dword(central+42)?!=local {return Err(bad("Unsupported ZIP entry layout"));}
+        let name_length=word(central+28)?;
+        let name=range(central+46,name_length)?;
+        if !names.insert(name) {return Err(bad("Duplicate ZIP entry"));}
+        let local_header=range(local,30)?;
+        let flags=word(central+8)?;
+        if &local_header[..4]!=b"PK\x03\x04" || flags & !0x0800!=0 || word(local+6)?!=flags || word(central+10)?!=8 || word(local+8)?!=8 || word(local+26)?!=name_length || word(local+28)?!=0 || range(local+30,name_length)?!=name || range(local+14,12)?!=range(central+16,12)? {return Err(bad("Ambiguous ZIP entry headers"));}
+        let compressed=dword(central+20)?;
+        local=local.checked_add(30+name_length).and_then(|offset|offset.checked_add(compressed)).ok_or_else(||bad("Invalid ZIP data bounds"))?;
+        central=central.checked_add(46+name_length).ok_or_else(||bad("Invalid ZIP directory bounds"))?;
+        if local>start || central>end {return Err(bad("ZIP entry exceeds its region"));}
+    }
+    if local!=start || central!=end {return Err(bad("Unaccounted ZIP contents"));}
+    Ok(())
+}
+
+fn validate_worker_bundle(bytes:&[u8],job:&Value,release:&Release,company_key:&ed25519_dalek::VerifyingKey,trust:&str)->Result<(),ApiError> {
+    // Verify content without extracting any paths. Download bundles cannot inject executables or setup scripts.
+    validate_bundle_zip_layout(bytes,5+COMPANY_BUNDLE_TEXT_FILES.len())?;
+    let mut zip=zip::ZipArchive::new(std::io::Cursor::new(bytes)).map_err(|_|bad("Invalid ZIP artifact"))?;
+    if zip.len()!=5+COMPANY_BUNDLE_TEXT_FILES.len() {return Err(bad("Unexpected bundle contents"));}
+    use std::io::Read;
+    let mut read=|name:&str,limit:u64|->Result<Vec<u8>,ApiError>{
+        let file=zip.by_name(name).map_err(|_|bad("Missing bundle file"))?;
+        if file.is_dir() || file.is_symlink() || file.size()>limit{return Err(bad("Invalid bundle entry type or size"));}
+        let mut output=Vec::new();file.take(limit+1).read_to_end(&mut output).map_err(|_|bad("Unreadable bundle"))?;
+        if output.len() as u64>limit{return Err(bad("Bundle entry too large"));}Ok(output)
+    };
+    if digest(read(&format!("SwanRemoteSupport-install.{}",release.format),512*1024*1024)?)!=release.sha256.to_lowercase() || digest(read("swan-agent.exe",512*1024*1024)?)!=release.agent_sha256.to_lowercase(){return Err(bad("Bundle binary hash mismatch"));}
+    for (name,expected) in COMPANY_BUNDLE_TEXT_FILES {let expected=bundle_text(expected)?;if read(name,expected.len() as u64)?!=expected{return Err(bad("Bundle script or license mismatch"));}}
+    let profile_bytes=read("company-profile.json",2*1024*1024)?;
+    let profile:SignedEnvelope=serde_json::from_slice(&profile_bytes)?;
+    if profile_bytes!=serde_json::to_vec_pretty(&profile)? || serde_json::to_value(&profile)?!=job["profile"] {return Err(bad("Wrong company profile"));}
+    let release_bytes=read("release.json",2*1024*1024)?;
+    let copied_release:SignedEnvelope=serde_json::from_slice(&release_bytes)?;
+    if release_bytes!=serde_json::to_vec_pretty(&copied_release)? || serde_json::to_value(&copied_release)?!=job["release"] {return Err(bad("Wrong release metadata"));}
+    let bootstrap_bytes=read("bootstrap.json",16*1024)?;
+    let bootstrap:swan_agent::Bootstrap=serde_json::from_slice(&bootstrap_bytes)?;
+    if bootstrap_bytes!=serde_json::to_vec_pretty(&bootstrap)? {return Err(bad("Noncanonical bootstrap configuration"));}
+    bootstrap.validate().map_err(|_|bad("Invalid bootstrap configuration"))?;
+    let p:CompanyProfile=profile.verify(company_key).map_err(|_|denied())?;
+    p.validate(&p.company_id,0,now()).map_err(|_|bad("Expired or invalid bundle profile"))?;
+    if bootstrap.company_id!=p.company_id || bootstrap.edition!=release.edition || bootstrap.management_url!=p.management_url || bootstrap.profile_public_key!=STANDARD.encode(company_key.as_bytes()) || bootstrap.release_public_key!=trust {return Err(bad("Bootstrap trust mismatch"));}
+    Ok(())
 }
 
 // Called only after bundle validation, under a blocking task.
