@@ -28,6 +28,12 @@ jobs:
           ./deployment/windows/test_server_removal_plan.ps1
           powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File ./deployment/windows/test_server_removal_plan.ps1
           if ($LASTEXITCODE -ne 0) { throw 'Windows PowerShell removal-plan checks failed.' }
+      - name: Render the Windows setup wizard without installation
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          powershell.exe -NoProfile -NonInteractive -STA -ExecutionPolicy Bypass -File ./deployment/windows/Setup-Server.ps1 -RenderPreview "$env:RUNNER_TEMP/server-setup-preview.png"
+          if ($LASTEXITCODE -ne 0) { throw 'Server setup preview failed.' }
   linux-deployment:
     runs-on: ubuntu-24.04
     steps:

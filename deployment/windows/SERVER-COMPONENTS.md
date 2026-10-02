@@ -5,7 +5,8 @@ packaged rendezvous, relay and HTTPS components. The service supervises its
 own children; component failure stops management, and service stop or a service
 process crash terminates its assigned children. Windows process-job lifecycle
 tests pass, but clean-machine installation, repair and uninstall are still
-unverified. A graphical setup wrapper remains incomplete.
+unverified. `Setup-Server.ps1` supplies the graphical setup flow; a signed
+packaged launcher and clean-machine wizard installation remain incomplete.
 
 `server-components.json` pins the Windows x64 RustDesk server 1.1.15 and Caddy
 2.10.2 archives by SHA-256, with upstream source references. Download each exact
@@ -33,6 +34,26 @@ Production packaging must retain RustDesk AGPL source/license notices and
 Caddy Apache-2.0 license/notices, publish exact corresponding project and
 transport source, and pass the server lifecycle and Windows compatibility
 checks. These prepared files are build inputs, not a complete server installer.
+
+Open the graphical wizard from an administrator Windows PowerShell session:
+
+```powershell
+powershell.exe -STA -File ./deployment/windows/Setup-Server.ps1
+```
+
+It collects the company hostname, trusted release key and publisher thumbprint,
+signed management executable and prepared components. Installation runs in a
+background PowerShell instance with structured parameters, so the form stays
+responsive; it prevents closing while installation runs. After success, open
+company HTTPS setup to configure branding, administrator MFA, accounts,
+enrollment and update policy. No secrets are embedded in the wizard or copied
+to public installation bundles. Without administrator rights, installation is
+disabled. The wizard does not request elevation automatically.
+
+For layout inspection, `-RenderPreview OUTPUT.png` renders the form without
+showing it, starting services or enabling installation/browser actions. The
+preview is layout evidence; it does not test privileged installation or backend
+completion/error events. Those require the clean Windows test matrix.
 
 For a fresh company deployment, run with administrator rights and a trusted
 signed management build containing component supervision:

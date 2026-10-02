@@ -860,3 +860,25 @@ not run SCM or firewall operations. The installer additionally requires a valid
 management signature matching an explicit trusted certificate thumbprint.
 Native privileged install/uninstall, retained-data reinstallation and full
 Windows compatibility remain unverified; receipt planning is not their proof.
+
+The Windows server setup form now collects company hostname, public release
+trust, expected publisher, signed management and prepared components, then
+invokes the installer with structured parameters in a background PowerShell
+instance. It disables installation without administrator rights and prevents
+closing during installation. Successful completion enables HTTPS company
+setup; failures show the installer error. Its Windows PowerShell 5.1 preview
+renders and was visually inspected, without displaying the form or starting
+services. This proves layout construction only. Privileged wizard actions,
+interactive setup, backend completion/error events and a signed packaged
+launcher remain unverified or incomplete.
+
+The exact `8cfdd8f` required public source inputs now build the pinned Linux
+management image `sha256:0410d99dd9995bf95854dff50621030aeefa567f73b07e5b4f4dd381cdfd5fb3`.
+The source archive SHA-256 is `3b40abde298095bad99347aad1bf5ee3a9b5ed855ea1788d8926038cc81cd72a`;
+the management binary SHA-256 is `c0182c6785480dc47b5220689146da3bee7d00362f17ee1f400233e39c0199a6`.
+The context check includes all 39 required inputs and excludes every private
+configuration/key/cache canary. Both deployment drivers from the same source
+pass: fresh setup, MFA/replay, approval, restart, management encrypted restore,
+and complete transport/TLS replacement recovery using the original trust.
+This is exact-source isolated Linux deployment evidence, not public ACME,
+external traversal, native sessions or clean Windows compatibility proof.
