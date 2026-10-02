@@ -459,3 +459,13 @@ Flutter and Windows artifact versions agree in a local source check. Native CI
 checks app/packer/Flutter/artifact version agreement before building. This is a
 development version change; no release tag or signed production publication has
 been made, and native build/upgrade behavior must still be demonstrated.
+
+Management now provides offline prepare/activate profile-key commands. They
+publish a replacement under the existing key before activation, require
+operator confirmation of client synchronization, and atomically update active
+key/profile state in SQLite. Activation closes grants and invalidates installer
+jobs with old bootstrap trust. A process lock prevents simultaneous upgraded
+management instances. Schema-1 migration requires an encrypted pre-upgrade
+backup; restored active keys and revisions survive component tests. Eleven
+management tests pass, including rotation, migration and backup recovery.
+Installed-app HTTPS rotation and live migration rollback remain unverified.

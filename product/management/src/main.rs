@@ -43,6 +43,11 @@ async fn run(stop:tokio::sync::oneshot::Receiver<()>)->Result<()> {
         println!("Encrypted {} completed.",args[1]);return Ok(());
     }
     let store = Arc::new(Store::open(&data)?);
+    if matches!(args.get(1).map(String::as_str),Some("prepare-profile-key"|"activate-profile-key")) {
+        if args[1]=="activate-profile-key" {anyhow::ensure!(args.iter().any(|arg|arg=="--confirm-clients-synced"),"First synchronize the prepared signed transition to installed clients; activation requires --confirm-clients-synced");}
+        let public=if args[1]=="prepare-profile-key" {store.prepare_profile_rotation()?}else{store.activate_profile_rotation()?};
+        println!("Profile public key: {public}");return Ok(());
+    }
     let address: SocketAddr = std::env::var("SWAN_LISTEN").unwrap_or_else(|_| "127.0.0.1:8080".into()).parse()?;
     let app: Router = service::router(store);
     let listener = tokio::net::TcpListener::bind(address).await.context("Bind management listener")?;

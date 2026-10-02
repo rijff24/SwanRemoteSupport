@@ -31,6 +31,9 @@ unsafe paths, and more than 4096 total files. The 512 MiB total plaintext limit 
 The transport directory must contain both `id_ed25519` and `id_ed25519.pub`.
 When present, `db_v2.sqlite3` is also snapshotted using SQLite's backup API.
 Management uses the same API for its database, including committed WAL data.
+Schema version 2 keeps active and pending profile-signing keys in that database;
+the original `profile-key.hex` file alone is insufficient after rotation. See
+[profile key rotation](PROFILE_KEY_ROTATION.md) for the migration and maintenance procedure.
 Stop configuration changes during the export when a coordinated snapshot of
 the separately stored environment, TLS identity and transport data is needed.
 The export does not stop or modify running transport services.

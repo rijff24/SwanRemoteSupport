@@ -13,6 +13,7 @@ use totp_rs::{Algorithm, Secret, TOTP};
 use uuid::Uuid;
 
 pub struct Store {
+    _process_lock: std::fs::File,
     db: Mutex<Connection>,
     key: SigningKey,
     setup_hash: String,
@@ -58,8 +59,15 @@ fn totp_step(secret:&str,code:&str,time:u64)->anyhow::Result<u64> {
 
 impl Store {
     pub fn open(directory:&FsPath)->anyhow::Result<Self> {
+        Self::open_with_backup_password(directory,std::env::var("SWAN_BACKUP_PASSPHRASE").ok().as_deref())
+    }
+    fn open_with_backup_password(directory:&FsPath,backup_password:Option<&str>)->anyhow::Result<Self> {
         std::fs::create_dir_all(directory)?;
         #[cfg(unix)] { use std::os::unix::fs::PermissionsExt; std::fs::set_permissions(directory,std::fs::Permissions::from_mode(0o700))?; }
+        let mut lock_options=std::fs::OpenOptions::new();lock_options.create(true).read(true).write(true);
+        #[cfg(unix)] {use std::os::unix::fs::OpenOptionsExt;lock_options.mode(0o600);}
+        let process_lock=lock_options.open(directory.join("management.lock"))?;
+        fs2::FileExt::try_lock_exclusive(&process_lock).map_err(|_|anyhow::anyhow!("Company management data is in use; stop the service before offline operations"))?;
         let key_path=directory.join("profile-key.hex");
         if !key_path.exists() { write_secret(&key_path,&hex::encode(SigningKey::generate(&mut OsRng).to_bytes()))?; }
         let key_bytes:[u8;32]=hex::decode(std::fs::read_to_string(&key_path)?.trim())?.try_into().map_err(|_|anyhow::anyhow!("Invalid signing key"))?;
@@ -71,10 +79,48 @@ impl Store {
         db.pragma_update(None,"foreign_keys","ON")?;
         db.busy_timeout(std::time::Duration::from_secs(5))?;
         let version:u32=db.pragma_query_value(None,"user_version",|r|r.get(0))?;
-        ensure!(version<=1,"Database was created by a newer server; restore the pre-upgrade backup rather than downgrading it");
+        ensure!(version<=2,"Database was created by a newer server; restore the pre-upgrade backup rather than downgrading it");
+        if version==1 {
+            let password=backup_password.ok_or_else(||anyhow::anyhow!("Schema upgrade requires SWAN_BACKUP_PASSPHRASE in private environment configuration for an encrypted pre-upgrade backup"))?;
+            crate::backup::export(directory,&directory.join(format!("pre-upgrade-v1-{}.swan-backup",random_token())),password)?;
+        }
         db.execute_batch(include_str!("schema.sql"))?;
+        db.execute("INSERT OR IGNORE INTO profile_signing_keys(id,active_hex) VALUES(1,?1)",[hex::encode(key_bytes)])?;
+        let active_hex:String=db.query_row("SELECT active_hex FROM profile_signing_keys WHERE id=1",[],|row|row.get(0))?;
+        let key=signing_key_from_hex(&active_hex)?;
         let artifact_dir=directory.join("artifacts");std::fs::create_dir_all(&artifact_dir)?;
-        Ok(Self {db:Mutex::new(db),key:SigningKey::from_bytes(&key_bytes),setup_hash,limits:Mutex::new(HashMap::new()),artifact_dir})
+        Ok(Self {_process_lock:process_lock,db:Mutex::new(db),key,setup_hash,limits:Mutex::new(HashMap::new()),artifact_dir})
+    }
+    pub fn prepare_profile_rotation(&self)->anyhow::Result<String> {
+        let mut db=self.db.lock().unwrap();let tx=db.transaction()?;
+        let pending:Option<String>=tx.query_row("SELECT pending_hex FROM profile_signing_keys WHERE id=1",[],|row|row.get(0))?;
+        ensure!(pending.is_none(),"A profile key rotation is already pending");
+        let raw:String=tx.query_row("SELECT body FROM profile WHERE id=1",[],|row|row.get(0))?;
+        let mut profile:CompanyProfile=serde_json::from_str(&raw)?;
+        ensure!(profile.next_profile_public_key.is_none(),"Profile already declares a replacement key");
+        let next=SigningKey::generate(&mut OsRng);let public=STANDARD.encode(next.verifying_key().as_bytes());
+        profile.next_profile_public_key=Some(public.clone());profile.revision=profile.revision.checked_add(1).ok_or_else(||anyhow::anyhow!("Profile revision exhausted"))?;
+        profile.issued_at=now();profile.expires_at=now()+30*86400;profile.validate(&profile.company_id,profile.revision,now())?;
+        tx.execute("UPDATE profile_signing_keys SET pending_hex=?1 WHERE id=1",[hex::encode(next.to_bytes())])?;
+        tx.execute("UPDATE profile SET body=?1 WHERE id=1",[serde_json::to_string(&profile)?])?;
+        tx.execute("INSERT INTO audit(at,actor,event,target) VALUES(?1,'local-operator','profile.key.prepared',?2)",params![now(),public])?;
+        tx.commit()?;Ok(public)
+    }
+    pub fn activate_profile_rotation(&self)->anyhow::Result<String> {
+        let mut db=self.db.lock().unwrap();let tx=db.transaction()?;
+        let pending:Option<String>=tx.query_row("SELECT pending_hex FROM profile_signing_keys WHERE id=1",[],|row|row.get(0))?;
+        let pending=pending.ok_or_else(||anyhow::anyhow!("No pending profile key rotation"))?;
+        let next=signing_key_from_hex(&pending)?;let public=STANDARD.encode(next.verifying_key().as_bytes());
+        let raw:String=tx.query_row("SELECT body FROM profile WHERE id=1",[],|row|row.get(0))?;let mut profile:CompanyProfile=serde_json::from_str(&raw)?;
+        ensure!(profile.next_profile_public_key.as_ref()==Some(&public),"Published profile does not authorize the pending key");
+        profile.next_profile_public_key=None;profile.revision=profile.revision.checked_add(1).ok_or_else(||anyhow::anyhow!("Profile revision exhausted"))?;
+        profile.issued_at=now();profile.expires_at=now()+30*86400;profile.validate(&profile.company_id,profile.revision,now())?;
+        tx.execute("UPDATE profile_signing_keys SET active_hex=?1,pending_hex=NULL WHERE id=1",[pending])?;
+        tx.execute("UPDATE profile SET body=?1 WHERE id=1",[serde_json::to_string(&profile)?])?;
+        tx.execute("UPDATE grants SET closed=1,lease_until=0 WHERE closed=0",[])?;
+        tx.execute("UPDATE builds SET state='failed',result=?1 WHERE state IN ('queued','running','uploaded','completed')",[json!({"ok":false,"error":"Company signing key rotated; regenerate company bundles"}).to_string()])?;
+        tx.execute("INSERT INTO audit(at,actor,event,target) VALUES(?1,'local-operator','profile.key.activated',?2)",params![now(),public])?;
+        tx.commit()?;Ok(public)
     }
     fn profile(&self)->anyhow::Result<CompanyProfile> {
         let raw:String=self.db.lock().unwrap().query_row("SELECT body FROM profile WHERE id=1",[],|r|r.get(0))?;
@@ -510,6 +556,43 @@ struct BuildResult { success:bool, artifact_url:String,sha256:String,log:String 
 #[cfg(test)]
 mod worker_completion_tests {
     use super::*;
+    #[test]
+    fn legacy_schema_migration_requires_encrypted_backup_and_keeps_original_key() {
+        let directory=std::env::temp_dir().join(format!("swan-key-migration-{}",random_token()));
+        let initial=Store::open(&directory).unwrap();let public=initial.key.verifying_key();
+        initial.db.lock().unwrap().execute_batch("DROP TABLE profile_signing_keys;PRAGMA user_version=1;").unwrap();drop(initial);
+        assert!(Store::open_with_backup_password(&directory,None).is_err());
+        let db=Connection::open(directory.join("management.sqlite3")).unwrap();assert_eq!(db.pragma_query_value(None,"user_version",|r|r.get::<_,u32>(0)).unwrap(),1);drop(db);
+        let upgraded=Store::open_with_backup_password(&directory,Some("schema migration backup password")).unwrap();assert_eq!(upgraded.key.verifying_key(),public);
+        let archive=std::fs::read_dir(&directory).unwrap().map(|e|e.unwrap().path()).find(|path|path.extension().is_some_and(|e|e=="swan-backup")).unwrap();drop(upgraded);
+        let restored_path=directory.with_extension("restored");crate::backup::restore(&restored_path,&archive,"schema migration backup password").unwrap();
+        let db=Connection::open(restored_path.join("management.sqlite3")).unwrap();assert_eq!(db.pragma_query_value(None,"user_version",|r|r.get::<_,u32>(0)).unwrap(),1);drop(db);
+        std::fs::remove_dir_all(directory).unwrap();std::fs::remove_dir_all(restored_path).unwrap();
+    }
+    #[test]
+    fn profile_key_rotation_is_atomic_survives_backup_and_requires_published_transition() {
+        let directory=std::env::temp_dir().join(format!("swan-server-key-rotation-{}",random_token()));
+        let store=Store::open(&directory).unwrap();assert!(Store::open(&directory).is_err());
+        let old=store.key.verifying_key();let old_public=STANDARD.encode(old.as_bytes());
+        let profile=CompanyProfile{schema:1,company_id:"rotation-test".into(),revision:1,issued_at:now()-1,expires_at:now()+3600,management_url:"https://support.example.com".into(),rendezvous:"support.example.com".into(),relay:"support.example.com".into(),transport_public_key:old_public.clone(),customer:Default::default(),technician:Default::default(),allow_unattended:false,updates_paused:true,rollout_percent:0,maintenance_start_utc:0,maintenance_end_utc:0,update_channel:"test".into(),next_profile_public_key:None};
+        store.db.lock().unwrap().execute("INSERT INTO profile VALUES(1,?1)",[serde_json::to_string(&profile).unwrap()]).unwrap();
+        assert!(store.activate_profile_rotation().is_err());
+        let next=store.prepare_profile_rotation().unwrap();assert_ne!(next,old_public);assert!(store.prepare_profile_rotation().is_err());
+        let transition=store.profile().unwrap();assert_eq!(transition.revision,2);assert_eq!(transition.next_profile_public_key.as_ref(),Some(&next));
+        let envelope=SignedEnvelope::sign(&transition,&store.key).unwrap();assert!(envelope.verify::<CompanyProfile>(&old).is_ok());
+        let mut altered=transition.clone();altered.next_profile_public_key=Some(old_public);
+        store.db.lock().unwrap().execute("UPDATE profile SET body=?1 WHERE id=1",[serde_json::to_string(&altered).unwrap()]).unwrap();
+        assert!(store.activate_profile_rotation().is_err());
+        store.db.lock().unwrap().execute("UPDATE profile SET body=?1 WHERE id=1",[serde_json::to_string(&transition).unwrap()]).unwrap();
+        assert_eq!(store.activate_profile_rotation().unwrap(),next);drop(store);
+        let restarted=Store::open(&directory).unwrap();assert_eq!(STANDARD.encode(restarted.key.verifying_key().as_bytes()),next);
+        let activated=restarted.profile().unwrap();assert_eq!(activated.revision,3);assert!(activated.next_profile_public_key.is_none());
+        let signed=SignedEnvelope::sign(&activated,&restarted.key).unwrap();assert!(signed.verify::<CompanyProfile>(&old).is_err());assert!(signed.verify::<CompanyProfile>(&public_key(&next).unwrap()).is_ok());
+        let archive=directory.with_extension("backup");crate::backup::export(&directory,&archive,"rotation backup test passphrase").unwrap();drop(restarted);
+        let restored_path=directory.with_extension("restored");crate::backup::restore(&restored_path,&archive,"rotation backup test passphrase").unwrap();
+        let restored=Store::open(&restored_path).unwrap();assert_eq!(STANDARD.encode(restored.key.verifying_key().as_bytes()),next);assert_eq!(restored.profile().unwrap().revision,3);drop(restored);
+        std::fs::remove_dir_all(directory).unwrap();std::fs::remove_dir_all(restored_path).unwrap();std::fs::remove_file(archive).unwrap();
+    }
     #[tokio::test]
     async fn release_withdrawal_requires_admin_and_stops_update_selection() {
         let directory=std::env::temp_dir().join(format!("swan-release-withdrawal-{}",random_token()));
