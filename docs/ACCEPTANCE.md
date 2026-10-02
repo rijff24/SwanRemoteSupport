@@ -350,3 +350,11 @@ recovery and final receipt/helper handoff now run in blocking workers. Final
 session exclusion is acquired and released wholly within one worker, without
 holding its file lock across an async wait. All 32 workspace tests pass. Native
 GUI executor responsiveness and signed update handoff remain unverified.
+
+Administrators can now withdraw individual release approval from the release
+page or DELETE its approval endpoint. Approval withdrawal and its audit event
+commit atomically; technicians are denied. Eight management tests pass, including
+withdrawal stopping update selection, edition/channel separation, pause and
+zero-percent rollout. Web JavaScript syntax passes. Browser interaction and real
+HTTP withdrawal during client downloads remain unverified. Previously generated
+bundles and already-started installation recovery are not removed by withdrawal.

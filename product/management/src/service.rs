@@ -143,7 +143,7 @@ pub fn router(store:Shared)->Router {
         .route("/api/v1/audit",get(audit))
         .route("/api/v1/sessions",get(session_history))
         .route("/api/v1/releases",get(releases).post(import_release))
-        .route("/api/v1/releases/{id}/approve",post(approve_release))
+        .route("/api/v1/releases/{id}/approve",post(approve_release).delete(withdraw_release))
         .route("/api/v1/device/update",get(device_update))
         .route("/api/v1/user/update",get(technician_update))
         .route("/api/v1/workers",post(create_worker))
@@ -509,6 +509,43 @@ struct BuildResult { success:bool, artifact_url:String,sha256:String,log:String 
 #[cfg(test)]
 mod worker_completion_tests {
     use super::*;
+    #[tokio::test]
+    async fn release_withdrawal_requires_admin_and_stops_update_selection() {
+        let directory=std::env::temp_dir().join(format!("swan-release-withdrawal-{}",random_token()));
+        let store=std::sync::Arc::new(Store::open(&directory).unwrap());
+        let public=STANDARD.encode(store.key.verifying_key().as_bytes());
+        let profile=CompanyProfile{schema:1,company_id:"release-test".into(),revision:1,issued_at:now()-1,expires_at:now()+3600,management_url:"https://support.example.com".into(),rendezvous:"support.example.com".into(),relay:"support.example.com".into(),transport_public_key:public,customer:Default::default(),technician:Default::default(),allow_unattended:false,updates_paused:false,rollout_percent:100,maintenance_start_utc:0,maintenance_end_utc:0,update_channel:"stable".into(),next_profile_public_key:None};
+        let release=Release{schema:1,product:"swan-remote-support".into(),version:"2.0.0".into(),sequence:1,edition:Edition::Technician,architecture:"x86_64".into(),channel:"stable".into(),expires_at:now()+3600,artifact_url:"https://releases.example/install.msi".into(),sha256:"a".repeat(64),installed_sha256:"b".repeat(64),installed_files:vec![],agent_url:"https://releases.example/agent.exe".into(),agent_sha256:"c".repeat(64),publisher:"Example".into(),publisher_certificate_sha256:"d".repeat(64),windows_versions:vec!["windows_11".into()],source_url:"https://releases.example/source.tar.gz".into(),format:"msi".into()};
+        let envelope=SignedEnvelope::sign(&release,&store.key).unwrap();
+        let admin_token=random_token();let technician_token=random_token();
+        {
+            let db=store.db.lock().unwrap();
+            db.execute("INSERT INTO profile VALUES(1,?1)",[serde_json::to_string(&profile).unwrap()]).unwrap();
+            for (id,role,credential) in [("admin","admin",&admin_token),("technician","technician",&technician_token)] {
+                db.execute("INSERT INTO users(id,username,password_hash,totp_secret,role) VALUES(?1,?1,'unused','unused',?2)",params![id,role]).unwrap();
+                db.execute("INSERT INTO sessions VALUES(?1,?2,?3)",params![digest(credential),id,now()+3600]).unwrap();
+            }
+            db.execute("INSERT INTO releases VALUES('release',?1,?2,1)",params![serde_json::to_string(&release).unwrap(),serde_json::to_string(&envelope).unwrap()]).unwrap();
+        }
+        let headers=|credential:&str| {let mut h=HeaderMap::new();h.insert(header::AUTHORIZATION,format!("Bearer {credential}").parse().unwrap());h};
+        assert!(!select_update(&store,"technician",Edition::Technician).ok().unwrap().0.is_null());
+        assert!(select_update(&store,"device",Edition::Customer).ok().unwrap().0.is_null());
+        let save_policy=|policy:&CompanyProfile| {store.db.lock().unwrap().execute("UPDATE profile SET body=?1 WHERE id=1",[serde_json::to_string(policy).unwrap()]).unwrap();};
+        let mut paused=profile.clone();paused.updates_paused=true;save_policy(&paused);
+        assert!(select_update(&store,"technician",Edition::Technician).ok().unwrap().0.is_null());
+        let mut staged=profile.clone();staged.rollout_percent=0;save_policy(&staged);
+        assert!(select_update(&store,"technician",Edition::Technician).ok().unwrap().0.is_null());
+        let mut channel=profile.clone();channel.update_channel="test".into();save_policy(&channel);
+        assert!(select_update(&store,"technician",Edition::Technician).ok().unwrap().0.is_null());
+        save_policy(&profile);
+        assert!(withdraw_release(State(store.clone()),headers(&technician_token),Path("release".into())).await.is_err());
+        assert!(!select_update(&store,"technician",Edition::Technician).ok().unwrap().0.is_null());
+        assert!(withdraw_release(State(store.clone()),headers(&admin_token),Path("release".into())).await.is_ok());
+        assert!(select_update(&store,"technician",Edition::Technician).ok().unwrap().0.is_null());
+        assert!(withdraw_release(State(store.clone()),headers(&admin_token),Path("missing".into())).await.is_err());
+        let audit:i64=store.db.lock().unwrap().query_row("SELECT COUNT(*) FROM audit WHERE event='release.withdrawn'",[],|r|r.get(0)).unwrap();assert_eq!(audit,1);
+        drop(store);std::fs::remove_dir_all(directory).unwrap();
+    }
     #[test]
     fn uploaded_artifact_retry_preserves_bytes_and_owner() {
         let directory=std::env::temp_dir().join(format!("swan-upload-retry-{}",random_token()));
@@ -545,6 +582,13 @@ mod worker_completion_tests {
         assert_eq!(serde_json::from_str::<Value>(&saved).unwrap()["log"],"Rejected invalid package");
         drop(store);std::fs::remove_dir_all(directory).unwrap();
     }
+}
+async fn withdraw_release(State(s):State<Shared>,headers:HeaderMap,Path(id):Path<String>)->ApiResult {
+    let user=s.user(&headers,true)?;
+    let mut db=s.db.lock().unwrap();let tx=db.transaction()?;
+    if tx.execute("UPDATE releases SET approved=0 WHERE id=?1",[&id])?!=1{return Err(bad("Unknown release"));}
+    tx.execute("INSERT INTO audit(at,actor,event,target) VALUES(?1,?2,'release.withdrawn',?3)",params![now(),user,id])?;
+    tx.commit()?;Ok(Json(json!({"ok":true})))
 }
 async fn revoke_group_access(State(s):State<Shared>,headers:HeaderMap,Path((group,user)):Path<(String,String)>)->ApiResult {
     let actor=s.user(&headers,true)?;
