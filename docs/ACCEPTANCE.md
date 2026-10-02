@@ -1,6 +1,6 @@
 # Configurable product acceptance report
 
-Development status, 1 October 2026. **The product is not complete or approved for
+Development status, 2 October 2026. **The product is not complete or approved for
 production publication.** A passing component test is not evidence of a working
 native support session or a clean-machine installation.
 
@@ -8,7 +8,7 @@ native support session or a clean-machine installation.
 
 - Public baseline tag `swan-single-company-baseline-1.4.9` preserves the original
   Swan deployment and build instructions. Its source was not replaced.
-- Twenty-three product tests pass on the local Windows development host, including
+- Twenty-eight product tests pass on the local Windows development host, including
   enrollment/trust preservation across stale writes, trusted key rotation, refusal to automatically reinstall a removed endpoint, and explicit consent changes surviving older refreshes. Consent API tests also reject delayed enable requests and older revocation retries; same-revision revocation takes precedence.
   The preceding eleven-test component source passed tests and release compilation on
   [Windows 2022 and Ubuntu 24.04 CI](https://github.com/rijff24/SwanRemoteSupport/actions/runs/36856716860)
@@ -32,7 +32,8 @@ native support session or a clean-machine installation.
   The [build at `31b13aa`](https://github.com/rijff24/SwanRemoteSupport/actions/runs/36967791061)
   also passed and produces a distinct technician portable artifact. It predates
   subsequent native file/audio capability guards, consent ordering, complete
-  backup and installation/repair changes. A new build at `7e589ba` is queued.
+  backup and installation/repair changes. These builds are historical evidence;
+  their results do not establish acceptance of later changes.
 - The unsigned Windows artifact from `31b13aa` downloaded successfully. Its
   digest matches GitHub's artifact digest and both endpoint package checksums
   match `SHA256SUMS.txt`. Both endpoint packages and all three product-component
