@@ -102,6 +102,7 @@ fn package_verified(output:PathBuf,id:&str,work:PathBuf,installer:PathBuf,agent:
         ("company-profile.json",serde_json::to_vec_pretty(&profile_envelope)?),
         ("release.json",serde_json::to_vec_pretty(&release_envelope)?),
         ("Install-Company.ps1",bundle_text(include_bytes!("../../../deployment/windows/Install-Company.ps1"))?),
+        ("Get-MsiInstallMode.ps1",bundle_text(include_bytes!("../../../deployment/windows/Get-MsiInstallMode.ps1"))?),
         ("Open-Technician.ps1",bundle_text(include_bytes!("../../../deployment/windows/Open-Technician.ps1"))?),
         ("Verify-Package.ps1",bundle_text(include_bytes!("../../../deployment/windows/Verify-Package.ps1"))?),
         ("LICENSE.txt",bundle_text(include_bytes!("../../../LICENCE"))?),

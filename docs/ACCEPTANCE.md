@@ -666,3 +666,20 @@ mutation ran on this host. Signed task registration, startup/logon, reboot,
 explicit cancelled-update reinstall handling and customer EXE rollback still
 need implementation/verification as applicable; the full clean Windows matrix
 and current native build remain gates.
+
+Explicit setup now handles cancelled pending updates after incoming package
+validation: it takes the activity lock, atomically prepares an immutable setup
+marker and archives the exact old receipt without changing identity, consent or
+sequence. Active recovery, tampered/foreign metadata, sequence replay,
+conflicting archives and competing setup markers are rejected. Identical
+preparation retries preserve evidence; exact committed setup metadata can finish
+interrupted marker cleanup without allowing ordinary replay. The wrapper checks
+the prepared marker instead of truncating it. A Windows component rehearsal
+passes actual hash/publisher verification using a copied Windows-signed OS
+executable, without executing it; bad bytes leave both pending evidence and
+setup state unchanged. Targeted signed-recovery regressions, script parsing and
+Windows agent/worker compilation pass. The MSI mode inspector reads an actual
+unsigned uninstalled technician package and selects installation without running
+it. Company bundles now include the inspector, and installer execution resolves
+the OS system directory. Actual Swan-signed setup, MSI repair, cancelled-update
+uninstall/reinstall and complete clean Windows acceptance remain unverified.

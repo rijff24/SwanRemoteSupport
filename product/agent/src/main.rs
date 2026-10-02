@@ -134,6 +134,18 @@ async fn main()->Result<()> {
             println!("Installed release verified: {}",installed);
         }
         #[cfg(windows)]
+        "prepare-installation"=>{
+            let file=PathBuf::from(args.get(2).context("Usage: swan-agent prepare-installation release.json INSTALLER [--repair]")?);
+            let package=PathBuf::from(args.get(3).context("Missing original installer path")?);
+            let prepare_directory=directory.clone();let repair=args.iter().any(|value|value=="--repair");
+            tokio::task::spawn_blocking(move ||->Result<()> {
+                let envelope:SignedEnvelope=serde_json::from_slice(&std::fs::read(file)?)?;
+                let state=AgentState::load(&prepare_directory)?;
+                state.prepare_installation(&prepare_directory,&envelope,&package,repair)
+            }).await.context("Explicit installation preparation failed")??;
+            println!("Verified setup prepared; any cancelled update evidence was retained.");
+        }
+        #[cfg(windows)]
         "record-installation"=>{
             let file=PathBuf::from(args.get(2).context("Usage: swan-agent record-installation release.json INSTALLER [--repair]")?);
             let package=PathBuf::from(args.get(3).context("Missing original installer path")?);

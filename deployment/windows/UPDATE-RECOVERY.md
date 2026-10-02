@@ -28,15 +28,28 @@ new sessions and automatic recovery. Paired uninstall rollback restores the
 previous cancellation state, including an earlier cancellation. Software
 rollback narrowly uninstalls its verified failed MSI with `SWAN_RECOVERY=1`,
 excluding user-uninstall cancellation actions. Only explicit verified setup or
-repair clears the cancellation marker. A cancelled pending update receipt may
-still require additional explicit setup/recovery handling; this is not yet a
-verified uninstall/reinstall workflow.
+repair clears the cancellation marker. Explicit setup now verifies its incoming
+package again under the activity lock, publishes a setup marker without
+overwriting a different interrupted setup, and archives the exact original
+cancelled receipt at `updates/<sequence>/cancelled-update.json`. An unchanged
+archive permits interrupted preparation to retry; a conflicting archive fails
+closed. Cancellation and setup markers keep sessions blocked until full installed
+identity verification completes. A setup interrupted after committing its exact
+installed metadata may finish only that same signed setup; ordinary sequence
+replay rejection resumes when the marker is gone. This implements the transition
+but does not yet demonstrate native uninstall/reinstall.
 
 For diagnostics, `Update-RecoveryTask.ps1 -InspectOnly` reads task ownership and
 outputs a proposed identity without registering or removing a task. It does not
 prove executable trust or successful registration. `test_update_recovery_task.ps1`
 tests pure ownership rejection and cancellation files in an isolated temporary
 directory, without native task changes or installer execution.
+
+The company bundle includes the fixed read-only MSI mode inspector. Setup selects
+repair for the exact already-registered product and installation for an unknown
+product. Both the updater and setup resolve Windows Installer from the OS system
+directory. This does not authorize another edition, publisher, version or package:
+signed metadata, artifact identity and package checks still precede installation.
 
 ## Verification boundary
 

@@ -44,7 +44,17 @@ $recordArguments = @('record-installation',(Join-Path $root 'release.json'),$ins
 if ($Repair) { $packageArguments += '--repair'; $recordArguments += '--repair' }
 & $agent @packageArguments
 if ($LASTEXITCODE -ne 0) { throw 'Installer metadata, hash or publisher validation failed.' }
-$msiOperation = if ($Repair) { '/fvamus' } else { '/i' }
+$prepareArguments = @('prepare-installation',(Join-Path $root 'release.json'),$installers[0].FullName)
+if ($Repair) { $prepareArguments += '--repair' }
+& $agent @prepareArguments
+if ($LASTEXITCODE -ne 0) { throw 'Cannot prepare explicit installation or preserve cancelled update evidence.' }
+$systemDirectory = [Environment]::GetFolderPath('System')
+$msiExecutable = Join-Path $systemDirectory 'msiexec.exe'
+$msiOperation = '/i'
+if ($installers[0].Extension -eq '.msi') {
+    $msiOperation = (& (Join-Path $systemDirectory 'WindowsPowerShell/v1.0/powershell.exe') -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File (Join-Path $root 'Get-MsiInstallMode.ps1') -Package $installers[0].FullName | Out-String).Trim()
+    if ($LASTEXITCODE -ne 0 -or $msiOperation -notin @('/i','/fvamus')) { throw 'Cannot select a safe MSI installation or repair mode.' }
+}
 $installationMarker = Join-Path $editionDirectory 'pending-install.json'
 $activityStream = [IO.File]::Open((Join-Path $editionDirectory 'activity.lock'),[IO.FileMode]::OpenOrCreate,[IO.FileAccess]::ReadWrite,[IO.FileShare]::ReadWrite)
 $activityLocked = $false
@@ -53,18 +63,15 @@ try {
     # Refuse active sessions; do not terminate them to perform setup.
     $activityStream.Lock(0,1)
     $activityLocked = $true
-    $markerStream = [IO.File]::Open($installationMarker,[IO.FileMode]::Create,[IO.FileAccess]::Write,[IO.FileShare]::Read)
-    try {
-        $markerBytes = [IO.File]::ReadAllBytes((Join-Path $root 'release.json'))
-        $markerStream.Write($markerBytes,0,$markerBytes.Length)
-        $markerStream.Flush($true)
-    } finally { $markerStream.Dispose() }
+    $prepared = Get-Content -LiteralPath $installationMarker -Raw | ConvertFrom-Json
+    $requested = Get-Content -LiteralPath (Join-Path $root 'release.json') -Raw | ConvertFrom-Json
+    if ($prepared.payload -cne $requested.payload -or $prepared.signature -cne $requested.signature) { throw 'Another company setup owns the installation recovery marker.' }
 if ($bootstrap.edition -eq 'customer') {
     $configurationTask = @(Get-ScheduledTask | Where-Object { $_.TaskName -eq 'Swan Company Configuration' })
     if ($configurationTask.Count -gt 1) { throw 'Ambiguous existing configuration task.' }
     if ($configurationTask.Count -eq 1) {
         $expectedAgent = [IO.Path]::GetFullPath((Join-Path $editionDirectory 'swan-agent.exe'))
-        if ($configurationTask[0].Actions.Count -ne 1 -or [IO.Path]::GetFullPath($configurationTask[0].Actions[0].Execute) -ine $expectedAgent -or $configurationTask[0].Actions[0].Arguments -cne 'watch') { throw 'Existing configuration task does not match this installation.' }
+        if ($configurationTask[0].Actions.Count -ne 1 -or [IO.Path]::GetFullPath($configurationTask[0].Actions[0].Execute) -ine $expectedAgent -or $configurationTask[0].Actions[0].Arguments -cne 'watch' -or $configurationTask[0].Principal.UserId -notin @('SYSTEM','S-1-5-18','NT AUTHORITY\SYSTEM')) { throw 'Existing configuration task does not match this installation.' }
         $configurationTask[0] | Disable-ScheduledTask | Out-Null
         $configurationTask[0] | Stop-ScheduledTask
         $stopDeadline = [DateTime]::UtcNow.AddSeconds(10)
@@ -74,7 +81,7 @@ if ($bootstrap.edition -eq 'customer') {
         }
     }
     if ($installers[0].Extension -eq '.msi') {
-        $process = Start-Process -FilePath 'msiexec.exe' -ArgumentList @($msiOperation,('"' + $installers[0].FullName + '"'),'/passive','/norestart') -PassThru -Wait -WindowStyle Hidden
+        $process = Start-Process -FilePath $msiExecutable -ArgumentList @($msiOperation,('"' + $installers[0].FullName + '"'),'/passive','/norestart') -PassThru -Wait -WindowStyle Hidden
     } else {
         $process = Start-Process -FilePath $installers[0].FullName -ArgumentList '--silent-install','printer=0' -PassThru -Wait -WindowStyle Hidden
     }
@@ -93,7 +100,7 @@ if ($bootstrap.edition -eq 'customer') {
     $release = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($releaseEnvelope.payload)) | ConvertFrom-Json
     $portable = Join-Path $editionDirectory 'SwanRemoteSupport-Technician.exe'
     if ($release.format -eq 'msi') {
-        $process = Start-Process -FilePath 'msiexec.exe' -ArgumentList @($msiOperation,('"' + $installers[0].FullName + '"'),'/passive','/norestart',('INSTALLFOLDER="' + $editionDirectory + '"')) -PassThru -Wait -WindowStyle Hidden
+        $process = Start-Process -FilePath $msiExecutable -ArgumentList @($msiOperation,('"' + $installers[0].FullName + '"'),'/passive','/norestart',('INSTALLFOLDER="' + $editionDirectory + '"')) -PassThru -Wait -WindowStyle Hidden
         if ($process.ExitCode -notin @(0,3010)) { throw "Technician MSI installation failed ($($process.ExitCode))." }
         if (-not (Test-Path -LiteralPath $portable)) { throw 'Technician MSI did not install the expected executable.' }
     } elseif ($release.format -eq 'exe' -and $release.sha256 -ceq $release.installed_sha256) {

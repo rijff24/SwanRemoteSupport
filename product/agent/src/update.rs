@@ -57,16 +57,66 @@ pub(crate) fn validate_recovery_release(state:&AgentState,envelope:&SignedEnvelo
     Ok(release)
 }
 
-#[cfg(windows)]
+#[cfg(any(windows,test))]
 fn installation_release(state:&AgentState,directory:&Path,envelope:&SignedEnvelope,repair:bool)->Result<Release> {
-    ensure!(!directory.join("pending-update.json").exists(),"Resolve pending update recovery before setup or repair");
-    if repair {
+    cancelled_pending_update(state,directory)?;
+    let setup_marker=directory.join("pending-install.json");
+    let completion=if !repair && setup_marker.exists() {
+        let marker:SignedEnvelope=serde_json::from_slice(&std::fs::read(setup_marker)?)?;
+        let requested:Release=envelope.verify(&public_key(&state.bootstrap.release_public_key)?)?;
+        marker.payload==envelope.payload && marker.signature==envelope.signature && requested.sequence==state.last_release_sequence
+    }else{false};
+    if repair || completion {
         let installed:SignedEnvelope=serde_json::from_slice(&std::fs::read(directory.join("installed-release.json"))?)?;
         validate_repair_release(state,envelope,&installed)
     }else{
         let release=validate_release(state,envelope)?;
         ensure!(release.sequence>failed_release_sequence(state,directory)?,"Failed release is quarantined; approve a newer release");
         Ok(release)
+    }
+}
+
+#[cfg(any(windows,test))]
+fn cancelled_pending_update(state:&AgentState,directory:&Path)->Result<Option<(Receipt,Vec<u8>)>> {
+    let bytes=match std::fs::read(directory.join("pending-update.json")) {
+        Ok(bytes)=>bytes,
+        Err(error) if error.kind()==std::io::ErrorKind::NotFound=>return Ok(None),
+        Err(error)=>return Err(error).context("Cannot inspect pending update for explicit setup"),
+    };
+    ensure!(directory.join("pending-uninstall").exists(),"Resolve active update recovery before explicit setup");
+    let receipt:Receipt=serde_json::from_slice(&bytes)?;
+    validate_pending_receipt(state,&receipt)?;
+    Ok(Some((receipt,bytes)))
+}
+
+#[cfg(any(windows,test))]
+fn archive_cancelled_update(state:&AgentState,directory:&Path)->Result<()> {
+    let Some((receipt,bytes))=cancelled_pending_update(state,directory)? else{return Ok(());};
+    let release=validate_pending_receipt(state,&receipt)?;
+    let folder=directory.join("updates").join(release.sequence.to_string());
+    std::fs::create_dir_all(&folder)?;
+    let archive=folder.join("cancelled-update.json");
+    match std::fs::read(&archive) {
+        Ok(saved)=>ensure!(saved==bytes,"Cancelled update archive differs; refuse to overwrite evidence"),
+        Err(error) if error.kind()==std::io::ErrorKind::NotFound=>publish_initial_bytes(&archive,&bytes)?,
+        Err(error)=>return Err(error).context("Cannot inspect cancelled update archive"),
+    }
+    ensure!(directory.join("pending-uninstall").exists() && std::fs::read(directory.join("pending-update.json"))?==bytes,"Cancellation changed while preparing setup");
+    std::fs::remove_file(directory.join("pending-update.json"))?;
+    Ok(())
+}
+
+#[cfg(any(windows,test))]
+fn prepare_installation_marker(directory:&Path,envelope:&SignedEnvelope)->Result<()> {
+    let path=directory.join("pending-install.json");
+    match std::fs::read(&path) {
+        Ok(bytes)=>{
+            let stored:SignedEnvelope=serde_json::from_slice(&bytes)?;
+            ensure!(stored.payload==envelope.payload && stored.signature==envelope.signature,"Another company setup must be recovered first");
+            Ok(())
+        },
+        Err(error) if error.kind()==std::io::ErrorKind::NotFound=>publish_initial_bytes(&path,&serde_json::to_vec(envelope)?),
+        Err(error)=>Err(error).context("Cannot inspect company setup recovery marker"),
     }
 }
 
@@ -138,11 +188,16 @@ fn publish_download(path:&Path,bytes:&[u8])->Result<()> {
 
 #[cfg(any(windows,test))]
 fn publish_initial_receipt(path:&Path,receipt:&Receipt)->Result<()> {
+    publish_initial_bytes(path,&serde_json::to_vec(receipt)?)
+}
+
+#[cfg(any(windows,test))]
+fn publish_initial_bytes(path:&Path,bytes:&[u8])->Result<()> {
     use std::io::Write;
     let temporary=path.parent().context("Missing receipt directory")?.join(format!("swan-receipt-{}.tmp",random_token()));
     let mut file=std::fs::OpenOptions::new().create_new(true).write(true).open(&temporary)?;
     let result=(||->Result<()> {
-        file.write_all(&serde_json::to_vec(receipt)?)?;file.sync_all()?;drop(file);
+        file.write_all(bytes)?;file.sync_all()?;drop(file);
         #[cfg(windows)] {
             use std::os::windows::ffi::OsStrExt;
             use windows_sys::Win32::Storage::FileSystem::{MoveFileExW,MOVEFILE_WRITE_THROUGH};
@@ -291,7 +346,7 @@ fn msi_install_command(package:&Path,release:&Release)->Result<std::process::Com
     ensure!(output.status.success(),"Unable to determine MSI installation or repair mode");
     let mode=std::str::from_utf8(&output.stdout)?.trim();
     ensure!(matches!(mode,"/i"|"/fvamus"),"Unexpected MSI installation mode");
-    let mut command=std::process::Command::new("msiexec.exe");
+    let mut command=std::process::Command::new(system_directory()?.join("msiexec.exe"));
     command.arg(mode).arg(package).args(["/qn","/norestart"]);
     Ok(command)
 }
@@ -538,6 +593,15 @@ fn launch_update_helper(directory:&Path,release:&Release)->Result<()> {
 }
 
 impl AgentState {
+    #[cfg(windows)]
+    pub fn prepare_installation(&self,directory:&Path,envelope:&SignedEnvelope,package:&Path,repair:bool)->Result<()> {
+        let activity=activity_file(directory)?;fs2::FileExt::try_lock_exclusive(&activity).context("Explicit setup requires all sessions and update helpers to close")?;
+        let state=AgentState::load(directory)?;
+        if repair {verify_repair_package(&state,directory,envelope,package)?;}else{verify_package(&state,directory,envelope,package)?;}
+        prepare_installation_marker(directory,envelope)?;
+        archive_cancelled_update(&state,directory)?;
+        Ok(())
+    }
     #[cfg(windows)]
     pub async fn recover_from_staged_task(directory:&Path)->Result<bool> {
         let check_directory=directory.to_owned();
@@ -891,6 +955,25 @@ pub(crate) fn test_failed_release_quarantine(state:&AgentState,release:&Release,
         installer.sha256=digest(std::fs::read(&source).unwrap());
         retain_installer(&source,&target,&installer).unwrap();
         assert!(staged_hash_matches(&target,&installer.sha256).unwrap());
+        let preparation=folder.join("verified-explicit-preparation");state.save(&preparation).unwrap();
+        let initial_state=std::fs::read(preparation.join("managed-state.json")).unwrap();
+        let mut cancelled_release=release.clone();cancelled_release.sequence=2;
+        let cancelled=Receipt{release:SignedEnvelope::sign(&cancelled_release,key).unwrap(),previous_sequence:1,phase:"installing".into(),previous_release:Some(SignedEnvelope::sign(&previous,key).unwrap()),rollback_protocol:1};
+        let pending_bytes=serde_json::to_vec_pretty(&cancelled).unwrap();
+        std::fs::write(preparation.join("pending-update.json"),&pending_bytes).unwrap();
+        std::fs::write(preparation.join("pending-uninstall"),b"explicit fixture cancellation").unwrap();
+        let mut requested=installer.clone();requested.sequence=3;
+        let mut invalid=requested.clone();invalid.sha256=digest(b"wrong verified setup bytes");
+        assert!(state.prepare_installation(&preparation,&SignedEnvelope::sign(&invalid,key).unwrap(),&source,false).is_err());
+        assert!(!preparation.join("pending-install.json").exists());
+        assert_eq!(std::fs::read(preparation.join("pending-update.json")).unwrap(),pending_bytes);
+        let envelope=SignedEnvelope::sign(&requested,key).unwrap();
+        state.prepare_installation(&preparation,&envelope,&source,false).unwrap();
+        state.prepare_installation(&preparation,&envelope,&source,false).unwrap();
+        assert!(!preparation.join("pending-update.json").exists());
+        assert_eq!(std::fs::read(preparation.join("updates/2/cancelled-update.json")).unwrap(),pending_bytes);
+        assert!(preparation.join("pending-uninstall").exists() && preparation.join("pending-install.json").exists());
+        assert_eq!(std::fs::read(preparation.join("managed-state.json")).unwrap(),initial_state);
         let mut wrong_publisher=installer.clone();wrong_publisher.publisher="Unapproved publisher".into();
         assert!(retain_installer(&source,&target,&wrong_publisher).is_err());
         assert!(staged_hash_matches(&target,&installer.sha256).unwrap(),"Publisher rejection retains the previous complete cache");
@@ -946,6 +1029,58 @@ pub(crate) fn test_failed_release_quarantine(state:&AgentState,release:&Release,
     std::fs::write(&path,b"interrupted metadata").unwrap();assert!(failed_release_sequence(state,&folder).is_err());
     std::fs::remove_file(&path).unwrap();std::fs::create_dir(&path).unwrap();
     assert!(failed_release_sequence(state,&folder).is_err(),"Quarantine I/O failures must not clear suppression");
+    let cancellation_folder=folder.join("explicit-cancelled-setup");std::fs::create_dir(&cancellation_folder).unwrap();
+    state.save(&cancellation_folder).unwrap();
+    let original_state=std::fs::read(cancellation_folder.join("managed-state.json")).unwrap();
+    let mut cancelled=receipt.clone();cancelled.phase="installing".into();
+    let cancelled_bytes=serde_json::to_vec_pretty(&cancelled).unwrap();
+    let cancelled_path=cancellation_folder.join("pending-update.json");
+    std::fs::write(&cancelled_path,&cancelled_bytes).unwrap();
+    let mut setup=release.clone();setup.sequence=3;
+    let setup_envelope=SignedEnvelope::sign(&setup,key).unwrap();
+    assert!(installation_release(state,&cancellation_folder,&setup_envelope,false).is_err(),"Active recovery must not become implicit setup");
+    assert!(archive_cancelled_update(state,&cancellation_folder).is_err());
+    std::fs::write(cancellation_folder.join("pending-uninstall"),b"explicit user cancellation").unwrap();
+    assert!(installation_release(state,&cancellation_folder,&setup_envelope,false).is_ok());
+    let mut repair=previous.clone();repair.expires_at=now()+3600;
+    let repair_envelope=SignedEnvelope::sign(&repair,key).unwrap();
+    std::fs::write(cancellation_folder.join("installed-release.json"),serde_json::to_vec(&repair_envelope).unwrap()).unwrap();
+    assert!(installation_release(state,&cancellation_folder,&repair_envelope,true).is_ok());
+    assert!(installation_release(state,&cancellation_folder,&repair_envelope,false).is_err(),"Cancellation cannot bypass sequence replay protection");
+    let foreign=SignedEnvelope::sign(&setup,&SigningKey::from_bytes(&[9;32])).unwrap();
+    assert!(installation_release(state,&cancellation_folder,&foreign,false).is_err());
+    let mut tampered=cancelled.clone();tampered.release.signature=STANDARD.encode([0u8;64]);
+    std::fs::write(&cancelled_path,serde_json::to_vec(&tampered).unwrap()).unwrap();
+    assert!(installation_release(state,&cancellation_folder,&setup_envelope,false).is_err());
+    assert!(archive_cancelled_update(state,&cancellation_folder).is_err());
+    std::fs::write(&cancelled_path,&cancelled_bytes).unwrap();
+    prepare_installation_marker(&cancellation_folder,&setup_envelope).unwrap();
+    let marker_bytes=std::fs::read(cancellation_folder.join("pending-install.json")).unwrap();
+    let mut competing=setup.clone();competing.sequence=4;
+    assert!(prepare_installation_marker(&cancellation_folder,&SignedEnvelope::sign(&competing,key).unwrap()).is_err());
+    assert_eq!(std::fs::read(cancellation_folder.join("pending-install.json")).unwrap(),marker_bytes);
+    prepare_installation_marker(&cancellation_folder,&setup_envelope).unwrap();
+    archive_cancelled_update(state,&cancellation_folder).unwrap();
+    let archive=cancellation_folder.join("updates/2/cancelled-update.json");
+    assert_eq!(std::fs::read(&archive).unwrap(),cancelled_bytes);
+    assert!(!cancelled_path.exists());
+    assert!(cancellation_folder.join("pending-uninstall").exists() && lock_session(&cancellation_folder).is_err());
+    std::fs::write(&cancelled_path,&cancelled_bytes).unwrap();
+    archive_cancelled_update(state,&cancellation_folder).unwrap();
+    let mut changed=cancelled.clone();changed.phase="rolling_back".into();
+    std::fs::write(&cancelled_path,serde_json::to_vec(&changed).unwrap()).unwrap();
+    assert!(archive_cancelled_update(state,&cancellation_folder).is_err(),"Cancelled evidence cannot be overwritten on retry");
+    assert_eq!(std::fs::read(&archive).unwrap(),cancelled_bytes);
+    assert_eq!(std::fs::read(cancellation_folder.join("managed-state.json")).unwrap(),original_state,"Explicit preparation preserves identity, consent and sequence");
+    std::fs::remove_file(&cancelled_path).unwrap();
+    std::fs::write(cancellation_folder.join("installed-release.json"),serde_json::to_vec(&setup_envelope).unwrap()).unwrap();
+    let mut completed=state.clone();completed.last_release_sequence=setup.sequence;
+    assert!(installation_release(&completed,&cancellation_folder,&setup_envelope,false).is_ok(),"Setup may finish exact committed metadata after marker cleanup was interrupted");
+    let mut altered=setup.clone();altered.version="99.0.0".into();
+    assert!(installation_release(&completed,&cancellation_folder,&SignedEnvelope::sign(&altered,key).unwrap(),false).is_err());
+    std::fs::remove_file(cancellation_folder.join("pending-install.json")).unwrap();
+    assert!(installation_release(&completed,&cancellation_folder,&setup_envelope,false).is_err(),"Absent completion marker restores ordinary sequence rejection");
+    assert!(installation_release(&completed,&cancellation_folder,&setup_envelope,true).is_ok());
     std::fs::remove_dir_all(folder).unwrap();
 }
 
