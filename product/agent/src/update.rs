@@ -401,13 +401,19 @@ fn agent_rollback_protocol(agent:&Path,directory:&Path)->Result<u32> {
 }
 
 #[cfg(windows)]
-fn rollback_technician(state:&AgentState,directory:&Path,folder:&Path,receipt:&Receipt)->Result<()> {
+fn supports_rollback(previous:&Release,failed:&Release)->bool {
+    previous.rollback_protocol==1 && previous.edition==failed.edition && previous.format==failed.format &&
+        (previous.format=="msi" || (previous.edition==Edition::Technician && previous.format=="exe" && previous.sha256.eq_ignore_ascii_case(&previous.installed_sha256)))
+}
+
+#[cfg(windows)]
+fn rollback_release(state:&AgentState,directory:&Path,folder:&Path,receipt:&Receipt)->Result<()> {
     ensure!(receipt.rollback_protocol==1 && receipt.phase=="rolling_back","Rollback was not durably prepared");
     ensure!(state.last_release_sequence==receipt.previous_sequence,"Cannot roll back a committed newer installation");
     let previous=receipt.previous_release.as_ref().context("Rollback requires a signed previous release")?;
     let release=validate_previous_release(state,previous,receipt.previous_sequence)?;
     let failed_release=receipt.release.verify::<Release>(&public_key(&state.bootstrap.release_public_key)?)?;
-    ensure!(release.rollback_protocol==1 && release.edition==Edition::Technician && failed_release.edition==Edition::Technician && release.format==failed_release.format && (release.format=="msi" || (release.format=="exe" && release.sha256.eq_ignore_ascii_case(&release.installed_sha256))),"Rollback requires compatible technician releases");
+    ensure!(release.edition==state.bootstrap.edition && supports_rollback(&release,&failed_release),"Rollback requires compatible releases");
     let snapshot=folder.join("rollback");
     verify_compatibility(directory,&release)?;
     verify_rollback_snapshot(state,&snapshot,previous,receipt.previous_sequence)?;
@@ -420,11 +426,11 @@ fn rollback_technician(state:&AgentState,directory:&Path,folder:&Path,receipt:&R
         ensure!(staged_hash_matches(&next_package,&failed_release.sha256)?,"Failed installer identity is unavailable for narrow MSI recovery");
         verify_publisher(&next_package,&failed_release)?;
         let next_identity=verify_msi_identity(&next_package,&failed_release)?;
-        let script=folder.join("Restore-TechnicianMsi.ps1");
-        std::fs::write(&script,include_str!("../../../deployment/windows/Restore-TechnicianMsi.ps1"))?;
+        let script=folder.join("Restore-ReleaseMsi.ps1");
+        std::fs::write(&script,include_str!("../../../deployment/windows/Restore-ReleaseMsi.ps1"))?;
         let status=powershell_command()?.args(["-NoLogo","-NoProfile","-NonInteractive","-ExecutionPolicy","Bypass","-File"]).arg(script)
             .arg("-PreviousPackage").arg(&package).arg("-NextProductCode").arg(next_identity.product_code).arg("-NextVersion").arg(&failed_release.version)
-            .arg("-PreviousProductCode").arg(previous_identity.product_code).arg("-PreviousVersion").arg(&release.version).arg("-Directory").arg(directory).status()?;
+            .arg("-PreviousProductCode").arg(previous_identity.product_code).arg("-PreviousVersion").arg(&release.version).arg("-Directory").arg(target.parent().context("Missing installation directory")?).arg("-Edition").arg(if release.edition==Edition::Customer {"customer"}else{"technician"}).status()?;
         ensure!(status.success(),"MSI rollback remains pending; explicit recovery or restart may be required");
     }else{
         require_existing_application(&target)?;
@@ -432,6 +438,12 @@ fn rollback_technician(state:&AgentState,directory:&Path,folder:&Path,receipt:&R
     }
     replace_verified_file(&snapshot.join("agent/swan-agent.exe"),&directory.join("swan-agent.exe"),&release.agent_sha256)?;
     verify_installed(directory,&release)?;
+    if release.edition==Edition::Customer {
+        let script=folder.join("Restore-Configuration.ps1");
+        std::fs::write(&script,include_str!("../../../deployment/windows/Restore-Configuration.ps1"))?;
+        let status=powershell_command()?.args(["-NoLogo","-NoProfile","-NonInteractive","-ExecutionPolicy","Bypass","-File"]).arg(script).arg("-Directory").arg(directory).args(["-DeferStart","-RequireTask"]).status()?;
+        ensure!(status.success(),"Customer configuration task restoration remains pending");
+    }
     save_installed_metadata(directory,previous)?;
     let mut failed=receipt.clone();failed.phase="rolled_back".into();
     ensure!(receipt.release.verify::<Release>(&public_key(&state.bootstrap.release_public_key)?)?.sequence>=failed_release_sequence(state,directory)?,"Cannot lower failed-release quarantine");
@@ -653,7 +665,7 @@ impl AgentState {
         verify_publisher(&helper,&agent_release)?;
         let folder=directory.join("updates").join(release.sequence.to_string());
         if receipt.phase=="rolling_back" {
-            rollback_technician(&latest,directory,&folder,&receipt)?;
+            rollback_release(&latest,directory,&folder,&receipt)?;
             *self=latest;return Ok(true);
         }
         let package=folder.join(format!("SwanRemoteSupport-install.{}",release.format));
@@ -694,11 +706,11 @@ impl AgentState {
         })();
         if let Err(error)=installation {
             let previous=receipt.previous_release.as_ref().map(|envelope|validate_previous_release(&latest,envelope,receipt.previous_sequence)).transpose()?;
-            let can_rollback=receipt.rollback_protocol==1 && latest.last_release_sequence==receipt.previous_sequence && release.edition==Edition::Technician && previous.as_ref().map(|old|old.rollback_protocol==1 && old.edition==Edition::Technician && old.format==release.format && (old.format=="msi" || (old.format=="exe" && old.sha256.eq_ignore_ascii_case(&old.installed_sha256)))).unwrap_or(false);
+            let can_rollback=receipt.rollback_protocol==1 && latest.last_release_sequence==receipt.previous_sequence && previous.as_ref().map(|old|supports_rollback(old,&release)).unwrap_or(false);
             if !can_rollback{return Err(error).context("Update failed; signed recovery remains pending");}
-            eprintln!("Update failed; restoring the verified previous technician release: {error:#}");
+            eprintln!("Update failed; restoring the verified previous release: {error:#}");
             receipt.phase="rolling_back".into();save_receipt(&receipt_path,&receipt)?;
-            rollback_technician(&latest,directory,&folder,&receipt)?;
+            rollback_release(&latest,directory,&folder,&receipt)?;
             *self=latest;return Ok(true);
         }
         save_installed_metadata(directory,&receipt.release)?;
@@ -791,6 +803,14 @@ pub(crate) fn test_failed_release_quarantine(state:&AgentState,release:&Release,
     assert_eq!(failed_release_sequence(state,&folder).unwrap(),0);
     let mut previous=release.clone();previous.sequence=1;previous.expires_at=now()-1;previous.rollback_protocol=1;
     #[cfg(windows)] {
+        let mut old=previous.clone();old.format="msi".into();old.edition=Edition::Customer;
+        let mut failed=old.clone();assert!(supports_rollback(&old,&failed));
+        failed.edition=Edition::Technician;assert!(!supports_rollback(&old,&failed));
+        old.edition=Edition::Technician;assert!(supports_rollback(&old,&failed));
+        old.rollback_protocol=0;assert!(!supports_rollback(&old,&failed));old.rollback_protocol=1;
+        old.format="exe".into();assert!(!supports_rollback(&old,&failed));
+        failed.format="exe".into();old.installed_sha256=old.sha256.clone();assert!(supports_rollback(&old,&failed));
+        old.edition=Edition::Customer;failed.edition=Edition::Customer;assert!(!supports_rollback(&old,&failed));
         let mut identity=MsiIdentity{product_code:"{00112233-4455-6677-8899-AABBCCDDEEFF}".into(),upgrade_code:"{32A585D7-9A78-4AD2-AF72-D0266EFC709D}".into(),product_version:release.version.clone(),template:"x64;1033".into()};
         validate_msi_identity(&identity,&Edition::Customer,&release.version).unwrap();
         assert!(validate_msi_identity(&identity,&Edition::Technician,&release.version).is_err());
@@ -894,12 +914,12 @@ mod tests {
         let wrong=if edition==Edition::Customer {Edition::Technician}else{Edition::Customer};
         assert!(validate_msi_identity(&identity,&wrong,&version).is_err());
         assert!(validate_msi_identity(&identity,&edition,"99.0.0").is_err());
-        if edition==Edition::Technician {
-            let script=package.parent().unwrap().join("Restore-TechnicianMsi-read-only-test.ps1");
-            std::fs::write(&script,include_str!("../../../deployment/windows/Restore-TechnicianMsi.ps1")).unwrap();
+        {
+            let script=package.parent().unwrap().join("Restore-ReleaseMsi-read-only-test.ps1");
+            std::fs::write(&script,include_str!("../../../deployment/windows/Restore-ReleaseMsi.ps1")).unwrap();
             let inspect=|previous_version:&str|powershell_command().unwrap().args(["-NoLogo","-NoProfile","-NonInteractive","-ExecutionPolicy","Bypass","-File"]).arg(&script)
                 .arg("-PreviousPackage").arg(&package).arg("-NextProductCode").arg(&identity.product_code).arg("-NextVersion").arg(&version)
-                .arg("-PreviousProductCode").arg(&identity.product_code).arg("-PreviousVersion").arg(previous_version).arg("-Directory").arg(package.parent().unwrap()).arg("-InspectOnly").output().unwrap();
+                .arg("-PreviousProductCode").arg(&identity.product_code).arg("-PreviousVersion").arg(previous_version).arg("-Directory").arg(package.parent().unwrap()).arg("-Edition").arg(if edition==Edition::Customer {"customer"}else{"technician"}).arg("-InspectOnly").output().unwrap();
             let result=inspect(&version);assert!(result.status.success(),"{}",String::from_utf8_lossy(&result.stderr));
             let plan:serde_json::Value=serde_json::from_slice(&result.stdout).unwrap();
             assert_eq!(plan["installer_executed"],false);assert_eq!(plan["would_remove_next"],false);

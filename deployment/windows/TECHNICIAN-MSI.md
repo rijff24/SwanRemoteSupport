@@ -63,9 +63,10 @@ previous package. Unexpected registrations stop recovery. Interrupted removal
 or restoration leaves the signed receipt pending for retry; no company identity
 or consent is restored from software snapshots. Hash, publisher, installed-file
 and agent checks must pass before quarantining the failed release and clearing
-the receipt. Customer MSI/service rollback remains separate unfinished work.
+the receipt. The same registration recovery now supports customer MSI releases,
+with additional service and configuration-task ownership checks.
 
-`Restore-TechnicianMsi.ps1 -InspectOnly` performs read-only identity and
+`Restore-ReleaseMsi.ps1 -Edition technician -InspectOnly` performs read-only identity and
 registration planning and exits before invoking Windows Installer. It is a
 diagnostic, not evidence that native rollback succeeds. Production recovery
 uses the signed agent's prior hash/publisher checks and does not select this mode.

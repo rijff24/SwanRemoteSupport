@@ -6,10 +6,11 @@ param(
     [Parameter(Mandatory=$true)][string]$PreviousProductCode,
     [Parameter(Mandatory=$true)][string]$PreviousVersion,
     [Parameter(Mandatory=$true)][string]$Directory,
+    [Parameter(Mandatory=$true)][ValidateSet('customer','technician')][string]$Edition,
     [switch]$InspectOnly
 )
 $ErrorActionPreference = 'Stop'
-$upgrade = '{A4374699-436F-4917-9A4E-223F62A9E634}'
+$upgrade = if ($Edition -eq 'customer') { '{32A585D7-9A78-4AD2-AF72-D0266EFC709D}' } else { '{A4374699-436F-4917-9A4E-223F62A9E634}' }
 $installer = New-Object -ComObject WindowsInstaller.Installer
 function Read-Identity([string]$Path) {
     $database = $installer.OpenDatabase((Resolve-Path -LiteralPath $Path).Path, 0)
@@ -36,7 +37,7 @@ Assert-Identity (Read-Identity $PreviousPackage) $PreviousProductCode $PreviousV
 # Enumerate only this edition's upgrade family in the caller's installer context.
 # Never remove an unexpected product or another user's installation.
 foreach ($code in @($installer.RelatedProducts($upgrade))) {
-    if ($code -ine $PreviousProductCode -and $code -ine $NextProductCode) { throw 'Unexpected installed technician release; explicit recovery required.' }
+    if ($code -ine $PreviousProductCode -and $code -ine $NextProductCode) { throw 'Unexpected installed release; explicit recovery required.' }
     $version = if ($code -ieq $NextProductCode) { $NextVersion } else { $PreviousVersion }
     Assert-Identity (Read-Identity ($installer.ProductInfo($code,'LocalPackage'))) $code $version
 }
@@ -50,6 +51,18 @@ if ($InspectOnly) {
     @{ previous_product_code=$PreviousProductCode; next_product_code=$NextProductCode; next_state=$nextState; would_remove_next=($NextProductCode -ine $PreviousProductCode -and $nextState -eq 5); installer_executed=$false } | ConvertTo-Json -Compress
     return
 }
+function Assert-CustomerServiceRecord($Service, [string]$Expected, [bool]$Required) {
+    if ($Service.PathName -ine $Expected -or $Service.StartName -ne 'LocalSystem') { throw 'Customer service belongs to another installation.' }
+    if ($Required -and ($Service.State -ne 'Running' -or $Service.StartMode -ne 'Auto')) { throw 'Restored customer service is not running automatically.' }
+}
+function Assert-CustomerService([bool]$Required) {
+    $services = @(Get-CimInstance -ClassName Win32_Service -Filter "Name='Swan Remote Support'")
+    if ($services.Count -eq 0 -and -not $Required) { return }
+    if ($services.Count -ne 1) { throw 'Expected exactly one customer service.' }
+    $expected = '"' + [IO.Path]::GetFullPath((Join-Path $Directory 'Swan Remote Support.exe')) + '" --service'
+    Assert-CustomerServiceRecord $services[0] $expected $Required
+}
+if ($Edition -eq 'customer') { Assert-CustomerService $false }
 if ($NextProductCode -ine $PreviousProductCode -and $installer.ProductState($NextProductCode) -eq 5) {
     # Recheck the exact cached database immediately before narrowly removing it.
     Assert-Identity (Read-Identity ($installer.ProductInfo($NextProductCode,'LocalPackage'))) $NextProductCode $NextVersion
@@ -63,3 +76,4 @@ $mode = if ($state -eq 5) { '/fvamus' } elseif ($state -in @(-1,1)) { '/i' } els
 if ($LASTEXITCODE -ne 0) { throw "Restoration requires recovery or restart (exit $LASTEXITCODE)." }
 Assert-Identity (Read-Identity ($installer.ProductInfo($PreviousProductCode,'LocalPackage'))) $PreviousProductCode $PreviousVersion
 if ($installer.ProductState($PreviousProductCode) -ne 5) { throw 'Previous product registration was not restored.' }
+if ($Edition -eq 'customer') { Assert-CustomerService $true }

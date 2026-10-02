@@ -628,3 +628,18 @@ planning fixture separately passes, including incorrect previous-version
 rejection and no installer execution. Script syntax and Windows compilation
 pass. Native MSI rollback, reboot/interruption, customer service rollback and
 the complete clean Windows matrix remain unverified.
+
+Customer MSI recovery now shares the verified registration path, with exact
+customer service executable/account checks before removal, automatic/running
+service verification after restoration, and owned configuration-task recreation
+after signed installed-file verification. Task startup is deferred until helper
+completion. Component tests reject another installation's service, a different
+account, stopped/manual service and unexpected executable arguments without
+querying or modifying any native service. Both actual MSI fixtures pass
+read-only planning and reject incorrect previous versions. Rollback eligibility
+regressions accept both MSI editions and reject cross-edition, protocol-0,
+format-changing and customer-EXE rollback. Windows compilation, script syntax
+and customer MSI authoring tests pass. No installer or service operation ran on
+the host. Customer EXE rollback and autonomous reboot recovery between removal
+and restoration remain unfinished; native MSI/service/task restoration and all
+clean-machine acceptance remain unverified.

@@ -72,5 +72,18 @@ tests pass. Pinned WiX compiled a real unsigned package and its Installer tables
 confirm rollback, cleanup and file-removal order. Actual task deletion, MSI
 rollback and reinstall on clean guests remain unverified.
 
+Failed software updates can now restore the previous customer MSI when both
+previous signed release metadata and its agent support rollback protocol 1.
+Recovery uses the complete verified snapshot and original installer, restricts
+registration removal to the exact failed ProductCode and checks the customer
+service's exact executable path and LocalSystem account before removal. The
+restored service must run automatically. The verified previous agent restores
+only its owned SYSTEM configuration task, deferring startup until recovery
+finishes. Enrollment and consent files remain current. Unexpected registration,
+service or task ownership leaves recovery pending. Customer EXE/service rollback
+and autonomous recovery after reboot between MSI removal and reinstall remain
+unfinished. This path has component and read-only planning evidence only; native
+signed installation, removal, restore and restart remain acceptance gates.
+
 References: [WiX service installation](https://docs.firegiant.com/wix/schema/wxs/serviceinstall/)
 and [Windows-owned file copying](https://docs.firegiant.com/wix/schema/wxs/copyfile/).
