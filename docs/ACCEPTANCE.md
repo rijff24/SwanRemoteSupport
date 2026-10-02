@@ -269,3 +269,14 @@ the same transaction as access checks and permission snapshots. Expanded API
 lifecycle tests pass for global disable/restore non-revival, attended renewal
 and a fresh grant followed by local consent revocation. Concurrent fault tests
 and native termination behavior remain unverified.
+
+Signed edition branding now supports public support-contact text and up to eight
+named HTTPS website shortcuts. Administration edits each edition independently;
+both native endpoint pages use a shared contact/link component. Shortcuts cannot
+execute shell commands, local files or non-HTTPS schemes. Empty fields preserve
+existing serialized branding, and old profiles deserialize with defaults. All
+29 workspace tests pass, including credential-bearing/unsafe URLs, invalid
+labels, excessive links and control characters. JavaScript syntax and native
+Rust parsing pass. Flutter compilation, rendering and installed synchronization
+remain unverified. Upgrade clients to compatible builds before publishing new
+nonempty branding fields; older strict clients will reject unfamiliar fields.

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_hbb/common.dart';
 import 'package:flutter_hbb/models/platform_model.dart';
+import 'company_contact_links.dart';
 
 /// Company authorization lives in Rust and on the receiver. This view never
 /// receives a bearer token, signing key or reusable device credential.
@@ -113,6 +114,7 @@ class _CompanyTechnicianPageState extends State<CompanyTechnicianPage> {
         Text(_company['display_name'] as String? ?? 'Swan Remote Support Technician',
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: brandColor)),
         Text(_company['domain'] as String? ?? 'Company setup required'),
+        CompanyContactLinks(company: _company),
         const SizedBox(height: 16),
         if (_busy) const LinearProgressIndicator(),
         if (_error.isNotEmpty) Padding(padding: const EdgeInsets.symmetric(vertical: 12),

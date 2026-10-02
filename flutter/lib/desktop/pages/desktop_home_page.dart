@@ -1,3 +1,4 @@
+import 'company_contact_links.dart';
 import 'dart:async';
 import 'dart:io';
 import 'dart:convert';
@@ -276,15 +277,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
                 icon: Icon(svcStopped.value ? Icons.play_arrow : Icons.stop_circle_outlined),
                 label: Text(svcStopped.value ? 'Resume support' : 'Stop support'),
               )),
-              if ((company['support_url'] as String? ?? '').isNotEmpty)
-                TextButton.icon(
-                  onPressed: () async {
-                    final url = Uri.tryParse(company['support_url'] as String);
-                    if (url != null && url.scheme == 'https' && url.host.isNotEmpty && url.userInfo.isEmpty) await launchUrl(url);
-                  },
-                  icon: const Icon(Icons.support_agent),
-                  label: const Text('Contact support'),
-                ),
+              CompanyContactLinks(company: company),
               if (company['unattended'] == true)
                 TextButton.icon(
                   onPressed: () async {

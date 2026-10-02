@@ -16,18 +16,26 @@ pub enum Edition { Customer, Technician }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
+pub struct BrandingShortcut { pub label:String, pub url:String }
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Branding {
     pub display_name: String,
     pub primary_color: String,
     pub logo_svg: String,
     pub support_url: String,
     pub consent_text: String,
+    #[serde(default,skip_serializing_if="String::is_empty")]
+    pub support_contacts: String,
+    #[serde(default,skip_serializing_if="Vec::is_empty")]
+    pub shortcuts: Vec<BrandingShortcut>,
 }
 impl Default for Branding {
     fn default() -> Self {
         Self { display_name: PRODUCT.into(), primary_color: "#007F82".into(),
             logo_svg: include_str!("../../../branding/swan-support-mark.svg").into(),
-            support_url: String::new(),
+            support_url: String::new(), support_contacts:String::new(), shortcuts:Vec::new(),
             consent_text: "Only allow remote support from a technician you trust. You can stop support or revoke ongoing access at any time.".into() }
     }
 }
@@ -43,6 +51,13 @@ impl Branding {
             ensure!(!svg.contains(forbidden), "Unsupported SVG content");
         }
         if !self.support_url.is_empty() { https_url(&self.support_url)?; }
+        ensure!(self.support_contacts.len()<=2000 && self.support_contacts.chars().all(|c|!c.is_control() || matches!(c,'\n'|'\r'|'\t')),"Invalid support contacts");
+        ensure!(self.shortcuts.len()<=8,"Too many company shortcuts");
+        for shortcut in &self.shortcuts {
+            ensure!(!shortcut.label.trim().is_empty() && shortcut.label.len()<=100 && !shortcut.label.chars().any(char::is_control),"Invalid shortcut label");
+            ensure!(shortcut.url.len()<=2048,"Shortcut URL too long");
+            https_url(&shortcut.url)?;
+        }
         Ok(())
     }
 }
@@ -280,6 +295,21 @@ pub fn maintenance_open(start: u8, end: u8, now: u64) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn company_contact_shortcuts_validate_and_old_profiles_keep_defaults() {
+        let value=serde_json::to_value(Branding::default()).unwrap();
+        assert!(value.get("support_contacts").is_none());assert!(value.get("shortcuts").is_none());
+        let mut brand:Branding=serde_json::from_value(value).unwrap();
+        brand.support_contacts="Support: help@example.com\nPhone: +27 10 123 4567".into();
+        brand.shortcuts=vec![BrandingShortcut{label:"Help centre".into(),url:"https://example.com/help".into()}];
+        assert!(brand.validate().is_ok());
+        for url in ["http://example.com","https://user:password@example.com","file:///C:/Windows","javascript:alert(1)"] {
+            brand.shortcuts[0].url=url.into();assert!(brand.validate().is_err());
+        }
+        brand.shortcuts[0].url="https://example.com/help".into();brand.shortcuts[0].label="\n".into();assert!(brand.validate().is_err());
+        brand.shortcuts[0].label="Help".into();brand.shortcuts=vec![brand.shortcuts[0].clone();9];assert!(brand.validate().is_err());
+        brand.shortcuts.clear();brand.support_contacts="Hidden\0contact".into();assert!(brand.validate().is_err());
+    }
     #[test]
     fn public_keys_reject_small_order_points() {
         let mut identity = [0u8; 32];
