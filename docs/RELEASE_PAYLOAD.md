@@ -40,3 +40,11 @@ the mandatory manifest are rejected; do not weaken validation to import them.
 No production compatibility or signing approval is implied. Full real signed
 payload installation, update replacement, rollback and native behavior remain
 acceptance requirements.
+
+Interrupted-update receipts also block new managed sessions after the updater
+process exits or releases its activity lock. Recovery rechecks Windows support
+and the installed agent hash and publisher as well as the endpoint payload.
+An old or missing agent cannot be accepted as a completed release. Automatic
+agent replacement and full interrupted-install retry/rollback remain incomplete;
+a changed-agent release stays pending until its full installed identity is
+restored and verified.

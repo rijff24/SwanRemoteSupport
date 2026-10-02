@@ -120,3 +120,10 @@ including the bundled swan/gear SVG and teal primary color. The server keeps its
 Swan wordmark and mark; existing company profiles are not rewritten. Product
 workspace tests (23) and administration JavaScript syntax checks pass. Graphical
 rendering and installed-app behavior remain to verify.
+
+Update recovery now retains session exclusion after process exit through the
+pending-update receipt. A new regression test verifies rejection after the
+exclusive process lock has closed; all 24 workspace tests pass. Installed-agent
+hash/publisher and Windows compatibility are included in recovery validation.
+Full signed agent replacement, retry/rollback and VM recovery remain unverified
+or incomplete.

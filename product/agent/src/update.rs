@@ -131,9 +131,6 @@ impl AgentState {
         }
         verify_compatibility(directory,&release)?;
         verify_installed(directory,&release)?;
-        let agent=directory.join("swan-agent.exe");
-        ensure!(digest(std::fs::read(&agent)?).eq_ignore_ascii_case(&release.agent_sha256),"Installed configuration agent differs from signed release");
-        let mut agent_release=release.clone();agent_release.sha256=release.agent_sha256.clone();verify_publisher(&agent,&agent_release)?;
         save_installed_metadata(directory,envelope)?;
         latest.last_release_sequence=release.sequence;latest.save(directory)?;
         if setup_marker.exists(){std::fs::remove_file(setup_marker)?;}
@@ -149,6 +146,7 @@ impl AgentState {
         release.validate(&self.bootstrap.edition,receipt.previous_sequence,now().min(release.expires_at.saturating_sub(1)))?;
         ensure!(release.edition==self.bootstrap.edition && release.product==PRODUCT && release.schema==SCHEMA,"Wrong recovery release");
         ensure!(self.last_release_sequence==receipt.previous_sequence || self.last_release_sequence==release.sequence,"Recovery sequence conflict");
+        verify_compatibility(directory,&release)?;
         verify_installed(directory,&release)?;
         save_installed_metadata(directory,&receipt.release)?;
         // A crashed updater may have installed successfully or saved state before
@@ -213,6 +211,9 @@ impl AgentState {
 
 #[cfg(windows)]
 fn verify_installed(directory:&Path,release:&Release)->Result<()> {
+    let agent=directory.join("swan-agent.exe");
+    ensure!(digest(std::fs::read(&agent)?).eq_ignore_ascii_case(&release.agent_sha256),"Installed configuration agent differs from signed release; recovery remains pending");
+    let mut agent_release=release.clone();agent_release.sha256=release.agent_sha256.clone();verify_publisher(&agent,&agent_release)?;
     let target=installed_target(directory,&release.edition)?;
     // Portable technician state also contains the agent and updater. Its single
     // packed EXE is verified separately; customer files share an install root.
@@ -240,6 +241,17 @@ mod tests {
         std::fs::create_dir(&folder).unwrap();std::fs::write(folder.join("pending-install.json"),b"interrupted setup fixture").unwrap();
         assert!(lock_session(&folder).is_err());
         std::fs::remove_file(folder.join("pending-install.json")).unwrap();
+        assert!(lock_session(&folder).is_ok());std::fs::remove_dir_all(folder).unwrap();
+    }
+    #[test]
+    fn interrupted_update_blocks_sessions_after_process_lock_is_released(){
+        let folder=std::env::temp_dir().join(format!("swan-pending-update-{}",random_token()));
+        std::fs::create_dir(&folder).unwrap();
+        let updater=activity_file(&folder).unwrap();fs2::FileExt::try_lock_exclusive(&updater).unwrap();
+        std::fs::write(folder.join("pending-update.json"),b"interrupted update fixture").unwrap();
+        drop(updater);
+        assert!(lock_session(&folder).is_err());
+        std::fs::remove_file(folder.join("pending-update.json")).unwrap();
         assert!(lock_session(&folder).is_ok());std::fs::remove_dir_all(folder).unwrap();
     }
     #[cfg(windows)]
