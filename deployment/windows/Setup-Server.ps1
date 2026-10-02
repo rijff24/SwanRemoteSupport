@@ -1,5 +1,5 @@
 [CmdletBinding()]
-param([string]$RenderPreview)
+param([string]$RenderPreview,[string]$BundledDirectory,[switch]$UnsignedTestPackage)
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
@@ -9,8 +9,13 @@ $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
 $administrator = ([Security.Principal.WindowsPrincipal]::new($identity)).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 $script:operation = $null
 $script:setupUrl = $null
+$script:installerText = $null
+if (Get-Variable -Name SwanPackagedInstallerScript -ErrorAction SilentlyContinue) {
+    $script:installerText = $SwanPackagedInstallerScript
+} else { $script:installerText = Get-Content -LiteralPath (Join-Path $PSScriptRoot 'Install-Server.ps1') -Raw }
 $form = [Windows.Forms.Form]::new()
 $form.Text = 'Swan Remote Support - Company server setup'
+if ($UnsignedTestPackage) {$form.Text += ' [UNSIGNED TEST]'}
 $form.ClientSize = [Drawing.Size]::new(820,740)
 $form.MinimumSize = $form.Size
 $form.MaximumSize = $form.Size
@@ -51,6 +56,10 @@ $keyInput = Add-Field 'Trusted project release public key' 195 'Use the base64 r
 $publisherInput = Add-Field 'Trusted management publisher certificate thumbprint' 274 'Use the certificate fingerprint from your trusted release policy, not from an unverified download.'
 $executableInput = Add-Field 'Signed management executable' 353 'Select the signed swan-management.exe from your reviewed release.' $true
 $componentsInput = Add-Field 'Prepared server components folder' 432 'Contains pinned rendezvous, relay, HTTPS executables and their license/source notices.' $true
+if ($BundledDirectory) {
+    $executableInput.Text = Join-Path $BundledDirectory 'swan-management.exe'
+    $componentsInput.Text = Join-Path $BundledDirectory 'components'
+}
 $fileButton = [Windows.Forms.Button]::new()
 $fileButton.Text = 'Browse...'
 $fileButton.SetBounds(714,377,80,28)
@@ -121,7 +130,7 @@ $installButton.Add_Click({
         if (-not (Test-Path -LiteralPath $componentsInput.Text -PathType Container)) {throw 'Select the prepared server components folder.'}
         $parameters = @{Executable=$executableInput.Text;ReleasePublicKey=$keyInput.Text.Trim();PublisherThumbprint=$publisherInput.Text.Trim();ComponentsDirectory=$componentsInput.Text;PublicHostname=$hostname}
         $worker = [Management.Automation.PowerShell]::Create()
-        $worker.AddCommand((Join-Path $PSScriptRoot 'Install-Server.ps1')).AddParameters($parameters) | Out-Null
+        $worker.AddScript($script:installerText).AddParameters($parameters) | Out-Null
         $handle = $worker.BeginInvoke()
         $script:operation = @{Worker=$worker;Handle=$handle;Hostname=$hostname}
         foreach ($control in @($hostInput,$keyInput,$publisherInput,$executableInput,$componentsInput,$fileButton,$folderButton,$installButton,$closeButton)) {$control.Enabled=$false}

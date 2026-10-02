@@ -892,3 +892,16 @@ SHA-256. The first attempt exposed Docker's default volume population and was
 discarded as cache reuse, not reproducibility proof. This proves the Linux
 management binary in that pinned environment, not byte-identical OCI images,
 native Windows binaries, signed packages or all product components.
+
+An x64 Windows .NET Framework test launcher now packages the setup wizard,
+installer, management executable, pinned rendezvous/relay/HTTPS binaries and
+license/source metadata into one EXE. Its first package compiled and rendered
+the bundled form using Windows PowerShell in-process; the window shows
+`UNSIGNED TEST`. Non-elevated preview exited successfully and removed its known
+temporary payload, without registering services or changing firewall/trust
+settings. Implicit production builds and a modified relay input are rejected
+before output creation. The builder verifies compiled resource hashes; the
+installer rechecks the copied management signature before registering its
+service. Final package verification and elevated extraction/installation on
+clean Windows VMs remain necessary. Test packaging is not signing approval,
+production publication or clean-machine compatibility evidence.

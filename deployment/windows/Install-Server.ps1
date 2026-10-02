@@ -46,6 +46,8 @@ New-Item -ItemType Directory -Path $installDirectory,$dataDirectory | Out-Null
 if ($LASTEXITCODE -ne 0) { throw 'Cannot protect server data.' }
 $destination = Join-Path $installDirectory 'swan-management.exe'
 Copy-Item -LiteralPath $source -Destination $destination
+$copiedSignature = Get-AuthenticodeSignature -LiteralPath $destination
+if ($copiedSignature.Status -ne 'Valid' -or $copiedSignature.SignerCertificate.Thumbprint -ne $PublisherThumbprint) { throw 'Copied management executable does not match the trusted publisher.' }
 $serviceEnvironment = @("SWAN_DATA_DIR=$dataDirectory","SWAN_LISTEN=127.0.0.1:$Port","SWAN_RELEASE_PUBLIC_KEY=$ReleasePublicKey")
 if ($fullStack) {
     $packaged = Join-Path $installDirectory 'components'

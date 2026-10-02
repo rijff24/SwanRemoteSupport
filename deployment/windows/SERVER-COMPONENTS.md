@@ -5,8 +5,9 @@ packaged rendezvous, relay and HTTPS components. The service supervises its
 own children; component failure stops management, and service stop or a service
 process crash terminates its assigned children. Windows process-job lifecycle
 tests pass, but clean-machine installation, repair and uninstall are still
-unverified. `Setup-Server.ps1` supplies the graphical setup flow; a signed
-packaged launcher and clean-machine wizard installation remain incomplete.
+unverified. `Setup-Server.ps1` supplies the graphical setup flow, and an
+unsigned test EXE bundles it with management and pinned transport/HTTPS inputs.
+Production signing and clean-machine wizard installation remain incomplete.
 
 `server-components.json` pins the Windows x64 RustDesk server 1.1.15 and Caddy
 2.10.2 archives by SHA-256, with upstream source references. Download each exact
@@ -54,6 +55,38 @@ For layout inspection, `-RenderPreview OUTPUT.png` renders the form without
 showing it, starting services or enabling installation/browser actions. The
 preview is layout evidence; it does not test privileged installation or backend
 completion/error events. Those require the clean Windows test matrix.
+
+## Unsigned test executable
+
+The x64 .NET Framework launcher uses the Windows PowerShell runtime already
+present in the targeted desktop Windows releases. Build only for isolated tests:
+
+```powershell
+./deployment/windows/Build-ServerSetup.ps1 -UnsignedTest `
+  -ManagementExecutable ./swan-management.exe `
+  -ComponentsDirectory ./prepared-server-components `
+  -OutputDirectory ./server-setup-test
+```
+
+It embeds the wizard and installer scripts, management, pinned transport/HTTPS
+executables, licenses and public source/hash metadata. Input PE architecture
+and component hashes are checked before output; compiled resources must match
+their input hashes. Output is `SwanServerSetup-UNSIGNED-TEST.exe`, with test
+status also shown in its window title. Building without `-UnsignedTest` is
+rejected. A supplied unsigned management executable may be packaged for layout
+tests, but installation still requires its valid trusted publisher signature.
+This does not bypass signing gates or grant production publication approval.
+Resource input paths containing commas are currently unsupported by this builder.
+
+Use `--render-preview OUTPUT.png` to inspect the packaged layout without opening
+the window or installing services. The launcher executes the installer from its
+embedded resource in memory, using structured parameters. Public binary payloads
+are extracted under a unique protected directory; elevated extraction grants
+only Administrators/SYSTEM access and ownership. Non-elevated previews use the
+current user's private temporary directory. Known payload files are cleaned up
+on normal exit without recursive deletion. Elevated extraction, interrupted
+cleanup and privileged installation remain clean-VM acceptance requirements.
+The installed management copy is signature-checked again before service creation.
 
 For a fresh company deployment, run with administrator rights and a trusted
 signed management build containing component supervision:
