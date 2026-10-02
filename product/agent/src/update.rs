@@ -68,7 +68,22 @@ async fn download(url:&str,hash:&str,path:&Path)->Result<()> {
     let mut bytes=Vec::new();
     while let Some(chunk)=response.chunk().await? {ensure!(bytes.len()+chunk.len()<=512*1024*1024,"Package too large");bytes.extend_from_slice(&chunk);}
     ensure!(digest(&bytes).eq_ignore_ascii_case(hash),"Package hash mismatch");
-    std::fs::write(path,bytes)?;Ok(())
+    let path=path.to_owned();
+    tokio::task::spawn_blocking(move ||publish_download(&path,&bytes)).await.context("Download publication task failed")?
+}
+
+fn publish_download(path:&Path,bytes:&[u8])->Result<()> {
+    use std::io::Write;
+    // A crash or a concurrent reader must see the previous complete download,
+    // never a truncated installer or helper executable.
+    let temporary=path.parent().context("Missing download directory")?.join(format!("swan-download-{}.tmp",random_token()));
+    let mut file=std::fs::OpenOptions::new().create_new(true).write(true).open(&temporary)?;
+    let result=(||->Result<()> {
+        file.write_all(bytes)?;file.sync_all()?;drop(file);
+        crate::replace_state(&temporary,path).context("Cannot publish complete download")
+    })();
+    if result.is_err(){std::fs::remove_file(&temporary).context("Cannot remove failed download staging file")?;}
+    result
 }
 
 #[cfg(windows)]
@@ -341,7 +356,7 @@ impl AgentState {
             let Some(envelope)=self.approved_update(technician_token).await? else{return Ok(false);};
             let release=validate_release(self,&envelope)?;
             ensure!(release.edition!=Edition::Technician || (release.format=="msi" || (release.format=="exe" && release.installed_sha256.eq_ignore_ascii_case(&release.sha256))),"Technician updates require an MSI or a portable EXE with matching installed identity");
-            let folder=directory.join("updates").join(release.sequence.to_string());std::fs::create_dir_all(&folder)?;
+            let folder=directory.join("updates").join(release.sequence.to_string());tokio::fs::create_dir_all(&folder).await?;
             let check_folder=folder.clone();let check_release=release.clone();
             tokio::task::spawn_blocking(move ||verify_compatibility(&check_folder,&check_release)).await.context("Compatibility verification task failed")??;
             let package=folder.join(format!("SwanRemoteSupport-install.{}",release.format));
@@ -407,6 +422,21 @@ fn verify_installed(directory:&Path,release:&Release)->Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn download_publication_retains_complete_files_and_cleans_failed_staging(){
+        let folder=std::env::temp_dir().join(format!("swan-download-test-{}",random_token()));
+        std::fs::create_dir(&folder).unwrap();
+        let target=folder.join("installer.exe");
+        std::fs::write(&target,b"previous complete package").unwrap();
+        publish_download(&target,b"new complete package").unwrap();
+        assert_eq!(std::fs::read(&target).unwrap(),b"new complete package");
+        let conflict=folder.join("directory.exe");std::fs::create_dir(&conflict).unwrap();
+        assert!(publish_download(&conflict,b"replacement").is_err());
+        assert!(conflict.is_dir());
+        assert_eq!(std::fs::read(&target).unwrap(),b"new complete package");
+        assert!(!std::fs::read_dir(&folder).unwrap().any(|entry|entry.unwrap().file_name().to_string_lossy().starts_with("swan-download-")));
+        std::fs::remove_dir_all(folder).unwrap();
+    }
     #[test]
     fn executable_replacement_verifies_staged_bytes_and_preserves_previous_on_failure(){
         let folder=std::env::temp_dir().join(format!("swan-replacement-test-{}",random_token()));

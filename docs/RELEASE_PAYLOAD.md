@@ -57,6 +57,14 @@ before advancing the sequence or removing the receipt. Customer completion
 restarts only the existing SYSTEM task whose action matches the canonical agent
 and `watch` arguments. No credentials are passed to the helper.
 
+Downloaded installers and helpers are published through a unique temporary file
+on the destination volume, flushed before atomic replacement. Download staging
+and replacement run outside the async runtime threads. A failed replacement
+cleans its temporary file and retains the previous complete staged artifact;
+hash and publisher verification still precede execution. Component regression
+coverage checks complete replacement and a destination-conflict failure. This
+does not establish recovery from a power loss or a failed native installer.
+
 A watcher can resume a pending update after restart; administrators can invoke
 `swan-agent resume-update` to hand off explicitly. `recover-update` continues to
 verify an already completed installation without rerunning its installer.
