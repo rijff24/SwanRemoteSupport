@@ -402,3 +402,11 @@ customer approval; reconnection never upgrades them to unattended access.
 Logout/login/update handoff clear the context. Native Rust parsing and diff
 checks pass. Reboot reconnection, concurrent-window behavior, revocation during
 reconnect and full native compilation remain unverified.
+
+Managed peer-information handling now clears inherited peer passwords and skips
+upstream password/address-book synchronization. Legacy UI password submission
+is refused before constructing a network login; managed challenge proofs still
+use their separate native path. These guards apply only to the managed build,
+preserving baseline source behavior. Rust parsing and diff checks pass. Native
+compilation, saved-settings inspection and negative legacy-UI tests remain
+unverified; receiver-side signed authorization remains the access boundary.

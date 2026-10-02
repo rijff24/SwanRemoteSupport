@@ -2547,10 +2547,21 @@ impl LoginConfigHandler {
         };
         let mut config = self.load_config();
         config.info = serde;
+        #[cfg(feature = "swan_custom")]
+        {
+            // Managed authorization is never a saved peer password. Remove
+            // inherited credentials rather than syncing them to address books.
+            self.password.clear();self.remember=false;config.password.clear();
+        }
+        #[cfg(not(feature = "swan_custom"))]
         let password = self.password.clone();
+        #[cfg(not(feature = "swan_custom"))]
         let password0 = config.password.clone();
+        #[cfg(not(feature = "swan_custom"))]
         let remember = self.remember;
+        #[cfg(not(feature = "swan_custom"))]
         let hash = self.hash.clone();
+        #[cfg(not(feature = "swan_custom"))]
         if remember {
             // remember is true: use PeerConfig password or ui login
             // not sync shared password to recent
@@ -2583,7 +2594,7 @@ impl LoginConfigHandler {
                 .options
                 .insert("force-always-relay".to_owned(), "Y".to_owned());
         }
-        #[cfg(feature = "flutter")]
+        #[cfg(all(feature = "flutter",not(feature = "swan_custom")))]
         {
             // sync connected password to personal ab automatically if it is not shared password
             if !config.password.is_empty()
@@ -3665,6 +3676,12 @@ pub async fn handle_login_from_ui(
     remember: bool,
     peer: &mut Stream,
 ) {
+    #[cfg(feature = "swan_custom")]
+    {
+        let _=(&lc,&os_username,&os_password,&password,remember,&peer);
+        log::warn!("Managed login requires company authorization; legacy UI password submission refused");
+        return;
+    }
     let mut hash_password = if password.is_empty() {
         let mut password2 = lc.read().unwrap().password.clone();
         if password2.is_empty() {
