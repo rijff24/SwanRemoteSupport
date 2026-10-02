@@ -76,6 +76,16 @@ async fn enrollment_mfa_and_grants_fail_closed() {
     let signed:SignedEnvelope=serde_json::from_value(unattended_envelope.clone()).unwrap();
     let unattended_grant:SessionGrant=serde_json::from_slice(&STANDARD.decode(&signed.payload).unwrap()).unwrap();
     assert_eq!(request(&app,"/api/v1/grants/claim","POST",Some(credential),json!({"grant":unattended_envelope})).await.0,StatusCode::OK);
+    let mut company_policy=profile_fixture();company_policy.allow_unattended=false;
+    assert_eq!(request(&app,"/api/v1/profile","PUT",Some(admin),serde_json::to_value(&company_policy).unwrap()).await.0,StatusCode::OK);
+    company_policy.allow_unattended=true;
+    assert_eq!(request(&app,"/api/v1/profile","PUT",Some(admin),serde_json::to_value(&company_policy).unwrap()).await.0,StatusCode::OK);
+    assert_eq!(request(&app,&format!("/api/v1/grants/{}/renew",unattended_grant.grant_id),"POST",Some(credential),Value::Null).await.0,StatusCode::FORBIDDEN,"Company policy restoration cannot revive old unattended grants");
+    assert_eq!(request(&app,&format!("/api/v1/grants/{}/renew",attended_grant.grant_id),"POST",Some(credential),Value::Null).await.0,StatusCode::OK,"Company unattended policy must preserve attended sessions");
+    let (_,local_envelope)=request(&app,"/api/v1/grants","POST",Some(admin),json!({"device_id":device_id,"proof_public_key":STANDARD.encode(proof.verifying_key().as_bytes()),"unattended":true})).await;
+    let signed:SignedEnvelope=serde_json::from_value(local_envelope.clone()).unwrap();
+    let unattended_grant:SessionGrant=serde_json::from_slice(&STANDARD.decode(&signed.payload).unwrap()).unwrap();
+    assert_eq!(request(&app,"/api/v1/grants/claim","POST",Some(credential),json!({"grant":local_envelope})).await.0,StatusCode::OK);
     assert_eq!(request(&app,"/api/v1/device/consent","PUT",Some(credential),json!({"unattended":false,"revision":2})).await.0,StatusCode::OK);
     assert_eq!(request(&app,"/api/v1/device/consent","PUT",Some(credential),json!({"unattended":true,"revision":1})).await.0,StatusCode::CONFLICT,"Delayed enable cannot undo revocation");
     assert_eq!(request(&app,"/api/v1/device/consent","PUT",Some(credential),json!({"unattended":true,"revision":2})).await.0,StatusCode::CONFLICT,"Revocation wins same-revision races");

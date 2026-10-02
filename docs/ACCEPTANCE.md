@@ -261,3 +261,11 @@ and audit event in one transaction, avoiding a stale permission insertion
 after reduction. The expanded API lifecycle test passes, including restored
 policy non-revival and separate attended-consent preservation. Concurrent fault
 injection and native session termination remain unverified.
+
+Disabling company-wide unattended support now closes all unattended grants in
+the profile-update transaction. Restoring that setting cannot revive them, and
+attended authorization is preserved. Grant creation reads company policy within
+the same transaction as access checks and permission snapshots. Expanded API
+lifecycle tests pass for global disable/restore non-revival, attended renewal
+and a fresh grant followed by local consent revocation. Concurrent fault tests
+and native termination behavior remain unverified.

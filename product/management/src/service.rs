@@ -232,6 +232,7 @@ async fn save_profile(State(s):State<Shared>,headers:HeaderMap,Json(mut input):J
     let raw:String=tx.query_row("SELECT body FROM profile WHERE id=1",[],|r|r.get(0))?;
     if serde_json::from_str::<CompanyProfile>(&raw)?.revision!=current.revision {return Err(ApiError(StatusCode::CONFLICT,"Profile changed; reload"));}
     tx.execute("UPDATE profile SET body=?1 WHERE id=1",[serde_json::to_string(&input)?])?;
+    if !input.allow_unattended {close_unattended_grants(&tx,None)?;}
     tx.execute("INSERT INTO audit(at,actor,event,target) VALUES(?1,?2,'profile.updated',?3)",params![now(),user,input.revision.to_string()])?;
     tx.commit()?;Ok(Json(json!({"revision":input.revision})))
 }
@@ -295,6 +296,17 @@ async fn device_state(State(s):State<Shared>,headers:HeaderMap,Path(id):Path<Str
 }
 #[derive(Deserialize)]
 struct Consent { unattended:bool,revision:u64 }
+fn close_unattended_grants(db:&Connection,device:Option<&str>)->Result<(),ApiError> {
+    let ids={
+        let mut statement=db.prepare("SELECT id,body FROM grants WHERE closed=0 AND (?1 IS NULL OR device_id=?1)")?;
+        let rows=statement.query_map([device],|row|Ok((row.get::<_,String>(0)?,row.get::<_,String>(1)?)))?;
+        let mut ids=Vec::new();
+        for row in rows {let (id,body)=row?;let grant:SessionGrant=serde_json::from_str(&body)?;if grant.unattended {ids.push(id);}}
+        ids
+    };
+    for id in ids {db.execute("UPDATE grants SET closed=1,lease_until=0 WHERE id=?1",[id])?;}
+    Ok(())
+}
 async fn device_status(State(s):State<Shared>,headers:HeaderMap)->ApiResult {
     // Pending devices may inspect only their own identity, never session APIs.
     let device:String=s.db.lock().unwrap().query_row("SELECT id FROM devices WHERE token_hash=?1 AND state IN ('pending','approved')",[digest(token(&headers)?)],|row|row.get(0)).optional()?.ok_or_else(unauthorized)?;
@@ -315,14 +327,7 @@ async fn consent(State(s):State<Shared>,headers:HeaderMap,Json(input):Json<Conse
         if input.revision==revision && input.unattended==enabled {return Ok(Json(json!({"ok":true})));}
         transaction.execute("UPDATE devices SET unattended=?1 WHERE id=?2",params![input.unattended,device])?;
         if !input.unattended {
-            let ids={
-                let mut statement=transaction.prepare("SELECT id,body FROM grants WHERE device_id=?1 AND closed=0")?;
-                let rows=statement.query_map([&device],|row|Ok((row.get::<_,String>(0)?,row.get::<_,String>(1)?)))?;
-                let mut ids=Vec::new();
-                for row in rows {let (id,body)=row?;let grant:SessionGrant=serde_json::from_str(&body)?;if grant.unattended {ids.push(id);}}
-                ids
-            };
-            for id in ids {transaction.execute("UPDATE grants SET closed=1,lease_until=0 WHERE id=?1",[id])?;}
+            close_unattended_grants(&transaction,Some(&device))?;
         }
         transaction.execute("INSERT INTO device_consent_revisions(device_id,revision) VALUES(?1,?2) ON CONFLICT(device_id) DO UPDATE SET revision=excluded.revision",params![device,input.revision])?;
         transaction.commit()?;
@@ -363,8 +368,9 @@ async fn set_group_permissions(State(s):State<Shared>,headers:HeaderMap,Path(gro
 async fn grant(State(s):State<Shared>,headers:HeaderMap,Json(input):Json<GrantRequest>)->ApiResult {
     let user=s.user(&headers,false)?;s.rate(&format!("grant:{user}"),30)?;
     public_key(&input.proof_public_key).map_err(|_|bad("Invalid proof key"))?;
-    let profile=s.profile()?;
     let mut db=s.db.lock().unwrap();let tx=db.transaction()?;
+    let raw:String=tx.query_row("SELECT body FROM profile WHERE id=1",[],|row|row.get(0))?;
+    let profile:CompanyProfile=serde_json::from_str(&raw)?;
     let peer:Option<String>=tx.query_row("SELECT d.rustdesk_id FROM devices d JOIN users u ON u.id=?2 WHERE d.id=?1 AND d.state='approved' AND u.disabled=0 AND (?3=0 OR d.unattended=1) AND (u.role='admin' OR EXISTS(SELECT 1 FROM group_access g WHERE g.group_id=d.group_id AND g.user_id=u.id))",params![input.device_id,user,input.unattended],|r|r.get(0)).optional()?;
     let peer=peer.ok_or_else(denied)?;
     if input.unattended && !profile.allow_unattended {return Err(denied());}
