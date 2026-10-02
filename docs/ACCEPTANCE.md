@@ -33,6 +33,11 @@ native support session or a clean-machine installation.
   also passed and produces a distinct technician portable artifact. It predates
   subsequent native file/audio capability guards, consent ordering, complete
   backup and installation/repair changes. A new build at `7e589ba` is queued.
+- The unsigned Windows artifact from `31b13aa` downloaded successfully. Its
+  digest matches GitHub's artifact digest and both endpoint package checksums
+  match `SHA256SUMS.txt`. Both endpoint packages and all three product-component
+  executables report `NotSigned`; no downloaded executable was launched on the
+  production host. This proves artifact integrity, not trusted publication.
 - A fresh-company HTTPS test at `71ebbec` passed with rebuilt agent and server
   executables. It additionally verifies enrollment-preserving repair, rejection
   of a changed transport identity, explicit consent opt-in/revocation,
