@@ -49,7 +49,8 @@ excluding local environment files, keys, databases, installers and caches from
 the build daemon and intermediate layers. Add newly required public build
 inputs explicitly when changing the embedded source.
 
-The Rust builder and Debian runtime images are pinned by manifest digest.
+The Rust builder, Debian runtime, Caddy HTTPS proxy and RustDesk transport images
+are pinned by manifest digest.
 Update those digests deliberately and rerun these checks when applying base-image
 security updates. Debian packages installed during the build still come from its
 configured repositories; the complete image is not claimed to be bit-for-bit
