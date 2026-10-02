@@ -103,3 +103,24 @@ its installed agent still has a valid signature; pending receipts continue to
 block sessions. Corrupt or missing canonical agents still require recovery from
 a verified staged helper or explicit setup/repair. Actual scheduled-task and
 power-loss behavior remain unverified.
+
+New automatic updates require a previously recorded signed installation. Before
+writing their pending receipt, they verify the current installed release and
+publish a complete rollback snapshot under `updates/SEQUENCE/rollback`: the
+signed installed-release envelope, every manifest-listed endpoint file (including
+customer libraries and assets), and the matching configuration agent. Snapshot
+files are hash checked while copying, flushed, and verified before the complete
+directory is renamed into place. The old metadata is accepted after expiry only
+for its exact recorded sequence and edition under the existing release trust key.
+Executable and agent publisher checks remain mandatory. The update receipt binds
+that previous envelope; a helper verifies its snapshot before changing the payload.
+Mutable branding, identity, credentials and consent are not copied into release
+snapshots or restored to older values. Legacy receipts without a snapshot can
+continue forward recovery, but do not gain rollback evidence retroactively.
+
+This preserves verified rollback inputs; automatic restoration of those inputs,
+Windows service/MSI registration recovery, failed-release suppression and full
+power-loss rollback remain unfinished. Component tests cover complete file
+preservation, rejection of tampered/missing sources and unsafe paths, incomplete
+snapshot cleanup, immutable published snapshots, and previous metadata trust and
+sequence checks. Signed installed-app rehearsals remain required.

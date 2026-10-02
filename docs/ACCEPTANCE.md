@@ -525,3 +525,22 @@ verification.
 GitHub native build run 36998413349 at `2eec008` is confirmed successful.
 Run 37005806648 at `4164964` remains queued as of the latest direct API check;
 neither run proves the subsequent online recovery implementation.
+
+The superseded queued run 37005806648 was subsequently cancelled after checking
+its current queued status. Replacement native build 37010780710 targets
+`111abe3`, covering online recovery and background technician handoff; it was
+confirmed queued when dispatched.
+
+New update preparation now requires a recorded signed installed release and
+preserves its full endpoint manifest and configuration agent in a verified,
+immutable rollback snapshot before writing the update receipt. The receipt
+includes the exact previous signed envelope. The helper rejects a mismatched or
+damaged snapshot before changing installed files. Branding, credentials, identity
+and consent remain outside the software snapshot. Windows agent compilation and
+21 ordinary agent tests pass (the separate real-HTTPS transport test is explicitly
+ignored in this ordinary run). Further targeted tests pass for complete snapshots,
+tampered and missing sources, unsafe paths, cleanup, immutable publication, and
+previous-release signature/edition/sequence checks after metadata expiry. This is
+verified rollback preparation, not completed automatic rollback: restoration,
+failed-release suppression, MSI/service consistency and native power-loss testing
+remain unfinished.

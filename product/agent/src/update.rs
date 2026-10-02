@@ -7,7 +7,13 @@ use std::path::Path;
 
 #[derive(Clone,Serialize,Deserialize)]
 #[serde(deny_unknown_fields)]
-struct Receipt { release:SignedEnvelope, previous_sequence:u64, phase:String }
+struct Receipt {
+    release:SignedEnvelope,
+    previous_sequence:u64,
+    phase:String,
+    #[serde(default)]
+    previous_release:Option<SignedEnvelope>,
+}
 
 fn require_existing_application(target:&Path)->Result<()> {
     ensure!(target.is_file(),"Application was removed; automatic updates cannot reinstall it. Run explicit company setup or repair.");
@@ -213,6 +219,51 @@ fn save_installed_metadata(directory:&Path,envelope:&SignedEnvelope)->Result<()>
     crate::replace_state(&temporary,&directory.join("installed-release.json"))
 }
 
+#[cfg(any(windows,test))]
+pub(crate) fn validate_previous_release(state:&AgentState,envelope:&SignedEnvelope,previous_sequence:u64)->Result<Release> {
+    ensure!(previous_sequence>0,"Rollback requires a recorded signed installation");
+    let release:Release=envelope.verify(&public_key(&state.bootstrap.release_public_key)?)?;
+    release.validate(&state.bootstrap.edition,previous_sequence-1,now().min(release.expires_at.saturating_sub(1)))?;
+    ensure!(release.sequence==previous_sequence,"Rollback release differs from previous installation");
+    Ok(release)
+}
+
+#[cfg(windows)]
+fn verify_rollback_snapshot(state:&AgentState,directory:&Path,envelope:&SignedEnvelope,previous_sequence:u64)->Result<()> {
+    let release=validate_previous_release(state,envelope,previous_sequence)?;
+    let stored:SignedEnvelope=serde_json::from_slice(&std::fs::read(directory.join("installed-release.json"))?)?;
+    ensure!(stored.payload==envelope.payload && stored.signature==envelope.signature,"Rollback metadata differs from pending receipt");
+    crate::payload::verify(&directory.join("endpoint"),&release.installed_files)?;
+    crate::payload::verify(&directory.join("agent"),&[InstalledFile{path:"swan-agent.exe".into(),sha256:release.agent_sha256.clone()}])?;
+    let mut executable_release=release.clone();executable_release.sha256=release.installed_sha256.clone();
+    let executable=if release.edition==Edition::Technician {"SwanRemoteSupport-Technician.exe"}else{"Swan Remote Support.exe"};
+    verify_publisher(&directory.join("endpoint").join(executable),&executable_release)?;
+    let mut agent_release=release.clone();agent_release.sha256=release.agent_sha256.clone();
+    verify_publisher(&directory.join("agent/swan-agent.exe"),&agent_release)
+}
+
+#[cfg(windows)]
+fn prepare_rollback_snapshot(state:&AgentState,directory:&Path,update_sequence:u64)->Result<SignedEnvelope> {
+    let envelope:SignedEnvelope=serde_json::from_slice(&std::fs::read(directory.join("installed-release.json"))?)?;
+    let previous=validate_previous_release(state,&envelope,state.last_release_sequence)?;
+    verify_compatibility(directory,&previous)?;
+    verify_installed(directory,&previous)?;
+    let folder=directory.join("updates").join(update_sequence.to_string());
+    let destination=folder.join("rollback");
+    if destination.exists(){verify_rollback_snapshot(state,&destination,&envelope,state.last_release_sequence)?;return Ok(envelope);}
+    let temporary=folder.join(format!("swan-rollback-{}",random_token()));std::fs::create_dir(&temporary)?;
+    let result=(||->Result<()> {
+        let target=installed_target(directory,&state.bootstrap.edition)?;
+        crate::payload::snapshot(target.parent().context("Missing installed directory")?,&temporary.join("endpoint"),&previous.installed_files)?;
+        crate::payload::snapshot(directory,&temporary.join("agent"),&[InstalledFile{path:"swan-agent.exe".into(),sha256:previous.agent_sha256.clone()}])?;
+        save_installed_metadata(&temporary,&envelope)?;
+        verify_rollback_snapshot(state,&temporary,&envelope,state.last_release_sequence)?;
+        std::fs::rename(&temporary,&destination).context("Cannot publish complete release rollback snapshot")
+    })();
+    if result.is_err(){std::fs::remove_dir_all(&temporary).context("Cannot remove incomplete release rollback snapshot")?;}
+    result?;Ok(envelope)
+}
+
 #[cfg(windows)]
 fn launch_update_helper(directory:&Path,release:&Release)->Result<()> {
     use std::os::windows::process::CommandExt;
@@ -294,7 +345,7 @@ impl AgentState {
         let latest=AgentState::load_for_refresh(directory)?;
         let receipt:Receipt=serde_json::from_slice(&std::fs::read(&receipt_path)?)?;
         if let Some(expected)=expected {
-            ensure!(receipt.release.payload==expected.release.payload && receipt.release.signature==expected.release.signature && receipt.previous_sequence==expected.previous_sequence && receipt.phase==expected.phase,"Pending update changed during staging recovery");
+            ensure!(serde_json::to_vec(&receipt)?==serde_json::to_vec(expected)?,"Pending update changed during staging recovery");
         }
         let release=validate_recovery_release(&latest,&receipt.release,receipt.previous_sequence,&receipt.phase)?;
         verify_compatibility(directory,&release)?;
@@ -364,6 +415,9 @@ impl AgentState {
         verify_publisher(&package,&release)?;
         if let Err(error)=verify_installed(directory,&release) {
             eprintln!("Installed payload requires recovery: {error:#}");
+            if let Some(previous)=receipt.previous_release.as_ref(){
+                verify_rollback_snapshot(&latest,&folder.join("rollback"),previous,receipt.previous_sequence)?;
+            }
             if latest.bootstrap.edition==Edition::Technician {
                 ensure!(release.format=="msi" || (release.format=="exe" && release.sha256.eq_ignore_ascii_case(&release.installed_sha256)),"Technician updates require an MSI or a portable EXE");
                 let target=installed_target(directory,&latest.bootstrap.edition)?;
@@ -435,7 +489,8 @@ impl AgentState {
             // Removal during download must not be turned into a fresh install.
             require_existing_application(&installed_target(&directory,&latest.bootstrap.edition)?)?;
             validate_release(&latest,&envelope)?;
-            let receipt=Receipt{release:envelope,previous_sequence:latest.last_release_sequence,phase:"installing".into()};
+            let previous_release=prepare_rollback_snapshot(&latest,&directory,release.sequence)?;
+            let receipt=Receipt{release:envelope,previous_sequence:latest.last_release_sequence,phase:"installing".into(),previous_release:Some(previous_release)};
             let mut options=std::fs::OpenOptions::new();options.create_new(true).write(true);
             use std::io::Write;
             let mut file=options.open(&receipt_path)?;file.write_all(&serde_json::to_vec(&receipt)?)?;file.sync_all()?;drop(file);
