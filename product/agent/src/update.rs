@@ -5,7 +5,7 @@ use anyhow::{ensure,Context,Result};
 use serde::{Deserialize,Serialize};
 use std::path::Path;
 
-#[derive(Serialize,Deserialize)]
+#[derive(Clone,Serialize,Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Receipt { release:SignedEnvelope, previous_sequence:u64, phase:String }
 
@@ -84,6 +84,23 @@ fn publish_download(path:&Path,bytes:&[u8])->Result<()> {
     })();
     if result.is_err(){std::fs::remove_file(&temporary).context("Cannot remove failed download staging file")?;}
     result
+}
+
+fn staged_hash_matches(path:&Path,hash:&str)->Result<bool> {
+    match std::fs::read(path) {
+        Ok(bytes)=>Ok(digest(bytes).eq_ignore_ascii_case(hash)),
+        Err(error) if error.kind()==std::io::ErrorKind::NotFound=>Ok(false),
+        Err(error)=>Err(error).context("Cannot inspect staged download"),
+    }
+}
+
+#[cfg(windows)]
+async fn restore_staged_download(path:&Path,url:&str,hash:&str,release:&Release)->Result<()> {
+    let check_path=path.to_owned();let check_hash=hash.to_owned();
+    let valid=tokio::task::spawn_blocking(move ||staged_hash_matches(&check_path,&check_hash)).await.context("Staging inspection task failed")??;
+    if !valid {download(url,hash,path).await?;}
+    let mut artifact_release=release.clone();artifact_release.sha256=hash.to_owned();
+    verify_downloaded_publisher(path,&artifact_release).await
 }
 
 #[cfg(windows)]
@@ -266,12 +283,19 @@ impl AgentState {
     }
     #[cfg(windows)]
     pub fn resume_pending_update(&self,directory:&Path,retry_now:bool)->Result<bool> {
+        self.resume_prepared_update(directory,retry_now,None)
+    }
+    #[cfg(windows)]
+    fn resume_prepared_update(&self,directory:&Path,retry_now:bool,expected:Option<&Receipt>)->Result<bool> {
         let activity=activity_file(directory)?;fs2::FileExt::try_lock_exclusive(&activity).context("Update recovery already running or sessions remain active")?;
         let receipt_path=directory.join("pending-update.json");
         if !receipt_path.exists(){return Ok(false);}
         ensure!(!directory.join("pending-install.json").exists(),"Company setup recovery must finish first");
         let latest=AgentState::load_for_refresh(directory)?;
         let receipt:Receipt=serde_json::from_slice(&std::fs::read(&receipt_path)?)?;
+        if let Some(expected)=expected {
+            ensure!(receipt.release.payload==expected.release.payload && receipt.release.signature==expected.release.signature && receipt.previous_sequence==expected.previous_sequence && receipt.phase==expected.phase,"Pending update changed during staging recovery");
+        }
         let release=validate_recovery_release(&latest,&receipt.release,receipt.previous_sequence,&receipt.phase)?;
         verify_compatibility(directory,&release)?;
         let attempt=directory.join("updates").join(release.sequence.to_string()).join("last-attempt.txt");
@@ -280,6 +304,36 @@ impl AgentState {
             if now().saturating_sub(previous)<300{return Ok(false);}
         }
         launch_update_helper(directory,&release)?;Ok(true)
+    }
+    #[cfg(windows)]
+    pub async fn resume_pending_update_online(&self,directory:&Path,retry_now:bool)->Result<bool> {
+        let check_directory=directory.to_owned();
+        let plan=tokio::task::spawn_blocking(move ||->Result<Option<(Receipt,Release)>> {
+            let activity=activity_file(&check_directory)?;
+            fs2::FileExt::try_lock_exclusive(&activity).context("Update recovery already running or sessions remain active")?;
+            let receipt_path=check_directory.join("pending-update.json");
+            if !receipt_path.exists(){return Ok(None);}
+            ensure!(!check_directory.join("pending-install.json").exists(),"Company setup recovery must finish first");
+            let latest=AgentState::load_for_refresh(&check_directory)?;
+            let receipt:Receipt=serde_json::from_slice(&std::fs::read(receipt_path)?)?;
+            let release=validate_recovery_release(&latest,&receipt.release,receipt.previous_sequence,&receipt.phase)?;
+            verify_compatibility(&check_directory,&release)?;
+            let attempt=check_directory.join("updates").join(release.sequence.to_string()).join("last-attempt.txt");
+            if !retry_now && attempt.exists(){
+                let previous=std::fs::read_to_string(attempt)?.parse::<u64>().context("Invalid update retry timestamp")?;
+                if now().saturating_sub(previous)<300{return Ok(None);}
+            }
+            Ok(Some((receipt,release)))
+        }).await.context("Recovery planning task failed")??;
+        let Some((receipt,release))=plan else{return Ok(false);};
+        // The durable signed receipt authorizes only these exact artifact bytes.
+        // No credentials accompany release downloads, including redirects.
+        let folder=directory.join("updates").join(release.sequence.to_string());
+        tokio::fs::create_dir_all(&folder).await?;
+        restore_staged_download(&folder.join(format!("SwanRemoteSupport-install.{}",release.format)),&release.artifact_url,&release.sha256,&release).await?;
+        restore_staged_download(&folder.join("swan-agent.exe"),&release.agent_url,&release.agent_sha256,&release).await?;
+        let state=self.clone();let directory=directory.to_owned();
+        tokio::task::spawn_blocking(move ||state.resume_prepared_update(&directory,retry_now,Some(&receipt))).await.context("Recovery handoff task failed")?
     }
     #[cfg(windows)]
     pub fn apply_pending_update(&mut self,directory:&Path)->Result<bool> {
@@ -344,8 +398,7 @@ impl AgentState {
         #[cfg(windows)] {
             ensure!(!directory.join("pending-install.json").exists(),"Company setup recovery is required before automatic updates");
             if directory.join("pending-update.json").exists(){
-                let state=self.clone();let directory=directory.to_owned();
-                return tokio::task::spawn_blocking(move ||state.resume_pending_update(&directory,false)).await.context("Update recovery task failed")?;
+                return self.resume_pending_update_online(directory,false).await;
             }
             require_existing_application(&installed_target(directory,&self.bootstrap.edition)?)?;
             if !update_policy_open(self)?{return Ok(false);}
@@ -422,6 +475,38 @@ fn verify_installed(directory:&Path,release:&Release)->Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[tokio::test]
+    #[ignore="Requires the isolated loopback HTTPS download-recovery harness"]
+    async fn https_download_recovery_preserves_staging_on_tamper_and_interruption(){
+        let base=std::env::var("SWAN_TEST_DOWNLOAD_BASE").expect("Run deployment/windows/test-update-download.js");
+        assert!(base.starts_with("https://localhost:"));
+        let folder=std::env::temp_dir().join(format!("swan-https-download-test-{}",random_token()));
+        std::fs::create_dir(&folder).unwrap();
+        let artifact=folder.join("installer.exe");
+        let payload=b"Swan HTTPS recovery download fixture\n";let hash=digest(payload);
+        std::fs::write(&artifact,b"previous complete staging").unwrap();
+        download(&format!("{base}/artifact"),&hash,&artifact).await.unwrap();
+        assert_eq!(std::fs::read(&artifact).unwrap(),payload);
+        assert!(download(&format!("{base}/tampered"),&hash,&artifact).await.is_err());
+        assert_eq!(std::fs::read(&artifact).unwrap(),payload);
+        assert!(download(&format!("{base}/partial"),&hash,&artifact).await.is_err());
+        assert_eq!(std::fs::read(&artifact).unwrap(),payload);
+        assert!(!std::fs::read_dir(&folder).unwrap().any(|entry|entry.unwrap().file_name().to_string_lossy().starts_with("swan-download-")));
+        std::fs::remove_dir_all(folder).unwrap();
+    }
+    #[test]
+    fn recovery_staging_requires_exact_hash_and_distinguishes_missing_from_io_failure(){
+        let folder=std::env::temp_dir().join(format!("swan-staging-test-{}",random_token()));
+        std::fs::create_dir(&folder).unwrap();
+        let artifact=folder.join("helper.exe");let hash=digest(b"authorized helper");
+        assert!(!staged_hash_matches(&artifact,&hash).unwrap());
+        std::fs::write(&artifact,b"truncated helper").unwrap();
+        assert!(!staged_hash_matches(&artifact,&hash).unwrap());
+        publish_download(&artifact,b"authorized helper").unwrap();
+        assert!(staged_hash_matches(&artifact,&hash.to_uppercase()).unwrap());
+        assert!(staged_hash_matches(&folder,&hash).is_err());
+        std::fs::remove_dir_all(folder).unwrap();
+    }
     #[test]
     fn download_publication_retains_complete_files_and_cleans_failed_staging(){
         let folder=std::env::temp_dir().join(format!("swan-download-test-{}",random_token()));

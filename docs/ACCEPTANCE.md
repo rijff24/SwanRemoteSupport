@@ -504,3 +504,24 @@ compilation passes. Real signed worker packaging, upload faults and publication
 remain unverified. After company profile-key activation, operators must update
 the worker's privately configured profile-key pin before rebuilding packages;
 automatic worker trust-pin rotation is not implemented.
+
+At source `7335010`, all 37 product workspace component tests pass on the local
+Windows GNU toolchain. Update downloads now flush unique staging files before
+atomic publication rather than overwriting a complete staged artifact in place.
+
+The subsequent recovery change re-downloads missing or hash-damaged artifacts
+from the exact signed pending receipt, rechecks the publisher and unchanged
+receipt, and retains session exclusion at handoff. Technician recovery runs in
+the background with the existing native progress guard. The agent Windows build
+and its 20 ordinary component tests pass. A separate explicitly ignored real
+HTTPS download test passes through `test-update-download.js`: an HTTPS redirect
+carries no authorization or cookie headers, and tampered or interrupted responses
+leave complete staging intact. Private evidence records the executable hash and
+dirty source state. This transport regression does not execute a native installer,
+prove successful signed recovery, or complete automatic rollback. Native Rust
+syntax parses locally; the changed Rust/Flutter integration requires CI and VM
+verification.
+
+GitHub native build run 36998413349 at `2eec008` is confirmed successful.
+Run 37005806648 at `4164964` remains queued as of the latest direct API check;
+neither run proves the subsequent online recovery implementation.

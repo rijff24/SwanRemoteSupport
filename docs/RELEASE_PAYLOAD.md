@@ -65,14 +65,32 @@ hash and publisher verification still precede execution. Component regression
 coverage checks complete replacement and a destination-conflict failure. This
 does not establish recovery from a power loss or a failed native installer.
 
+For the real HTTPS download regression, build the `swan-agent` test executable
+with `cargo test --manifest-path product/Cargo.toml --locked -p swan-agent --no-run`.
+Run `node deployment/windows/test-update-download.js PRIVATE_ENV TEST_EXE NEW_RESULT_JSON`.
+The private environment supplies `SWAN_TEST_TLS_PFX`, `SWAN_TEST_TLS_PASSWORD`
+and `SWAN_TEST_CA_FILE` for a verified localhost test identity. The harness binds
+an ephemeral loopback port, executes only the explicitly ignored download test,
+and closes its own listener. It checks an actual HTTPS redirect, absent artifact
+credentials, tampered bytes and an interrupted response. Evidence includes the
+test executable hash; no installer is executed. Do not commit private TLS files
+or the environment. Release builds do not accept the debug-only test CA input.
+
 A watcher can resume a pending update after restart; administrators can invoke
 `swan-agent resume-update` to hand off explicitly. `recover-update` continues to
 verify an already completed installation without rerunning its installer.
 Recovery may finish the previously selected signed release after metadata expiry;
 it cannot authorize a new release or relax the stored sequence. The helper log
 and previous agent/portable executable are retained in the protected update
-staging directory. Automatic rollback, damaged-stage re-download and graphical
-technician update coordination remain incomplete. Signed clean-machine tests
+staging directory. Missing or hash-damaged staged installers and helpers are
+re-downloaded from the exact HTTPS URLs in the validated pending receipt. These
+downloads send no company credentials, must match the receipt's hashes and
+pinned publisher, and do not select a newer release. Intact staging remains
+usable offline. Recovery rechecks the unchanged receipt and session exclusion
+before handoff. Permission and other staging I/O errors remain errors rather
+than being treated as missing files. Automatic rollback and canonical-agent
+recovery remain incomplete. Graphical technician update coordination and this
+staging recovery still require native end-to-end verification. Signed clean-machine tests
 are required before claiming interruption or self-update acceptance.
 
 Recovery validation is shared by completion, retry and helper execution. Its

@@ -70,7 +70,7 @@ async fn main()->Result<()> {
         #[cfg(windows)]
         "resume-update"=>{
             let state=AgentState::load_for_refresh(&directory)?;
-            println!("Update recovery handed off: {}",state.resume_pending_update(&directory,true)?);
+            println!("Update recovery handed off: {}",state.resume_pending_update_online(&directory,true).await?);
         }
         #[cfg(windows)]
         "apply-update"=>{

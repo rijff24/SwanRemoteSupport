@@ -35,8 +35,7 @@ class _CompanyTechnicianPageState extends State<CompanyTechnicianPage> {
 
   Future<dynamic> _request(Map<String, dynamic> input) async {
     final text = await bind.mainCompanyRequest(request: jsonEncode(input))
-        .first.timeout(input['action'] == 'resume-update'
-            ? const Duration(minutes: 25) : const Duration(seconds: 25));
+        .first.timeout(const Duration(seconds: 25));
     final response = jsonDecode(text) as Map<String, dynamic>;
     if (response['ok'] != true) {
       throw Exception(response['error'] ?? 'Company request failed');

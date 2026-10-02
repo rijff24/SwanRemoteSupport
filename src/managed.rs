@@ -52,11 +52,21 @@ async fn technician_request_inner(request:&str)->ResultType<serde_json::Value> {
         // Recovery can finish an already authorized installation offline. It
         // cannot select a new release and does not require a reusable login.
         let pending=directory.join("pending-update.json").exists();
-        {let memory=TECHNICIAN.lock().unwrap();
-            if memory.update_running || memory.update_handed_off{return Ok(json!({"handed_off":memory.update_handed_off,"pending":pending}));}}
         if !pending || !crate::flutter::sessions::get_sessions().is_empty(){return Ok(json!({"handed_off":false,"pending":pending}));}
-        let handed_off=hbb_common::tokio::task::spawn_blocking(move ||state.resume_pending_update(&directory,false)).await??;
-        return Ok(json!({"handed_off":handed_off,"pending":true}));
+        {let mut memory=TECHNICIAN.lock().unwrap();
+            if memory.update_running || memory.update_handed_off{return Ok(json!({"handed_off":memory.update_handed_off,"pending":pending}));}
+            memory.update_running=true;memory.update_failed=false;
+        }
+        hbb_common::tokio::spawn(async move {
+            let result=state.resume_pending_update_online(&directory,false).await;
+            let mut memory=TECHNICIAN.lock().unwrap();
+            memory.update_running=false;memory.update_failed=result.is_err();
+            memory.update_handed_off=matches!(result,Ok(true));
+            if memory.update_handed_off {
+                memory.generation=memory.generation.wrapping_add(1);memory.login=None;memory.tickets.clear();memory.reconnects.clear();
+            }
+        });
+        return Ok(json!({"handed_off":false,"pending":true,"started":true}));
     }
     if action=="sync" {
         let mut state=state;state.sync().await?;state.save(&directory)?;
