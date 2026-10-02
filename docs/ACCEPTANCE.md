@@ -29,8 +29,10 @@ native support session or a clean-machine installation.
   [pinned Windows x64 build at `c78a471`](https://github.com/rijff24/SwanRemoteSupport/actions/runs/36873808239)
   passed Rust/Flutter compilation, unsigned customer package generation, and
   product-component compilation. It predates the capability-policy changes.
-  A new build at `31b13aa` also produces a distinct technician portable artifact;
-  its outcome remains pending.
+  The [build at `31b13aa`](https://github.com/rijff24/SwanRemoteSupport/actions/runs/36967791061)
+  also passed and produces a distinct technician portable artifact. It predates
+  subsequent native file/audio capability guards, consent ordering, complete
+  backup and installation/repair changes. A new build at `7e589ba` is queued.
 - A fresh-company HTTPS test at `71ebbec` passed with rebuilt agent and server
   executables. It additionally verifies enrollment-preserving repair, rejection
   of a changed transport identity, explicit consent opt-in/revocation,
