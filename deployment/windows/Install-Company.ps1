@@ -1,5 +1,5 @@
 [CmdletBinding()]
-param([switch]$UnattendedConsent)
+param([switch]$UnattendedConsent,[switch]$Repair)
 $ErrorActionPreference = 'Stop'
 $root = $PSScriptRoot
 $bootstrap = Get-Content -LiteralPath (Join-Path $root 'bootstrap.json') -Raw | ConvertFrom-Json
@@ -36,7 +36,10 @@ if (-not (Test-Path -LiteralPath (Join-Path $editionDirectory 'managed-state.jso
 if ($LASTEXITCODE -ne 0) { throw 'Installer does not match the configured company, edition or trust keys.' }
 $installers = @(Get-ChildItem -LiteralPath $root -File | Where-Object { $_.Name -match '^SwanRemoteSupport-install\.(exe|msi)$' })
 if ($installers.Count -ne 1) { throw 'Expected one company installer.' }
-& $agent verify-package (Join-Path $root 'release.json') $installers[0].FullName
+$packageArguments = @('verify-package',(Join-Path $root 'release.json'),$installers[0].FullName)
+$recordArguments = @('record-installation',(Join-Path $root 'release.json'))
+if ($Repair) { $packageArguments += '--repair'; $recordArguments += '--repair' }
+& $agent @packageArguments
 if ($LASTEXITCODE -ne 0) { throw 'Installer metadata, hash or publisher validation failed.' }
 if ($bootstrap.edition -eq 'customer') {
     if ($installers[0].Extension -eq '.msi') {
@@ -53,7 +56,7 @@ if ($bootstrap.edition -eq 'customer') {
     & $agent @enrollmentArguments
     if ($LASTEXITCODE -ne 0) { throw 'Device enrollment failed. Access remains blocked.' }
     Copy-Item -LiteralPath $agent -Destination (Join-Path $editionDirectory 'swan-agent.exe') -Force
-    & $agent record-installation (Join-Path $root 'release.json')
+    & $agent @recordArguments
     if ($LASTEXITCODE -ne 0) { throw 'Installed application or configuration agent verification failed. Background updates were not enabled.' }
     $action = New-ScheduledTaskAction -Execute (Join-Path $editionDirectory 'swan-agent.exe') -Argument 'watch'
     $trigger = New-ScheduledTaskTrigger -AtStartup
@@ -69,7 +72,7 @@ if ($bootstrap.edition -eq 'customer') {
     $portable = Join-Path $editionDirectory 'SwanRemoteSupport-Technician.exe'
     Copy-Item -LiteralPath $installers[0].FullName -Destination $portable -Force
     Copy-Item -LiteralPath $agent -Destination (Join-Path $editionDirectory 'swan-agent.exe') -Force
-    & $agent record-installation (Join-Path $root 'release.json')
+    & $agent @recordArguments
     if ($LASTEXITCODE -ne 0) { throw 'Technician installed application or agent verification failed.' }
     Copy-Item -LiteralPath (Join-Path $root 'Open-Technician.ps1') -Destination (Join-Path $editionDirectory 'Open-Technician.ps1') -Force
     $shortcutPath = Join-Path ([Environment]::GetFolderPath('Programs')) 'Swan Remote Support Technician.lnk'

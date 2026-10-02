@@ -280,6 +280,24 @@ mod tests {
         let mut changed=original;changed.profile_public_key=STANDARD.encode(SigningKey::from_bytes(&[12;32]).verifying_key().as_bytes());assert!(state.validate_installer_bootstrap(&changed).is_err());
     }
     #[test]
+    fn explicit_repair_accepts_only_exact_pinned_release_without_weakening_updates() {
+        let mut state=fixture();let key=SigningKey::from_bytes(&[7;32]);
+        let mut release=Release{schema:1,product:PRODUCT.into(),version:"1.5.0".into(),sequence:2,edition:Edition::Customer,architecture:"x64".into(),channel:"test".into(),expires_at:now()+3600,artifact_url:"https://releases.example/package.exe".into(),sha256:"a".repeat(64),installed_sha256:"b".repeat(64),agent_url:"https://releases.example/agent.exe".into(),agent_sha256:"c".repeat(64),publisher:"Example".into(),publisher_certificate_sha256:"d".repeat(64),windows_versions:vec!["windows_11".into()],source_url:"https://releases.example/source.tar.gz".into(),format:"exe".into()};
+        let pinned=SignedEnvelope::sign(&release,&key).unwrap();
+        assert!(update::validate_repair_release(&state,&pinned,&pinned).is_err(),"Unrecorded installation cannot use repair");
+        state.last_release_sequence=2;
+        assert!(update::validate_repair_release(&state,&pinned,&pinned).is_ok());
+        assert!(update::validate_release(&state,&pinned).is_err(),"Automatic updates still reject current-sequence replay");
+        release.sha256="e".repeat(64);let changed=SignedEnvelope::sign(&release,&key).unwrap();
+        assert!(update::validate_repair_release(&state,&changed,&pinned).is_err(),"Even newly signed replacements at the same sequence require a new release");
+        release.sequence=1;let older=SignedEnvelope::sign(&release,&key).unwrap();
+        assert!(update::validate_repair_release(&state,&older,&older).is_err());
+        release.sequence=2;release.expires_at=now();let expired=SignedEnvelope::sign(&release,&key).unwrap();
+        assert!(update::validate_repair_release(&state,&expired,&expired).is_err());
+        let mut tampered=pinned.clone();tampered.signature=STANDARD.encode([0u8;64]);
+        assert!(update::validate_repair_release(&state,&tampered,&pinned).is_err());
+    }
+    #[test]
     fn explicit_consent_changes_survive_older_refreshes() {
         let directory=std::env::temp_dir().join(format!("swan-consent-{}",random_token()));
         let mut state=fixture();state.save(&directory).unwrap();let old_allowed=state.clone();

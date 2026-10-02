@@ -54,7 +54,7 @@ async fn main()->Result<()> {
         "record-installation"=>{
             let file=args.get(2).context("Usage: swan-agent record-installation release.json")?;
             let envelope:SignedEnvelope=serde_json::from_slice(&std::fs::read(file)?)?;
-            let mut state=AgentState::load(&directory)?;state.record_installation(&directory,&envelope)?;
+            let mut state=AgentState::load(&directory)?;state.record_installation(&directory,&envelope,args.iter().any(|value|value=="--repair"))?;
             println!("Installed application and agent identities verified; release sequence recorded.");
         }
         #[cfg(windows)]
@@ -71,7 +71,8 @@ async fn main()->Result<()> {
             let metadata=args.get(2).context("Usage: swan-agent verify-package release.json INSTALLER")?;
             let package=args.get(3).context("Missing installer path")?;
             let envelope:SignedEnvelope=serde_json::from_slice(&std::fs::read(metadata)?)?;
-            swan_agent::update::verify_package(&state,&envelope,std::path::Path::new(package))?;
+            if args.iter().any(|value|value=="--repair") {swan_agent::update::verify_repair_package(&state,&directory,&envelope,std::path::Path::new(package))?;}
+            else{swan_agent::update::verify_package(&state,&directory,&envelope,std::path::Path::new(package))?;}
             println!("Installer metadata, bytes and publisher verified.");
         }
         "revoke-unattended"=>{

@@ -29,6 +29,26 @@ pub fn validate_release(state:&AgentState,envelope:&SignedEnvelope)->Result<Rele
     Ok(release)
 }
 
+pub fn validate_repair_release(state:&AgentState,envelope:&SignedEnvelope,installed:&SignedEnvelope)->Result<Release> {
+    state.company_profile()?;
+    ensure!(state.last_release_sequence>0,"Repair requires a previously recorded installation");
+    let key=public_key(&state.bootstrap.release_public_key)?;
+    let release:Release=envelope.verify(&key)?;
+    let previous:Release=installed.verify(&key)?;
+    ensure!(envelope.payload==installed.payload && envelope.signature==installed.signature && release.sequence==previous.sequence && release.sequence==state.last_release_sequence,"Repair must use the exact currently pinned release");
+    release.validate(&state.bootstrap.edition,state.last_release_sequence-1,now())?;
+    Ok(release)
+}
+
+#[cfg(windows)]
+fn installation_release(state:&AgentState,directory:&Path,envelope:&SignedEnvelope,repair:bool)->Result<Release> {
+    ensure!(!directory.join("pending-update.json").exists(),"Resolve pending update recovery before setup or repair");
+    if repair {
+        let installed:SignedEnvelope=serde_json::from_slice(&std::fs::read(directory.join("installed-release.json"))?)?;
+        validate_repair_release(state,envelope,&installed)
+    }else{validate_release(state,envelope)}
+}
+
 async fn download(url:&str,hash:&str,path:&Path)->Result<()> {
     https_url(url)?;
     // Artifact endpoints may redirect to HTTPS object storage. No credentials
@@ -52,10 +72,18 @@ fn verify_publisher(path:&Path,release:&Release)->Result<()> {
 }
 
 #[cfg(windows)]
-pub fn verify_package(state:&AgentState,envelope:&SignedEnvelope,path:&Path)->Result<()> {
-    let release=validate_release(state,envelope)?;
+pub fn verify_package(state:&AgentState,directory:&Path,envelope:&SignedEnvelope,path:&Path)->Result<()> {
+    let release=installation_release(state,directory,envelope,false)?;
     verify_compatibility(path.parent().context("Missing package directory")?,&release)?;
     ensure!(digest(std::fs::read(path)?).eq_ignore_ascii_case(&release.sha256),"Installer hash differs from signed metadata");
+    verify_publisher(path,&release)
+}
+
+#[cfg(windows)]
+pub fn verify_repair_package(state:&AgentState,directory:&Path,envelope:&SignedEnvelope,path:&Path)->Result<()> {
+    let release=installation_release(state,directory,envelope,true)?;
+    verify_compatibility(path.parent().context("Missing package directory")?,&release)?;
+    ensure!(digest(std::fs::read(path)?).eq_ignore_ascii_case(&release.sha256),"Repair installer hash differs from signed metadata");
     verify_publisher(path,&release)
 }
 
@@ -92,10 +120,10 @@ fn save_installed_metadata(directory:&Path,envelope:&SignedEnvelope)->Result<()>
 
 impl AgentState {
     #[cfg(windows)]
-    pub fn record_installation(&mut self,directory:&Path,envelope:&SignedEnvelope)->Result<()> {
+    pub fn record_installation(&mut self,directory:&Path,envelope:&SignedEnvelope,repair:bool)->Result<()> {
         let activity=activity_file(directory)?;fs2::FileExt::try_lock_exclusive(&activity).context("Installation verification requires all sessions to close")?;
         let mut latest=AgentState::load(directory)?;
-        let release=validate_release(&latest,envelope)?;
+        let release=installation_release(&latest,directory,envelope,repair)?;
         verify_compatibility(directory,&release)?;
         verify_installed(directory,&release)?;
         let agent=directory.join("swan-agent.exe");

@@ -8,7 +8,7 @@ native support session or a clean-machine installation.
 
 - Public baseline tag `swan-single-company-baseline-1.4.9` preserves the original
   Swan deployment and build instructions. Its source was not replaced.
-- Seventeen product tests pass on the local Windows development host, including
+- Eighteen product tests pass on the local Windows development host, including
   enrollment/trust preservation across stale writes, trusted key rotation, refusal to automatically reinstall a removed endpoint, and explicit consent changes surviving older refreshes. Consent API tests also reject delayed enable requests and older revocation retries; same-revision revocation takes precedence.
   The preceding eleven-test component source passed tests and release compilation on
   [Windows 2022 and Ubuntu 24.04 CI](https://github.com/rijff24/SwanRemoteSupport/actions/runs/36856716860)
@@ -54,7 +54,9 @@ customer watcher. Technician setup copies its portable executable, agent and
 launcher to a durable per-user directory and creates a Start menu shortcut;
 launch no longer installs opportunistically from the extracted download. Rust
 compilation/component tests and PowerShell parsing pass. Actual signed setup,
-same-release repair, launcher use and uninstall remain unverified or incomplete.
+signed same-release repair, launcher use and uninstall remain unverified or incomplete.
+The explicit repair trust gate passes component tests and requires exact pinned
+metadata without allowing automatic-update replay; see INSTALLER_REPAIR.md.
 
 The built product executables at `20f88e3` additionally passed a fresh-company
 HTTPS lifecycle test with an offline-consent fault injected through the local
