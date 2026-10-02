@@ -23,6 +23,21 @@ function setupScreen(){
 function loginScreen(){title('Sign in to your company server','Administrator and technician accounts require an authenticator code.');document.querySelector('#nav').hidden=true;content.innerHTML=`<form class="card" id="login">${field('username','Username')}${field('password','Password','password')}${field('code','Authenticator code')}<button type="submit">Sign in</button><p class="muted">Your session stays in this page’s memory and expires after one hour.</p></form>`;bindForm('login',async values=>{const login=await api('login','POST',{username:values.get('username'),password:values.get('password'),totp_code:values.get('code')});accessToken=login.token;document.querySelector('#nav').hidden=false;await view('devices');});}
 async function view(name){notice.textContent='';for(const button of document.querySelectorAll('[data-view]'))button.classList.toggle('active',button.dataset.view===name);try{await screens[name]();}catch(error){showError(error);}}
 const screens={
+  async permissions(){
+    title('Group session permissions','Set what technicians may do on devices in each group. Reducing permissions prevents existing sessions from renewing their authorization.');
+    const capabilities={keyboard:'Keyboard and mouse control',clipboard:'Clipboard',audio:'Audio',file:'File transfer',restart:'Restart device',recording:'Session recording',block_input:'Block customer input',privacy_mode:'Privacy mode'};
+    content.innerHTML=`<form id="select-policy" class="card">${field('policy-group','Device group','text','default')}<button type="submit">Load permissions</button></form><div id="policy"></div>`;
+    bindForm('select-policy',async values=>{
+      const group=String(values.get('policy-group')).trim();
+      const policy=await api('groups/'+encodeURIComponent(group)+'/permissions');
+      document.querySelector('#policy').innerHTML=`<form id="save-policy" class="card"><h2>${escapeText(group)}</h2><p>Desktop viewing requires device approval and technician group access. The permissions below limit additional actions.</p>${Object.entries(capabilities).map(([key,label])=>`<label><input type="checkbox" name="${key}" ${policy[key]===true?'checked':''}> ${label}</label>`).join('')}<button type="submit">Save permissions</button></form>`;
+      bindForm('save-policy',async selected=>{
+        const updated=Object.fromEntries(Object.keys(capabilities).map(key=>[key,selected.has(key)]));
+        await api('groups/'+encodeURIComponent(group)+'/permissions','PUT',updated);
+        notice.textContent='Permissions saved. New grants use this policy; existing sessions must reauthorize within five minutes.';
+      });
+    });
+  },
   async devices(){title('Devices','Approve new devices and choose which support group can access them.');const devices=await api('devices');content.innerHTML='<div class="card"><table><thead><tr><th>Device</th><th>Status</th><th>Access</th><th>Actions</th></tr></thead><tbody>'+devices.map(d=>`<tr><td>${escapeText(d.name)}<small>${escapeText(d.rustdesk_id)}</small></td><td><span class="badge">${escapeText(d.state)}</span></td><td>${escapeText(d.group)}<small>${d.unattended?'Unattended consent recorded':'Customer approval required'}</small></td><td><div class="actions"><button data-approve="${escapeText(d.id)}" class="secondary">Approve / group</button><button data-revoke="${escapeText(d.id)}" class="danger">Revoke</button></div></td></tr>`).join('')+'</tbody></table><p class="muted">Only enrolled and approved devices are available to authorized technicians. Use the technician app for remote sessions.</p></div>';
     for(const button of document.querySelectorAll('[data-approve]'))button.onclick=async()=>{const group=prompt('Device group','default');if(!group)return;try{await api('devices/'+encodeURIComponent(button.dataset.approve)+'/state','PUT',{state:'approved',group});await view('devices');}catch(error){showError(error);}};
     for(const button of document.querySelectorAll('[data-revoke]'))button.onclick=async()=>{try{await api('devices/'+encodeURIComponent(button.dataset.revoke)+'/state','PUT',{state:'revoked',group:'default'});await view('devices');}catch(error){showError(error);}};

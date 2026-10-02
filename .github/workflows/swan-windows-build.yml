@@ -145,6 +145,10 @@ jobs:
           # The portable packer opens RustDesk's one-page installer when the
           # filename ends in "install.exe".
           mv ./target/release/rustdesk-portable-packer.exe ./artifacts/SwanRemoteSupport-${{ env.VERSION }}-x64-unsigned-install.exe
+          # Both editions use unchanged project binaries. A pinned technician
+          # bootstrap selects its authenticated outgoing-only interface. The
+          # technician filename launches the portable app instead of customer setup.
+          cp ./artifacts/SwanRemoteSupport-${{ env.VERSION }}-x64-unsigned-install.exe ./artifacts/SwanRemoteSupport-${{ env.VERSION }}-technician-x64-unsigned.exe
           pushd ./artifacts
           sha256sum SwanRemoteSupport-*.exe | tee SHA256SUMS.txt
           popd
@@ -164,6 +168,7 @@ jobs:
           if-no-files-found: error
           path: |
             artifacts/SwanRemoteSupport-${{ env.VERSION }}-x64-unsigned-install.exe
+            artifacts/SwanRemoteSupport-${{ env.VERSION }}-technician-x64-unsigned.exe
             artifacts/SHA256SUMS.txt
             artifacts/swan-*.exe
             artifacts/Install-Company.ps1
