@@ -374,3 +374,12 @@ restoring approval does not revive or requeue cancelled claims. Eight management
 tests pass; the final expanded withdrawal test also passes independently. This
 uses handler/storage fixtures, not a signed installer worker end-to-end run;
 simultaneous network faults and production package publication remain unverified.
+
+Technician inventory/history now display before optional update discovery and
+handoff. Update errors have a separate visible status and no longer discard
+fresh inventory. The native recovery response exposes a public pending flag;
+pending/failed recovery is visible and disables new connection controls while
+native receipt and file-lock enforcement remains authoritative. Native Rust
+parsing and diff checks pass. Flutter compilation, rendering and responsiveness
+during long downloads remain unverified. The branding native run is confirmed
+live in dependency installation; later native runs remain queued.

@@ -37,9 +37,10 @@ async fn technician_request_inner(request:&str)->ResultType<serde_json::Value> {
     if action=="resume-update" {
         // Recovery can finish an already authorized installation offline. It
         // cannot select a new release and does not require a reusable login.
-        if !directory.join("pending-update.json").exists() || !crate::flutter::sessions::get_sessions().is_empty(){return Ok(json!({"handed_off":false}));}
+        let pending=directory.join("pending-update.json").exists();
+        if !pending || !crate::flutter::sessions::get_sessions().is_empty(){return Ok(json!({"handed_off":false,"pending":pending}));}
         let handed_off=hbb_common::tokio::task::spawn_blocking(move ||state.resume_pending_update(&directory,false)).await??;
-        return Ok(json!({"handed_off":handed_off}));
+        return Ok(json!({"handed_off":handed_off,"pending":true}));
     }
     if action=="sync" {
         let mut state=state;state.sync().await?;state.save(&directory)?;

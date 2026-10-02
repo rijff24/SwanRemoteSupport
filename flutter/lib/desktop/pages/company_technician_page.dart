@@ -25,6 +25,8 @@ class _CompanyTechnicianPageState extends State<CompanyTechnicianPage> {
   bool _loggedIn = false;
   bool _busy = false;
   String _error = '';
+  String _updateError = '';
+  bool _recoveryPending = false;
   String? _approvedUpdate;
   Timer? _refreshTimer;
 
@@ -52,8 +54,19 @@ class _CompanyTechnicianPageState extends State<CompanyTechnicianPage> {
         as Map<String, dynamic>;
     if (mounted) setState(() { _company = cachedCompany; });
     if (Platform.isWindows) {
-      final recovery = await _request({'action': 'resume-update'}) as Map<String, dynamic>;
-      if (recovery['handed_off'] == true) exit(0);
+      try {
+        final recovery = await _request({'action': 'resume-update'}) as Map<String, dynamic>;
+        if (recovery['handed_off'] == true) exit(0);
+        if (mounted) setState(() {
+          _recoveryPending = recovery['pending'] == true;
+          _updateError = _recoveryPending ? 'Software installation recovery is pending. New support connections are unavailable.' : '';
+        });
+      } catch (_) {
+        if (mounted) setState(() {
+          _recoveryPending = true;
+          _updateError = 'Software recovery could not finish. It will retry automatically.';
+        });
+      }
     }
     // Retain cached branding if the server is offline; authenticated operations
     // still require a current signed policy on the native side.
@@ -68,7 +81,9 @@ class _CompanyTechnicianPageState extends State<CompanyTechnicianPage> {
     });
     final devices = loggedIn ? await _request({'action': 'devices'}) as List<dynamic> : <dynamic>[];
     final history = loggedIn ? await _request({'action': 'history'}) as List<dynamic> : <dynamic>[];
-    if (mounted && loggedIn && Platform.isWindows) {
+    if (mounted) setState(() { _devices = devices; _history = history; });
+    try {
+    if (mounted && loggedIn && Platform.isWindows && !_recoveryPending) {
       final result = await _request({'action': 'update'}) as Map<String, dynamic>;
       // Rust writes the signed recovery receipt and starts the verified helper
       // before acknowledging handoff. New sessions are then blocked natively.
@@ -80,6 +95,12 @@ class _CompanyTechnicianPageState extends State<CompanyTechnicianPage> {
       _company = company; _loggedIn = loggedIn; _devices = devices; _history = history;
       _approvedUpdate = update is Map ? update['version'] as String? : null;
     });
+    } catch (_) {
+      if (mounted) setState(() {
+        _approvedUpdate = null;
+        if (!_recoveryPending) _updateError = 'Software update could not finish. It will retry automatically.';
+      });
+    }
   }
 
   Future<void> _login() async {
@@ -139,6 +160,7 @@ class _CompanyTechnicianPageState extends State<CompanyTechnicianPage> {
         Text(_company['domain'] as String? ?? 'Company setup required'),
         CompanyContactLinks(company: _company),
         if (_approvedUpdate != null) Text('Company-approved update available: $_approvedUpdate'),
+        if (_updateError.isNotEmpty) Text(_updateError),
         const SizedBox(height: 16),
         if (_busy) const LinearProgressIndicator(),
         if (_error.isNotEmpty) Padding(padding: const EdgeInsets.symmetric(vertical: 12),
@@ -170,10 +192,10 @@ class _CompanyTechnicianPageState extends State<CompanyTechnicianPage> {
             return Card(child: ListTile(title: Text(device['name'] as String),
               subtitle: Text('${device['group']} · ${device['state']}'),
               trailing: Wrap(spacing: 8, children: [
-                TextButton(onPressed: !_busy && approved ? () => _run(() => _connect(device)) : null,
+                TextButton(onPressed: !_busy && approved && !_recoveryPending ? () => _run(() => _connect(device)) : null,
                     child: const Text('Request support')),
                 if (device['unattended'] == true)
-                  TextButton(onPressed: !_busy && approved ? () => _run(() => _connect(device, unattended: true)) : null,
+                  TextButton(onPressed: !_busy && approved && !_recoveryPending ? () => _run(() => _connect(device, unattended: true)) : null,
                       child: const Text('Unattended')),
               ])));
           }),
