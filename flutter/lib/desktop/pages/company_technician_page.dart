@@ -30,7 +30,7 @@ class _CompanyTechnicianPageState extends State<CompanyTechnicianPage> {
 
   Future<dynamic> _request(Map<String, dynamic> input) async {
     final text = await bind.mainCompanyRequest(request: jsonEncode(input))
-        .first.timeout(input['action'] == 'update'
+        .first.timeout(input['action'] == 'update' || input['action'] == 'resume-update'
             ? const Duration(minutes: 25) : const Duration(seconds: 25));
     final response = jsonDecode(text) as Map<String, dynamic>;
     if (response['ok'] != true) {
@@ -48,6 +48,13 @@ class _CompanyTechnicianPageState extends State<CompanyTechnicianPage> {
   }
 
   Future<void> _refresh() async {
+    final cachedCompany = jsonDecode(await bind.mainGetCommon(key: 'company-overview'))
+        as Map<String, dynamic>;
+    if (mounted) setState(() { _company = cachedCompany; });
+    if (Platform.isWindows) {
+      final recovery = await _request({'action': 'resume-update'}) as Map<String, dynamic>;
+      if (recovery['handed_off'] == true) exit(0);
+    }
     // Retain cached branding if the server is offline; authenticated operations
     // still require a current signed policy on the native side.
     try { await _request({'action': 'sync'}); } catch (_) {}
@@ -55,6 +62,10 @@ class _CompanyTechnicianPageState extends State<CompanyTechnicianPage> {
         as Map<String, dynamic>;
     final status = await _request({'action': 'status'}) as Map<String, dynamic>;
     final loggedIn = status['logged_in'] == true;
+    if (mounted) setState(() {
+      _company = company; _loggedIn = loggedIn;
+      if (!loggedIn) { _devices = []; _history = []; _approvedUpdate = null; }
+    });
     final devices = loggedIn ? await _request({'action': 'devices'}) as List<dynamic> : <dynamic>[];
     final history = loggedIn ? await _request({'action': 'history'}) as List<dynamic> : <dynamic>[];
     if (mounted && loggedIn && Platform.isWindows) {

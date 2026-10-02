@@ -334,3 +334,13 @@ persisted signed-policy change that pauses or moves the window after an older
 snapshot was eligible. Real HTTP withdrawal during downloads and signed Windows
 installation still require end-to-end evidence. Existing installation receipts
 retain recovery semantics rather than starting a new policy-controlled upgrade.
+
+Technician refresh now attempts pending signed-installation recovery before
+network sync, login or inventory. The local native action cannot choose a new
+release; it retains receipt signature, sequence, staged helper, publisher and
+session-exclusion checks, and runs blocking verification outside the async
+executor. Cached branding is displayed before these operations. Native Rust
+parsing passes; the existing 32 component tests remain the last workspace
+evidence. This new GUI path still needs native compilation and a real offline
+interrupted-installation test. The QEMU process is confirmed live; no completed
+clean Windows installation is demonstrated and VirtualBox remains uninstalled.
