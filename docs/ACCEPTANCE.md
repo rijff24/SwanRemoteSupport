@@ -178,3 +178,12 @@ registration change. Shared key parsing additionally rejects weak Ed25519
 public keys; six protocol tests pass, including rejection of identity and
 zero encodings and acceptance of a generated key. Native packaging-fix CI
 run 36992817681 was confirmed queued; completion is not yet established.
+
+MSI update recovery now reads the verified staged package's product identity
+and queries Windows Installer registration before choosing installation or
+forced repair. An installed product uses `/fvamus`; an unknown or advertised
+product uses `/i`. Other-user and corrupt registrations fail closed. The real
+uninstalled lab MSI read-only probe returns `/i`, and all 26 product workspace
+tests pass. Installed-product repair, interruption recovery and rollback still
+require clean-guest tests. Product state meanings follow
+[Microsoft's Installer API](https://learn.microsoft.com/en-us/windows/win32/msi/installer-productstate-property).

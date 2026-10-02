@@ -81,6 +81,21 @@ fn verify_publisher(path:&Path,release:&Release)->Result<()> {
 }
 
 #[cfg(windows)]
+fn msi_install_command(package:&Path)->Result<std::process::Command> {
+    let script=package.parent().context("Missing update directory")?.join("Get-MsiInstallMode.ps1");
+    std::fs::write(&script,include_str!("../../../deployment/windows/Get-MsiInstallMode.ps1"))?;
+    let output=std::process::Command::new("powershell.exe")
+        .args(["-NoLogo","-NoProfile","-NonInteractive","-ExecutionPolicy","Bypass","-File"])
+        .arg(script).arg("-Package").arg(package).output()?;
+    ensure!(output.status.success(),"Unable to determine MSI installation or repair mode");
+    let mode=std::str::from_utf8(&output.stdout)?.trim();
+    ensure!(matches!(mode,"/i"|"/fvamus"),"Unexpected MSI installation mode");
+    let mut command=std::process::Command::new("msiexec.exe");
+    command.arg(mode).arg(package).args(["/qn","/norestart"]);
+    Ok(command)
+}
+
+#[cfg(windows)]
 pub fn verify_package(state:&AgentState,directory:&Path,envelope:&SignedEnvelope,path:&Path)->Result<()> {
     let release=installation_release(state,directory,envelope,false)?;
     verify_compatibility(path.parent().context("Missing package directory")?,&release)?;
@@ -231,12 +246,12 @@ impl AgentState {
                 let previous=folder.join("previous-technician.exe");
                 if !previous.exists(){std::fs::copy(&target,&previous)?;}
                 if release.format=="msi" {
-                    let status=std::process::Command::new("msiexec.exe").arg("/i").arg(&package).args(["/qn","/norestart"]).arg(format!("INSTALLFOLDER={}",directory.display())).status()?;
+                    let status=msi_install_command(&package)?.arg(format!("INSTALLFOLDER={}",directory.display())).status()?;
                     ensure!(matches!(status.code(),Some(0|3010)),"Technician MSI installation failed; retain signed recovery receipt");
                 }else{std::fs::copy(&package,&target)?;}
             }else{
                 require_existing_application(&installed_target(directory,&latest.bootstrap.edition)?)?;
-                let mut command=if release.format=="msi" {let mut c=std::process::Command::new("msiexec.exe");c.arg("/i").arg(&package).args(["/qn","/norestart"]);c}else{let mut c=std::process::Command::new(&package);c.args(["--silent-install","printer=0"]);c};
+                let mut command=if release.format=="msi" {msi_install_command(&package)?}else{let mut c=std::process::Command::new(&package);c.args(["--silent-install","printer=0"]);c};
                 let status=command.status()?;
                 ensure!(matches!(status.code(),Some(0|3010)),"Installation failed; retain signed recovery receipt");
             }
