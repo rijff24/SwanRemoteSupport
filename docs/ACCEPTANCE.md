@@ -905,3 +905,22 @@ installer rechecks the copied management signature before registering its
 service. Final package verification and elevated extraction/installation on
 clean Windows VMs remain necessary. Test packaging is not signing approval,
 production publication or clean-machine compatibility evidence.
+
+The final test server package from clean source `eb1d580` passed compiled
+resource verification and its non-elevated, noninteractive preview, leaving no
+temporary payload. Its SHA-256 is
+`db5a93275f277222b51719b01b2d0d6a909c4e3a556f34d86c691485625a5c25`;
+its management input is the existing debug test binary, and the package remains
+unsigned. Separately, [Windows x64 build 37030567046](https://github.com/rijff24/SwanRemoteSupport/actions/runs/37030567046)
+completed successfully for source `215dfef3fc80799f7077cfe314ecad7b1c1ebc30`,
+including the native app and company components. The resulting
+`SwanRemoteSupport-1.5.0-x64-unsigned` artifact is a build result, not installation,
+session, reproducibility or signing proof. Later source changes still require
+their own applicable validation.
+
+Server installer preflight now aborts if TCP, UDP, firewall or service inspection
+fails, and checks the management port for management-only installations too.
+Enumeration is checked before filtering, so a missing named resource is not
+confused with an inspection failure. Windows PowerShell 5.1 and PowerShell 7
+parse the updated installer; read-only host endpoint and firewall enumeration
+succeeded. No privileged installation or host configuration was performed.
