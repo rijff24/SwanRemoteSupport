@@ -41,12 +41,15 @@ signed management build containing component supervision:
 ./deployment/windows/Install-Server.ps1 `
   -Executable ./swan-management.exe `
   -ReleasePublicKey PROJECT_RELEASE_PUBLIC_KEY `
+  -PublisherThumbprint TRUSTED_RELEASE_CERTIFICATE_THUMBPRINT `
   -ComponentsDirectory ./prepared-server-components `
   -PublicHostname support.example.com
 ```
 
 The script rejects existing service/data/install directories, missing licenses,
 modified component executables, invalid hostnames and occupied component ports.
+The management signature must be valid and match the explicitly configured
+certificate thumbprint from the trusted project or company release policy.
 It protects company data, copies the components under the management installation,
 writes a Caddy recipe, registers automatic service recovery, and opens TCP
 80/443/21115–21117 and UDP 21116 for this deployment. Management stays on loopback.
@@ -69,3 +72,20 @@ component data/log directories under `SWAN_DATA_DIR`; it does not parse the
 HTTPS recipe or prove DNS, certificates or connectivity. Set `SWAN_PUBLIC_HOST`
 and `SWAN_DATA_DIR` for this preflight. Installation failure removes only its
 new service and firewall rules, retaining files/private data for inspection.
+
+## Removal
+
+Run `Uninstall-Server.ps1` with administrator rights to remove this company
+service, its owned firewall rules and the known packaged files. `-WhatIf` checks
+the removal plan without changing them. The installer records public ownership
+metadata in the protected `installation.json`; removal refuses a different
+service executable, company directory, reparse point or unexpected firewall
+ownership. It does not recursively delete installation directories or remove
+unknown files. Company database, configuration, enrollment, keys, TLS storage,
+logs and receipt remain in ProgramData for recovery.
+
+Existing installations without this receipt need an administrator-reviewed
+maintenance procedure. A fresh install deliberately refuses retained company
+data, so do not delete it merely to get past setup. Native removal, reinstallation
+and restore tests still require clean Windows VMs; removal-plan fixtures prove
+ownership rejection and exclusion of data, not successful SCM/firewall removal.

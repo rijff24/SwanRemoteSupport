@@ -847,3 +847,16 @@ The privileged installer itself has not run on a clean Windows VM. SCM startup,
 firewall rollback, reboot/service recovery, public HTTPS/ACME, live Windows
 transport sessions, repair/uninstall and the graphical setup wrapper remain
 unverified or incomplete. These process tests do not satisfy those gates.
+
+Server installation now records public ownership metadata in protected company
+storage. `Uninstall-Server.ps1` validates that receipt and exact service command,
+refuses redirected directories/files and unexpected firewall ownership, then
+removes the company service, its rules and known packaged files while retaining
+all company data. Removal-plan checks pass under both PowerShell 7 and Windows
+PowerShell 5.1, including wrong executable/arguments, company paths, rule names,
+duplicate rules, invalid policy types, a directory substituted for a file and
+an actual directory junction. The fixtures preserve their identity data and do
+not run SCM or firewall operations. The installer additionally requires a valid
+management signature matching an explicit trusted certificate thumbprint.
+Native privileged install/uninstall, retained-data reinstallation and full
+Windows compatibility remain unverified; receipt planning is not their proof.

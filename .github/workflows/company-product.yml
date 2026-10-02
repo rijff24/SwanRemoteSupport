@@ -21,6 +21,13 @@ jobs:
         run: cargo +1.90.0 test --manifest-path product/Cargo.toml --workspace --locked
       - name: Build components
         run: cargo +1.90.0 build --manifest-path product/Cargo.toml --workspace --release --locked
+      - name: Verify company server removal ownership and data preservation
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          ./deployment/windows/test_server_removal_plan.ps1
+          powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File ./deployment/windows/test_server_removal_plan.ps1
+          if ($LASTEXITCODE -ne 0) { throw 'Windows PowerShell removal-plan checks failed.' }
   linux-deployment:
     runs-on: ubuntu-24.04
     steps:

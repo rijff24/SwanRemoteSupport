@@ -1,12 +1,15 @@
 [CmdletBinding()]
-param([Parameter(Mandatory)][string]$Executable,[Parameter(Mandatory)][string]$ReleasePublicKey,[int]$Port=8080,
+param([Parameter(Mandatory)][string]$Executable,[Parameter(Mandatory)][string]$ReleasePublicKey,
+      [Parameter(Mandatory)][ValidatePattern('^[A-Fa-f0-9]{40}$')][string]$PublisherThumbprint,[int]$Port=8080,
       [string]$ComponentsDirectory,[string]$PublicHostname)
 $ErrorActionPreference = 'Stop'
 $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
 if (-not ([Security.Principal.WindowsPrincipal]::new($identity)).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) { throw 'Server installation requires administrator rights.' }
 if ($Port -lt 1024 -or $Port -gt 65535) { throw 'Invalid management port.' }
 $source = (Resolve-Path -LiteralPath $Executable).Path
-if ((Get-AuthenticodeSignature -LiteralPath $source).Status -ne 'Valid') { throw 'The company server executable requires a trusted release signature.' }
+$signature = Get-AuthenticodeSignature -LiteralPath $source
+if ($signature.Status -ne 'Valid') { throw 'The company server executable requires a trusted release signature.' }
+if ($signature.SignerCertificate.Thumbprint -ne $PublisherThumbprint) { throw 'Company server signature publisher does not match the configured certificate.' }
 if ([Convert]::FromBase64String($ReleasePublicKey).Length -ne 32) { throw 'Expected a 32-byte project release public key.' }
 $componentPins = @{
     'hbbs.exe'='2102e17d32af3ab313a4096d4a4db307984630eccf4f9ed03ef3dfbd4fdb8f83'
@@ -63,9 +66,9 @@ try {
     & sc.exe failure SwanCompanyServer reset= 86400 actions= restart/60000/restart/60000/restart/300000 | Out-Null
     if ($LASTEXITCODE -ne 0) { throw 'Cannot configure company service recovery.' }
     if ($fullStack) {
-        New-NetFirewallRule -Name 'SwanCompanyServer-TCP' -DisplayName 'Swan company HTTPS and transport' -Direction Inbound -Action Allow -Protocol TCP -LocalPort 80,443,21115,21116,21117 | Out-Null
+        New-NetFirewallRule -Name 'SwanCompanyServer-TCP' -Group 'SwanCompanyServer' -DisplayName 'Swan company HTTPS and transport' -Direction Inbound -Action Allow -Protocol TCP -LocalPort 80,443,21115,21116,21117 | Out-Null
         $createdRules += 'SwanCompanyServer-TCP'
-        New-NetFirewallRule -Name 'SwanCompanyServer-UDP' -DisplayName 'Swan company rendezvous UDP' -Direction Inbound -Action Allow -Protocol UDP -LocalPort 21116 | Out-Null
+        New-NetFirewallRule -Name 'SwanCompanyServer-UDP' -Group 'SwanCompanyServer' -DisplayName 'Swan company rendezvous UDP' -Direction Inbound -Action Allow -Protocol UDP -LocalPort 21116 | Out-Null
         $createdRules += 'SwanCompanyServer-UDP'
     }
     Start-Service SwanCompanyServer
@@ -78,6 +81,9 @@ try {
         Start-Sleep -Milliseconds 250
     }
     if (-not $healthy) { throw 'Company management health check timed out.' }
+    $receipt = [ordered]@{schema=1; service_name='SwanCompanyServer'; install_directory=[IO.Path]::GetFullPath($installDirectory);
+        data_directory=[IO.Path]::GetFullPath($dataDirectory); full_stack=$fullStack; firewall_rules=@($createdRules)}
+    [IO.File]::WriteAllText((Join-Path $dataDirectory 'installation.json'),($receipt | ConvertTo-Json -Depth 4),[Text.UTF8Encoding]::new($false))
 } catch {
     foreach ($rule in $createdRules) { Remove-NetFirewallRule -Name $rule -ErrorAction Continue }
     if ($serviceCreated) {
