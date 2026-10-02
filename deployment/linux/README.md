@@ -55,8 +55,14 @@ Update those digests deliberately and rerun these checks when applying base-imag
 security updates. The runtime copies its public certificate trust bundle from
 the pinned builder, rather than installing packages from live repositories.
 Rustls reads that bundle through `SSL_CERT_FILE`; HTTPS certificate verification
-remains enabled. Bit-for-bit reproducibility still requires a separate rebuild
-comparison and is not established by the deployment tests.
+remains enabled. An isolated offline rebuild of the exact `8cfdd8f` source,
+using the pinned builder with a verified-empty target directory, produced the
+same management executable SHA-256 as its original release build. Docker target
+volumes must use `volume-nocopy`; otherwise Docker populates them with compiled
+files from the builder image and the check reuses artifacts. This establishes
+that Linux management binary comparison only. OCI image timestamps, other
+components and native Windows builds still require separate reproducibility
+checks; ordinary deployment tests do not establish them.
 
 From the repository root, with a working Linux Docker engine and OpenSSL:
 

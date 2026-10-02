@@ -882,3 +882,13 @@ pass: fresh setup, MFA/replay, approval, restart, management encrypted restore,
 and complete transport/TLS replacement recovery using the original trust.
 This is exact-source isolated Linux deployment evidence, not public ACME,
 external traversal, native sessions or clean Windows compatibility proof.
+
+The exact `8cfdd8f` Linux management executable also passes a separate offline
+rebuild comparison. The pinned builder retained only downloaded locked sources
+and toolchains; its target directory was hidden by a new `volume-nocopy` volume
+and verified empty before compilation. A full 84-second release compilation
+without network access produced the same `c0182c6785480dc47b5220689146da3bee7d00362f17ee1f400233e39c0199a6`
+SHA-256. The first attempt exposed Docker's default volume population and was
+discarded as cache reuse, not reproducibility proof. This proves the Linux
+management binary in that pinned environment, not byte-identical OCI images,
+native Windows binaries, signed packages or all product components.
