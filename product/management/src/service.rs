@@ -347,19 +347,31 @@ async fn group_permissions(State(s):State<Shared>,headers:HeaderMap,Path(group):
 }
 async fn set_group_permissions(State(s):State<Shared>,headers:HeaderMap,Path(group):Path<String>,Json(policy):Json<SessionPermissions>)->ApiResult {
     let actor=s.user(&headers,true)?;if group.is_empty() || group.len()>64 {return Err(bad("Invalid group"));}
-    s.db.lock().unwrap().execute("INSERT INTO group_permissions(group_id,body) VALUES(?1,?2) ON CONFLICT(group_id) DO UPDATE SET body=excluded.body",params![group,serde_json::to_string(&policy)?])?;
-    s.audit(&actor,"group.permissions_changed",&group)?;Ok(Json(json!({"ok":true})))
+    let mut db=s.db.lock().unwrap();let tx=db.transaction()?;
+    tx.execute("INSERT INTO group_permissions(group_id,body) VALUES(?1,?2) ON CONFLICT(group_id) DO UPDATE SET body=excluded.body",params![group,serde_json::to_string(&policy)?])?;
+    let invalid={
+        let mut statement=tx.prepare("SELECT g.id,g.body FROM grants g JOIN devices d ON d.id=g.device_id WHERE d.group_id=?1 AND g.closed=0")?;
+        let rows=statement.query_map([&group],|row|Ok((row.get::<_,String>(0)?,row.get::<_,String>(1)?)))?;
+        let mut ids=Vec::new();
+        for row in rows {let (id,body)=row?;let grant:SessionGrant=serde_json::from_str(&body)?;if !policy.allows(&grant.permissions){ids.push(id);}}
+        ids
+    };
+    for id in invalid {tx.execute("UPDATE grants SET closed=1,lease_until=0 WHERE id=?1",[id])?;}
+    tx.execute("INSERT INTO audit(at,actor,event,target) VALUES(?1,?2,'group.permissions_changed',?3)",params![now(),actor,group])?;
+    tx.commit()?;Ok(Json(json!({"ok":true})))
 }
 async fn grant(State(s):State<Shared>,headers:HeaderMap,Json(input):Json<GrantRequest>)->ApiResult {
     let user=s.user(&headers,false)?;s.rate(&format!("grant:{user}"),30)?;
     public_key(&input.proof_public_key).map_err(|_|bad("Invalid proof key"))?;
     let profile=s.profile()?;
-    let peer:Option<String>=s.db.lock().unwrap().query_row("SELECT d.rustdesk_id FROM devices d JOIN users u ON u.id=?2 WHERE d.id=?1 AND d.state='approved' AND u.disabled=0 AND (?3=0 OR d.unattended=1) AND (u.role='admin' OR EXISTS(SELECT 1 FROM group_access g WHERE g.group_id=d.group_id AND g.user_id=u.id))",params![input.device_id,user,input.unattended],|r|r.get(0)).optional()?;
+    let mut db=s.db.lock().unwrap();let tx=db.transaction()?;
+    let peer:Option<String>=tx.query_row("SELECT d.rustdesk_id FROM devices d JOIN users u ON u.id=?2 WHERE d.id=?1 AND d.state='approved' AND u.disabled=0 AND (?3=0 OR d.unattended=1) AND (u.role='admin' OR EXISTS(SELECT 1 FROM group_access g WHERE g.group_id=d.group_id AND g.user_id=u.id))",params![input.device_id,user,input.unattended],|r|r.get(0)).optional()?;
     let peer=peer.ok_or_else(denied)?;
     if input.unattended && !profile.allow_unattended {return Err(denied());}
-    let grant=SessionGrant { schema:SCHEMA,company_id:profile.company_id,grant_id:Uuid::new_v4().to_string(),technician_id:user.clone(),device_id:input.device_id.clone(),rustdesk_id:peer,proof_public_key:input.proof_public_key,unattended:input.unattended,permissions:device_permissions(&s.db.lock().unwrap(),&input.device_id)?,issued_at:now(),expires_at:now()+60 };
-    s.db.lock().unwrap().execute("INSERT INTO grants(id,user_id,device_id,body,expires_at) VALUES(?1,?2,?3,?4,?5)",params![grant.grant_id,user,input.device_id,serde_json::to_string(&grant)?,grant.expires_at])?;
-    s.audit(&user,"session.requested",&grant.grant_id)?;
+    let grant=SessionGrant { schema:SCHEMA,company_id:profile.company_id,grant_id:Uuid::new_v4().to_string(),technician_id:user.clone(),device_id:input.device_id.clone(),rustdesk_id:peer,proof_public_key:input.proof_public_key,unattended:input.unattended,permissions:device_permissions(&tx,&input.device_id)?,issued_at:now(),expires_at:now()+60 };
+    tx.execute("INSERT INTO grants(id,user_id,device_id,body,expires_at) VALUES(?1,?2,?3,?4,?5)",params![grant.grant_id,user,input.device_id,serde_json::to_string(&grant)?,grant.expires_at])?;
+    tx.execute("INSERT INTO audit(at,actor,event,target) VALUES(?1,?2,'session.requested',?3)",params![now(),user,grant.grant_id])?;
+    tx.commit()?;
     Ok(Json(serde_json::to_value(SignedEnvelope::sign(&grant,&s.key)?)?))
 }
 #[derive(Deserialize)]

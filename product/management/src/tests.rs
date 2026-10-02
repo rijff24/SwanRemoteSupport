@@ -61,12 +61,17 @@ async fn enrollment_mfa_and_grants_fail_closed() {
     assert_eq!(request(&app,&format!("/api/v1/grants/{}/renew",issued.grant_id),"POST",Some(credential),Value::Null).await.0,StatusCode::FORBIDDEN,"Reduced capabilities invalidate existing authorization leases");
     assert_eq!(request(&app,"/api/v1/groups/customers/permissions","PUT",None,serde_json::to_value(&reduced).unwrap()).await.0,StatusCode::UNAUTHORIZED);
     assert_eq!(request(&app,"/api/v1/groups/customers/permissions","PUT",Some(admin),serde_json::to_value(SessionPermissions::support_default()).unwrap()).await.0,StatusCode::OK);
+    assert_eq!(request(&app,&format!("/api/v1/grants/{}/renew",issued.grant_id),"POST",Some(credential),Value::Null).await.0,StatusCode::FORBIDDEN,"Restored capabilities cannot revive withdrawn authorization");
     assert_eq!(request(&app,"/api/v1/grants/claim","POST",Some(credential),claim).await.0,StatusCode::FORBIDDEN,"Session ticket is single-use");
     let (_,history)=request(&app,"/api/v1/sessions","GET",Some(admin),Value::Null).await;
     assert_eq!(history.as_array().unwrap().len(),1);
     assert_eq!(history[0]["claimed"],true);
     assert_eq!(request(&app,"/api/v1/grants","POST",Some(admin),json!({"device_id":device_id,"proof_public_key":STANDARD.encode(proof.verifying_key().as_bytes()),"unattended":true})).await.0,StatusCode::FORBIDDEN,"Unattended access needs device consent");
     assert_eq!(request(&app,"/api/v1/device/consent","PUT",Some(credential),json!({"unattended":true,"revision":1})).await.0,StatusCode::OK);
+    let (_,attended_envelope)=request(&app,"/api/v1/grants","POST",Some(admin),json!({"device_id":device_id,"proof_public_key":STANDARD.encode(proof.verifying_key().as_bytes()),"unattended":false})).await;
+    let signed:SignedEnvelope=serde_json::from_value(attended_envelope.clone()).unwrap();
+    let attended_grant:SessionGrant=serde_json::from_slice(&STANDARD.decode(&signed.payload).unwrap()).unwrap();
+    assert_eq!(request(&app,"/api/v1/grants/claim","POST",Some(credential),json!({"grant":attended_envelope})).await.0,StatusCode::OK);
     let (_,unattended_envelope)=request(&app,"/api/v1/grants","POST",Some(admin),json!({"device_id":device_id,"proof_public_key":STANDARD.encode(proof.verifying_key().as_bytes()),"unattended":true})).await;
     let signed:SignedEnvelope=serde_json::from_value(unattended_envelope.clone()).unwrap();
     let unattended_grant:SessionGrant=serde_json::from_slice(&STANDARD.decode(&signed.payload).unwrap()).unwrap();
@@ -76,7 +81,7 @@ async fn enrollment_mfa_and_grants_fail_closed() {
     assert_eq!(request(&app,"/api/v1/device/consent","PUT",Some(credential),json!({"unattended":true,"revision":2})).await.0,StatusCode::CONFLICT,"Revocation wins same-revision races");
     assert_eq!(request(&app,"/api/v1/device/consent","PUT",Some(credential),json!({"unattended":true,"revision":3})).await.0,StatusCode::OK);
     assert_eq!(request(&app,&format!("/api/v1/grants/{}/renew",unattended_grant.grant_id),"POST",Some(credential),Value::Null).await.0,StatusCode::FORBIDDEN,"New consent cannot revive old unattended authorization");
-    assert_eq!(request(&app,&format!("/api/v1/grants/{}/renew",issued.grant_id),"POST",Some(credential),Value::Null).await.0,StatusCode::OK,"Unattended revocation must preserve attended authorization");
+    assert_eq!(request(&app,&format!("/api/v1/grants/{}/renew",attended_grant.grant_id),"POST",Some(credential),Value::Null).await.0,StatusCode::OK,"Unattended revocation must preserve attended authorization");
     assert_eq!(request(&app,"/api/v1/device/consent","PUT",Some(credential),json!({"unattended":false,"revision":2})).await.0,StatusCode::CONFLICT,"Old retry cannot undo newer explicit consent");
     assert_eq!(request(&app,"/api/v1/device/consent","PUT",Some(credential),json!({"unattended":false,"revision":4})).await.0,StatusCode::OK);
     assert_eq!(request(&app,"/api/v1/device/consent","PUT",Some(credential),json!({"unattended":false,"revision":4})).await.0,StatusCode::OK,"Revocation retries are idempotent");

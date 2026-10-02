@@ -253,3 +253,11 @@ authorization preservation, device re-approval denial and group move/back denial
 including administrator grants. Native session shutdown on lease expiry remains
 unverified. Current native CI was confirmed building the branded client, with
 no terminal result yet.
+
+Group capability reductions now close incompatible grants transactionally.
+Restoring capabilities does not revive withdrawn authorization. Grant creation
+checks device/user/group access, snapshots permissions and inserts its grant
+and audit event in one transaction, avoiding a stale permission insertion
+after reduction. The expanded API lifecycle test passes, including restored
+policy non-revival and separate attended-consent preservation. Concurrent fault
+injection and native session termination remain unverified.
