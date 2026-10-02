@@ -136,6 +136,17 @@ impl<T: InvokeUiSession> Remote<T> {
     }
 
     pub async fn io_loop(&mut self, key: &str, token: &str, round: u32) {
+        // Cover connection establishment as well as the authenticated session.
+        // Each loop owns its lock, so retries and multiple windows cannot let
+        // installation race a connection or retain a lock after disconnection.
+        #[cfg(feature = "swan_custom")]
+        let _managed_activity = match swan_agent::lock_session(&swan_agent::state_directory()) {
+            Ok(activity) => activity,
+            Err(_) => {
+                self.handler.msgbox("error", "Company update in progress", "Wait for company setup or update recovery to finish before connecting.", "");
+                return;
+            }
+        };
         #[cfg(target_os = "windows")]
         let _file_clip_context_holder = {
             // `is_port_forward()` will not reach here, but we still check it for clarity.

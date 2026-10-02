@@ -144,12 +144,9 @@ pub async fn renew(lease:&mut Lease)->ResultType<()> {
 }
 
 pub fn login(challenge:&str,target:&str,local_ticket:&str)->ResultType<Vec<u8>> {
-    // Hold the shared activity lock for the outgoing app process. Incoming leases
-    // hold their own locks. The updater acquires the exclusive side before install.
-    static ACTIVITY:std::sync::Mutex<Option<std::fs::File>>=std::sync::Mutex::new(None);
-    let mut activity=ACTIVITY.lock().unwrap();
-    if activity.is_none(){*activity=Some(swan_agent::lock_session(&swan_agent::state_directory())?);}
-    drop(activity);
+    // The outgoing connection loop retains its own shared lock through close.
+    // Recheck pending installation here as well before consuming a proof ticket.
+    let _activity=swan_agent::lock_session(&swan_agent::state_directory())?;
     let state=AgentState::load(&swan_agent::state_directory())?;
     if state.bootstrap.edition!=Edition::Technician {hbb_common::bail!("Technician edition required");}
     // The opaque handle identifies one window's pending request. It contains

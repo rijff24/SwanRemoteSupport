@@ -317,7 +317,7 @@ impl AgentState {
             let mut agent_release=release.clone();agent_release.sha256=release.agent_sha256.clone();
             verify_publisher(&replacement_agent,&agent_release)?;
             let activity=activity_file(directory)?;
-            fs2::FileExt::try_lock_exclusive(&activity).context("Update deferred while a session or technician app is active")?;
+            fs2::FileExt::try_lock_exclusive(&activity).context("Update deferred while a session or connection attempt is active")?;
             ensure!(!directory.join("pending-install.json").exists(),"Company setup started while the update was downloading");
             // Re-read consent and enrollment immediately before installation.
             let latest=AgentState::load(directory)?;
@@ -417,5 +417,21 @@ try {$stream.Lock(0,1);[Console]::WriteLine('locked');[Console]::ReadLine()|Out-
         assert!(fs2::FileExt::try_lock_exclusive(&update).is_err());drop(session);
         fs2::FileExt::try_lock_exclusive(&update).unwrap();assert!(lock_session(&folder).is_err());drop(update);
         assert!(lock_session(&folder).is_ok());std::fs::remove_dir_all(folder).unwrap();
+    }
+    #[test]
+    fn closing_one_connection_does_not_release_another_connections_update_lock() {
+        let folder=std::env::temp_dir().join(format!("swan-multiple-session-lock-{}",random_token()));
+        let first=lock_session(&folder).unwrap();
+        let second=lock_session(&folder).unwrap();
+        let update=activity_file(&folder).unwrap();
+        assert!(fs2::FileExt::try_lock_exclusive(&update).is_err());
+        drop(first);
+        assert!(fs2::FileExt::try_lock_exclusive(&update).is_err());
+        drop(second);
+        fs2::FileExt::try_lock_exclusive(&update).unwrap();
+        assert!(lock_session(&folder).is_err());
+        drop(update);
+        assert!(lock_session(&folder).is_ok());
+        std::fs::remove_dir_all(folder).unwrap();
     }
 }

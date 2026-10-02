@@ -298,3 +298,12 @@ policy applies. All 29 workspace tests and native Rust parsing pass. Flutter
 compilation and end-to-end authenticated discovery remain unverified. This is
 discovery only: automatic GUI shutdown, session-safe installation handoff and
 full interrupted-update recovery/rollback remain incomplete.
+
+Outgoing managed connection loops now own their activity locks from before
+transport establishment until loop exit. Closing one window does not permit an
+update while another connection remains active, and the last disconnected
+connection no longer keeps a process-wide lock forever. Proof generation also
+checks the installation guard before consuming its ticket. All 30 workspace
+tests pass, including simultaneous independent locks and Windows installer byte
+lock exclusion. Native Rust parsing passes. Native connection lifecycle and
+GUI shutdown/restart during signed installation still require end-to-end tests.
