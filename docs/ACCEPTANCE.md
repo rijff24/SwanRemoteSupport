@@ -187,3 +187,10 @@ uninstalled lab MSI read-only probe returns `/i`, and all 26 product workspace
 tests pass. Installed-product repair, interruption recovery and rollback still
 require clean-guest tests. Product state meanings follow
 [Microsoft's Installer API](https://learn.microsoft.com/en-us/windows/win32/msi/installer-productstate-property).
+
+The installer worker now isolates claim parsing, build, upload and completion
+errors from its polling loop. Transient job failures are logged without exiting
+the worker; existing server claim expiry retains recovery. Windows cargo check
+passes. Immediate upload retry, idempotent completion and a real signed worker
+job with network fault injection remain incomplete or unverified. Native runs
+36992580109 and 36992817681 were confirmed in progress and queued respectively.

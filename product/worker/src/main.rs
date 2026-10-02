@@ -18,6 +18,18 @@ async fn main()->Result<()> {
         let response=client.post(format!("{}/api/v1/worker/claim",server.trim_end_matches('/'))).bearer_auth(&token).send().await;
         match response {
             Ok(response) if response.status().is_success()=>{
+                if let Err(error)=process_claim(response,&client,&server,&token,&output,&release_key,&company_key).await {
+                    eprintln!("Worker job processing failed: {error:#}. Continuing polling; the server retains the job for recovery.");
+                }
+            }
+            Ok(response)=>eprintln!("Worker polling failed: {}",response.status()),
+            Err(_)=>eprintln!("Worker management endpoint unavailable; retrying"),
+        }
+        tokio::time::sleep(std::time::Duration::from_secs(15)).await;
+    }
+}
+
+async fn process_claim(response:reqwest::Response,client:&reqwest::Client,server:&str,token:&str,output:&Path,release_key:&str,company_key:&str)->Result<()> {
                 let value:Value=response.json().await?;
                 if !value.is_null(){
                     let id=value["id"].as_str().context("Missing build identity")?;
@@ -34,12 +46,7 @@ async fn main()->Result<()> {
                     };
                     client.put(format!("{}/api/v1/worker/builds/{id}",server.trim_end_matches('/'))).bearer_auth(&token).json(&result).send().await?.error_for_status()?;
                 }
-            }
-            Ok(response)=>eprintln!("Worker polling failed: {}",response.status()),
-            Err(_)=>eprintln!("Worker management endpoint unavailable; retrying"),
-        }
-        tokio::time::sleep(std::time::Duration::from_secs(15)).await;
-    }
+    Ok(())
 }
 
 async fn build(_client:&reqwest::Client,job:&Value,output:&Path,id:&str,release_key:&str,company_key:&str)->Result<(String,String)> {
