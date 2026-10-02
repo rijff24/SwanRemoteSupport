@@ -408,6 +408,7 @@ fn supports_rollback(previous:&Release,failed:&Release)->bool {
 
 #[cfg(windows)]
 fn rollback_release(state:&AgentState,directory:&Path,folder:&Path,receipt:&Receipt)->Result<()> {
+    ensure!(!directory.join("pending-uninstall").exists(),"Explicit uninstall cancels automatic rollback");
     ensure!(receipt.rollback_protocol==1 && receipt.phase=="rolling_back","Rollback was not durably prepared");
     ensure!(state.last_release_sequence==receipt.previous_sequence,"Cannot roll back a committed newer installation");
     let previous=receipt.previous_release.as_ref().context("Rollback requires a signed previous release")?;
@@ -504,12 +505,26 @@ fn prepare_rollback_snapshot(state:&AgentState,directory:&Path,update:&Release)-
 }
 
 #[cfg(windows)]
+fn recovery_task(directory:&Path,release:&Release,operation:&str)->Result<()> {
+    ensure!(matches!(operation,"register"|"remove"),"Unknown recovery task operation");
+    let folder=directory.join("updates").join(release.sequence.to_string());
+    let script=folder.join("Update-RecoveryTask.ps1");
+    std::fs::write(&script,include_str!("../../../deployment/windows/Update-RecoveryTask.ps1"))?;
+    let status=powershell_command()?.args(["-NoLogo","-NoProfile","-NonInteractive","-ExecutionPolicy","Bypass","-File"]).arg(script)
+        .arg("-Operation").arg(operation).arg("-Directory").arg(directory).arg("-Edition").arg(if release.edition==Edition::Customer {"customer"}else{"technician"})
+        .arg("-Sequence").arg(release.sequence.to_string()).status()?;
+    ensure!(status.success(),"Durable update recovery task operation failed");Ok(())
+}
+
+#[cfg(windows)]
 fn launch_update_helper(directory:&Path,release:&Release)->Result<()> {
+    ensure!(!directory.join("pending-uninstall").exists(),"Explicit uninstall cancels automatic update handoff");
     use std::os::windows::process::CommandExt;
     let folder=directory.join("updates").join(release.sequence.to_string());
     let helper=folder.join("swan-agent.exe");
     ensure!(digest(std::fs::read(&helper)?).eq_ignore_ascii_case(&release.agent_sha256),"Staged update helper hash mismatch");
     let mut agent_release=release.clone();agent_release.sha256=release.agent_sha256.clone();verify_publisher(&helper,&agent_release)?;
+    recovery_task(directory,release,"register")?;
     use std::io::Write;
     let attempt=folder.join(format!("last-attempt-{}.tmp",random_token()));
     let mut file=std::fs::OpenOptions::new().create_new(true).write(true).open(&attempt)?;
@@ -523,6 +538,32 @@ fn launch_update_helper(directory:&Path,release:&Release)->Result<()> {
 }
 
 impl AgentState {
+    #[cfg(windows)]
+    pub async fn recover_from_staged_task(directory:&Path)->Result<bool> {
+        let check_directory=directory.to_owned();
+        let pending=tokio::task::spawn_blocking(move ||->Result<Option<AgentState>> {
+            let state=AgentState::load_for_refresh(&check_directory)?;
+            let helper=std::env::current_exe()?;
+            let folder=helper.parent().context("Missing staged recovery folder")?;
+            let sequence=folder.file_name().context("Missing recovery sequence")?.to_string_lossy().parse::<u64>()?;
+            ensure!(sequence>0 && helper==check_directory.join("updates").join(sequence.to_string()).join("swan-agent.exe"),"Recovery task must run from its exact staged helper");
+            let receipt_path=check_directory.join("pending-update.json");
+            if !receipt_path.exists() || check_directory.join("pending-uninstall").exists(){
+                let installed:SignedEnvelope=serde_json::from_slice(&std::fs::read(check_directory.join("installed-release.json"))?)?;
+                let mut release:Release=installed.verify(&public_key(&state.bootstrap.release_public_key)?)?;
+                ensure!(release.edition==state.bootstrap.edition,"Installed release belongs to another edition");
+                release.sequence=sequence;recovery_task(&check_directory,&release,"remove")?;return Ok(None);
+            }
+            let receipt:Receipt=serde_json::from_slice(&std::fs::read(receipt_path)?)?;
+            let release=validate_pending_receipt(&state,&receipt)?;
+            ensure!(release.sequence==sequence,"Another update owns the pending receipt");
+            ensure!(digest(std::fs::read(&helper)?).eq_ignore_ascii_case(&release.agent_sha256),"Recovery task helper differs from signed receipt");
+            let mut agent_release=release;agent_release.sha256=agent_release.agent_sha256.clone();verify_publisher(&helper,&agent_release)?;
+            Ok(Some(state))
+        }).await.context("Staged recovery task verification failed")??;
+        let Some(state)=pending else{return Ok(false);};
+        state.resume_pending_update_online(directory,false).await
+    }
     pub async fn approved_update(&self,directory:&Path,technician_token:Option<&str>)->Result<Option<SignedEnvelope>> {
         let profile=self.company_profile()?;
         if !update_policy_open(self)?{return Ok(None);}
@@ -565,10 +606,15 @@ impl AgentState {
         save_installed_metadata(directory,envelope)?;
         latest.last_release_sequence=release.sequence;latest.save(directory)?;
         if setup_marker.exists(){std::fs::remove_file(setup_marker)?;}
+        let uninstall_marker=directory.join("pending-uninstall");
+        if uninstall_marker.exists(){std::fs::remove_file(uninstall_marker)?;}
+        let cancellation_rollback=directory.join("uninstall-cancellation-rollback.json");
+        if cancellation_rollback.exists(){std::fs::remove_file(cancellation_rollback)?;}
         *self=latest;Ok(())
     }
     #[cfg(windows)]
     pub fn recover_update(&mut self,directory:&Path)->Result<()> {
+        ensure!(!directory.join("pending-uninstall").exists(),"Explicit uninstall cancels automatic recovery");
         let activity=activity_file(directory)?;fs2::FileExt::try_lock_exclusive(&activity).context("Recovery requires all sessions to close")?;
         let receipt_path=directory.join("pending-update.json");
         let receipt:Receipt=serde_json::from_slice(&std::fs::read(&receipt_path)?)?;
@@ -593,6 +639,7 @@ impl AgentState {
         let activity=activity_file(directory)?;fs2::FileExt::try_lock_exclusive(&activity).context("Update recovery already running or sessions remain active")?;
         let receipt_path=directory.join("pending-update.json");
         if !receipt_path.exists(){return Ok(false);}
+        ensure!(!directory.join("pending-uninstall").exists(),"Explicit uninstall cancels automatic update recovery");
         ensure!(!directory.join("pending-install.json").exists(),"Company setup recovery must finish first");
         let latest=AgentState::load_for_refresh(directory)?;
         let receipt:Receipt=serde_json::from_slice(&std::fs::read(&receipt_path)?)?;
@@ -616,6 +663,7 @@ impl AgentState {
             fs2::FileExt::try_lock_exclusive(&activity).context("Update recovery already running or sessions remain active")?;
             let receipt_path=check_directory.join("pending-update.json");
             if !receipt_path.exists(){return Ok(None);}
+            ensure!(!check_directory.join("pending-uninstall").exists(),"Explicit uninstall cancels automatic update recovery");
             ensure!(!check_directory.join("pending-install.json").exists(),"Company setup recovery must finish first");
             let latest=AgentState::load_for_refresh(&check_directory)?;
             let receipt:Receipt=serde_json::from_slice(&std::fs::read(receipt_path)?)?;
@@ -654,6 +702,7 @@ impl AgentState {
         }
         let receipt_path=directory.join("pending-update.json");
         if !receipt_path.exists(){return Ok(false);}
+        ensure!(!directory.join("pending-uninstall").exists(),"Explicit uninstall cancels automatic update recovery");
         ensure!(!directory.join("pending-install.json").exists(),"Company setup recovery must finish first");
         let mut receipt:Receipt=serde_json::from_slice(&std::fs::read(&receipt_path)?)?;
         let mut latest=AgentState::load_for_refresh(directory)?;
@@ -721,6 +770,7 @@ impl AgentState {
     pub async fn update(&mut self,directory:&Path,technician_token:Option<&str>)->Result<bool> {
         #[cfg(not(windows))] {let _=(directory,technician_token);anyhow::bail!("Endpoint updates require Windows");}
         #[cfg(windows)] {
+            ensure!(!directory.join("pending-uninstall").exists(),"Explicit uninstall cancels automatic updates");
             ensure!(!directory.join("pending-install.json").exists(),"Company setup recovery is required before automatic updates");
             if directory.join("pending-update.json").exists(){
                 return self.resume_pending_update_online(directory,false).await;
@@ -755,6 +805,7 @@ impl AgentState {
             let activity=activity_file(&directory)?;
             fs2::FileExt::try_lock_exclusive(&activity).context("Update deferred while a session or connection attempt is active")?;
             ensure!(!directory.join("pending-install.json").exists(),"Company setup started while the update was downloading");
+            ensure!(!directory.join("pending-uninstall").exists(),"Explicit uninstall started while the update was downloading");
             ensure!(!receipt_path.exists(),"Another update already requires recovery");
             // Re-read consent and enrollment immediately before installation.
             let latest=AgentState::load(&directory)?;
@@ -1035,8 +1086,13 @@ try {$stream.Lock(0,1);[Console]::WriteLine('locked');[Console]::ReadLine()|Out-
         assert!(require_existing_application(&target).is_err());
         std::fs::write(&target,b"installed test fixture").unwrap();
         assert!(require_existing_application(&target).is_ok());
+        std::fs::write(folder.join("pending-uninstall"),b"explicit cancellation").unwrap();
+        assert!(lock_session(&folder).is_err());
+        std::fs::remove_file(folder.join("pending-uninstall")).unwrap();
+        assert!(lock_session(&folder).is_ok());
         std::fs::remove_file(&target).unwrap();
         assert!(require_existing_application(&target).is_err());
+        std::fs::remove_file(folder.join("activity.lock")).unwrap();
         std::fs::remove_dir(folder).unwrap();
     }
     #[test]

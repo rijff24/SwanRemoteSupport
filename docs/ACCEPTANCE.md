@@ -643,3 +643,26 @@ and customer MSI authoring tests pass. No installer or service operation ran on
 the host. Customer EXE rollback and autonomous reboot recovery between removal
 and restoration remain unfinished; native MSI/service/task restoration and all
 clean-machine acceptance remain unverified.
+
+Durable update task handoff now registers the verified staged helper outside
+MSI-owned installed files. Customer startup/SYSTEM and technician logon/limited
+user tasks retry every five minutes, derive state from their staged location,
+and revalidate signed pending metadata and helper identity. Own-task cleanup
+refuses mismatched task path, actions, arguments or principal. Explicit MSI
+uninstall cancels recovery and sessions before file removal; paired uninstall
+rollback preserves any earlier cancellation. Signed MSI recovery excludes
+those cancellation actions. This implements the reboot retry mechanism but
+does not demonstrate native reboot recovery.
+
+All 21 ordinary agent tests pass again, including cancellation session rejection;
+agent and worker Windows builds pass. Task ownership and isolated cancellation
+file tests pass, including malformed rollback rejection. Read-only task planning
+and Scheduled Task object creation confirm intended principals and five-minute
+repetition without registering any task. Both unsigned MSI recipes compile
+against historical 1.4.9 native inputs; read-only tables confirm cancellation
+rollback at 3498, cancellation at 3499 and file removal at 3500, excluded during
+upgrades and signed recovery. No product installer, service or native task
+mutation ran on this host. Signed task registration, startup/logon, reboot,
+explicit cancelled-update reinstall handling and customer EXE rollback still
+need implementation/verification as applicable; the full clean Windows matrix
+and current native build remain gates.

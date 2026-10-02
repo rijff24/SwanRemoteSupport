@@ -49,7 +49,7 @@ class CustomerMsiTests(unittest.TestCase):
             self.assertEqual(cleanup.attrib["Impersonate"], "no")
             scheduling = tree.find(".//w:InstallExecuteSequence/w:Custom[@Action='RemoveCompanyConfigurationTask']", ns)
             self.assertEqual(scheduling.attrib["Before"], "RemoveFiles")
-            self.assertEqual(scheduling.attrib["Condition"], 'REMOVE = "ALL" AND NOT UPGRADINGPRODUCTCODE')
+            self.assertEqual(scheduling.attrib["Condition"], 'REMOVE = "ALL" AND NOT UPGRADINGPRODUCTCODE AND NOT SWAN_RECOVERY')
             rollback = tree.find(".//w:CustomAction[@Id='RestoreCompanyConfigurationTask']", ns)
             self.assertEqual(rollback.attrib["Execute"], "rollback")
             rollback_scheduling = tree.find(".//w:InstallExecuteSequence/w:Custom[@Action='RestoreCompanyConfigurationTask']", ns)

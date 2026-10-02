@@ -71,6 +71,12 @@ registration planning and exits before invoking Windows Installer. It is a
 diagnostic, not evidence that native rollback succeeds. Production recovery
 uses the signed agent's prior hash/publisher checks and does not select this mode.
 
+A separate staged recovery task implements logon and periodic retry even when
+the installed agent has been removed during rollback. Explicit MSI uninstall
+cancels recovery before removing its files; the paired uninstall rollback
+restores the prior cancellation state. See [update recovery](UPDATE-RECOVERY.md).
+Task execution and reboot recovery remain native acceptance gates.
+
 ## Evidence and remaining work
 
 An actual unsigned MSI was built locally with WiX `5.0.2+aa65968c` from the

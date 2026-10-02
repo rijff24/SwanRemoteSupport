@@ -2,6 +2,12 @@
   <Package Name="Swan Remote Support Technician" Manufacturer="Swan Remote Support" Version="$(var.Version)" UpgradeCode="A4374699-436F-4917-9A4E-223F62A9E634" Scope="perUser" InstallerVersion="500" Language="1033">
     <MajorUpgrade DowngradeErrorMessage="A newer Swan Remote Support Technician version is already installed." Schedule="afterInstallInitialize" />
     <MediaTemplate EmbedCab="yes" />
+    <CustomAction Id="CancelUpdateRecovery" FileRef="AgentExe" ExeCommand="cancel-update-recovery" Execute="deferred" Impersonate="yes" Return="check" />
+    <CustomAction Id="RestoreUpdateRecovery" FileRef="AgentExe" ExeCommand="restore-update-recovery" Execute="rollback" Impersonate="yes" Return="check" />
+    <InstallExecuteSequence>
+      <Custom Action="RestoreUpdateRecovery" Before="CancelUpdateRecovery" Condition="REMOVE = &quot;ALL&quot; AND NOT UPGRADINGPRODUCTCODE AND NOT SWAN_RECOVERY" />
+      <Custom Action="CancelUpdateRecovery" Before="RemoveFiles" Condition="REMOVE = &quot;ALL&quot; AND NOT UPGRADINGPRODUCTCODE AND NOT SWAN_RECOVERY" />
+    </InstallExecuteSequence>
     <Property Id="ARPNOMODIFY" Value="1" />
     <Property Id="WINDOWSBUILD"><RegistrySearch Id="WindowsBuild" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion" Name="CurrentBuildNumber" Type="raw" Bitness="always64" /></Property>
     <Property Id="INSTALLATIONTYPE"><RegistrySearch Id="InstallationType" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion" Name="InstallationType" Type="raw" Bitness="always64" /></Property>

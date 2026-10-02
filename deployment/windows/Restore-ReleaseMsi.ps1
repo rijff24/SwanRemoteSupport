@@ -66,7 +66,8 @@ if ($Edition -eq 'customer') { Assert-CustomerService $false }
 if ($NextProductCode -ine $PreviousProductCode -and $installer.ProductState($NextProductCode) -eq 5) {
     # Recheck the exact cached database immediately before narrowly removing it.
     Assert-Identity (Read-Identity ($installer.ProductInfo($NextProductCode,'LocalPackage'))) $NextProductCode $NextVersion
-    & $msiexec /x $NextProductCode /qn /norestart
+    # Suppress user-uninstall cancellation only for this signed recovery path.
+    & $msiexec /x $NextProductCode /qn /norestart SWAN_RECOVERY=1
     if ($LASTEXITCODE -ne 0) { throw "Removal requires recovery or restart (exit $LASTEXITCODE)." }
 }
 $state = $installer.ProductState($PreviousProductCode)

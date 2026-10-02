@@ -94,9 +94,9 @@ def author(source, agent, version):
             ExeCommand="restore-configuration-task", Execute="rollback", Impersonate="no", Return="check")
     sequence = element(package, "InstallExecuteSequence")
     element(sequence, "Custom", Action="RestoreCompanyConfigurationTask", Before="RemoveCompanyConfigurationTask",
-            Condition='REMOVE = "ALL" AND NOT UPGRADINGPRODUCTCODE')
+            Condition='REMOVE = "ALL" AND NOT UPGRADINGPRODUCTCODE AND NOT SWAN_RECOVERY')
     element(sequence, "Custom", Action="RemoveCompanyConfigurationTask", Before="RemoveFiles",
-            Condition='REMOVE = "ALL" AND NOT UPGRADINGPRODUCTCODE')
+            Condition='REMOVE = "ALL" AND NOT UPGRADINGPRODUCTCODE AND NOT SWAN_RECOVERY')
     return ET.ElementTree(root), files
 
 

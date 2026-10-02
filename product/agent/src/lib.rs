@@ -238,6 +238,7 @@ pub fn activity_file(directory:&Path)->Result<std::fs::File> {
 }
 pub fn lock_session(directory:&Path)->Result<std::fs::File> {
     let file=activity_file(directory)?;fs2::FileExt::try_lock_shared(&file).context("An update or installation is in progress")?;
+    ensure!(!directory.join("pending-uninstall").exists(),"Customer uninstall prevents new support sessions");
     ensure!(!directory.join("pending-install.json").exists(),"Company installation requires recovery before support sessions can start");
     ensure!(!directory.join("pending-update.json").exists(),"Software update requires recovery before support sessions can start");Ok(file)
 }

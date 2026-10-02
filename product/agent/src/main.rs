@@ -9,15 +9,44 @@ use swan_protocol::*;
 #[tokio::main]
 async fn main()->Result<()> {
     let args:Vec<String>=std::env::args().collect();
-    let directory=state_directory();
     let command=args.get(1).map(String::as_str).unwrap_or("help");
+    let directory=state_directory();
+    #[cfg(windows)]
+    let directory=if command=="recover-update-task" {
+        let executable=std::env::current_exe()?;
+        let updates=executable.parent().and_then(|folder|folder.parent()).context("Missing staged updates directory")?;
+        ensure!(updates.file_name().is_some_and(|name|name.to_string_lossy().eq_ignore_ascii_case("updates")),"Recovery task is outside staged updates");
+        updates.parent().context("Missing company recovery directory")?.to_owned()
+    }else{directory};
     match command {
         "rollback-protocol"=>println!("1"),
+        #[cfg(windows)]
+        "cancel-update-recovery"|"restore-update-recovery"=>{
+            let executable=std::env::current_exe()?;
+            ensure!(executable.file_name().is_some_and(|name|name.to_string_lossy().eq_ignore_ascii_case("swan-agent.exe")),"Uninstall cancellation requires the installed agent");
+            let installed_directory=executable.parent().context("Missing installed agent directory")?;
+            let script=installed_directory.join("Update-UninstallCancellation.ps1");
+            std::fs::write(&script,include_str!("../../../deployment/windows/Update-UninstallCancellation.ps1"))?;
+            let status=swan_agent::update::powershell_command()?.args(["-NoLogo","-NoProfile","-NonInteractive","-ExecutionPolicy","Bypass","-File"]).arg(script).arg("-Directory").arg(installed_directory)
+                .arg("-Operation").arg(if command=="cancel-update-recovery" {"cancel"}else{"restore"}).status()?;
+            ensure!(status.success(),"Uninstall update cancellation failed");
+        }
+        #[cfg(windows)]
+        "recover-update-task"=>{
+            println!("Recovery task handed off: {}",AgentState::recover_from_staged_task(&directory).await?);
+        }
         #[cfg(windows)]
         "remove-configuration-task"|"restore-configuration-task"=>{
             let executable=std::env::current_exe()?;
             let installed_directory=executable.parent().context("Missing installed agent directory")?;
             ensure!(executable.file_name().is_some_and(|name|name.to_string_lossy().eq_ignore_ascii_case("swan-agent.exe")),"Uninstall cleanup requires the installed configuration agent");
+            let cancellation_script=installed_directory.join("Update-UninstallCancellation.ps1");
+            std::fs::write(&cancellation_script,include_str!("../../../deployment/windows/Update-UninstallCancellation.ps1"))?;
+            let cancellation=|operation:&str|->Result<()> {
+                let status=swan_agent::update::powershell_command()?.args(["-NoLogo","-NoProfile","-NonInteractive","-ExecutionPolicy","Bypass","-File"]).arg(&cancellation_script).arg("-Directory").arg(installed_directory).arg("-Operation").arg(operation).status()?;
+                ensure!(status.success(),"Uninstall recovery cancellation failed");Ok(())
+            };
+            if command=="remove-configuration-task" {cancellation("cancel")?;}
             // MSI invokes the installed binary under SYSTEM before removing it.
             // The script checks the exact task executable, arguments and owner.
             let (name,contents)=if command=="remove-configuration-task" {
@@ -28,6 +57,7 @@ async fn main()->Result<()> {
             let status=swan_agent::update::powershell_command()?.args(["-NoLogo","-NoProfile","-NonInteractive","-ExecutionPolicy","Bypass","-File"]).arg(&script).arg("-Directory").arg(installed_directory).status()?;
             std::fs::remove_file(&script)?;
             ensure!(status.success(),"Company configuration task cleanup failed");
+            if command=="restore-configuration-task" {cancellation("restore")?;}
         }
         "setup"=>{
             let file=args.get(2).context("Usage: swan-agent setup bootstrap.json --accept-company")?;

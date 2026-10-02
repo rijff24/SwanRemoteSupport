@@ -80,9 +80,10 @@ service's exact executable path and LocalSystem account before removal. The
 restored service must run automatically. The verified previous agent restores
 only its owned SYSTEM configuration task, deferring startup until recovery
 finishes. Enrollment and consent files remain current. Unexpected registration,
-service or task ownership leaves recovery pending. Customer EXE/service rollback
-and autonomous recovery after reboot between MSI removal and reinstall remain
-unfinished. This path has component and read-only planning evidence only; native
+service or task ownership leaves recovery pending. A separate staged recovery
+task now implements startup and periodic retry across removal of the installed
+agent; see [update recovery](UPDATE-RECOVERY.md). Customer EXE/service rollback
+remains unfinished. This path has component and read-only planning evidence only; native
 signed installation, removal, restore and restart remain acceptance gates.
 
 References: [WiX service installation](https://docs.firegiant.com/wix/schema/wxs/serviceinstall/)
