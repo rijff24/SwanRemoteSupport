@@ -19,10 +19,57 @@ import urllib.error
 import urllib.request
 import uuid
 
-from test_container_startup import authenticator, docker
+from test_container_startup import authenticator, docker, secret_command
 
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
+
+
+def complete_backup(image, prefix, volumes, lab):
+    """Export stopped components and authenticate a restore into a fresh volume.
+
+    Private keys stay inside Docker volumes; the passphrase travels over stdin.
+    This checks archive recovery, not replacement-service startup.
+    """
+    management, transport, tls, _ = volumes
+    restored = prefix + "-archive-restore"
+    docker("volume", "create", restored)
+    password = secrets.token_hex(32)
+    common = ["run", "--rm", "-i", "--user", "0", "--read-only", "--network", "none",
+              "--tmpfs", "/tmp", "--security-opt", "no-new-privileges:true"]
+    read_password = "IFS= read -r SWAN_BACKUP_PASSPHRASE; export SWAN_BACKUP_PASSPHRASE; "
+    try:
+        secret_command(common + ["--mount", "type=volume,src=" + management + ",dst=/var/lib/swan",
+            "--mount", "type=volume,src=" + transport + ",dst=/transport,readonly",
+            "--mount", "type=volume,src=" + tls + ",dst=/tls,readonly",
+            "--mount", "type=bind,src=" + str(lab / "local-test.env") + ",dst=/local-test.env,readonly",
+            "--entrypoint", "sh", image, "-ec", read_password +
+            "exec swan-management backup /var/lib/swan/complete.swanbackup --transport-directory /transport --tls-directory /tls --deployment-env /local-test.env"], password)
+        restore = common + ["--mount", "type=volume,src=" + management + ",dst=/input,readonly",
+            "--mount", "type=volume,src=" + restored + ",dst=/var/lib/swan",
+            "--env", "SWAN_DATA_DIR=/var/lib/swan/restored", "--entrypoint", "sh", image, "-ec",
+            read_password + "exec swan-management restore /input/complete.swanbackup"]
+        secret_command(restore, secrets.token_hex(32), expected_success=False)
+        docker(*common[:2], "--user", "0", "--network", "none", "--read-only",
+               "--mount", "type=volume,src=" + restored + ",dst=/restored,readonly",
+               "--entrypoint", "sh", image, "-ec", "test ! -e /restored/restored")
+        secret_command(restore, password)
+        # Compare actual private artifacts without returning their contents.
+        docker("run", "--rm", "--user", "0", "--read-only", "--network", "none",
+            "--mount", "type=volume,src=" + restored + ",dst=/restore,readonly",
+            "--mount", "type=volume,src=" + transport + ",dst=/transport,readonly",
+            "--mount", "type=volume,src=" + tls + ",dst=/tls,readonly",
+            "--mount", "type=bind,src=" + str(lab / "local-test.env") + ",dst=/local-test.env,readonly",
+            "--entrypoint", "sh", image, "-ec",
+            "test -s /restore/restored/management.sqlite3 || { echo missing-database >&2; exit 1; }; "
+            "cmp -s /transport/id_ed25519 /restore/restored/transport-id_ed25519 || { echo private-key-mismatch >&2; exit 1; }; "
+            "cmp -s /transport/id_ed25519.pub /restore/restored/transport-id_ed25519.pub || { echo public-key-mismatch >&2; exit 1; }; "
+            "cmp -s /local-test.env /restore/restored/deployment.env || { echo environment-mismatch >&2; exit 1; }; "
+            "find /tls -type f -exec sh -ec 'for file do relative=${file#/tls/}; cmp -s \"$file\" \"/restore/restored/tls-storage/$relative\" || exit 1; done' sh {} +; test $(find /tls -type f | wc -l) = $(find /restore/restored/tls-storage -type f | wc -l); "
+            "test $(stat -c %a /restore/restored) = 700 || { echo directory-mode >&2; exit 1; }; "
+            "test $(stat -c %a /restore/restored/transport-id_ed25519) = 600 || { echo key-mode >&2; exit 1; }")
+    finally:
+        docker("volume", "rm", restored)
 
 
 def pinned_images():
@@ -260,6 +307,7 @@ def main():
             endpoint.request("/api/v1/devices", token=administrator, expected=401)
             for role in ["https", "management", "hbbs", "hbbr"]:
                 docker("stop", "--time", "10", names[role])
+            complete_backup(image, prefix, volumes, lab)
             for role in ["management", "hbbs", "hbbr", "https"]:
                 docker("start", names[role])
             endpoint = Endpoint(names["https"], context)
