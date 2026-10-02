@@ -118,6 +118,20 @@ fn save_installed_metadata(directory:&Path,envelope:&SignedEnvelope)->Result<()>
     crate::replace_state(&temporary,&directory.join("installed-release.json"))
 }
 
+#[cfg(windows)]
+fn launch_update_helper(directory:&Path,release:&Release)->Result<()> {
+    use std::os::windows::process::CommandExt;
+    let folder=directory.join("updates").join(release.sequence.to_string());
+    let helper=folder.join("swan-agent.exe");
+    ensure!(digest(std::fs::read(&helper)?).eq_ignore_ascii_case(&release.agent_sha256),"Staged update helper hash mismatch");
+    let mut agent_release=release.clone();agent_release.sha256=release.agent_sha256.clone();verify_publisher(&helper,&agent_release)?;
+    let log=std::fs::OpenOptions::new().create(true).append(true).open(folder.join("apply-update.log"))?;
+    std::process::Command::new(helper).arg("apply-update").env("SWAN_STATE_DIR",directory).env_remove("SWAN_TECHNICIAN_TOKEN")
+        .creation_flags(0x08000000).stdin(std::process::Stdio::null())
+        .stdout(std::process::Stdio::from(log.try_clone()?)).stderr(std::process::Stdio::from(log)).spawn()?;
+    Ok(())
+}
+
 impl AgentState {
     #[cfg(windows)]
     pub fn record_installation(&mut self,directory:&Path,envelope:&SignedEnvelope,repair:bool)->Result<()> {
@@ -154,10 +168,90 @@ impl AgentState {
         self.last_release_sequence=release.sequence;self.save(directory)?;
         std::fs::remove_file(receipt_path)?;Ok(())
     }
+    #[cfg(windows)]
+    pub fn resume_pending_update(&self,directory:&Path)->Result<bool> {
+        let activity=activity_file(directory)?;fs2::FileExt::try_lock_exclusive(&activity).context("Update recovery already running or sessions remain active")?;
+        let receipt_path=directory.join("pending-update.json");
+        if !receipt_path.exists(){return Ok(false);}
+        ensure!(!directory.join("pending-install.json").exists(),"Company setup recovery must finish first");
+        let latest=AgentState::load_for_refresh(directory)?;
+        let receipt:Receipt=serde_json::from_slice(&std::fs::read(&receipt_path)?)?;
+        let release:Release=receipt.release.verify(&public_key(&latest.bootstrap.release_public_key)?)?;
+        ensure!(receipt.phase=="installing","Unknown update recovery phase");
+        release.validate(&latest.bootstrap.edition,receipt.previous_sequence,now().min(release.expires_at.saturating_sub(1)))?;
+        ensure!(latest.last_release_sequence==receipt.previous_sequence || latest.last_release_sequence==release.sequence,"Recovery sequence conflict");
+        verify_compatibility(directory,&release)?;
+        launch_update_helper(directory,&release)?;Ok(true)
+    }
+    #[cfg(windows)]
+    pub fn apply_pending_update(&mut self,directory:&Path)->Result<bool> {
+        // This method performs blocking Windows installation and is called from
+        // spawn_blocking. A bounded wait lets the preparing process release its lock.
+        let activity=activity_file(directory)?;
+        let deadline=std::time::Instant::now()+std::time::Duration::from_secs(30);
+        loop {
+            match fs2::FileExt::try_lock_exclusive(&activity) {
+                Ok(())=>break,
+                Err(error)=>{ensure!(std::time::Instant::now()<deadline,"Update handoff could not acquire session exclusion: {error}");std::thread::sleep(std::time::Duration::from_millis(100));}
+            }
+        }
+        let receipt_path=directory.join("pending-update.json");
+        if !receipt_path.exists(){return Ok(false);}
+        ensure!(!directory.join("pending-install.json").exists(),"Company setup recovery must finish first");
+        let receipt:Receipt=serde_json::from_slice(&std::fs::read(&receipt_path)?)?;
+        let mut latest=AgentState::load_for_refresh(directory)?;
+        let release:Release=receipt.release.verify(&public_key(&latest.bootstrap.release_public_key)?)?;
+        ensure!(receipt.phase=="installing","Unknown update recovery phase");
+        release.validate(&latest.bootstrap.edition,receipt.previous_sequence,now().min(release.expires_at.saturating_sub(1)))?;
+        ensure!(latest.last_release_sequence==receipt.previous_sequence || latest.last_release_sequence==release.sequence,"Recovery sequence conflict");
+        verify_compatibility(directory,&release)?;
+        let helper=std::env::current_exe()?;
+        let mut agent_release=release.clone();agent_release.sha256=release.agent_sha256.clone();
+        ensure!(digest(std::fs::read(&helper)?).eq_ignore_ascii_case(&release.agent_sha256),"Update helper differs from signed release");
+        verify_publisher(&helper,&agent_release)?;
+        let folder=directory.join("updates").join(release.sequence.to_string());
+        let package=folder.join(format!("SwanRemoteSupport-install.{}",release.format));
+        ensure!(digest(std::fs::read(&package)?).eq_ignore_ascii_case(&release.sha256),"Staged installer hash mismatch");
+        verify_publisher(&package,&release)?;
+        if verify_installed(directory,&release).is_err() {
+            if latest.bootstrap.edition==Edition::Technician {
+                ensure!(release.format=="exe" && release.sha256.eq_ignore_ascii_case(&release.installed_sha256),"Technician updates require a portable EXE");
+                let target=installed_target(directory,&latest.bootstrap.edition)?;
+                require_existing_application(&target)?;
+                let previous=folder.join("previous-technician.exe");
+                if !previous.exists(){std::fs::copy(&target,&previous)?;}
+                std::fs::copy(&package,&target)?;
+            }else{
+                require_existing_application(&installed_target(directory,&latest.bootstrap.edition)?)?;
+                let mut command=if release.format=="msi" {let mut c=std::process::Command::new("msiexec.exe");c.arg("/i").arg(&package).args(["/qn","/norestart"]);c}else{let mut c=std::process::Command::new(&package);c.args(["--silent-install","printer=0"]);c};
+                let status=command.status()?;
+                ensure!(matches!(status.code(),Some(0|3010)),"Installation failed; retain signed recovery receipt");
+            }
+            let installed_agent=directory.join("swan-agent.exe");
+            let agent_already_current=installed_agent.is_file() && digest(std::fs::read(&installed_agent)?).eq_ignore_ascii_case(&release.agent_sha256);
+            if !agent_already_current {
+                let previous=folder.join("previous-agent.exe");
+                if installed_agent.exists() && !previous.exists(){std::fs::copy(&installed_agent,&previous)?;}
+                let deadline=std::time::Instant::now()+std::time::Duration::from_secs(30);
+                loop {
+                    match std::fs::copy(&helper,&installed_agent) {
+                        Ok(_)=>break,
+                        Err(error) if matches!(error.raw_os_error(),Some(5|32|33)) && std::time::Instant::now()<deadline=>std::thread::sleep(std::time::Duration::from_millis(100)),
+                        Err(error)=>return Err(error).context("Agent replacement failed; retain update receipt"),
+                    }
+                }
+            }
+        }
+        verify_installed(directory,&release)?;
+        save_installed_metadata(directory,&receipt.release)?;
+        latest.last_release_sequence=release.sequence;latest.save(directory)?;
+        std::fs::remove_file(receipt_path)?;*self=latest;Ok(true)
+    }
     pub async fn update(&mut self,directory:&Path,technician_token:Option<&str>)->Result<bool> {
         #[cfg(not(windows))] {let _=(directory,technician_token);anyhow::bail!("Endpoint updates require Windows");}
         #[cfg(windows)] {
             ensure!(!directory.join("pending-install.json").exists(),"Company setup recovery is required before automatic updates");
+            if directory.join("pending-update.json").exists(){return self.resume_pending_update(directory);}
             require_existing_application(&installed_target(directory,&self.bootstrap.edition)?)?;
             let profile=self.company_profile()?;
             if profile.updates_paused || !maintenance_open(profile.maintenance_start_utc,profile.maintenance_end_utc,now()){return Ok(false);}
@@ -176,11 +270,15 @@ impl AgentState {
             let package=folder.join(format!("SwanRemoteSupport-install.{}",release.format));
             download(&release.artifact_url,&release.sha256,&package).await?;
             verify_publisher(&package,&release)?;
+            let replacement_agent=folder.join("swan-agent.exe");
+            download(&release.agent_url,&release.agent_sha256,&replacement_agent).await?;
+            let mut agent_release=release.clone();agent_release.sha256=release.agent_sha256.clone();
+            verify_publisher(&replacement_agent,&agent_release)?;
             let activity=activity_file(directory)?;
             fs2::FileExt::try_lock_exclusive(&activity).context("Update deferred while a session or technician app is active")?;
             ensure!(!directory.join("pending-install.json").exists(),"Company setup started while the update was downloading");
             // Re-read consent and enrollment immediately before installation.
-            let mut latest=AgentState::load(directory)?;
+            let latest=AgentState::load(directory)?;
             // Removal during download must not be turned into a fresh install.
             require_existing_application(&installed_target(directory,&latest.bootstrap.edition)?)?;
             validate_release(&latest,&envelope)?;
@@ -188,23 +286,10 @@ impl AgentState {
             let mut options=std::fs::OpenOptions::new();options.create_new(true).write(true);
             use std::io::Write;
             let mut file=options.open(&receipt_path)?;file.write_all(&serde_json::to_vec(&receipt)?)?;file.sync_all()?;drop(file);
-            if latest.bootstrap.edition==Edition::Technician {
-                ensure!(release.format=="exe","Technician portable updates require EXE artifacts");
-                let target=directory.join("SwanRemoteSupport-Technician.exe");
-                if target.exists(){std::fs::copy(&target,directory.join("SwanRemoteSupport-Technician.previous.exe"))?;}
-                std::fs::copy(&package,&target)?;
-            }else{
-                let package_for_install=package.clone();let format=release.format.clone();
-                let status=tokio::task::spawn_blocking(move || ->Result<std::process::ExitStatus>{
-                    let mut command=if format=="msi" {let mut c=std::process::Command::new("msiexec.exe");c.arg("/i").arg(&package_for_install).args(["/qn","/norestart"]);c}else{let mut c=std::process::Command::new(package_for_install);c.args(["--silent-install","printer=0"]);c};
-                    Ok(command.status()?)
-                }).await??;
-                ensure!(matches!(status.code(),Some(0|3010)),"Installation failed; retain signed recovery receipt");
-            }
-            verify_installed(directory,&release)?;
-            save_installed_metadata(directory,&receipt.release)?;
-            latest.last_release_sequence=release.sequence;latest.save(directory)?;
-            std::fs::remove_file(receipt_path)?;*self=latest;Ok(true)
+            // The signed replacement runs from staging. This caller must exit so
+            // Windows releases the old executable before it is overwritten.
+            launch_update_helper(directory,&release)?;
+            *self=latest;Ok(true)
         }
     }
 }

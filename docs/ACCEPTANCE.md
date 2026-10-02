@@ -127,3 +127,9 @@ exclusive process lock has closed; all 24 workspace tests pass. Installed-agent
 hash/publisher and Windows compatibility are included in recovery validation.
 Full signed agent replacement, retry/rollback and VM recovery remain unverified
 or incomplete.
+
+Staged signed-agent handoff and agent replacement are now implemented in source,
+including receipt-based retry and validation of the customer SYSTEM task before
+restart. Windows Rust compilation and existing 24 product tests pass; signed
+self-replacement, interrupted installer retry, scheduled-task restart and
+technician handoff require actual VM tests. Rollback remains incomplete.

@@ -43,12 +43,32 @@ async fn main()->Result<()> {
             if current.bootstrap.edition==Edition::Customer && current.device_id.is_some() && !current.unattended_consent {
                 if let Err(error)=current.consent(false).await {eprintln!("Consent revocation synchronization deferred: {error}");}
             }
-            if state.bootstrap.edition==Edition::Customer {if let Err(error)=state.update(&directory,None).await {eprintln!("Update deferred: {error}");}}
+            if state.bootstrap.edition==Edition::Customer {match state.update(&directory,None).await {Ok(true)=>return Ok(()),Ok(false)=>{},Err(error)=>eprintln!("Update deferred: {error}")}}
         },Err(error)=>eprintln!("Configuration unavailable: {error}")};tokio::time::sleep(std::time::Duration::from_secs(300)).await;}}
         "update"=>{
             let mut state=AgentState::load_for_refresh(&directory)?;state.sync().await?;state.save(&directory)?;
             let token=std::env::var("SWAN_TECHNICIAN_TOKEN").ok();
-            println!("Update installed: {}",state.update(&directory,token.as_deref()).await?);
+            println!("Update handed off: {}",state.update(&directory,token.as_deref()).await?);
+        }
+        #[cfg(windows)]
+        "resume-update"=>{
+            let state=AgentState::load_for_refresh(&directory)?;
+            println!("Update recovery handed off: {}",state.resume_pending_update(&directory)?);
+        }
+        #[cfg(windows)]
+        "apply-update"=>{
+            let update_directory=directory.clone();
+            let completed=tokio::task::spawn_blocking(move ||->anyhow::Result<bool>{
+                let mut state=AgentState::load_for_refresh(&update_directory)?;
+                state.apply_pending_update(&update_directory)
+            }).await??;
+            println!("Installed release verified: {completed}");
+            if completed && AgentState::load_for_refresh(&directory)?.bootstrap.edition==Edition::Customer {
+                let script=directory.join("Restart-Configuration.ps1");
+                std::fs::write(&script,include_str!("../../../deployment/windows/Restart-Configuration.ps1"))?;
+                let status=std::process::Command::new("powershell.exe").args(["-NoLogo","-NoProfile","-NonInteractive","-ExecutionPolicy","Bypass","-File"]).arg(script).arg("-Directory").arg(&directory).status()?;
+                ensure!(status.success(),"Update installed but configuration task restart failed");
+            }
         }
         #[cfg(windows)]
         "record-installation"=>{

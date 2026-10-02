@@ -44,7 +44,25 @@ acceptance requirements.
 Interrupted-update receipts also block new managed sessions after the updater
 process exits or releases its activity lock. Recovery rechecks Windows support
 and the installed agent hash and publisher as well as the endpoint payload.
-An old or missing agent cannot be accepted as a completed release. Automatic
-agent replacement and full interrupted-install retry/rollback remain incomplete;
-a changed-agent release stays pending until its full installed identity is
-restored and verified.
+An old or missing agent cannot be accepted as a completed release. Agent replacement is implemented through a staged signed helper; its real
+Windows installation and full rollback behavior remain unverified. A release
+stays pending until its full installed identity is restored and verified.
+
+Automatic updates now stage both the installer and agent and verify their
+signed hashes and pinned publishers before writing the pending receipt. The
+watcher hands off to the staged agent and exits. The helper acquires exclusive
+session exclusion, revalidates the receipt and staged artifacts, installs the
+endpoint, replaces the old agent, and verifies the complete installed identity
+before advancing the sequence or removing the receipt. Customer completion
+restarts only the existing SYSTEM task whose action matches the canonical agent
+and `watch` arguments. No credentials are passed to the helper.
+
+A watcher can resume a pending update after restart; administrators can invoke
+`swan-agent resume-update` to hand off explicitly. `recover-update` continues to
+verify an already completed installation without rerunning its installer.
+Recovery may finish the previously selected signed release after metadata expiry;
+it cannot authorize a new release or relax the stored sequence. The helper log
+and previous agent/portable executable are retained in the protected update
+staging directory. Automatic rollback, damaged-stage re-download and graphical
+technician update coordination remain incomplete. Signed clean-machine tests
+are required before claiming interruption or self-update acceptance.
