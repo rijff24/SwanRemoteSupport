@@ -211,3 +211,9 @@ bytes and state; all 28 product workspace tests pass. The worker uses bounded
 transient retries with a cloned buffered request body. This is storage-level
 evidence, not a signed end-to-end worker fault test. QEMU reports running but
 a fresh Server 2025 screenshot still shows boot; clean installation is unproven.
+
+The administrator branding/policy form now exposes stable/test channel and UTC
+maintenance start/end controls, saving through the existing authenticated signed
+profile API. Equal-hour and overnight descriptions match protocol semantics.
+JavaScript syntax and diff checks pass. Rendered form interaction and installed
+client rollout behavior remain unverified.
