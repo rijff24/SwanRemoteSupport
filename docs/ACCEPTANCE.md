@@ -1000,3 +1000,42 @@ completed successfully for source
 `6840d910c252d8fb7d5c34ca7dffbc2a2ddffb4b`, including the later company
 management and transport-supervision source. Its unsigned artifacts still
 require their own integrity, installation, company setup and session checks.
+
+That newer artifact was subsequently downloaded and checked against GitHub's
+published SHA-256
+`4099acc0e992e8369738515c74a34d26625e51fc567ba5e3955f82b76d28a813`.
+Safe ZIP extraction checked all 18 entry paths, sizes, CRCs and included payload
+checksums. Its unsigned management, agent and worker binaries remain separate
+from the earlier MSI lifecycle results.
+
+Actual optional company signing now passes on the private Server 2016 VM using
+Microsoft Windows SDK SignTool from the Microsoft-owned NuGet package
+`Microsoft.Windows.SDK.BuildTools 10.0.26100.1`. The package matched its published
+SHA-512; the x64 tool SHA-256 is
+`38da9179b56d88adc0694ebf7393b9c44727c344e2df8dfa32399a4c9694715c`.
+Its Microsoft Authenticode signature was verified on the host and guest before
+execution. A non-exportable software-provider lab key and a certificate trusted
+only in the disposable guest signed a new copy of the source `6840d91` agent.
+The original agent SHA-256
+`d36cc9e4fea3b3331d64013a9c8a25f17e80f1456c84be16aef074b4d2bdd526`
+stayed unchanged; the signed copy is
+`956ecc4462841cfb94372429be6d33dfe1b82a25069213693b601aca4f9722cf`.
+
+The first SDK attempt rejected the HTTPS timestamp URL. The integration now
+accepts the operator's explicit HTTP or HTTPS RFC3161 URL, without automatic
+fallback, and rejects credentials, queries and fragments. DigiCert's documented
+HTTP endpoint returned a timestamp that SDK verification accepted. Server 2016
+PowerShell nevertheless returned a null `TimeStamperCertificate`; the integration
+now relies on SDK `/pa /all /tw` verification rather than that unreliable field.
+An otherwise trusted signature with no timestamp produced warning exit `2` and
+was rejected by the same verification gate. The valid signed agent passes the
+pinned publisher/certificate verifier under both administrator and standard
+accounts. Wrong publisher, wrong certificate and a one-byte tamper are rejected;
+the tampered fixture reports `HashMismatch`. Unsafe timestamp URLs created no
+artifact or signing receipt. The tested signing-script SHA-256 is
+`2c1baf6d00fe7e876f553341d221389b97dbd10fe6a4eeed6c5b3801aa2d1f4c`.
+
+No lab signing key was exported, no host trust store changed, and no production
+signing approval was obtained. This validates one EXE signing integration, not
+signed MSI publication, worker consumption, complete company installation,
+automatic updates or native sessions. Raw logs and test artifacts stay private.
