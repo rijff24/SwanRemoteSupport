@@ -68,3 +68,23 @@ release approvals. Reconcile any revocations made after the backup. Installed
 clients reject profiles older than their cached revision, so recover a profile
 revision newer than those clients have accepted before attempting normal sync.
 These restore rehearsals and migration rollback checks remain release gates.
+
+## Isolated restore rehearsal
+
+`node deployment/windows/test-server-restore.js ORIGINAL_PRIVATE_ENV
+RESTORED_PRIVATE_ENV` checks two separately running local HTTPS test servers.
+Use only the isolated fixture created by `test-company-lifecycle.js`; its private
+administrator credentials and customer state must remain in protected test
+directories. Never point this harness at a company production deployment.
+
+The actual management CLI at `20f88e3` exported and restored that fixture with
+its private deployment environment and TLS identity. Hash comparisons preserved
+the profile-signing material, setup token, environment and TLS identity. The
+restored SQLite database passed `PRAGMA quick_check`. The restored server passed
+real HTTPS verification of signed configuration, administrator MFA, accounts,
+device state, group capabilities, and denial of a revoked device and its session
+grant. Private results are recorded in the restored test directory.
+
+This does not demonstrate live hbbs/hbbr recovery, certificate renewal, recovery
+of changes after the backup, profile revision reconciliation or migration
+rollback. Those remain acceptance requirements.

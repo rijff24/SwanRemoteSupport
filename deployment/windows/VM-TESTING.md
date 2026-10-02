@@ -58,6 +58,7 @@ Official media starting points:
 
 - <https://www.microsoft.com/en-us/evalcenter/evaluate-windows-11-enterprise>
 - <https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2025>
+- <https://www.microsoft.com/en-us/evalcenter/download-windows-server-2016>
 - <https://www.qemu.org/download/>
 
 Evaluation expiration or missing supported media must be reported as an
