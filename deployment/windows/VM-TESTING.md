@@ -64,6 +64,35 @@ Official media starting points:
 Evaluation expiration or missing supported media must be reported as an
 unverified matrix row, never as a passing compatibility test.
 
+## Bare MSI lifecycle checks
+
+`Test-DisposableMsi.ps1` runs one actual MSI phase (`install`, `repair`, or
+`uninstall`) inside an independently provisioned disposable guest. It requires
+an exact `ExpectedComputerName` and a private `C:\SwanLab\disposable-lab.json`
+marker with `purpose` equal to `swan-disposable-windows-acceptance` and
+`computer_name` equal to that guest's name. Never create this marker on the host
+or on a company/customer machine.
+
+Pass the verified package SHA-256, source revision and agent SHA-256; technician
+tests also require the portable executable SHA-256. Customer tests require the
+installed-files manifest and its verified SHA-256. Copy `Get-MsiIdentity.ps1`
+and `Get-WindowsCompatibility.ps1` alongside the runner. Use a new result
+directory for each phase and keep raw MSI logs private.
+
+Fresh installation refuses existing application/agent paths. Customer checks
+verify every manifested file and the running service's exact executable,
+arguments and LocalSystem identity. Customer repair first damages the verified
+packaged license file, then checks that MSI repair restores the complete
+manifest. Both editions check agent hashes, and technician checks its executable
+hash. Uninstall checks removal of application/agent executables and the customer
+service. Exit code 3010 is recorded as requiring a reboot; perform and verify
+that reboot before interpreting later tests as reboot acceptance.
+
+This runner does not configure a company, approve enrollment, test signatures,
+exercise updates or establish a remote session. Successful bare MSI phases
+cannot replace those acceptance requirements. Do not edit production installer
+verification to accommodate unsigned lab packages.
+
 The first local WHPX probe reported `Unexpected VP exit code 4`; the isolated
 guest was stopped. Its sparse disk is preserved outside Git. No operating
 system installation or accelerator compatibility is established by that probe.
