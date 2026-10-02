@@ -819,3 +819,14 @@ This establishes isolated component recovery, including actual transport and
 TLS storage. It does not establish public ACME, external traversal, authorized
 remote desktop sessions, populated transport-peer recovery, migration rollback,
 native Windows installation or the compatibility matrix.
+
+Windows server component preparation now passes with the actual pinned
+RustDesk server 1.1.15 and Caddy 2.10.2 Windows archives. Both archive SHA-256
+values match upstream release asset metadata; extraction produces only the
+expected component executables and the public manifest. Read-only PE inspection
+confirms x64 executables. An invalid archive is rejected before output creation.
+All three supplier executables report `NotSigned`; hash pinning does not supply
+production Authenticode trust. No supplier installer or component was executed,
+and no services or firewall settings changed. Combined Windows server setup,
+service supervision, HTTPS provisioning, signing and native lifecycle tests
+remain incomplete.

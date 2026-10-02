@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "architecture": "x86_64",
+  "transport": {
+    "source": "https://github.com/rustdesk/rustdesk-server/tree/9bae9f2f39d92c4b4ba2e28e089da5071897b22e",
+    "url": "https://github.com/rustdesk/rustdesk-server/releases/download/1.1.15/rustdesk-server-windows-x86_64-unsigned.zip",
+    "sha256": "541cbe462c0c7f9fe995fea3752108d0bb3a0e0c83a96618ce684bcd6c806242",
+    "files": ["hbbs.exe", "hbbr.exe"]
+  },
+  "https": {
+    "source": "https://github.com/caddyserver/caddy/tree/v2.10.2",
+    "url": "https://github.com/caddyserver/caddy/releases/download/v2.10.2/caddy_2.10.2_windows_amd64.zip",
+    "sha256": "9fd1ef9be5d9b05852b66ccc25f96f23d8651bcab20779861a745bdffa273722",
+    "files": ["caddy.exe"]
+  }
+}
