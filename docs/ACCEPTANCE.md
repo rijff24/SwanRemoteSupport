@@ -153,3 +153,9 @@ service and Windows-owned broker copy/removal tables were inspected. Three new
 authoring tests and the existing three manifest tests pass. Clean-machine
 installation, signing, service/task lifecycle and recovery remain unverified;
 see deployment/windows/CUSTOMER-MSI.md. Native CI includes both MSI recipes.
+
+Explicit MSI repair now requests forced replacement and source re-caching
+through `/fvamus`, while retaining the exact pinned-release trust gate. Native
+x64 compatibility preflight and technician MSI launch conditions now reject
+ARM64; the preflight identifies the current host as windows_11. Clean-machine
+repair and ARM64 rejection still require runtime validation on those guests.

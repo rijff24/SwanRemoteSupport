@@ -1,5 +1,7 @@
 $ErrorActionPreference = 'Stop'
 if (-not [Environment]::Is64BitOperatingSystem) { throw 'This release requires Windows x64.' }
+$nativeArchitecture = (Get-ItemProperty -LiteralPath 'HKLM:/SYSTEM/CurrentControlSet/Control/Session Manager/Environment' -Name PROCESSOR_ARCHITECTURE).PROCESSOR_ARCHITECTURE
+if ($nativeArchitecture -ne 'AMD64') { throw 'Native Windows x64 is required; ARM64 is not supported in this release.' }
 $version = Get-ItemProperty -LiteralPath 'HKLM:/SOFTWARE/Microsoft/Windows NT/CurrentVersion'
 $build = [int]$version.CurrentBuildNumber
 if ($version.InstallationType -eq 'Server Core') { throw 'Windows Server Core is not supported.' }

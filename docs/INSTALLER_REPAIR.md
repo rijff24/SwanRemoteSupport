@@ -46,3 +46,11 @@ Rust session locks. Complete signed EXE/MSI repair, interruption recovery,
 scheduled-task behavior and clean-machine session coordination remain acceptance work.
 This document describes the development implementation, not tested production
 compatibility.
+
+For MSI bundles, explicit `-Repair` now invokes Windows Installer with
+`/fvamus` against the already verified pinned MSI: run from source/re-cache,
+force file replacement and restore registry entries/shortcuts. Normal setup
+continues to use `/i`. This does not loosen metadata, publisher, hash, company
+identity or session-lock checks. Actual clean-machine repair and interrupted
+MSI recovery remain unverified. See Microsoft
+[repair options](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/msiexec).

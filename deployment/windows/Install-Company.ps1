@@ -44,6 +44,7 @@ $recordArguments = @('record-installation',(Join-Path $root 'release.json'))
 if ($Repair) { $packageArguments += '--repair'; $recordArguments += '--repair' }
 & $agent @packageArguments
 if ($LASTEXITCODE -ne 0) { throw 'Installer metadata, hash or publisher validation failed.' }
+$msiOperation = if ($Repair) { '/fvamus' } else { '/i' }
 $installationMarker = Join-Path $editionDirectory 'pending-install.json'
 $activityStream = [IO.File]::Open((Join-Path $editionDirectory 'activity.lock'),[IO.FileMode]::OpenOrCreate,[IO.FileAccess]::ReadWrite,[IO.FileShare]::ReadWrite)
 $activityLocked = $false
@@ -73,7 +74,7 @@ if ($bootstrap.edition -eq 'customer') {
         }
     }
     if ($installers[0].Extension -eq '.msi') {
-        $process = Start-Process -FilePath 'msiexec.exe' -ArgumentList @('/i',('"' + $installers[0].FullName + '"'),'/passive','/norestart') -PassThru -Wait -WindowStyle Hidden
+        $process = Start-Process -FilePath 'msiexec.exe' -ArgumentList @($msiOperation,('"' + $installers[0].FullName + '"'),'/passive','/norestart') -PassThru -Wait -WindowStyle Hidden
     } else {
         $process = Start-Process -FilePath $installers[0].FullName -ArgumentList '--silent-install','printer=0' -PassThru -Wait -WindowStyle Hidden
     }
@@ -92,7 +93,7 @@ if ($bootstrap.edition -eq 'customer') {
     $release = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($releaseEnvelope.payload)) | ConvertFrom-Json
     $portable = Join-Path $editionDirectory 'SwanRemoteSupport-Technician.exe'
     if ($release.format -eq 'msi') {
-        $process = Start-Process -FilePath 'msiexec.exe' -ArgumentList @('/i',('"' + $installers[0].FullName + '"'),'/passive','/norestart',('INSTALLFOLDER="' + $editionDirectory + '"')) -PassThru -Wait -WindowStyle Hidden
+        $process = Start-Process -FilePath 'msiexec.exe' -ArgumentList @($msiOperation,('"' + $installers[0].FullName + '"'),'/passive','/norestart',('INSTALLFOLDER="' + $editionDirectory + '"')) -PassThru -Wait -WindowStyle Hidden
         if ($process.ExitCode -notin @(0,3010)) { throw "Technician MSI installation failed ($($process.ExitCode))." }
         if (-not (Test-Path -LiteralPath $portable)) { throw 'Technician MSI did not install the expected executable.' }
     } elseif ($release.format -eq 'exe' -and $release.sha256 -ceq $release.installed_sha256) {
