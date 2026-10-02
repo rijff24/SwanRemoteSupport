@@ -8,6 +8,7 @@ $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 $manifestPath = Join-Path $PSScriptRoot 'server-components.json'
 $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
+$transportLicense = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '../../LICENCE')).Path
 if ($manifest.schema -ne 1 -or $manifest.architecture -ne 'x86_64') { throw 'Unsupported server component manifest.' }
 $destination = [IO.Path]::GetFullPath($OutputDirectory)
 if (Test-Path -LiteralPath $destination) { throw 'Component output directory already exists.' }
@@ -35,6 +36,11 @@ try {
             }
             $selected[$name] = $matches[0]
         }
+        if ('caddy.exe' -in $package.Pin.files) {
+            $licenses = @($archive.Entries | Where-Object FullName -eq 'LICENSE')
+            if ($licenses.Count -ne 1 -or $licenses[0].Length -lt 1 -or $licenses[0].Length -gt 128KB) { throw 'Pinned HTTPS archive license missing or invalid.' }
+            $selected['Caddy-LICENSE.txt'] = $licenses[0]
+        }
     }
     New-Item -ItemType Directory -Path $destination | Out-Null
     foreach ($name in $selected.Keys) {
@@ -42,6 +48,9 @@ try {
         [IO.Compression.ZipFileExtensions]::ExtractToFile($selected[$name], (Join-Path $destination $name), $false)
     }
     Copy-Item -LiteralPath $manifestPath -Destination (Join-Path $destination 'server-components.json')
+    Copy-Item -LiteralPath $transportLicense -Destination (Join-Path $destination 'RustDesk-LICENSE.txt')
+    $notices = "RustDesk rendezvous/relay: AGPL-3.0, upstream RustDesk contributors.`nCorresponding source: $($manifest.transport.source)`n`nCaddy HTTPS server: Apache-2.0, upstream Caddy contributors.`nSource: $($manifest.https.source)`n`nRetain both license files and these source references with distributions.`n"
+    [IO.File]::WriteAllText((Join-Path $destination 'THIRD-PARTY.txt'),$notices,[Text.UTF8Encoding]::new($false))
     Write-Output $destination
 } finally {
     foreach ($archive in $archives) { $archive.Dispose() }

@@ -33,6 +33,7 @@ product/management/src/**
 !product/management/src/network.rs
 !product/management/src/backup.rs
 !product/management/src/windows.rs
+!product/management/src/components.rs
 !product/management/src/tests.rs
 !product/management/src/schema.sql
 !product/management/web/

@@ -830,3 +830,20 @@ production Authenticode trust. No supplier installer or component was executed,
 and no services or firewall settings changed. Combined Windows server setup,
 service supervision, HTTPS provisioning, signing and native lifecycle tests
 remain incomplete.
+
+Windows management now supports supervised packaged rendezvous, relay and
+HTTPS children. The full-stack install script pins their executable hashes,
+retains license/source notices, validates the company hostname, rejects
+occupied ports and existing data, configures the proxy and private storage,
+and checks management startup. Windows GNU management tests pass: 18 ordinary
+tests, with two child-process fixtures invoked by lifecycle tests. Actual
+Windows child processes are reaped on stop and partial startup failure;
+component exit stops management. A process-owner crash test observes its
+assigned child terminate through Windows job-object cleanup. Private preflight
+with the actual supplier binaries accepts their hashes, and changing one byte
+of the relay rejects it without starting services. PowerShell scripts parse,
+and preparation preserves upstream licenses/source references.
+The privileged installer itself has not run on a clean Windows VM. SCM startup,
+firewall rollback, reboot/service recovery, public HTTPS/ACME, live Windows
+transport sessions, repair/uninstall and the graphical setup wrapper remain
+unverified or incomplete. These process tests do not satisfy those gates.

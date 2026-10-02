@@ -9,8 +9,16 @@ use service::Store;
 use std::{net::SocketAddr, path::PathBuf, sync::Arc};
 #[cfg(windows)]
 mod windows;
+#[cfg(any(windows, test))]
+mod components;
 
 fn main() -> Result<()> {
+    #[cfg(windows)]
+    if std::env::args().nth(1).as_deref()==Some("check-components") {
+        components::installed_specs()?;
+        println!("Pinned company executables and hostname validated; HTTPS configuration found; no services started.");
+        return Ok(());
+    }
     #[cfg(windows)]
     if std::env::args().any(|a|a=="--service") {return windows::dispatch();}
     // This is the executable entrypoint, not a helper within an existing runtime.

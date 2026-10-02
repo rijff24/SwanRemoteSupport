@@ -15,7 +15,16 @@ fn service_main(_arguments:Vec<OsString>) {
     let status=|state,exit|ServiceStatus{service_type:ServiceType::OWN_PROCESS,current_state:state,controls_accepted:if state==ServiceState::Running{ServiceControlAccept::STOP|ServiceControlAccept::SHUTDOWN}else{ServiceControlAccept::empty()},exit_code:ServiceExitCode::Win32(exit),checkpoint:0,wait_hint:Duration::from_secs(10),process_id:None};
     if let Err(error)=status_handle.set_service_status(status(ServiceState::Running,0)){eprintln!("Service status failed: {error}");return;}
     // SCM invokes this entrypoint on its own thread; it owns the only server runtime.
-    let outcome=tokio::runtime::Runtime::new().map_err(anyhow::Error::from).and_then(|runtime|runtime.block_on(super::run(receiver)));
+    let outcome=tokio::runtime::Runtime::new().map_err(anyhow::Error::from).and_then(|runtime|runtime.block_on(async {
+        match std::env::var("SWAN_COMPONENTS") {
+            Ok(value) if value=="1"=>{
+                let specs=tokio::task::spawn_blocking(super::components::installed_specs).await??;
+                super::components::supervise(specs,receiver,super::run).await
+            },
+            Err(std::env::VarError::NotPresent)=>super::run(receiver).await,
+            _=>anyhow::bail!("Invalid company component service mode"),
+        }
+    }));
     if let Err(error)=&outcome{eprintln!("Company server failed: {error}");}
     if let Err(error)=status_handle.set_service_status(status(ServiceState::Stopped,if outcome.is_ok(){0}else{1})){eprintln!("Service shutdown status failed: {error}");}
 }
