@@ -5,6 +5,13 @@ reviewing the company HTTPS hostname. Customer installation requires
 administrator access. Technician installation uses the current user's local
 application directory.
 
+Windows Installer policy still applies to technician MSI setup and repair.
+On the tested Server 2016 build, a standard desktop account was blocked from
+installing the non-assigned MSI with error `1625`, while administrator lifecycle
+tests succeeded. Company IT must arrange an approved deployment in the intended
+user context when policy blocks unmanaged per-user packages. Setup does not
+change [Windows Installer policy](https://learn.microsoft.com/en-us/windows/win32/msi/disablemsi).
+
 Repair requires a previously recorded installation and its signed
 `installed-release.json`. The supplied release envelope must exactly match that
 record, and its sequence must equal the durable installed sequence. The agent

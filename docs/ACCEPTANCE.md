@@ -970,3 +970,33 @@ technician installation, upgrade, reboot, company bootstrap/enrollment, trusted
 publisher validation, automatic updates, remote sessions and the remaining
 Windows compatibility matrix are still unverified. VM credentials and raw
 installation logs remain in the private lab outside the repository.
+
+A separate standard account was tested on the same Server 2016 VM. Initial
+batch launch was denied by the guest's batch-logon rights; granting only that
+right allowed the task to execute without administrator membership. SSH and
+batch MSI attempts returned `1601` because they could not connect to Windows
+Installer. After an actual standard-user desktop logon, the MSI instead returned
+`1625`. Its log reports effective `DisableMsi=1`, rejects a non-assigned
+application for a non-admin account, and confirms the package is marked for
+installation without elevation. No installer policy was changed. The denied
+installation left the product unregistered and endpoint/agent absent. This
+does not establish successful standard-user installation; company-managed
+assignment and client Windows editions still need testing. See Microsoft's
+[DisableMSI policy](https://learn.microsoft.com/en-us/windows/win32/msi/disablemsi).
+The temporary private VM logon password was removed automatically, with cleanup
+and disabled auto-logon verified after reboot. This reboot provisioned the test
+desktop; it is not product reboot acceptance.
+
+The lifecycle runner now records actual account elevation, supports an explicit
+standard-user technician requirement, and checks installer registration plus
+packaged-file, shortcut and component-registration cleanup. It reads OS version
+from the registry so standard-user reports do not require WMI permission, and
+writes a failed result even if process creation fails. The failed interactive
+test recorded runner SHA-256
+`4c70cfe5a4f8ce60e599460febb7bfab5a166860af995e9260df13f12be96396`.
+
+[Native Windows build 37065751842](https://github.com/rijff24/SwanRemoteSupport/actions/runs/37065751842)
+completed successfully for source
+`6840d910c252d8fb7d5c34ca7dffbc2a2ddffb4b`, including the later company
+management and transport-supervision source. Its unsigned artifacts still
+require their own integrity, installation, company setup and session checks.

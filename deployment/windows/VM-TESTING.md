@@ -84,8 +84,12 @@ verify every manifested file and the running service's exact executable,
 arguments and LocalSystem identity. Customer repair first damages the verified
 packaged license file, then checks that MSI repair restores the complete
 manifest. Both editions check agent hashes, and technician checks its executable
-hash. Uninstall checks removal of application/agent executables and the customer
-service. Exit code 3010 is recorded as requiring a reboot; perform and verify
+hash. Use `-RequireStandardUser` for technician tests to reject an elevated
+account; customer phases require administrator access. Reports record the
+actual administrator status. Both editions check Windows Installer registration.
+Uninstall checks all customer manifest files, application/agent executables,
+the customer service, and technician launcher, license, shortcut and component
+registration. Exit code 3010 is recorded as requiring a reboot; perform and verify
 that reboot before interpreting later tests as reboot acceptance.
 
 This runner does not configure a company, approve enrollment, test signatures,
