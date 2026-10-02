@@ -366,3 +366,11 @@ started installation recovery are unaffected. Build creation keeps its approval
 check and queue insertion under the same database lock. All eight management
 tests pass, including three job states and completed-bundle download denial.
 Worker/network race fault injection and browser behavior remain unverified.
+
+The withdrawal regression now exercises a real authenticated worker claim and
+stored fixture artifact: late persistence, failure completion and success
+completion are rejected after withdrawal, stored bytes remain unchanged, and
+restoring approval does not revive or requeue cancelled claims. Eight management
+tests pass; the final expanded withdrawal test also passes independently. This
+uses handler/storage fixtures, not a signed installer worker end-to-end run;
+simultaneous network faults and production package publication remain unverified.

@@ -520,6 +520,7 @@ mod worker_completion_tests {
         let envelope=SignedEnvelope::sign(&release,&store.key).unwrap();
         let admin_token=random_token();let technician_token=random_token();
         let completed=Uuid::new_v4().to_string();
+        let in_flight=Uuid::new_v4().to_string();let worker_token=random_token();let worker=digest(&worker_token);
         {
             let db=store.db.lock().unwrap();
             db.execute("INSERT INTO profile VALUES(1,?1)",[serde_json::to_string(&profile).unwrap()]).unwrap();
@@ -531,7 +532,10 @@ mod worker_completion_tests {
             let job=json!({"release":envelope}).to_string();
             for state in ["queued","running","uploaded"] {db.execute("INSERT INTO builds(id,body,state) VALUES(?1,?2,?1)",params![state,job]).unwrap();}
             db.execute("INSERT INTO builds(id,body,state) VALUES(?1,?2,'completed')",params![completed,job]).unwrap();
+            db.execute("INSERT INTO workers(id,token_hash) VALUES('worker',?1)",[&worker]).unwrap();
+            db.execute("INSERT INTO builds(id,body,state,worker,claimed_at) VALUES(?1,?2,'running',?3,?4)",params![in_flight,job,worker,now()]).unwrap();
         }
+        persist_verified_artifact(&store,&in_flight,&worker,b"previously validated bundle").ok().unwrap();
         let headers=|credential:&str| {let mut h=HeaderMap::new();h.insert(header::AUTHORIZATION,format!("Bearer {credential}").parse().unwrap());h};
         assert!(!select_update(&store,"technician",Edition::Technician).ok().unwrap().0.is_null());
         assert!(select_update(&store,"device",Edition::Customer).ok().unwrap().0.is_null());
@@ -548,9 +552,19 @@ mod worker_completion_tests {
         assert!(withdraw_release(State(store.clone()),headers(&admin_token),Path("release".into())).await.is_ok());
         assert!(select_update(&store,"technician",Edition::Technician).ok().unwrap().0.is_null());
         assert!(withdraw_release(State(store.clone()),headers(&admin_token),Path("missing".into())).await.is_err());
-        let cancelled:i64=store.db.lock().unwrap().query_row("SELECT COUNT(*) FROM builds WHERE state='failed'",[],|r|r.get(0)).unwrap();assert_eq!(cancelled,3);
+        let cancelled:i64=store.db.lock().unwrap().query_row("SELECT COUNT(*) FROM builds WHERE state='failed'",[],|r|r.get(0)).unwrap();assert_eq!(cancelled,4);
+        assert!(persist_verified_artifact(&store,&in_flight,&worker,b"late replacement").is_err());
+        let late_result=BuildResult{success:false,artifact_url:String::new(),sha256:String::new(),log:"Worker reports a different terminal outcome".into()};
+        assert!(finish_build(State(store.clone()),headers(&worker_token),Path(in_flight.clone()),Json(late_result)).await.is_err());
+        let late_success=BuildResult{success:true,artifact_url:format!("{}/api/v1/downloads/{in_flight}",profile.management_url),sha256:digest(b"previously validated bundle"),log:"Worker finished after withdrawal".into()};
+        assert!(finish_build(State(store.clone()),headers(&worker_token),Path(in_flight.clone()),Json(late_success)).await.is_err());
+        assert_eq!(std::fs::read(store.artifact_dir.join(format!("{in_flight}.zip"))).unwrap(),b"previously validated bundle");
         assert!(matches!(download_artifact(State(store.clone()),Path(completed),HeaderMap::new()).await,Err(ApiError(StatusCode::NOT_FOUND,_))));
         let audit:i64=store.db.lock().unwrap().query_row("SELECT COUNT(*) FROM audit WHERE event='release.withdrawn'",[],|r|r.get(0)).unwrap();assert_eq!(audit,1);
+        // Restoring release approval cannot revive a cancelled worker claim.
+        store.db.lock().unwrap().execute("UPDATE releases SET approved=1 WHERE id='release'",[]).unwrap();
+        assert!(persist_verified_artifact(&store,&in_flight,&worker,b"late replacement").is_err());
+        assert!(claim_build(State(store.clone()),headers(&worker_token)).await.ok().unwrap().0.is_null());
         drop(store);std::fs::remove_dir_all(directory).unwrap();
     }
     #[test]
