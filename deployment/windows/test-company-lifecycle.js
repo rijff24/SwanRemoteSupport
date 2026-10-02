@@ -102,6 +102,13 @@ async function main(){
   policy.file=false;assert.equal((await api('groups/test-customers/permissions','PUT',admin,policy)).status,200);
   assert.equal((await api(`grants/${issued.grant_id}/renew`,'POST',customer.device_token)).status,403,'Reduced policy renewed older permissions');
   const history=JSON.parse(runAgent(techDir,['history'],auth));assert.equal(history.length,1);assert.equal(history[0].claimed,true);assert.equal(history[0].device_id,customer.device_id);
+  const accessPath=`groups/test-customers/users/${technician.id}`;
+  assert.equal((await api(accessPath,'DELETE',technicianLogin.token)).status,401,'Technician revoked group access');
+  assert.equal((await api(accessPath,'DELETE',admin)).status,200);
+  assert.equal(JSON.parse(runAgent(techDir,['devices'],auth)).length,0,'Revoked group remained visible');
+  assert.equal((await api('grants','POST',technicianLogin.token,ticket)).status,403,'Revoked group issued a grant');
+  assert.equal((await api(accessPath,'PUT',admin,{})).status,200);
+  assert.equal((await api(`grants/${issued.grant_id}/renew`,'POST',customer.device_token)).status,403,'Re-grant revived revoked session');
   current.customer.display_name='Changed Local Test Branding';assert.equal((await api('profile','PUT',admin,current)).status,200);
   runAgent(customerDir,['sync']);const updated=JSON.parse(Buffer.from(state(customerDir).profile.payload,'base64'));assert.equal(updated.customer.display_name,'Changed Local Test Branding');assert.equal(updated.revision,2);
   assert.equal((await api(`devices/${customer.device_id}/state`,'PUT',admin,{state:'revoked',group:'test-customers'})).status,200);
@@ -110,6 +117,6 @@ async function main(){
   const source=spawnSync('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8'});
   const dirty=spawnSync('git',['status','--porcelain'],{cwd:root,encoding:'utf8'});
   fs.writeFileSync(path.join(data,'lifecycle-result.json'),JSON.stringify({passed:true,at:new Date().toISOString(),source_commit:source.status===0?source.stdout.trim():'unknown',source_dirty:dirty.status===0?dirty.stdout.trim().length>0:null,agent_sha256:crypto.createHash('sha256').update(fs.readFileSync(agent)).digest('hex'),management_sha256:crypto.createHash('sha256').update(fs.readFileSync(path.join(binaryDirectory,'swan-management.exe'))).digest('hex'),offline_revocation_recovery:settings.SWAN_TEST_FAULTS==='1',checks:['HTTPS certificate validation','fresh company setup','built agent bootstrap and enrollment','pending approval denial','technician MFA login and group inventory','technician session history','logout revokes credentials','unattended consent denial','grant replay denial','signed branding sync','device revocation']},null,2));
-  console.log('PASS: real local HTTPS company lifecycle and built-agent checks. Native sessions and installers remain separate tests.');
+  console.log('PASS: real local HTTPS company lifecycle, group revocation and built-agent checks. Native sessions and installers remain separate tests.');
 }
 main().catch(error=>{console.error(error.message);process.exitCode=1;});
