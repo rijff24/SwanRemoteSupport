@@ -12,7 +12,7 @@ async fn main()->Result<()> {
     let release_key=std::env::var("SWAN_RELEASE_PUBLIC_KEY").context("Pin SWAN_RELEASE_PUBLIC_KEY on the worker")?;public_key(&release_key)?;
     let company_key=std::env::var("SWAN_PROFILE_PUBLIC_KEY").context("Pin SWAN_PROFILE_PUBLIC_KEY on the worker")?;public_key(&company_key)?;
     let output=PathBuf::from(std::env::var("SWAN_ARTIFACT_DIR").context("Set worker artifact output directory")?);
-    std::fs::create_dir_all(&output)?;
+    tokio::fs::create_dir_all(&output).await?;
     let client=swan_agent::http_client(600,false)?;
     loop {
         let response=client.post(format!("{}/api/v1/worker/claim",server.trim_end_matches('/'))).bearer_auth(&token).send().await;
@@ -77,12 +77,18 @@ async fn build(_client:&reqwest::Client,job:&Value,output:&Path,id:&str,release_
     let profile_envelope:SignedEnvelope=serde_json::from_value(job["profile"].clone())?;
     let profile:CompanyProfile=profile_envelope.verify(&public_key(company_key)?)?;
     profile.validate(&profile.company_id,0,now())?;
-    let work=output.join(format!("work-{id}"));std::fs::create_dir_all(&work)?;
+    let work=output.join(format!("work-{id}"));tokio::fs::create_dir_all(&work).await?;
     let installer=work.join(format!("SwanRemoteSupport-install.{}",release.format));
     let agent=work.join("swan-agent.exe");
     let artifact_client=swan_agent::http_client(600,true)?;
     download(&artifact_client,&release.artifact_url,&installer,&release.sha256).await?;
     download(&artifact_client,&release.agent_url,&agent,&release.agent_sha256).await?;
+    let output=output.to_owned();let id=id.to_owned();let company_key=company_key.to_owned();let release_key=release_key.to_owned();
+    tokio::task::spawn_blocking(move ||package_verified(output,&id,work,installer,agent,release,profile,release_envelope,profile_envelope,&release_key,&company_key))
+        .await.context("Installer verification and packaging task failed")?
+}
+
+fn package_verified(output:PathBuf,id:&str,work:PathBuf,installer:PathBuf,agent:PathBuf,release:Release,profile:CompanyProfile,release_envelope:SignedEnvelope,profile_envelope:SignedEnvelope,release_key:&str,company_key:&str)->Result<(String,String)> {
     verify_windows(&installer,&release,&work)?;
     verify_windows(&agent,&release,&work)?;
     let bootstrap=Bootstrap{schema:SCHEMA,edition:release.edition.clone(),company_id:profile.company_id,management_url:profile.management_url,profile_public_key:company_key.into(),release_public_key:release_key.into()};
@@ -113,7 +119,7 @@ pub async fn download(client:&reqwest::Client,url:&str,path:&Path,hash:&str)->Re
     let mut bytes=Vec::new();
     while let Some(chunk)=response.chunk().await?{ensure!(bytes.len()+chunk.len()<=512*1024*1024,"Artifact too large");bytes.extend(chunk);}
     ensure!(digest(&bytes).eq_ignore_ascii_case(hash),"Artifact hash mismatch");
-    std::fs::write(path,bytes)?;Ok(())
+    tokio::fs::write(path,bytes).await?;Ok(())
 }
 fn verify_windows(path:&Path,release:&Release,directory:&Path)->Result<()> {
     let verifier=directory.join("Verify-Package.ps1");std::fs::write(&verifier,include_bytes!("../../../deployment/windows/Verify-Package.ps1"))?;

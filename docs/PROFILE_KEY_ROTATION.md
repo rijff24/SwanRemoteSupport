@@ -28,6 +28,11 @@ exclusive data-directory lock; older server versions must also be stopped.
    and verify synchronized clients accept the new signed profile. Generate new
    company installer bundles and replace website/internal distribution links.
    Previously downloaded old bundles must also be withdrawn by the operator.
+   The worker currently pins `SWAN_PROFILE_PUBLIC_KEY` in its private operator
+   configuration. Update that pin to the key authorized by the prepared signed
+   transition and restart the worker before rebuilding; it deliberately rejects
+   jobs signed by an unrelated or unconfigured key. Automatic worker-pin rotation
+   is not implemented.
 
 Activation invalidates current sessions as their authorization is revalidated.
 Schedule rotation as a maintenance operation. This does not create an automatic

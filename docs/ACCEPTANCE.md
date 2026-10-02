@@ -496,3 +496,11 @@ JavaScript regression check verifies exact pipe/whitespace preservation, blank
 row omission, incomplete-entry rejection and HTML attribute escaping. JavaScript
 syntax and diff checks pass. Browser interaction, accessibility and installed-app
 shortcut rendering remain unverified.
+
+The Windows installer worker now stages downloaded files through asynchronous
+filesystem operations and runs Authenticode verification, ZIP compression,
+artifact hashing and immutable publication in a blocking worker task. Windows
+compilation passes. Real signed worker packaging, upload faults and publication
+remain unverified. After company profile-key activation, operators must update
+the worker's privately configured profile-key pin before rebuilding packages;
+automatic worker trust-pin rotation is not implemented.
