@@ -439,3 +439,16 @@ export/restore. Restore rejects traversal, Windows filename collisions and
 file/directory conflicts before creating its target. Nine management tests pass;
 the three backup tests also pass after adding malformed encrypted archive cases.
 Live certificate renewal, transport restore and migration rollback remain open.
+
+Server 2016 has completed file preparation, features and its first reboot. It
+is now at the initial administrator-password screen; desktop provisioning and
+product tests are pending. The computer-use authentication boundary requires
+user completion of that screen.
+
+Customer MSI now schedules a SYSTEM configuration-task cleanup action before
+file removal, with paired rollback and exclusion during major upgrades. It
+checks exact task ownership, preserves company state, and records the previous
+enabled/running state for rollback. Windows agent compilation, script parsing,
+three MSI authoring tests and real unsigned WiX packaging pass. Installer-table
+inspection verifies action order. This does not establish actual uninstall,
+rollback, task cleanup or service behavior; clean-guest tests remain open.

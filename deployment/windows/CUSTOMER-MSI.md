@@ -59,5 +59,18 @@ interrupted-install rollback remain unverified. Native build CI now includes
 both MSI recipes; its exact results must be recorded separately. MSI service
 rules and a successful build do not establish these acceptance conditions.
 
+Customer MSI uninstall now invokes its installed configuration agent under
+SYSTEM before file removal to remove the separately registered configuration
+task. The task's executable path, `watch` arguments and SYSTEM principal must
+match this installation; an unrelated task is refused. Company identity and
+consent files remain protected for explicit reinstallation. Major upgrades skip
+task removal. A paired MSI rollback action restores the previous enabled/running
+state after an interrupted uninstall, using protected rollback state and a
+validly signed restored agent. A task absent before cleanup is not created by
+rollback. The agent compiles on Windows and both scripts parse; three authoring
+tests pass. Pinned WiX compiled a real unsigned package and its Installer tables
+confirm rollback, cleanup and file-removal order. Actual task deletion, MSI
+rollback and reinstall on clean guests remain unverified.
+
 References: [WiX service installation](https://docs.firegiant.com/wix/schema/wxs/serviceinstall/)
 and [Windows-owned file copying](https://docs.firegiant.com/wix/schema/wxs/copyfile/).

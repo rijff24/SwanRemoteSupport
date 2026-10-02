@@ -12,6 +12,23 @@ async fn main()->Result<()> {
     let directory=state_directory();
     let command=args.get(1).map(String::as_str).unwrap_or("help");
     match command {
+        #[cfg(windows)]
+        "remove-configuration-task"|"restore-configuration-task"=>{
+            let executable=std::env::current_exe()?;
+            let installed_directory=executable.parent().context("Missing installed agent directory")?;
+            ensure!(executable.file_name().is_some_and(|name|name.to_string_lossy().eq_ignore_ascii_case("swan-agent.exe")),"Uninstall cleanup requires the installed configuration agent");
+            // MSI invokes the installed binary under SYSTEM before removing it.
+            // The script checks the exact task executable, arguments and owner.
+            let (name,contents)=if command=="remove-configuration-task" {
+                ("Remove-Configuration.ps1",include_str!("../../../deployment/windows/Remove-Configuration.ps1"))
+            }else{("Restore-Configuration.ps1",include_str!("../../../deployment/windows/Restore-Configuration.ps1"))};
+            let script=installed_directory.join(name);
+            std::fs::write(&script,contents)?;
+            let powershell=PathBuf::from(std::env::var_os("SystemRoot").context("Missing Windows directory")?).join("System32/WindowsPowerShell/v1.0/powershell.exe");
+            let status=std::process::Command::new(powershell).args(["-NoLogo","-NoProfile","-NonInteractive","-ExecutionPolicy","Bypass","-File"]).arg(&script).arg("-Directory").arg(installed_directory).status()?;
+            std::fs::remove_file(&script)?;
+            ensure!(status.success(),"Company configuration task cleanup failed");
+        }
         "setup"=>{
             let file=args.get(2).context("Usage: swan-agent setup bootstrap.json --accept-company")?;
             ensure!(args.iter().any(|a|a=="--accept-company"),"Review the company HTTPS domain and trust key; pass --accept-company only after confirming them");

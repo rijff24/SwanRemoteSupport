@@ -88,6 +88,15 @@ def author(source, agent, version):
     component = element(state, "Component", Id="ConfigurationAgent", Guid=str(uuid.uuid5(UPGRADE, "configuration-agent")).upper(), Bitness="always64")
     element(component, "File", Id="ConfigurationAgentExe", Name="swan-agent.exe", Source=str(agent), KeyPath="yes")
     element(feature, "ComponentRef", Id="ConfigurationAgent")
+    element(package, "CustomAction", Id="RemoveCompanyConfigurationTask", FileRef="ConfigurationAgentExe",
+            ExeCommand="remove-configuration-task", Execute="deferred", Impersonate="no", Return="check")
+    element(package, "CustomAction", Id="RestoreCompanyConfigurationTask", FileRef="ConfigurationAgentExe",
+            ExeCommand="restore-configuration-task", Execute="rollback", Impersonate="no", Return="check")
+    sequence = element(package, "InstallExecuteSequence")
+    element(sequence, "Custom", Action="RestoreCompanyConfigurationTask", Before="RemoveCompanyConfigurationTask",
+            Condition='REMOVE = "ALL" AND NOT UPGRADINGPRODUCTCODE')
+    element(sequence, "Custom", Action="RemoveCompanyConfigurationTask", Before="RemoveFiles",
+            Condition='REMOVE = "ALL" AND NOT UPGRADINGPRODUCTCODE')
     return ET.ElementTree(root), files
 
 
