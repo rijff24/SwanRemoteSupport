@@ -1,5 +1,12 @@
 # Swan Remote Support completion assessment
 
+**Historical baseline research, not current implementation status.** The findings
+below describe `9494a5a` before the configurable-product work. Management,
+configuration trust, enrollment, authorization, workers, installer authoring and
+update code have since been added on `codex/configurable-product`. Current
+verification and remaining release gates are recorded in [ACCEPTANCE.md](ACCEPTANCE.md).
+The original requirements remain in scope; the product is not production-ready.
+
 Research date: 1 October 2026. This assessment covers the company-configurable open-source product: a self-hosted server, public customer installer, internal technician installer, branding and policy synchronization, and automatic updates without requiring Tailscale.
 
 The remote desktop engine and a Swan-specific unsigned customer build exist. The reusable company administration and distribution system does not yet exist in this checkout. We should extend the RustDesk OSS foundation with our own open-source management service and company configuration protocol. The proposed architecture below is a recommendation, not implemented behavior.
