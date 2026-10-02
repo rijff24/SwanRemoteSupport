@@ -217,3 +217,12 @@ maintenance start/end controls, saving through the existing authenticated signed
 profile API. Equal-hour and overnight descriptions match protocol semantics.
 JavaScript syntax and diff checks pass. Rendered form interaction and installed
 client rollout behavior remain unverified.
+
+Administrator account controls now expose technician disable and group-access
+revocation. Group removal closes affected grants transactionally; re-granting
+access cannot revive them. Account disable removes login sessions and closes
+all account grants in the same audited transaction. Expanded real API lifecycle
+checks pass for administrator-only removal, inventory/grant/renewal denial,
+re-grant non-revival and disabled-token rejection. JavaScript syntax passes.
+Native active-session termination on lease expiry and rendered controls remain
+unverified; no live company account was changed by these tests.

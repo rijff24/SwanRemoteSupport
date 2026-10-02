@@ -135,7 +135,7 @@ pub fn router(store:Shared)->Router {
         .route("/api/v1/device/consent",put(consent))
         .route("/api/v1/device/status",get(device_status))
         .route("/api/v1/groups/{group}/permissions",get(group_permissions).put(set_group_permissions))
-        .route("/api/v1/groups/{group}/users/{user}",put(group_access))
+        .route("/api/v1/groups/{group}/users/{user}",put(group_access).delete(revoke_group_access))
         .route("/api/v1/grants",post(grant))
         .route("/api/v1/grants/claim",post(claim))
         .route("/api/v1/grants/{id}/renew",post(renew))
@@ -253,7 +253,12 @@ async fn users(State(s):State<Shared>,headers:HeaderMap)->ApiResult {
 }
 async fn disable_user(State(s):State<Shared>,headers:HeaderMap,Path(id):Path<String>)->ApiResult {
     let actor=s.user(&headers,true)?;if actor==id {return Err(bad("Cannot disable your own administrator account"));}
-    s.db.lock().unwrap().execute("UPDATE users SET disabled=1 WHERE id=?1",[&id])?;s.audit(&actor,"user.disabled",&id)?;Ok(Json(json!({"ok":true})))
+    let mut db=s.db.lock().unwrap();let tx=db.transaction()?;
+    tx.execute("UPDATE users SET disabled=1 WHERE id=?1",[&id])?;
+    tx.execute("DELETE FROM sessions WHERE user_id=?1",[&id])?;
+    tx.execute("UPDATE grants SET closed=1,lease_until=0 WHERE user_id=?1",[&id])?;
+    tx.execute("INSERT INTO audit(at,actor,event,target) VALUES(?1,?2,'user.disabled',?3)",params![now(),actor,id])?;
+    tx.commit()?;Ok(Json(json!({"ok":true})))
 }
 #[derive(Deserialize)]
 struct Enrollment { name:String,rustdesk_id:String,unattended_consent:bool }
@@ -506,6 +511,17 @@ mod worker_completion_tests {
         assert_eq!(serde_json::from_str::<Value>(&saved).unwrap()["log"],"Rejected invalid package");
         drop(store);std::fs::remove_dir_all(directory).unwrap();
     }
+}
+async fn revoke_group_access(State(s):State<Shared>,headers:HeaderMap,Path((group,user)):Path<(String,String)>)->ApiResult {
+    let actor=s.user(&headers,true)?;
+    if group.len()>64 || group.is_empty(){return Err(bad("Invalid group"));}
+    let mut db=s.db.lock().unwrap();let tx=db.transaction()?;
+    tx.execute("DELETE FROM group_access WHERE group_id=?1 AND user_id=?2",params![group,user])?;
+    // Re-granting access must not revive authorization issued before revocation.
+    tx.execute("UPDATE grants SET closed=1,lease_until=0 WHERE user_id=?1 AND device_id IN (SELECT id FROM devices WHERE group_id=?2)",params![user,group])?;
+    tx.execute("INSERT INTO audit(at,actor,event,target) VALUES(?1,?2,'group.access_revoked',?3)",params![now(),actor,format!("{group}/{user}")])?;
+    tx.commit()?;
+    Ok(Json(json!({"ok":true})))
 }
 async fn finish_build(State(s):State<Shared>,headers:HeaderMap,Path(id):Path<String>,Json(input):Json<BuildResult>)->ApiResult {
     s.worker(&headers)?;
