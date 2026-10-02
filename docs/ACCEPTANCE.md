@@ -226,3 +226,10 @@ checks pass for administrator-only removal, inventory/grant/renewal denial,
 re-grant non-revival and disabled-token rejection. JavaScript syntax passes.
 Native active-session termination on lease expiry and rendered controls remain
 unverified; no live company account was changed by these tests.
+
+Customer and technician branding forms now edit their logo and consent text
+independently. Saving no longer overwrites technician values with customer
+values. Both use the existing signed, validated edition profile fields;
+JavaScript syntax passes. Rendered interaction and installed edition branding
+synchronization remain unverified. Native runs 36992580109 and 36992817681 are
+still confirmed in progress; no completion result is inferred.
