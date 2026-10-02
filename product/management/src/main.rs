@@ -17,7 +17,16 @@ fn main() -> Result<()> {
     let runtime=tokio::runtime::Runtime::new()?;
     runtime.block_on(async {
         let (sender,receiver)=tokio::sync::oneshot::channel();
-        tokio::spawn(async move {if tokio::signal::ctrl_c().await.is_ok(){let _=sender.send(());}});
+        #[cfg(unix)]
+        let mut terminate=tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate()).context("Install management termination handler")?;
+        tokio::spawn(async move {
+            #[cfg(unix)]
+            let signal=tokio::select! {result=tokio::signal::ctrl_c()=>result,_=terminate.recv()=>Ok(())};
+            #[cfg(not(unix))]
+            let signal=tokio::signal::ctrl_c().await;
+            if let Err(error)=signal {eprintln!("Management shutdown signal failed: {error}");}
+            let _=sender.send(());
+        });
         run(receiver).await
     })
 }

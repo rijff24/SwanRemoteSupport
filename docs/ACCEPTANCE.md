@@ -703,3 +703,23 @@ native Rust syntax parse. Full current native app/packer compilation, EXE
 uninstall/service restoration, signed rollback, reboot and clean Windows matrix
 acceptance remain unverified. No native uninstall/cancellation script, installer
 or service operation executed on this development host.
+
+Linux deployment now has a Dockerfile-specific deny-by-default context for named
+public build inputs; Git-ignored company environment files, keys, databases and
+build caches cannot intentionally be copied by the deployment recipe. A new CI
+check uses Docker's scratch exporter against tracked public source and synthetic
+configuration/key/cache canaries, and rejects missing or unexpected exported
+files. A separate real-image rehearsal exercises non-root/read-only operation,
+private storage permissions, fresh company setup, MFA/replay rejection, pending
+enrollment, unattended-policy denial, graceful Docker SIGTERM shutdown, persisted
+identity/approval/consent and logout after restart. Linux management now handles
+SIGTERM as well as Ctrl+C.
+
+Python syntax and fixture assembly (38 required public inputs and 11 exclusion
+canaries), Compose schema/configuration and Windows GNU management compilation
+pass locally. Neither new Docker execution check has passed yet: the local
+Docker Desktop startup reports an inference-service socket error before its
+Linux engine is usable. Existing Docker data was not reset. The new CI job must
+pass before claiming this Linux deployment evidence. Public HTTPS, native
+transport, full backup/restore/migration recovery, real package installation and
+the complete clean Windows matrix remain separate acceptance gates.

@@ -21,3 +21,13 @@ jobs:
         run: cargo +1.90.0 test --manifest-path product/Cargo.toml --workspace --locked
       - name: Build components
         run: cargo +1.90.0 build --manifest-path product/Cargo.toml --workspace --release --locked
+  linux-deployment:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - name: Verify private files cannot enter the Docker build context
+        run: python3 deployment/linux/test_build_context.py
+      - name: Build the company management image
+        run: docker build --file deployment/linux/Dockerfile --tag swan-management:test .
+      - name: Exercise fresh company setup and persistence in the deployment image
+        run: python3 deployment/linux/test_container_startup.py swan-management:test
