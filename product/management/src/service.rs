@@ -561,6 +561,23 @@ struct BuildResult { success:bool, artifact_url:String,sha256:String,log:String 
 mod worker_completion_tests {
     use super::*;
     #[test]
+    fn compressed_artifact_hash_checks_expanded_limit_and_crc() {
+        use std::io::Write;
+        let payload=vec![42u8;256*1024];
+        let mut writer=zip::ZipWriter::new(std::io::Cursor::new(Vec::new()));
+        writer.start_file("artifact.exe",zip::write::SimpleFileOptions::default().compression_method(zip::CompressionMethod::Deflated)).unwrap();
+        writer.write_all(&payload).unwrap();let bytes=writer.finish().unwrap().into_inner();
+        assert!(bytes.len()<payload.len()/100);
+        let mut archive=zip::ZipArchive::new(std::io::Cursor::new(&bytes)).unwrap();
+        assert_eq!(bounded_artifact_digest(archive.by_name("artifact.exe").unwrap(),payload.len() as u64).ok().unwrap(),digest(&payload));
+        assert!(bounded_artifact_digest(archive.by_name("artifact.exe").unwrap(),64*1024).is_err());
+        let mut corrupt=bytes.clone();
+        let central=corrupt.windows(4).position(|header|header==b"PK\x01\x02").unwrap();
+        corrupt[14]^=1;corrupt[central+16]^=1;
+        let mut archive=zip::ZipArchive::new(std::io::Cursor::new(corrupt)).unwrap();
+        assert!(bounded_artifact_digest(archive.by_name("artifact.exe").unwrap(),payload.len() as u64).is_err());
+    }
+    #[test]
     fn worker_bundle_requires_complete_exact_recipe_and_company_trust() {
         // Inert bytes exercise the upload contract; no installer or signing
         // provider is invoked, and these fixtures are never published.
@@ -898,13 +915,17 @@ fn validate_worker_bundle(bytes:&[u8],job:&Value,release:&Release,company_key:&e
     let mut zip=zip::ZipArchive::new(std::io::Cursor::new(bytes)).map_err(|_|bad("Invalid ZIP artifact"))?;
     if zip.len()!=5+COMPANY_BUNDLE_TEXT_FILES.len() {return Err(bad("Unexpected bundle contents"));}
     use std::io::Read;
+    for (name,expected) in [(format!("SwanRemoteSupport-install.{}",release.format),&release.sha256),("swan-agent.exe".into(),&release.agent_sha256)] {
+        let file=zip.by_name(&name).map_err(|_|bad("Missing bundle file"))?;
+        if file.is_dir() || file.is_symlink() || file.size()>512*1024*1024{return Err(bad("Invalid bundle entry type or size"));}
+        if bounded_artifact_digest(file,512*1024*1024)?!=expected.to_lowercase(){return Err(bad("Bundle binary hash mismatch"));}
+    }
     let mut read=|name:&str,limit:u64|->Result<Vec<u8>,ApiError>{
         let file=zip.by_name(name).map_err(|_|bad("Missing bundle file"))?;
         if file.is_dir() || file.is_symlink() || file.size()>limit{return Err(bad("Invalid bundle entry type or size"));}
         let mut output=Vec::new();file.take(limit+1).read_to_end(&mut output).map_err(|_|bad("Unreadable bundle"))?;
         if output.len() as u64>limit{return Err(bad("Bundle entry too large"));}Ok(output)
     };
-    if digest(read(&format!("SwanRemoteSupport-install.{}",release.format),512*1024*1024)?)!=release.sha256.to_lowercase() || digest(read("swan-agent.exe",512*1024*1024)?)!=release.agent_sha256.to_lowercase(){return Err(bad("Bundle binary hash mismatch"));}
     for (name,expected) in COMPANY_BUNDLE_TEXT_FILES {let expected=bundle_text(expected)?;if read(name,expected.len() as u64)?!=expected{return Err(bad("Bundle script or license mismatch"));}}
     let profile_bytes=read("company-profile.json",2*1024*1024)?;
     let profile:SignedEnvelope=serde_json::from_slice(&profile_bytes)?;
@@ -920,6 +941,18 @@ fn validate_worker_bundle(bytes:&[u8],job:&Value,release:&Release,company_key:&e
     p.validate(&p.company_id,0,now()).map_err(|_|bad("Expired or invalid bundle profile"))?;
     if bootstrap.company_id!=p.company_id || bootstrap.edition!=release.edition || bootstrap.management_url!=p.management_url || bootstrap.profile_public_key!=STANDARD.encode(company_key.as_bytes()) || bootstrap.release_public_key!=trust {return Err(bad("Bootstrap trust mismatch"));}
     Ok(())
+}
+
+fn bounded_artifact_digest(mut reader:impl std::io::Read,limit:u64)->Result<String,ApiError> {
+    use sha2::{Digest,Sha256};
+    let mut hash=Sha256::new();let mut total=0u64;let mut chunk=[0u8;64*1024];
+    loop {
+        let count=reader.read(&mut chunk).map_err(|_|bad("Unreadable bundle"))?;
+        if count==0 {break;}
+        total=total.checked_add(count as u64).filter(|size|*size<=limit).ok_or_else(||bad("Bundle entry too large"))?;
+        hash.update(&chunk[..count]);
+    }
+    Ok(hex::encode(hash.finalize()))
 }
 
 // Called only after bundle validation, under a blocking task.

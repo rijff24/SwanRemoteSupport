@@ -743,3 +743,10 @@ the isolated HTTPS download-recovery harness and read-only MSI identity check.
 These skips do not prove those requirements at this source. The agent suite
 exercised actual read-only Authenticode checks and expected rejection paths;
 no native installer, service installation or desktop session was executed.
+
+Installer upload validation now hashes expanded binaries through a fixed 64 KiB
+buffer instead of allocating a complete expanded binary. The 512 MiB per-entry
+limit, signed hash comparison and ZIP CRC rejection remain enforced. Seven
+management worker/distribution regressions pass, including a real compressed ZIP
+fixture that verifies exact-boundary success, expansion-limit rejection and CRC
+corruption rejection. Full native package generation remains unverified.
