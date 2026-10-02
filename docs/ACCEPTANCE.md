@@ -233,3 +233,13 @@ values. Both use the existing signed, validated edition profile fields;
 JavaScript syntax passes. Rendered interaction and installed edition branding
 synchronization remain unverified. Native runs 36992580109 and 36992817681 are
 still confirmed in progress; no completion result is inferred.
+
+At clean source 5be190d, the Windows GNU release workspace build succeeds.
+A release-profile local-CA rehearsal stops at the expected TLS trust check:
+release binaries ignore the debug-only test CA, and that protection was retained.
+A separately built development rehearsal profile then passes the actual isolated
+HTTPS lifecycle with fresh data and built agent/server executables, including
+group removal, inventory and new-grant denial, non-revival after re-grant, prior
+MFA/enrollment/branding checks and offline consent recovery. Exact binary hashes
+and private result records remain in ignored test data. This does not verify
+production certificate deployment, native sessions, signed installers or VMs.
