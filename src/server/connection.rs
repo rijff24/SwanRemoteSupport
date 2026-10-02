@@ -2562,6 +2562,14 @@ impl Connection {
                         self.audio &= p.audio;self.file &= p.file;self.restart &= p.restart;
                         self.recording &= p.recording;self.block_input &= p.block_input;
                         self.privacy_mode &= p.privacy_mode;self.managed_lease=Some(lease);
+                        // Advertise the actual grant bounds before processing
+                        // login options or any subsequent privileged packets.
+                        for (permission,enabled) in [
+                            (Permission::Keyboard,self.keyboard),(Permission::Clipboard,self.clipboard),
+                            (Permission::Audio,self.audio),(Permission::File,self.file),
+                            (Permission::Restart,self.restart),(Permission::Recording,self.recording),
+                            (Permission::BlockInput,self.block_input),(Permission::PrivacyMode,self.privacy_mode),
+                        ] {self.send_permission(permission,enabled).await;}
                     },
                     Err(_) => {
                         self.send_login_error("Company session authorization denied").await;
@@ -5407,6 +5415,7 @@ impl Connection {
     fn authorized_scope_violation(&self, msg: &Message) -> Option<&'static str> {
         #[cfg(feature = "swan_custom")]
         match msg.union.as_ref() {
+            Some(message::Union::AudioFrame(_)) | Some(message::Union::VoiceCallRequest(_)) | Some(message::Union::VoiceCallResponse(_)) if !self.managed_permission_cap("audio") => return Some("Company grant denies audio"),
             Some(message::Union::FileAction(_)) | Some(message::Union::FileResponse(_)) if !self.managed_permission_cap("file") => return Some("Company grant denies file transfer"),
             Some(message::Union::Cliprdr(_)) if !self.managed_permission_cap("file") || !self.managed_permission_cap("clipboard") => return Some("Company grant denies clipboard file transfer"),
             _=>{}
