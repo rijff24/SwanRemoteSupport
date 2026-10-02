@@ -949,3 +949,24 @@ command was 280 characters; Microsoft's documented limit is
 A new private provisioning seed uses a 192-character command and validates this
 bound before generation. The failed disk remained hardware read-only throughout
 diagnosis. The corrected seed still requires an actual successful installation.
+
+The corrected private VM subsequently completed installation of Windows Server
+2016 Standard Evaluation with Desktop Experience, x64 build `14393`. Encrypted
+NTLM WinRM verified the guest identity and administrator context without changing
+host trust settings. Both unsigned `1.5.0` MSIs identified above passed actual
+`msiexec` install, repair and uninstall with exit code `0` and no requested reboot.
+The harness SHA-256 was
+`26ad362ee1d5d1793ee3ee35548d18ab84efc2973f4a663a3d62de50a53bf385`.
+Customer installation and repair verified all 96 manifest files, the agent hash,
+and the running LocalSystem service's exact executable. Repair restored a
+deliberately damaged packaged license file. A subsequent read-only cleanup audit
+confirmed all 96 files were absent and Windows Installer reported the customer
+product unregistered (`ProductState=-1`). Technician checks verified its main
+executable and agent hashes; repair did not deliberately damage a technician
+file. Both lifecycle tests ran under the guest administrator account.
+
+This is bare MSI lifecycle evidence for one Windows build. Standard-user
+technician installation, upgrade, reboot, company bootstrap/enrollment, trusted
+publisher validation, automatic updates, remote sessions and the remaining
+Windows compatibility matrix are still unverified. VM credentials and raw
+installation logs remain in the private lab outside the repository.
