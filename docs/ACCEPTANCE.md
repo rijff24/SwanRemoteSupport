@@ -145,3 +145,11 @@ inspected; no installer ran on the host. Technician setup/update support MSI
 containers and explicit external bootstrap input. Clean-guest install/upgrade,
 signing, customer MSI and complete uninstall cleanup remain acceptance gates;
 see deployment/windows/TECHNICIAN-MSI.md.
+
+Customer MSI authoring and the CLI recipe now build an actual unsigned package
+from the verified native 31b13aa payload, without executing product installers.
+The package includes the complete Flutter payload, local license and agent;
+service and Windows-owned broker copy/removal tables were inspected. Three new
+authoring tests and the existing three manifest tests pass. Clean-machine
+installation, signing, service/task lifecycle and recovery remain unverified;
+see deployment/windows/CUSTOMER-MSI.md. Native CI includes both MSI recipes.

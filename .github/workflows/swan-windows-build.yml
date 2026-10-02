@@ -157,6 +157,7 @@ jobs:
         shell: pwsh
         run: |
           python3 -m unittest discover -s deployment/windows -p test_payload_manifest.py
+          python3 -m unittest discover -s deployment/windows -p test_customer_msi.py
           python3 deployment/windows/generate-payload-manifest.py --edition customer --source swan-client --output artifacts/customer-installed-files.unsigned.json
           python3 deployment/windows/generate-payload-manifest.py --edition technician --source artifacts/SwanRemoteSupport-${{ env.VERSION }}-technician-x64-unsigned.exe --output artifacts/technician-installed-files.unsigned.json
 
@@ -168,7 +169,7 @@ jobs:
           Copy-Item deployment/windows/Install-Company.ps1,deployment/windows/Open-Technician.ps1,deployment/windows/Verify-Package.ps1,deployment/windows/Get-WindowsCompatibility.ps1 artifacts/
           Copy-Item LICENCE artifacts/
 
-      - name: Build unsigned technician MSI with pinned WiX
+      - name: Build unsigned customer and technician MSIs with pinned WiX
         shell: pwsh
         run: |
           $toolPackage = Join-Path $env:RUNNER_TEMP 'wix-cli-x64-5.0.2.msi'
@@ -179,6 +180,10 @@ jobs:
           ./deployment/windows/Build-TechnicianMsi.ps1 -WixExe $wix -TechnicianExe 'artifacts/SwanRemoteSupport-${{ env.VERSION }}-technician-x64-unsigned.exe' -AgentExe artifacts/swan-agent.exe -Version '${{ env.VERSION }}' -Output $output -UnsignedTest
           $hash = (Get-FileHash -LiteralPath $output -Algorithm SHA256).Hash.ToLowerInvariant()
           Add-Content artifacts/SHA256SUMS.txt ($hash+'  '+[IO.Path]::GetFileName($output))
+          $customerOutput = 'artifacts/SwanRemoteSupport-${{ env.VERSION }}-customer-x64-unsigned.msi'
+          ./deployment/windows/Build-CustomerMsi.ps1 -WixExe $wix -SourceDirectory swan-client -AgentExe artifacts/swan-agent.exe -Version '${{ env.VERSION }}' -Output $customerOutput -UnsignedTest
+          $customerHash = (Get-FileHash -LiteralPath $customerOutput -Algorithm SHA256).Hash.ToLowerInvariant()
+          Add-Content artifacts/SHA256SUMS.txt ($customerHash+'  '+[IO.Path]::GetFileName($customerOutput))
 
       - name: Upload unsigned installer and checksum
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -189,7 +194,9 @@ jobs:
             artifacts/SwanRemoteSupport-${{ env.VERSION }}-x64-unsigned-install.exe
             artifacts/SwanRemoteSupport-${{ env.VERSION }}-technician-x64-unsigned.exe
             artifacts/SwanRemoteSupport-${{ env.VERSION }}-technician-x64-unsigned.msi
+            artifacts/SwanRemoteSupport-${{ env.VERSION }}-customer-x64-unsigned.msi
             artifacts/*.msi.build.json
+            artifacts/*.msi.installed-files.json
             artifacts/SHA256SUMS.txt
             artifacts/swan-*.exe
             artifacts/Install-Company.ps1
