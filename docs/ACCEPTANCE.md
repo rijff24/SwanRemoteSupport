@@ -750,3 +750,13 @@ limit, signed hash comparison and ZIP CRC rejection remain enforced. Seven
 management worker/distribution regressions pass, including a real compressed ZIP
 fixture that verifies exact-boundary success, expansion-limit rejection and CRC
 corruption rejection. Full native package generation remains unverified.
+
+At clean source `059f675`, the dedicated HTTPS recovery harness also passed
+against the current agent test executable. It verified redirect handling,
+artifact tamper/interruption rejection, retention of complete staged bytes,
+cleanup and absence of credentials in artifact requests. Both customer and
+technician unsigned 1.4.9 MSI fixtures passed the current read-only edition,
+version and recovery-plan checks, including wrong-identity rejection and unchanged
+package bytes. These checks close the ordinary suite's two skipped fixture tests
+for their stated scope; they do not establish current native MSI installation,
+trusted production signing, service/task changes or upgrade restoration.
