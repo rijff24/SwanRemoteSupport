@@ -35,7 +35,10 @@ $files=@()
 if ($Edition -eq 'technician' -and $TechnicianSha256 -notmatch '^[a-fA-F0-9]{64}$') { throw 'Pinned technician executable hash required.' }
 if ($Edition -eq 'customer') {
     if ($ManifestSha256 -notmatch '^[a-fA-F0-9]{64}$' -or (Get-FileHash -LiteralPath $Manifest -Algorithm SHA256).Hash -ine $ManifestSha256) { throw 'Pinned customer manifest required.' }
-    $files=@(Get-Content -LiteralPath $Manifest -Raw | ConvertFrom-Json)
+    # Windows PowerShell 5.1 emits a JSON array as one pipeline object. Assign
+    # it first, then enumerate its entries consistently in both supported shells.
+    $decoded=Get-Content -LiteralPath $Manifest -Raw | ConvertFrom-Json
+    $files=@($decoded)
     $seen=@{}
     foreach($file in $files){
         if ($file.path -notmatch '^[A-Za-z0-9 _\-.@+/]+$' -or @($file.path.Split('/') | Where-Object {$_ -in @('','.', '..') -or $_.EndsWith('.') -or $_.EndsWith(' ')}).Count -or $seen.ContainsKey($file.path) -or $file.sha256 -notmatch '^[a-fA-F0-9]{64}$') { throw 'Unsafe manifest entry.' }
