@@ -41,7 +41,34 @@ $recordArguments = @('record-installation',(Join-Path $root 'release.json'))
 if ($Repair) { $packageArguments += '--repair'; $recordArguments += '--repair' }
 & $agent @packageArguments
 if ($LASTEXITCODE -ne 0) { throw 'Installer metadata, hash or publisher validation failed.' }
+$installationMarker = Join-Path $editionDirectory 'pending-install.json'
+$activityStream = [IO.File]::Open((Join-Path $editionDirectory 'activity.lock'),[IO.FileMode]::OpenOrCreate,[IO.FileAccess]::ReadWrite,[IO.FileShare]::ReadWrite)
+$activityLocked = $false
+try {
+    # LockFile's exclusive byte range overlaps fs2's session/update lock range.
+    # Refuse active sessions; do not terminate them to perform setup.
+    $activityStream.Lock(0,1)
+    $activityLocked = $true
+    $markerStream = [IO.File]::Open($installationMarker,[IO.FileMode]::Create,[IO.FileAccess]::Write,[IO.FileShare]::Read)
+    try {
+        $markerBytes = [IO.File]::ReadAllBytes((Join-Path $root 'release.json'))
+        $markerStream.Write($markerBytes,0,$markerBytes.Length)
+        $markerStream.Flush($true)
+    } finally { $markerStream.Dispose() }
 if ($bootstrap.edition -eq 'customer') {
+    $configurationTask = @(Get-ScheduledTask | Where-Object { $_.TaskName -eq 'Swan Company Configuration' })
+    if ($configurationTask.Count -gt 1) { throw 'Ambiguous existing configuration task.' }
+    if ($configurationTask.Count -eq 1) {
+        $expectedAgent = [IO.Path]::GetFullPath((Join-Path $editionDirectory 'swan-agent.exe'))
+        if ($configurationTask[0].Actions.Count -ne 1 -or [IO.Path]::GetFullPath($configurationTask[0].Actions[0].Execute) -ine $expectedAgent -or $configurationTask[0].Actions[0].Arguments -cne 'watch') { throw 'Existing configuration task does not match this installation.' }
+        $configurationTask[0] | Disable-ScheduledTask | Out-Null
+        $configurationTask[0] | Stop-ScheduledTask
+        $stopDeadline = [DateTime]::UtcNow.AddSeconds(10)
+        while (@(Get-CimInstance Win32_Process -Filter "Name='swan-agent.exe'" | Where-Object { $_.ExecutablePath -ieq $expectedAgent }).Count -gt 0) {
+            if ([DateTime]::UtcNow -ge $stopDeadline) { throw 'Installed configuration agent did not stop. Close its running processes and retry setup.' }
+            Start-Sleep -Milliseconds 100
+        }
+    }
     if ($installers[0].Extension -eq '.msi') {
         $process = Start-Process -FilePath 'msiexec.exe' -ArgumentList @('/i',('"' + $installers[0].FullName + '"'),'/passive','/norestart') -PassThru -Wait -WindowStyle Hidden
     } else {
@@ -56,14 +83,6 @@ if ($bootstrap.edition -eq 'customer') {
     & $agent @enrollmentArguments
     if ($LASTEXITCODE -ne 0) { throw 'Device enrollment failed. Access remains blocked.' }
     Copy-Item -LiteralPath $agent -Destination (Join-Path $editionDirectory 'swan-agent.exe') -Force
-    & $agent @recordArguments
-    if ($LASTEXITCODE -ne 0) { throw 'Installed application or configuration agent verification failed. Background updates were not enabled.' }
-    $action = New-ScheduledTaskAction -Execute (Join-Path $editionDirectory 'swan-agent.exe') -Argument 'watch'
-    $trigger = New-ScheduledTaskTrigger -AtStartup
-    $settings = New-ScheduledTaskSettingsSet -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 1) -ExecutionTimeLimit ([TimeSpan]::Zero)
-    Register-ScheduledTask -TaskName 'Swan Company Configuration' -Action $action -Trigger $trigger -Settings $settings -User 'SYSTEM' -RunLevel Highest -Force | Out-Null
-    Start-ScheduledTask -TaskName 'Swan Company Configuration'
-    Write-Host 'Installed and enrolled. Your company must approve the device. Support status and stop controls remain available.'
 } else {
     $releaseEnvelope = Get-Content -LiteralPath (Join-Path $root 'release.json') -Raw | ConvertFrom-Json
     # The agent already verified this signed metadata and installer before any copy.
@@ -72,8 +91,25 @@ if ($bootstrap.edition -eq 'customer') {
     $portable = Join-Path $editionDirectory 'SwanRemoteSupport-Technician.exe'
     Copy-Item -LiteralPath $installers[0].FullName -Destination $portable -Force
     Copy-Item -LiteralPath $agent -Destination (Join-Path $editionDirectory 'swan-agent.exe') -Force
-    & $agent @recordArguments
-    if ($LASTEXITCODE -ne 0) { throw 'Technician installed application or agent verification failed.' }
+}
+} finally {
+    try { if ($activityLocked) { $activityStream.Unlock(0,1) } }
+    finally { $activityStream.Dispose() }
+}
+# Sessions remain blocked by the durable marker while the agent verifies the
+# complete installed identity under its own exclusive lock.
+& $agent @recordArguments
+if ($LASTEXITCODE -ne 0) { throw 'Installed application or agent verification failed. Installation recovery is required.' }
+if (Test-Path -LiteralPath $installationMarker) { throw 'Company installation recovery marker remains; support sessions stay blocked.' }
+if ($bootstrap.edition -eq 'customer') {
+    $action = New-ScheduledTaskAction -Execute (Join-Path $editionDirectory 'swan-agent.exe') -Argument 'watch'
+    $trigger = New-ScheduledTaskTrigger -AtStartup
+    $settings = New-ScheduledTaskSettingsSet -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 1) -ExecutionTimeLimit ([TimeSpan]::Zero)
+    Register-ScheduledTask -TaskName 'Swan Company Configuration' -Action $action -Trigger $trigger -Settings $settings -User 'SYSTEM' -RunLevel Highest -Force | Out-Null
+    Enable-ScheduledTask -TaskName 'Swan Company Configuration' | Out-Null
+    Start-ScheduledTask -TaskName 'Swan Company Configuration'
+    Write-Host 'Installed and enrolled. Your company must approve the device. Support status and stop controls remain available.'
+} else {
     Copy-Item -LiteralPath (Join-Path $root 'Open-Technician.ps1') -Destination (Join-Path $editionDirectory 'Open-Technician.ps1') -Force
     $shortcutPath = Join-Path ([Environment]::GetFolderPath('Programs')) 'Swan Remote Support Technician.lnk'
     $shell = New-Object -ComObject WScript.Shell

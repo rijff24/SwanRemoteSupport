@@ -124,13 +124,20 @@ impl AgentState {
         let activity=activity_file(directory)?;fs2::FileExt::try_lock_exclusive(&activity).context("Installation verification requires all sessions to close")?;
         let mut latest=AgentState::load(directory)?;
         let release=installation_release(&latest,directory,envelope,repair)?;
+        let setup_marker=directory.join("pending-install.json");
+        if setup_marker.exists(){
+            let pending:SignedEnvelope=serde_json::from_slice(&std::fs::read(&setup_marker)?)?;
+            ensure!(pending.payload==envelope.payload && pending.signature==envelope.signature,"Another company installation must be recovered first");
+        }
         verify_compatibility(directory,&release)?;
         verify_installed(directory,&release)?;
         let agent=directory.join("swan-agent.exe");
         ensure!(digest(std::fs::read(&agent)?).eq_ignore_ascii_case(&release.agent_sha256),"Installed configuration agent differs from signed release");
         let mut agent_release=release.clone();agent_release.sha256=release.agent_sha256.clone();verify_publisher(&agent,&agent_release)?;
         save_installed_metadata(directory,envelope)?;
-        latest.last_release_sequence=release.sequence;latest.save(directory)?;*self=latest;Ok(())
+        latest.last_release_sequence=release.sequence;latest.save(directory)?;
+        if setup_marker.exists(){std::fs::remove_file(setup_marker)?;}
+        *self=latest;Ok(())
     }
     #[cfg(windows)]
     pub fn recover_update(&mut self,directory:&Path)->Result<()> {
@@ -152,6 +159,7 @@ impl AgentState {
     pub async fn update(&mut self,directory:&Path,technician_token:Option<&str>)->Result<bool> {
         #[cfg(not(windows))] {let _=(directory,technician_token);anyhow::bail!("Endpoint updates require Windows");}
         #[cfg(windows)] {
+            ensure!(!directory.join("pending-install.json").exists(),"Company setup recovery is required before automatic updates");
             require_existing_application(&installed_target(directory,&self.bootstrap.edition)?)?;
             let profile=self.company_profile()?;
             if profile.updates_paused || !maintenance_open(profile.maintenance_start_utc,profile.maintenance_end_utc,now()){return Ok(false);}
@@ -172,6 +180,7 @@ impl AgentState {
             verify_publisher(&package,&release)?;
             let activity=activity_file(directory)?;
             fs2::FileExt::try_lock_exclusive(&activity).context("Update deferred while a session or technician app is active")?;
+            ensure!(!directory.join("pending-install.json").exists(),"Company setup started while the update was downloading");
             // Re-read consent and enrollment immediately before installation.
             let mut latest=AgentState::load(directory)?;
             // Removal during download must not be turned into a fresh install.
@@ -225,6 +234,32 @@ fn verify_installed(directory:&Path,release:&Release)->Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn interrupted_setup_blocks_sessions_until_recovered(){
+        let folder=std::env::temp_dir().join(format!("swan-pending-install-{}",random_token()));
+        std::fs::create_dir(&folder).unwrap();std::fs::write(folder.join("pending-install.json"),b"interrupted setup fixture").unwrap();
+        assert!(lock_session(&folder).is_err());
+        std::fs::remove_file(folder.join("pending-install.json")).unwrap();
+        assert!(lock_session(&folder).is_ok());std::fs::remove_dir_all(folder).unwrap();
+    }
+    #[cfg(windows)]
+    #[test]
+    fn powershell_installer_byte_lock_excludes_native_sessions(){
+        use std::io::{BufRead,Write};use std::os::windows::process::CommandExt;
+        let folder=std::env::temp_dir().join(format!("swan-installer-lock-{}",random_token()));std::fs::create_dir(&folder).unwrap();
+        let script=folder.join("hold-install-lock.ps1");
+        std::fs::write(&script,r#"param([string]$Directory)
+$ErrorActionPreference='Stop'
+$stream=[IO.File]::Open((Join-Path $Directory 'activity.lock'),[IO.FileMode]::OpenOrCreate,[IO.FileAccess]::ReadWrite,[IO.FileShare]::ReadWrite)
+try {$stream.Lock(0,1);[Console]::WriteLine('locked');[Console]::ReadLine()|Out-Null}finally{$stream.Dispose()}
+"#).unwrap();
+        let mut child=std::process::Command::new("powershell.exe").args(["-NoLogo","-NoProfile","-NonInteractive","-ExecutionPolicy","Bypass","-File"]).arg(&script).arg(&folder).creation_flags(0x08000000).stdin(std::process::Stdio::piped()).stdout(std::process::Stdio::piped()).spawn().unwrap();
+        let mut output=std::io::BufReader::new(child.stdout.take().unwrap());let mut line=String::new();output.read_line(&mut line).unwrap();
+        let ready=line.trim()=="locked";let blocked=lock_session(&folder).is_err();
+        if let Some(mut input)=child.stdin.take(){input.write_all(b"release\n").unwrap();}
+        let status=child.wait().unwrap();assert!(ready && blocked && status.success());
+        assert!(lock_session(&folder).is_ok());std::fs::remove_dir_all(folder).unwrap();
+    }
     #[test]
     fn removed_application_requires_explicit_setup_instead_of_automatic_reinstall() {
         let folder=std::env::temp_dir().join(format!("swan-removed-{}",random_token()));
