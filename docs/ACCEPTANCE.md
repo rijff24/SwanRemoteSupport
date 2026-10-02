@@ -280,3 +280,12 @@ labels, excessive links and control characters. JavaScript syntax and native
 Rust parsing pass. Flutter compilation, rendering and installed synchronization
 remain unverified. Upgrade clients to compatible builds before publishing new
 nonempty branding fields; older strict clients will reject unfamiliar fields.
+
+Optional local company artifact signing now has an explicit pinned-input helper
+using a company certificate's local private-key provider and Microsoft-signed
+SDK SignTool. It signs separate copies, requires trusted publisher/certificate
+verification and a timestamp, and records final hashes. PowerShell parsing and
+wrong-input-hash rejection pass against a real unsigned agent with no source
+change or output. No actual signature was made. Provider/certificate signing,
+worker consumption, signed installs/updates and release-issuer migration remain
+unverified or incomplete; see deployment/windows/COMPANY-SIGNING.md.
