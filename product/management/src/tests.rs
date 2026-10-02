@@ -26,6 +26,7 @@ async fn enrollment_mfa_and_grants_fail_closed() {
     let directory=std::env::temp_dir().join(format!("swan-api-{}",random_token()));
     let store=Arc::new(Store::open(&directory).unwrap());let app=router(store.clone());
     assert_eq!(request(&app,"/api/v1/devices","GET",None,Value::Null).await.0,StatusCode::UNAUTHORIZED);
+    assert_eq!(request(&app,"/api/v1/network/check","POST",None,Value::Null).await.0,StatusCode::UNAUTHORIZED);
     let secret=Secret::generate_secret().to_encoded().to_string();
     let generator=TOTP::new(Algorithm::SHA1,6,1,30,Secret::Encoded(secret.clone()).to_bytes().unwrap()).unwrap();
     let time=now();let setup_token=std::fs::read_to_string(directory.join("setup-token.txt")).unwrap();
@@ -79,6 +80,7 @@ async fn enrollment_mfa_and_grants_fail_closed() {
     let (_,tech_login)=request(&app,"/api/v1/login","POST",None,json!({"username":"technician","password":"another long strong password","totp_code":tech_generator.generate(now())})).await;
     let technician=tech_login["token"].as_str().unwrap();
     assert_eq!(request(&app,"/api/v1/users","GET",Some(technician),Value::Null).await.0,StatusCode::UNAUTHORIZED);
+    assert_eq!(request(&app,"/api/v1/network/check","POST",Some(technician),Value::Null).await.0,StatusCode::UNAUTHORIZED,"Only company administrators may probe configured endpoints");
     assert_eq!(request(&app,"/api/v1/grants","POST",Some(technician),json!({"device_id":device_id,"proof_public_key":STANDARD.encode(proof.verifying_key().as_bytes()),"unattended":false})).await.0,StatusCode::FORBIDDEN,"Technicians need explicit group access");
     let (_,devices)=request(&app,"/api/v1/devices","GET",Some(technician),Value::Null).await;assert_eq!(devices.as_array().unwrap().len(),0);
     assert_eq!(request(&app,&format!("/api/v1/groups/customers/users/{}",new_user["id"].as_str().unwrap()),"PUT",Some(admin),Value::Null).await.0,StatusCode::OK);

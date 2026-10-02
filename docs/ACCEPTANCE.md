@@ -8,7 +8,7 @@ native support session or a clean-machine installation.
 
 - Public baseline tag `swan-single-company-baseline-1.4.9` preserves the original
   Swan deployment and build instructions. Its source was not replaced.
-- Twenty-two product tests pass on the local Windows development host, including
+- Twenty-three product tests pass on the local Windows development host, including
   enrollment/trust preservation across stale writes, trusted key rotation, refusal to automatically reinstall a removed endpoint, and explicit consent changes surviving older refreshes. Consent API tests also reject delayed enable requests and older revocation retries; same-revision revocation takes precedence.
   The preceding eleven-test component source passed tests and release compilation on
   [Windows 2022 and Ubuntu 24.04 CI](https://github.com/rijff24/SwanRemoteSupport/actions/runs/36856716860)
@@ -76,7 +76,7 @@ remain unverified.
 | Requirement | Current evidence and remaining work |
 | --- | --- |
 | Reproducible server, customer, technician and worker builds | Product components pass pinned builds. Native x64 build/package remains pending; baseline rebuild is not newly proved. |
-| Fresh-company Windows/Linux setup | HTTPS/API setup works. Equivalent full setup wizards, transport provisioning, certificate management and reachability checks remain incomplete. |
+| Fresh-company Windows/Linux setup | HTTPS/API setup works. Administrator network settings and server-vantage DNS/TCP/HTTPS company-signature diagnostics are implemented with access tests. Equivalent full setup wizards, transport provisioning, certificate management and external reachability checks remain incomplete; see NETWORK_DIAGNOSTICS.md. |
 | Roles, groups, permissions and revocation | MFA/group/device denial tests pass. Signed capability fields, administrator group policy APIs, and receiver capability bounds are implemented in source. Policy reduction denies lease renewal in component tests. Administration controls, native enforcement and direct-connection bypass tests remain unverified. |
 | Configurable customer and technician apps | Signed profile sync passes. Graphical login/inventory/history, logo/color rendering, contacts, company shortcuts, offline operation and native restart/upgrade preservation remain to verify or complete. |
 | Signed profiles and rotation | Component tests reject tampering, wrong-company, expired and older profiles and untrusted key changes. Trusted cached key/endpoint rotation preserves enrollment in tests. Real HTTPS rotation and installed-app behavior still need verification. |

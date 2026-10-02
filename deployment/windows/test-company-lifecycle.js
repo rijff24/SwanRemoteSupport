@@ -41,6 +41,14 @@ async function main(){
   const setup=await api('setup','POST',fs.readFileSync(path.join(data,'setup-token.txt'),'utf8').trim(),{profile,username:'test-admin',password,totp_secret:secret,totp_code:totp(secret)});assert.equal(setup.status,200);
   fs.writeFileSync(path.join(data,'test-admin.private.json'),JSON.stringify({username:'test-admin',password,totp_secret:secret}));
   const login=await api('login','POST',null,{username:'test-admin',password,totp_code:totp(secret,1)});assert.equal(login.status,200);const admin=login.body.token;
+  if(settings.SWAN_TEST_CA_FILE){
+    assert.equal((await api('network/check','POST')).status,401,'Unauthenticated network diagnostics accepted');
+    const diagnostics=await api('network/check','POST',admin,{management_url:'https://unconfigured.invalid'});
+    assert.equal(diagnostics.status,200);assert.equal(diagnostics.body.management_url,base,'Probe used an unconfigured request target');
+    assert.equal(diagnostics.body.https_and_company_signature_valid,true,'Configured HTTPS company trust check failed');
+    assert.equal(diagnostics.body.vantage_point,'company_server');assert.equal(diagnostics.body.tcp_checks.length,3);
+    assert.equal(diagnostics.body.external_reachability_verified,false);assert.equal(diagnostics.body.udp_reachability_verified,false);
+  }
   const signed=(await api('profile')).body;const current=JSON.parse(Buffer.from(signed.payload,'base64'));
   const bootstrap={schema:1,edition:'customer',company_id:current.company_id,management_url:base,profile_public_key:status.profile_public_key,release_public_key:''};
   const customerDir=path.join(data,'customer-agent'), techDir=path.join(data,'technician-agent');

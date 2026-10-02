@@ -5,7 +5,7 @@ param(
 $ErrorActionPreference = 'Stop'
 if (!(Test-Path -LiteralPath $EnvironmentFile)) { throw 'Create local-test.env from local-test.env.example first.' }
 # Only named server settings are accepted; the file is data, never PowerShell code.
-$allowed = @('SWAN_LISTEN', 'SWAN_DATA_DIR', 'SWAN_RELEASE_PUBLIC_KEY', 'SWAN_TEST_TLS_PORT', 'SWAN_TEST_TLS_PFX', 'SWAN_TEST_TLS_PASSWORD', 'SWAN_TEST_FAULTS')
+$allowed = @('SWAN_LISTEN', 'SWAN_DATA_DIR', 'SWAN_RELEASE_PUBLIC_KEY', 'SWAN_TEST_TLS_PORT', 'SWAN_TEST_TLS_PFX', 'SWAN_TEST_TLS_PASSWORD', 'SWAN_TEST_FAULTS', 'SWAN_TEST_CA_FILE')
 foreach ($line in Get-Content -LiteralPath $EnvironmentFile) {
     if (!$line.Trim() -or $line.TrimStart().StartsWith('#')) { continue }
     if ($line -notmatch '^([A-Z_]+)=(.*)$' -or $Matches[1] -notin $allowed) { throw 'Invalid local environment setting.' }

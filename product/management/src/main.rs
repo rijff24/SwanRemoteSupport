@@ -1,5 +1,6 @@
 mod service;
 mod backup;
+mod network;
 #[cfg(test)]
 mod tests;
 use anyhow::{Context, Result};

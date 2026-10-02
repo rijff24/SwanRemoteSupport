@@ -243,7 +243,14 @@ pub fn validate_host(value: &str) -> Result<()> {
     ensure!(value.bytes().all(|c| c.is_ascii_alphanumeric() || b".-:[]".contains(&c)), "Invalid transport address");
     let endpoint=url::Url::parse(&format!("tcp://{value}"))?;
     ensure!(endpoint.host_str().is_some() && endpoint.username().is_empty() && endpoint.password().is_none() && endpoint.query().is_none() && endpoint.fragment().is_none() && ["","/"].contains(&endpoint.path()),"Expected transport hostname and optional port");
+    ensure!(endpoint.port()!=Some(0),"Transport port zero is invalid");
     Ok(())
+}
+pub fn transport_socket(value:&str,default_port:u16)->Result<(String,u16)> {
+    validate_host(value)?;ensure!(default_port>0,"Transport port zero is invalid");
+    let endpoint=url::Url::parse(&format!("tcp://{value}"))?;
+    let host=endpoint.host_str().context("Missing transport hostname")?.trim_matches(['[',']']).to_string();
+    Ok((host,endpoint.port().unwrap_or(default_port)))
 }
 pub fn public_key(value: &str) -> Result<VerifyingKey> {
     let bytes: [u8; 32] = STANDARD.decode(value)?.try_into().map_err(|_| anyhow::anyhow!("Expected 32-byte key"))?;

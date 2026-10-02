@@ -124,6 +124,7 @@ pub fn router(store:Shared)->Router {
         .route("/api/v1/login",post(login))
         .route("/api/v1/logout",post(logout))
         .route("/api/v1/profile",get(profile).put(save_profile))
+        .route("/api/v1/network/check",post(network_check))
         .route("/api/v1/users",get(users).post(create_user))
         .route("/api/v1/users/{id}/disable",post(disable_user))
         .route("/api/v1/enroll",post(enroll))
@@ -158,6 +159,12 @@ pub fn router(store:Shared)->Router {
 async fn status(State(s):State<Shared>)->ApiResult {
     let configured=s.db.lock().unwrap().query_row("SELECT EXISTS(SELECT 1 FROM profile)",[],|r|r.get::<_,bool>(0))?;
     Ok(Json(json!({"configured":configured,"profile_public_key":STANDARD.encode(s.key.verifying_key().as_bytes())})))
+}
+async fn network_check(State(s):State<Shared>,headers:HeaderMap)->ApiResult {
+    let actor=s.user(&headers,true)?;s.rate("network-check",10)?;
+    let profile=s.profile()?;
+    let result=crate::network::check(&profile,&s.key.verifying_key()).await?;
+    s.audit(&actor,"network.checked",&profile.company_id)?;Ok(Json(result))
 }
 #[derive(Deserialize)]
 struct Setup { profile:CompanyProfile, username:String,password:String,totp_secret:String,totp_code:String }

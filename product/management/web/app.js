@@ -23,6 +23,23 @@ function setupScreen(){
 function loginScreen(){title('Sign in to your company server','Administrator and technician accounts require an authenticator code.');document.querySelector('#nav').hidden=true;content.innerHTML=`<form class="card" id="login">${field('username','Username')}${field('password','Password','password')}${field('code','Authenticator code')}<button type="submit">Sign in</button><p class="muted">Your session stays in this page’s memory and expires after one hour.</p></form>`;bindForm('login',async values=>{const login=await api('login','POST',{username:values.get('username'),password:values.get('password'),totp_code:values.get('code')});accessToken=login.token;document.querySelector('#nav').hidden=false;await view('devices');});}
 async function view(name){notice.textContent='';for(const button of document.querySelectorAll('[data-view]'))button.classList.toggle('active',button.dataset.view===name);try{await screens[name]();}catch(error){showError(error);}}
 const screens={
+  async network(){
+    title('Company network','Configure company-owned public endpoints and check them from this server. External access needs a separate test.');
+    const envelope=await api('profile');
+    const profile=JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(envelope.payload),c=>c.charCodeAt(0))));
+    content.innerHTML=`<form class="card" id="network"><h2>Transport and management</h2>${field('management-url','Management HTTPS URL','url',profile.management_url)}${field('rendezvous-host','ID server hostname and optional port','text',profile.rendezvous)}${field('relay-host','Relay hostname and optional port','text',profile.relay)}${field('transport-key','Public transport trust key','text',profile.transport_public_key)}<p class="muted">These settings publish signed client configuration. DNS, HTTPS certificates, server processes and port forwarding must also match. Changing the URL does not move this server.</p><button type="submit">Publish network configuration</button></form><div class="card"><h2>Reachability check</h2><p>This check uses the saved company configuration. It can detect DNS, TCP and management trust problems from this server, but cannot prove access from an outside network or UDP traversal.</p><button id="check-network" class="secondary">Check saved endpoints</button><div id="network-result" role="status"></div><p class="muted">Office hosting behind CGNAT may need a company-controlled public relay. Test direct and relay sessions externally before publishing customer packages. HTTPS-only corporate proxies are not guaranteed.</p></div>`;
+    bindForm('network',async values=>{
+      profile.management_url=String(values.get('management-url')).replace(/\/$/,'');profile.rendezvous=String(values.get('rendezvous-host'));profile.relay=String(values.get('relay-host'));profile.transport_public_key=String(values.get('transport-key'));
+      await api('profile','PUT',profile);notice.textContent='Signed network configuration published. Check the saved endpoints before distribution.';
+    });
+    document.querySelector('#check-network').onclick=async event=>{
+      event.target.disabled=true;
+      try {
+        const result=await api('network/check','POST');
+        document.querySelector('#network-result').innerHTML=`<p>Vantage point: this company server. Management HTTPS and company signature: ${result.https_and_company_signature_valid?'verified':'failed'}.</p><table><thead><tr><th>Endpoint</th><th>Result</th><th>Resolved addresses</th></tr></thead><tbody>${result.tcp_checks.map(check=>`<tr><td>${escapeText(check.name)}<small>${escapeText(check.host)}:${escapeText(check.port)}</small></td><td>${escapeText(check.result)}</td><td>${check.addresses.map(address=>`${escapeText(address.ip)} (${escapeText(address.classification)})`).join('<br>')}</td></tr>`).join('')}</tbody></table><p>${escapeText(result.guidance)}</p>`;
+      } catch(error){showError(error);} finally {event.target.disabled=false;}
+    };
+  },
   async permissions(){
     title('Group session permissions','Set what technicians may do on devices in each group. Reducing permissions prevents existing sessions from renewing their authorization.');
     const capabilities={keyboard:'Keyboard and mouse control',clipboard:'Clipboard',audio:'Audio',file:'File transfer',restart:'Restart device',recording:'Session recording',block_input:'Block customer input',privacy_mode:'Privacy mode'};
