@@ -488,3 +488,11 @@ stays denied. The rehearsal passes again after rebuilding startup and rotation
 operations onto blocking worker threads. Private results record the binary
 hashes and dirty source state; both fixture listeners stop. Live ACME renewal,
 hbbs/hbbr restoration and Windows native acceptance remain unverified.
+
+The administration branding form now uses separate shortcut name/HTTPS-address
+fields with add/remove controls and an eight-entry limit. Valid names and URLs
+containing pipe characters survive editing without delimiter ambiguity. A local
+JavaScript regression check verifies exact pipe/whitespace preservation, blank
+row omission, incomplete-entry rejection and HTML attribute escaping. JavaScript
+syntax and diff checks pass. Browser interaction, accessibility and installed-app
+shortcut rendering remain unverified.
