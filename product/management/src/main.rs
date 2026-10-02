@@ -33,11 +33,11 @@ async fn run(stop:tokio::sync::oneshot::Receiver<()>)->Result<()> {
             let mut inputs=std::collections::HashMap::new();
             anyhow::ensure!(extra.len()%2==0,"Backup options require explicit paths");
             for pair in extra.chunks_exact(2){
-                anyhow::ensure!(operation=="backup" && matches!(pair[0].as_str(),"--transport-directory"|"--deployment-env"|"--tls-identity"),"Unknown backup option");
+                anyhow::ensure!(operation=="backup" && matches!(pair[0].as_str(),"--transport-directory"|"--deployment-env"|"--tls-identity"|"--tls-directory"),"Unknown backup option");
                 anyhow::ensure!(inputs.insert(pair[0].clone(),PathBuf::from(&pair[1])).is_none(),"Duplicate backup option");
             }
             if operation=="backup" {
-                backup::export_complete(&data,&path,&passphrase,inputs.get("--transport-directory").map(|p|p.as_path()),inputs.get("--deployment-env").map(|p|p.as_path()),inputs.get("--tls-identity").map(|p|p.as_path()))
+                backup::export_deployment(&data,&path,&passphrase,inputs.get("--transport-directory").map(|p|p.as_path()),inputs.get("--deployment-env").map(|p|p.as_path()),inputs.get("--tls-identity").map(|p|p.as_path()),inputs.get("--tls-directory").map(|p|p.as_path()))
             }else{backup::restore(&data,&path,&passphrase)}
         }).await??;
         println!("Encrypted {} completed.",args[1]);return Ok(());

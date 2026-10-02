@@ -428,3 +428,14 @@ and screenshots remain outside the repository. The existing Server 2025 VM is
 still running at its boot screen and was not restarted. No clean Windows install
 or product installation has passed yet. Native build 37002003558 is queued at
 0c71544, covering the acknowledged customer-consent source.
+
+The Server 2016 VM has now selected Standard Evaluation with Desktop Experience
+and started installation on its empty virtual disk. File preparation reached
+81%; this is provisioning progress, not a completed OS or product test.
+
+Management backup accepts `--tls-directory` for the complete HTTPS storage tree.
+Nested certificate-key and ACME account fixtures survive authenticated encrypted
+export/restore. Restore rejects traversal, Windows filename collisions and
+file/directory conflicts before creating its target. Nine management tests pass;
+the three backup tests also pass after adding malformed encrypted archive cases.
+Live certificate renewal, transport restore and migration rollback remain open.

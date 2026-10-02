@@ -13,12 +13,20 @@ swan-management backup company.swan-backup
 
 For a deployment export, replace the path placeholders with company-controlled
 paths. Omit `--tls-identity` only when HTTPS identity will be reissued separately.
-The TLS argument accepts one existing identity file, such as a PFX or PEM bundle;
-it does not export an entire ACME storage directory.
+The TLS identity argument accepts one existing file, such as a PFX or PEM bundle.
+Use `--tls-directory HTTPS_STORAGE_DIRECTORY` for the complete certificate-service
+storage tree, including ACME account and certificate files. For Caddy, supply its
+persistent data directory. Stop certificate renewal and other writes to this tree
+for the duration of export. Export reads it without stopping or modifying services.
 
 ```text
 swan-management backup company.swan-backup --transport-directory TRANSPORT_DATA --deployment-env PRIVATE_ENV_FILE --tls-identity TLS_IDENTITY_FILE
 ```
+
+Alternatively, replace the final option with `--tls-directory HTTPS_STORAGE_DIRECTORY`.
+Both options can be included when the deployment uses separate storage and identity files.
+Directory exports reject symbolic links, Windows reparse points, special files,
+unsafe paths, and more than 4096 total files. The 512 MiB total plaintext limit applies.
 
 The transport directory must contain both `id_ed25519` and `id_ed25519.pub`.
 When present, `db_v2.sqlite3` is also snapshotted using SQLite's backup API.
@@ -41,8 +49,9 @@ swan-management restore company.swan-backup
 
 Set `SWAN_DATA_DIR` to that empty replacement directory before running restore.
 The restorer authenticates and validates the archive before writing contents.
-It permits fixed filenames only, rejects duplicate names and incomplete key
-pairs, and protects restored files with private Unix permissions or Windows
+It permits fixed management filenames and validated relative paths under
+`tls-storage/`, rejects duplicate or Windows-colliding names, file/directory
+conflicts and incomplete key pairs, and protects restored files with private Unix permissions or Windows
 ACLs for the invoking account, SYSTEM and Administrators.
 
 Management files restore directly. Deployment extras are staged in that same
@@ -55,6 +64,7 @@ protected directory; restore never overwrites external service files:
 | `transport-db.sqlite3` | Transport data directory as `db_v2.sqlite3` |
 | `deployment.env` | Private deployment environment configuration |
 | `tls-identity` | Company HTTPS identity location, or replace through certificate reissuance |
+| `tls-storage/` | Complete HTTPS service data directory; copy while that service is stopped |
 
 Keep transport services stopped while placing their restored data. Preserve
 private ownership and permissions appropriate to the service accounts. Use the
@@ -88,3 +98,7 @@ grant. Private results are recorded in the restored test directory.
 This does not demonstrate live hbbs/hbbr recovery, certificate renewal, recovery
 of changes after the backup, profile revision reconciliation or migration
 rollback. Those remain acceptance requirements.
+
+The extended storage component test additionally preserves nested certificate
+private-key and ACME account fixtures through encrypted export and restore.
+It does not demonstrate a running Caddy service restoring or renewing certificates.

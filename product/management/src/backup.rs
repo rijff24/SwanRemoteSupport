@@ -12,6 +12,37 @@ pub fn export(data:&Path,destination:&Path,password:&str)->Result<()> {
     export_complete(data,destination,password,None,None,None)
 }
 pub fn export_complete(data:&Path,destination:&Path,password:&str,transport:Option<&Path>,configuration:Option<&Path>,tls_identity:Option<&Path>)->Result<()> {
+    export_deployment(data,destination,password,transport,configuration,tls_identity,None)
+}
+fn tls_entry(name:&str)->bool {
+    name.strip_prefix("tls-storage/").is_some_and(|relative| {
+        !relative.is_empty() && !relative.contains(['\\',':']) &&
+        relative.split('/').count()<=32 && relative.split('/').all(|part| {
+            let stem=part.split('.').next().unwrap_or_default().to_ascii_uppercase();
+            !part.is_empty() && !part.ends_with(['.',' ']) && !part.chars().any(|c|c.is_control() || "<>\"|?*".contains(c)) &&
+            !matches!(stem.as_str(),"CON"|"PRN"|"AUX"|"NUL"|"COM1"|"COM2"|"COM3"|"COM4"|"COM5"|"COM6"|"COM7"|"COM8"|"COM9"|"LPT1"|"LPT2"|"LPT3"|"LPT4"|"LPT5"|"LPT6"|"LPT7"|"LPT8"|"LPT9")
+        })
+    })
+}
+fn collect_tls(root:&Path,directory:&Path,files:&mut Vec<(String,std::path::PathBuf)>)->Result<()> {
+    let metadata=std::fs::symlink_metadata(directory)?;
+    ensure!(!metadata.file_type().is_symlink(),"TLS storage must not contain symbolic links");
+    #[cfg(windows)] {use std::os::windows::fs::MetadataExt;ensure!(metadata.file_attributes()&0x400==0,"TLS storage must not contain reparse points");}
+    ensure!(metadata.is_dir(),"TLS storage must be a directory");
+    for entry in std::fs::read_dir(directory)? {
+        let path=entry?.path();let metadata=std::fs::symlink_metadata(&path)?;
+        ensure!(!metadata.file_type().is_symlink(),"TLS storage must not contain symbolic links");
+        #[cfg(windows)] {use std::os::windows::fs::MetadataExt;ensure!(metadata.file_attributes()&0x400==0,"TLS storage must not contain reparse points");}
+        let relative=path.strip_prefix(root)?.to_str().context("TLS storage filenames must be UTF-8")?.replace('\\',"/");
+        let name=format!("tls-storage/{relative}");ensure!(tls_entry(&name),"Unsupported TLS storage path");
+        if metadata.is_dir(){collect_tls(root,&path,files)?;}else{
+            ensure!(metadata.is_file(),"TLS storage must contain regular files only");
+            ensure!(files.len()<4096,"Too many backup files");files.push((name,path));
+        }
+    }
+    Ok(())
+}
+pub fn export_deployment(data:&Path,destination:&Path,password:&str,transport:Option<&Path>,configuration:Option<&Path>,tls_identity:Option<&Path>,tls_directory:Option<&Path>)->Result<()> {
     ensure!(!destination.exists(),"Refusing to overwrite an existing backup");
     let db=rusqlite::Connection::open_with_flags(data.join("management.sqlite3"),rusqlite::OpenFlags::SQLITE_OPEN_READ_ONLY)?;
     let snapshot=data.join(format!("backup-{}.sqlite3",swan_protocol::random_token()));
@@ -20,18 +51,19 @@ pub fn export_complete(data:&Path,destination:&Path,password:&str,transport:Opti
     let result=(||->Result<()> {
         let mut archive=zip::ZipWriter::new(Cursor::new(Vec::new()));
         let options=zip::write::SimpleFileOptions::default().compression_method(zip::CompressionMethod::Deflated);
-        let mut files=vec![("management.sqlite3",snapshot.clone()),("profile-key.hex",data.join("profile-key.hex")),("setup-token.txt",data.join("setup-token.txt"))];
+        let mut files=vec![("management.sqlite3".to_string(),snapshot.clone()),("profile-key.hex".to_string(),data.join("profile-key.hex")),("setup-token.txt".to_string(),data.join("setup-token.txt"))];
         if let Some(directory)=transport {
-            files.push(("transport-id_ed25519",directory.join("id_ed25519")));files.push(("transport-id_ed25519.pub",directory.join("id_ed25519.pub")));
+            files.push(("transport-id_ed25519".into(),directory.join("id_ed25519")));files.push(("transport-id_ed25519.pub".into(),directory.join("id_ed25519.pub")));
             if directory.join("db_v2.sqlite3").exists(){
                 let transport_snapshot=data.join(format!("backup-transport-{}.sqlite3",swan_protocol::random_token()));snapshots.push(transport_snapshot.clone());
                 let transport_db=rusqlite::Connection::open_with_flags(directory.join("db_v2.sqlite3"),rusqlite::OpenFlags::SQLITE_OPEN_READ_ONLY)?;
                 transport_db.backup(rusqlite::DatabaseName::Main,&transport_snapshot,None)?;
-                files.push(("transport-db.sqlite3",transport_snapshot));
+                files.push(("transport-db.sqlite3".into(),transport_snapshot));
             }
         }
-        if let Some(path)=configuration {files.push(("deployment.env",path.to_path_buf()));}
-        if let Some(path)=tls_identity {files.push(("tls-identity",path.to_path_buf()));}
+        if let Some(path)=configuration {files.push(("deployment.env".into(),path.to_path_buf()));}
+        if let Some(path)=tls_identity {files.push(("tls-identity".into(),path.to_path_buf()));}
+        if let Some(directory)=tls_directory {collect_tls(directory,directory,&mut files)?;}
         let mut total=0u64;
         for (name,path) in files {
             let size=std::fs::metadata(&path)?.len();total=total.checked_add(size).context("Backup size overflow")?;
@@ -58,17 +90,22 @@ pub fn restore(data:&Path,source:&Path,password:&str)->Result<()> {
     let cipher=Aes256Gcm::new_from_slice(&key(password,salt)?).map_err(|_|anyhow::anyhow!("Invalid decryption key"))?;
     let plaintext=cipher.decrypt(Nonce::from_slice(nonce),&bytes[offset+28..]).map_err(|_|anyhow::anyhow!("Backup password incorrect or backup modified"))?;
     let mut archive=zip::ZipArchive::new(Cursor::new(plaintext))?;
-    ensure!((3..=8).contains(&archive.len()),"Unexpected backup contents");
+    ensure!((3..=4096).contains(&archive.len()),"Unexpected backup contents");
     let allowed=["management.sqlite3","profile-key.hex","setup-token.txt","transport-id_ed25519","transport-id_ed25519.pub","transport-db.sqlite3","deployment.env","tls-identity"];
     let mut names=std::collections::HashSet::new();
-    for index in 0..archive.len(){let entry=archive.by_index(index)?;ensure!(allowed.contains(&entry.name()) && names.insert(entry.name().to_string()),"Unknown or duplicate backup entry");}
+    for index in 0..archive.len(){let entry=archive.by_index(index)?;ensure!((allowed.contains(&entry.name()) || tls_entry(entry.name())) && !entry.is_dir() && names.insert(entry.name().to_string()),"Unknown or duplicate backup entry");}
+    let mut portable_names=std::collections::HashSet::new();
+    for name in &names {ensure!(portable_names.insert(name.to_ascii_lowercase()),"Backup filenames collide on Windows");}
+    for name in &portable_names {
+        let mut parent=name.as_str();while let Some((prefix,_))=parent.rsplit_once('/') {ensure!(!portable_names.contains(prefix),"Backup file conflicts with a directory");parent=prefix;}
+    }
     ensure!(names.contains("transport-id_ed25519")==names.contains("transport-id_ed25519.pub"),"Incomplete transport trust key pair");
     for required in &allowed[..3]{ensure!(names.contains(*required),"Missing management backup entry");}
     // Validate all contents before creating anything. Never extract arbitrary archive paths.
     let mut files=Vec::new();
     let mut total=0u64;
-    for name in allowed.into_iter().filter(|name|names.contains(*name)) {
-        let mut entry=archive.by_name(name)?;total=total.checked_add(entry.size()).context("Backup size overflow")?;ensure!(total<=512*1024*1024,"Backup contents too large");
+    for name in names {
+        let mut entry=archive.by_name(&name)?;total=total.checked_add(entry.size()).context("Backup size overflow")?;ensure!(total<=512*1024*1024,"Backup contents too large");
         let mut content=Vec::new();entry.read_to_end(&mut content)?;files.push((name,content));
     }
     std::fs::create_dir_all(data)?;
@@ -85,7 +122,8 @@ pub fn restore(data:&Path,source:&Path,password:&str)->Result<()> {
     for (name,content) in files {
         let mut options=std::fs::OpenOptions::new();options.create_new(true).write(true);
         #[cfg(unix)] {use std::os::unix::fs::OpenOptionsExt;options.mode(0o600);}
-        let mut file=options.open(data.join(name))?;file.write_all(&content)?;file.sync_all()?;
+        let path=data.join(name);if let Some(parent)=path.parent(){std::fs::create_dir_all(parent)?;}
+        let mut file=options.open(path)?;file.write_all(&content)?;file.sync_all()?;
     }
     Ok(())
 }
@@ -102,13 +140,34 @@ mod tests {
         std::fs::write(transport.join("id_ed25519"),b"private transport key").unwrap();std::fs::write(transport.join("id_ed25519.pub"),b"public transport key").unwrap();
         let db=rusqlite::Connection::open(transport.join("db_v2.sqlite3")).unwrap();db.execute_batch("CREATE TABLE peers(id TEXT);INSERT INTO peers VALUES('retained peer');").unwrap();drop(db);
         let configuration=root.join("company.env");let tls=root.join("server.pfx");std::fs::write(&configuration,b"company settings and TLS password").unwrap();std::fs::write(&tls,b"TLS identity fixture").unwrap();
-        let archive=root.join("complete.swan-backup");export_complete(&data,&archive,"complete backup passphrase",Some(&transport),Some(&configuration),Some(&tls)).unwrap();
+        let tls_storage=root.join("caddy");let certificate=tls_storage.join("certificates/acme.example/company.example/company.key");
+        std::fs::create_dir_all(certificate.parent().unwrap()).unwrap();std::fs::write(&certificate,b"ACME private key fixture").unwrap();
+        std::fs::write(tls_storage.join("account.json"),b"ACME account fixture").unwrap();
+        let archive=root.join("complete.swan-backup");export_deployment(&data,&archive,"complete backup passphrase",Some(&transport),Some(&configuration),Some(&tls),Some(&tls_storage)).unwrap();
         let destination=root.join("restored");restore(&destination,&archive,"complete backup passphrase").unwrap();
         assert_eq!(std::fs::read(destination.join("transport-id_ed25519")).unwrap(),b"private transport key");assert_eq!(std::fs::read(destination.join("transport-id_ed25519.pub")).unwrap(),b"public transport key");
         assert_eq!(std::fs::read(destination.join("deployment.env")).unwrap(),std::fs::read(configuration).unwrap());assert_eq!(std::fs::read(destination.join("tls-identity")).unwrap(),std::fs::read(tls).unwrap());
+        assert_eq!(std::fs::read(destination.join("tls-storage/certificates/acme.example/company.example/company.key")).unwrap(),std::fs::read(certificate).unwrap());
+        assert_eq!(std::fs::read(destination.join("tls-storage/account.json")).unwrap(),b"ACME account fixture");
         let db=rusqlite::Connection::open(destination.join("transport-db.sqlite3")).unwrap();assert_eq!(db.query_row("SELECT id FROM peers",[],|row|row.get::<_,String>(0)).unwrap(),"retained peer");drop(db);
         let mut modified=std::fs::read(&archive).unwrap();let last=modified.len()-1;modified[last]^=1;let tampered=root.join("tampered.swan-backup");std::fs::write(&tampered,modified).unwrap();
         let rejected=root.join("rejected");assert!(restore(&rejected,&tampered,"complete backup passphrase").is_err());assert!(!rejected.exists());
+        std::fs::remove_dir_all(root).unwrap();
+    }
+    #[test]
+    fn tls_archive_paths_cannot_escape_restore_or_collide_with_management() {
+        assert!(tls_entry("tls-storage/certificates/company.example/company.key"));
+        for name in ["tls-storage/../profile-key.hex","tls-storage/./key","tls-storage//key","tls-storage/C:/key","tls-storage/dir\\key","tls-storage/key\0","tls-storage/","tls-storage/key.","tls-storage/key ","tls-storage/CON.key","tls-storage/NUL","profile-key.hex"] {assert!(!tls_entry(name),"{name:?}");}
+        let root=std::env::temp_dir().join(format!("swan-invalid-tls-backup-{}",swan_protocol::random_token()));std::fs::create_dir(&root).unwrap();
+        for (index,extras) in [vec!["tls-storage/../outside"],vec!["tls-storage/Key","tls-storage/key"],vec!["tls-storage/file","tls-storage/file/child"]].into_iter().enumerate() {
+            let mut archive=zip::ZipWriter::new(Cursor::new(Vec::new()));
+            for name in ["management.sqlite3","profile-key.hex","setup-token.txt"].into_iter().chain(extras) {archive.start_file(name,zip::write::SimpleFileOptions::default()).unwrap();archive.write_all(b"fixture").unwrap();}
+            let plaintext=archive.finish().unwrap().into_inner();let salt=[1u8;16];let nonce=[2u8;12];
+            let cipher=Aes256Gcm::new_from_slice(&key("invalid archive test password",&salt).unwrap()).unwrap();let ciphertext=cipher.encrypt(Nonce::from_slice(&nonce),plaintext.as_ref()).unwrap();
+            let mut bytes=HEADER.to_vec();bytes.extend(salt);bytes.extend(nonce);bytes.extend(ciphertext);
+            let source=root.join(format!("{index}.backup"));std::fs::write(&source,bytes).unwrap();let destination=root.join(format!("restore-{index}"));
+            assert!(restore(&destination,&source,"invalid archive test password").is_err());assert!(!destination.exists());
+        }
         std::fs::remove_dir_all(root).unwrap();
     }
     #[test]
