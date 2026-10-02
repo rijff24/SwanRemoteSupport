@@ -466,22 +466,61 @@ async fn claim_build(State(s):State<Shared>,headers:HeaderMap)->ApiResult {
 }
 #[derive(Deserialize)]
 struct BuildResult { success:bool, artifact_url:String,sha256:String,log:String }
+
+#[cfg(test)]
+mod worker_completion_tests {
+    use super::*;
+    #[tokio::test]
+    async fn lost_completion_response_retries_without_changing_terminal_result() {
+        let directory=std::env::temp_dir().join(format!("swan-worker-retry-{}",random_token()));
+        let store=Arc::new(Store::open(&directory).unwrap());
+        let credential=random_token();let worker=digest(&credential);let id=Uuid::new_v4().to_string();
+        {
+            let db=store.db.lock().unwrap();
+            db.execute("INSERT INTO workers(id,token_hash) VALUES('test',?1)",[&worker]).unwrap();
+            db.execute("INSERT INTO builds(id,body,state,worker) VALUES(?1,'{}','running',?2)",params![id,worker]).unwrap();
+        }
+        let mut headers=HeaderMap::new();headers.insert(header::AUTHORIZATION,format!("Bearer {credential}").parse().unwrap());
+        let result=||BuildResult{success:false,artifact_url:String::new(),sha256:String::new(),log:"Rejected invalid package".into()};
+        assert!(finish_build(State(store.clone()),headers.clone(),Path(id.clone()),Json(result())).await.is_ok());
+        assert!(finish_build(State(store.clone()),headers.clone(),Path(id.clone()),Json(result())).await.is_ok());
+        let mut changed=result();changed.log="Different outcome".into();
+        assert!(finish_build(State(store.clone()),headers.clone(),Path(id.clone()),Json(changed)).await.is_err());
+        store.db.lock().unwrap().execute("UPDATE workers SET disabled=1",[]).unwrap();
+        assert!(finish_build(State(store.clone()),headers,Path(id.clone()),Json(result())).await.is_err());
+        let saved:String=store.db.lock().unwrap().query_row("SELECT result FROM builds WHERE id=?1",[id],|r|r.get(0)).unwrap();
+        assert_eq!(serde_json::from_str::<Value>(&saved).unwrap()["log"],"Rejected invalid package");
+        drop(store);std::fs::remove_dir_all(directory).unwrap();
+    }
+}
 async fn finish_build(State(s):State<Shared>,headers:HeaderMap,Path(id):Path<String>,Json(input):Json<BuildResult>)->ApiResult {
     s.worker(&headers)?;
     if Uuid::parse_str(&id).is_err(){return Err(bad("Invalid build identity"));}
     let worker=digest(token(&headers)?);
-    let owned:bool=s.db.lock().unwrap().query_row("SELECT EXISTS(SELECT 1 FROM builds WHERE id=?1 AND worker=?2 AND state IN ('running','uploaded'))",params![id,worker],|r|r.get(0))?;
-    if !owned{return Err(denied());}
     if input.log.len()>8192 || (input.success && (https_url(&input.artifact_url).is_err() || input.sha256.len()!=64 || !input.sha256.bytes().all(|b|b.is_ascii_hexdigit()))) {return Err(bad("Invalid build result"));}
+    let result=json!({"artifact_url":input.artifact_url,"sha256":input.sha256,"log":input.log});
+    let terminal=if input.success{"completed"}else{"failed"};
+    let previous:Option<(String,String)>=s.db.lock().unwrap().query_row(
+        "SELECT state,result FROM builds WHERE id=?1 AND worker=?2",params![id,worker],
+        |r|Ok((r.get(0)?,r.get(1)?))).optional()?;
+    match previous {
+        Some((state,saved)) if state==terminal && serde_json::from_str::<Value>(&saved)?==result=>return Ok(Json(json!({"ok":true}))),
+        Some((state,_)) if state=="running" || state=="uploaded"=>{},
+        _=>return Err(denied()),
+    }
     if input.success {
         let expected=format!("{}/api/v1/downloads/{id}",s.profile()?.management_url.trim_end_matches('/'));
         if input.artifact_url!=expected{return Err(bad("Artifact URL must use this company server"));}
         let bytes=tokio::fs::read(s.artifact_dir.join(format!("{id}.zip"))).await.map_err(|_|bad("Verified artifact upload required"))?;
         if !digest(bytes).eq_ignore_ascii_case(&input.sha256){return Err(bad("Uploaded artifact hash mismatch"));}
     }
-    let result=json!({"artifact_url":input.artifact_url,"sha256":input.sha256,"log":input.log});
-    let count=s.db.lock().unwrap().execute("UPDATE builds SET state=?1,result=?2 WHERE id=?3 AND worker=?4 AND (state='uploaded' OR (state='running' AND ?5=0))",params![if input.success{"completed"}else{"failed"},result.to_string(),id,worker,input.success])?;
-    if count!=1 {return Err(denied());}Ok(Json(json!({"ok":true})))
+    let db=s.db.lock().unwrap();
+    let count=db.execute("UPDATE builds SET state=?1,result=?2 WHERE id=?3 AND worker=?4 AND (state='uploaded' OR (state='running' AND ?5=0))",params![terminal,result.to_string(),id,worker,input.success])?;
+    if count!=1 {
+        let saved:Option<String>=db.query_row("SELECT result FROM builds WHERE id=?1 AND worker=?2 AND state=?3",params![id,worker,terminal],|r|r.get(0)).optional()?;
+        if saved.map(|value|serde_json::from_str::<Value>(&value)).transpose()?.as_ref()!=Some(&result){return Err(denied());}
+    }
+    Ok(Json(json!({"ok":true})))
 }
 
 async fn upload_artifact(State(s):State<Shared>,Path(id):Path<String>,request:axum::extract::Request)->ApiResult {

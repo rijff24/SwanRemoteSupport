@@ -44,9 +44,26 @@ async fn process_claim(response:reqwest::Response,client:&reqwest::Client,server
                         },
                         Err(error)=>{eprintln!("Build {id} failed: {error}");json!({"success":false,"artifact_url":"","sha256":"","log":"Build failed; see the protected worker log. No package was published."})}
                     };
-                    client.put(format!("{}/api/v1/worker/builds/{id}",server.trim_end_matches('/'))).bearer_auth(&token).json(&result).send().await?.error_for_status()?;
+                    report_completion(client,server,token,id,&result).await?;
                 }
     Ok(())
+}
+
+async fn report_completion(client:&reqwest::Client,server:&str,token:&str,id:&str,result:&Value)->Result<()> {
+    for attempt in 0..3 {
+        let response=client.put(format!("{}/api/v1/worker/builds/{id}",server.trim_end_matches('/')))
+            .bearer_auth(token).json(result).send().await;
+        match response {
+            Ok(response) if response.status().is_success()=>return Ok(()),
+            Ok(response) if !response.status().is_server_error() && response.status()!=reqwest::StatusCode::TOO_MANY_REQUESTS=>{
+                response.error_for_status()?;
+                anyhow::bail!("Unexpected completion response");
+            },
+            _=>{},
+        }
+        if attempt<2 {tokio::time::sleep(std::time::Duration::from_secs(5*(attempt+1))).await;}
+    }
+    anyhow::bail!("Completion report unavailable after bounded retries; server retains job recovery")
 }
 
 async fn build(_client:&reqwest::Client,job:&Value,output:&Path,id:&str,release_key:&str,company_key:&str)->Result<(String,String)> {

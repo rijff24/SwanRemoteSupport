@@ -194,3 +194,11 @@ the worker; existing server claim expiry retains recovery. Windows cargo check
 passes. Immediate upload retry, idempotent completion and a real signed worker
 job with network fault injection remain incomplete or unverified. Native runs
 36992580109 and 36992817681 were confirmed in progress and queued respectively.
+
+Worker completion reporting now permits exact repeated terminal results from
+the original active worker and refuses conflicting results or revoked workers.
+A real management-handler regression test passes for initial completion, lost
+response retry, conflict and revocation, with saved-result integrity checked.
+The worker retries completion reporting up to three times for transport errors,
+server failures or rate limits; Windows compilation passes. Signed upload retry
+and full network-fault recovery still require implementation and verification.
