@@ -13,7 +13,7 @@ env:
   FLUTTER_ENGINE_SHA256: "ec8cabf36ee4ff24c8d98de25b00e70781eb03876265aee84d0fe554a110036e"
   VCPKG_COMMIT_ID: "120deac3062162151622ca4860575a33844ba10b"
   VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
-  VERSION: "1.4.9"
+  VERSION: "1.5.0"
 
 jobs:
   generate-bridge:
@@ -46,6 +46,16 @@ jobs:
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           submodules: recursive
+
+      - name: Verify application and installer versions agree
+        shell: pwsh
+        run: |
+          $sourceVersion = [regex]::Match((Get-Content Cargo.toml -Raw), '(?m)^version = "([0-9]+\.[0-9]+\.[0-9]+)"').Groups[1].Value
+          $packerVersion = [regex]::Match((Get-Content libs/portable/Cargo.toml -Raw), '(?m)^version = "([0-9]+\.[0-9]+\.[0-9]+)"').Groups[1].Value
+          $flutterVersion = [regex]::Match((Get-Content flutter/pubspec.yaml -Raw), '(?m)^version: ([0-9]+\.[0-9]+\.[0-9]+)\+[0-9]+').Groups[1].Value
+          if (-not $sourceVersion -or $sourceVersion -cne $env:VERSION -or $packerVersion -cne $sourceVersion -or $flutterVersion -cne $sourceVersion) {
+            throw 'Application, portable packer, Flutter and installer artifact versions must agree.'
+          }
 
       - name: Restore Flutter bridge files
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1

@@ -452,3 +452,10 @@ enabled/running state for rollback. Windows agent compilation, script parsing,
 three MSI authoring tests and real unsigned WiX packaging pass. Installer-table
 inspection verifies action order. This does not establish actual uninstall,
 rollback, task cleanup or service behavior; clean-guest tests remain open.
+
+Configurable endpoint source now identifies itself as 1.5.0 (Flutter build 68),
+separately from the tagged 1.4.9 Swan baseline. Cargo, portable packer, lockfile,
+Flutter and Windows artifact versions agree in a local source check. Native CI
+checks app/packer/Flutter/artifact version agreement before building. This is a
+development version change; no release tag or signed production publication has
+been made, and native build/upgrade behavior must still be demonstrated.
