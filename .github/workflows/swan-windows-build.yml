@@ -204,6 +204,23 @@ jobs:
           $customerHash = (Get-FileHash -LiteralPath $customerOutput -Algorithm SHA256).Hash.ToLowerInvariant()
           Add-Content artifacts/SHA256SUMS.txt ($customerHash+'  '+[IO.Path]::GetFileName($customerOutput))
 
+      - name: Build unsigned company server setup with pinned components
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $pins = Get-Content deployment/windows/server-components.json -Raw | ConvertFrom-Json
+          $transport = Join-Path $env:RUNNER_TEMP 'swan-server-transport.zip'
+          $https = Join-Path $env:RUNNER_TEMP 'swan-server-https.zip'
+          Invoke-WebRequest -Uri $pins.transport.url -OutFile $transport -UseBasicParsing
+          Invoke-WebRequest -Uri $pins.https.url -OutFile $https -UseBasicParsing
+          $components = Join-Path $env:RUNNER_TEMP 'swan-server-components'
+          ./deployment/windows/Prepare-ServerComponents.ps1 -TransportPackage $transport -HttpsPackage $https -OutputDirectory $components
+          $setup = ./deployment/windows/Build-ServerSetup.ps1 -ManagementExecutable artifacts/swan-management.exe -ComponentsDirectory $components -OutputDirectory artifacts/server-setup -UnsignedTest
+          $hash = (Get-FileHash -LiteralPath $setup -Algorithm SHA256).Hash.ToLowerInvariant()
+          Copy-Item -LiteralPath $setup -Destination artifacts/SwanServerSetup-UNSIGNED-TEST.exe
+          Copy-Item -LiteralPath artifacts/server-setup/SOURCE.json -Destination artifacts/SwanServerSetup-SOURCE.json
+          Add-Content artifacts/SHA256SUMS.txt ($hash+'  SwanServerSetup-UNSIGNED-TEST.exe')
+
       - name: Upload unsigned installer and checksum
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
@@ -214,6 +231,8 @@ jobs:
             artifacts/SwanRemoteSupport-${{ env.VERSION }}-technician-x64-unsigned.exe
             artifacts/SwanRemoteSupport-${{ env.VERSION }}-technician-x64-unsigned.msi
             artifacts/SwanRemoteSupport-${{ env.VERSION }}-customer-x64-unsigned.msi
+            artifacts/SwanServerSetup-UNSIGNED-TEST.exe
+            artifacts/SwanServerSetup-SOURCE.json
             artifacts/*.msi.build.json
             artifacts/*.msi.installed-files.json
             artifacts/SHA256SUMS.txt

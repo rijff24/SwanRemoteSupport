@@ -1736,3 +1736,17 @@ Native CI run `37095431510` is confirmed in progress for exact source
 `0a541c78609e8e3438e3c577abb352d714812b18`, covering implementation changes after
 the earlier verified native build. Its outputs remain unverified until successful
 completion and artifact checks.
+
+The Windows workflow now includes pinned transport/HTTPS archive preparation,
+unsigned company-server setup compilation, source-manifest publication and its
+SHA-256 checksum alongside endpoint installers. YAML parsing and both upload
+entries passed local validation. The setup builder was exercised under Windows
+PowerShell 5 using verified `6bd54c2` native management and existing pinned
+components: all eleven embedded resource hashes passed, and the unsigned
+64,093,696-byte package SHA-256 is
+`14c2c794de937a20b16dc52f37b6238968c3fcaa6c3378fa80b5287838a0cb93`.
+Its source receipt records recipe revision `4071147` and the dirty working tree;
+it is a local test package, not a corresponding-source production release.
+The already-running `0a541c7` CI build predates this workflow addition; a subsequent
+full run must verify the new server packaging step. No setup executable was run
+on the host and no host service, firewall, DNS or trust setting was changed.

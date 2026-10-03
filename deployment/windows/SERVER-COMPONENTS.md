@@ -143,3 +143,10 @@ maintenance procedure. A fresh install deliberately refuses retained company
 data, so do not delete it merely to get past setup. Native removal, reinstallation
 and restore tests still require clean Windows VMs; removal-plan fixtures prove
 ownership rejection and exclusion of data, not successful SCM/firewall removal.
+
+Windows CI is configured to build `SwanServerSetup-UNSIGNED-TEST.exe` with these pinned
+transport/HTTPS archives and the matching management executable. Its artifact
+includes `SwanServerSetup-SOURCE.json` and a checksum. The setup builder checks
+embedded resource hashes and retains component licenses/source notices. These
+outputs remain test packages: production signing and clean-machine setup
+acceptance are required before publication.
