@@ -158,3 +158,12 @@ files matched their pre-backup recorded SHA-256 hashes. Trust, accounts, worker
 state, releases and MFA/replay protections remained intact. This uses a locally
 built GNU executable with the disposable lab publisher, and guest-loopback HTTP;
 it does not establish production signing, public connectivity or live transport recovery.
+
+The current MSVC build from `11faae3` also passed that Server 2016 rehearsal with
+four retained bundles: one public customer download and three authenticated
+technician downloads, including the newer eleven-entry MSI bundle. All hashes,
+trust/configuration/authorization comparisons and negative restore/MFA checks
+passed. Its lab-signed executable and both isolated foreground processes were
+verified, with existing service statuses preserved. This remains guest-loopback
+management evidence; native transport/TLS restore, migration rollback and
+production publication require their own verification.

@@ -2090,3 +2090,46 @@ its specific expected error, and both state and bootstrap bytes remained unchang
 Keys were ephemeral and not serialized. This is native CLI trust verification
 against synthetic local fixtures, without network, installation, rendered branding
 or remote-session evidence.
+
+The current MSVC management executable from `11faae3` subsequently passed the
+native encrypted installer-backup rehearsal on Server 2016 build 14393. Its
+unsigned hash is `de623e216e4ef2b81785c18615fc23e83e4716c894225ed620a860e2aea9f817`;
+the disposable lab-signed hash is
+`194c837babd6a07f51b37743fb11400e37cfa6a41e48c16e2701032f2d921f3d`.
+Authenticode and required RFC3161 timestamp verification passed. The restored
+server served one customer bundle publicly and three technician bundles after
+authentication, including the eleven-entry MSI bundle. Every download hash
+matched its retained build record, and unauthenticated technician requests
+returned 401. Trust files, signed profile, users/devices/workers/releases,
+administrator MFA and replay checks passed; backup overwrite, nonempty restore,
+wrong passwords and ciphertext modification were rejected. Both isolated
+processes stopped and existing company service statuses were preserved. This
+extends the GNU result to the current MSVC management runtime, over guest-loopback
+HTTP; transport/TLS restore, migration rollback and production signing remain
+separate unverified requirements.
+
+The matched-source MSVC server and worker from `11faae3` then completed a real
+technician MSI bundle job over trusted guest HTTPS. The worker's unsigned hash is
+`73ce8e09c6473f9c32c7cd8c22d5eb0c75e68c448e1829a462df42e3843d5bd9`;
+its timestamp-verified lab-signed hash is
+`fa6bb94be7a44a4e2148b428af3fe1a0ca93045d0961aefd54e8c2188bb92c0c`.
+Job `3444e8fd-4e4a-4624-887c-1e1b370afbd3` produced bundle
+`478f2d3af2838f26245ed0723b5a009fd80ae53b58bd57418a8e2bf76e6832a9`.
+All eleven entries, company/edition/endpoint bootstrap and downloaded hash passed;
+unauthenticated technician download returned 401. The owned worker credential
+was revoked and listed disabled, the administrator session logged out, all three
+isolated processes stopped, and existing company service statuses were preserved.
+This uses retained lab MSI recipe `8ec66d2`, signed endpoint/agent inputs `0a541c7`
+and a newly signed test release sequence 13; it is mixed-source packaging evidence,
+not installation or production source-release acceptance.
+
+Two preceding attempts failed and remain separate evidence. The first isolated
+Caddy startup crashed with `fatal: morestack on g0` before login/job creation; a
+version probe of the same pinned binary succeeded. The second started HTTPS but
+its worker could not fetch the older signed release's artifacts: the retained
+port-443 lab endpoint had no listener. No existing endpoint was restarted. The
+successful run instead used newly signed metadata pointing to the isolated
+port-24442 endpoint, which served only the two named lab inputs alongside its
+management proxy. Company policy was not implicitly changed, unrelated active
+jobs were checked before enqueue, and component pins were unchanged. The startup
+crash's cause and wider Windows server stability remain unresolved.
