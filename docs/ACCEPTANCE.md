@@ -1461,3 +1461,18 @@ matching tasks). Nothing was manually launched to satisfy these startup checks.
 This demonstrates reboot persistence and automatic background startup on Server
 2016 build `14393`; it does not demonstrate a remote logon-screen session, UAC
 control, recovery from power loss during MSI, or other Windows versions.
+
+### Installed native consent synchronization
+
+On Server 2016 build `14393`, installed signed agent source `4768d53` rejected
+`allow-unattended` without `--confirm-unattended`; local consent/revision and
+identity/token comparisons remained unchanged. With the isolated company policy
+temporarily allowing unattended support, `sync` followed by explicit
+`allow-unattended --confirm-unattended` enabled consent locally and in the actual
+HTTPS server inventory with an increased consent revision. `revoke-unattended`
+then disabled both local and server consent with another revision increase.
+Enrollment comparisons passed. Cleanup revoked consent and restored/synchronized
+the original company policy. Credentials and raw state remained private.
+This tests the installed native CLI consent path; graphical consent controls,
+actual unattended sessions and termination/rejection of live session grants
+still require separate evidence.
