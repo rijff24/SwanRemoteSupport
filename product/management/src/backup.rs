@@ -162,6 +162,39 @@ pub fn restore(data:&Path,source:&Path,password:&str)->Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[cfg(unix)]
+    #[test]
+    fn readonly_transport_wal_export_preserves_committed_peers() {
+        use std::os::unix::fs::PermissionsExt;
+        let root=std::env::temp_dir().join(format!("swan-readonly-wal-backup-{}",swan_protocol::random_token()));
+        let data=root.join("data");let original=root.join("original");let transport=root.join("transport");
+        for directory in [&data,&original,&transport]{std::fs::create_dir_all(directory).unwrap();}
+        let management=rusqlite::Connection::open(data.join("management.sqlite3")).unwrap();
+        management.execute_batch("CREATE TABLE identity(value TEXT);INSERT INTO identity VALUES('retained company');").unwrap();drop(management);
+        std::fs::write(data.join("profile-key.hex"),b"fixture key").unwrap();std::fs::write(data.join("setup-token.txt"),b"fixture token").unwrap();
+        let writer=rusqlite::Connection::open(original.join("db_v2.sqlite3")).unwrap();
+        writer.execute_batch("PRAGMA journal_mode=WAL;PRAGMA wal_autocheckpoint=0;CREATE TABLE peers(id TEXT);INSERT INTO peers VALUES('committed WAL peer');").unwrap();
+        // Model stopped transport storage with committed WAL frames and no SHM
+        // file, as a read-only backup mount may present it after interruption.
+        for name in ["db_v2.sqlite3","db_v2.sqlite3-wal"]{std::fs::copy(original.join(name),transport.join(name)).unwrap();}
+        std::fs::write(transport.join("id_ed25519"),b"fixture private key").unwrap();std::fs::write(transport.join("id_ed25519.pub"),b"fixture public key").unwrap();
+        std::fs::set_permissions(&transport,std::fs::Permissions::from_mode(0o555)).unwrap();
+        let probe=transport.join("write-probe");
+        if std::fs::OpenOptions::new().create_new(true).write(true).open(&probe).is_ok(){
+            // Root bypasses Unix mode bits; actual read-only mount coverage is
+            // provided by the separate container deployment rehearsal.
+            std::fs::set_permissions(&transport,std::fs::Permissions::from_mode(0o755)).unwrap();drop(writer);std::fs::remove_dir_all(root).unwrap();return;
+        }
+        let archive=root.join("complete.backup");
+        let result=export_complete(&data,&archive,"readonly WAL test passphrase",Some(&transport),None,None);
+        let source_unchanged=!transport.join("db_v2.sqlite3-shm").exists();
+        std::fs::set_permissions(&transport,std::fs::Permissions::from_mode(0o755)).unwrap();drop(writer);
+        result.unwrap();assert!(source_unchanged,"Export must not write into read-only transport storage");
+        let restored=root.join("restored");restore(&restored,&archive,"readonly WAL test passphrase").unwrap();
+        let db=rusqlite::Connection::open(restored.join("transport-db.sqlite3")).unwrap();
+        assert_eq!(db.query_row("SELECT id FROM peers",[],|row|row.get::<_,String>(0)).unwrap(),"committed WAL peer");drop(db);
+        std::fs::remove_dir_all(root).unwrap();
+    }
     #[test]
     fn installer_artifacts_roundtrip_and_reject_unfinished_or_unsafe_entries() {
         let root=std::env::temp_dir().join(format!("swan-artifact-backup-{}",swan_protocol::random_token()));
