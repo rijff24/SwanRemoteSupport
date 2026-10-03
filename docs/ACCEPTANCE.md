@@ -1445,3 +1445,19 @@ recovery task was still Ready with its next normal cleanup check scheduled for
 `02:30:30Z`; self-removal has not yet been observed. Power loss during MSI,
 rollback after installer failure, reboot/startup recovery, active remote sessions
 and other Windows versions remain separate acceptance requirements.
+
+### Reboot persistence after recovered update
+
+The disposable Server 2016 guest was rebooted through its own `shutdown.exe`,
+after verifying no active update helper or recovery marker remained and saving
+protected private state/hash comparisons. The host and production services were
+not rebooted or changed. A different guest boot time was observed. At inspection,
+no `explorer.exe` desktop session existed, while `SwanCompanyServer`, the customer
+service and `Swan Company Configuration` watcher were Running. MSI registration
+remained `1.5.6`, release sequence `7`, both endpoint hashes matched the pre-reboot
+snapshot, and identity/token/consent comparisons passed. No recovery marker was
+present. The completed release7 recovery task removed itself at startup (zero
+matching tasks). Nothing was manually launched to satisfy these startup checks.
+This demonstrates reboot persistence and automatic background startup on Server
+2016 build `14393`; it does not demonstrate a remote logon-screen session, UAC
+control, recovery from power loss during MSI, or other Windows versions.
