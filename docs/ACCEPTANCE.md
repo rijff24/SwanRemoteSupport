@@ -23,9 +23,15 @@ protected directory. A wrong password failed before creating its target.
 Restored profile-signing material, setup token and Caddy recipe matched the
 original files; the management database was restored. The original HTTPS
 service remained healthy throughout, and no service control was performed.
-This is management/archive evidence: restored services were not started,
-database/account semantics were not exercised, and transport/TLS storage
-was not included in this narrower rehearsal. The coordinated full-server
+A separately protected, hash-verified copy of the restored SQLite snapshot
+passed `quick_check` and `foreign_key_check`, retained schema 2 and company
+profile revision 7, and derived the original public profile trust from its
+active signing key. Its enabled administrator retained password/MFA material;
+the approved device retained unattended consent off. All four imported release
+envelopes verified with the original release trust, including approved sequence
+3. These checks output no credentials or private keys. This is management/archive
+evidence: restored services and MFA login were not exercised, and transport/TLS
+storage was not included in this narrower rehearsal. The coordinated full-server
 rehearsal command was rejected by automatic approval review with only
 “blocked by policy”; it was not executed. Full Windows deployment restore
 using this correction remains unverified.
