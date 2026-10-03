@@ -49,7 +49,7 @@ firewall rule. Keep the original configuration file protected too. A manually
 started foreground worker does not survive reboot. Verify authenticated build
 completion, standard-user credential denial, service stop/restart and startup
 after reboot before deployment; signed VM evidence for this new service path is
-still pending. Service log collection remains unfinished.
+still pending. Service output is appended to protected `C:\ProgramData\SwanInstallerWorker\worker-service.log`; runtime log verification and log rotation remain pending.
 Prevent a foreground worker from running alongside the service against the same
 output directory.
 

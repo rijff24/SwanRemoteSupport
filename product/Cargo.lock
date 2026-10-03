@@ -1685,6 +1685,7 @@ dependencies = [
  "swan-protocol",
  "tokio",
  "windows-service",
+ "windows-sys 0.61.2",
  "zip",
 ]
 
