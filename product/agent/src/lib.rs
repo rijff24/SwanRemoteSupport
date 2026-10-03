@@ -206,16 +206,25 @@ impl AgentState {
         Ok(Lease { grant_id:grant.grant_id,unattended:grant.unattended,permissions:grant.permissions,expires_at:expires,last_renewed:now(),_activity:activity })
     }
     pub async fn renew(&self,lease:&mut Lease)->Result<()> {
+        let remaining=lease.expires_at.checked_sub(now()).filter(|seconds|*seconds>0).context("Session authorization expired")?;
         let profile=self.company_profile()?;
         ensure!(!lease.unattended || (self.unattended_consent && profile.allow_unattended),"Unattended consent or company permission revoked");
-        let result:Value=self.client()?.post(self.endpoint(&format!("grants/{}/renew",lease.grant_id))?).bearer_auth(self.device_token.as_ref().context("Not enrolled")?).send().await?.error_for_status()?.json().await?;
+        let result:Value=self.client()?.post(self.endpoint(&format!("grants/{}/renew",lease.grant_id))?).timeout(std::time::Duration::from_secs(remaining.min(15))).bearer_auth(self.device_token.as_ref().context("Not enrolled")?).send().await?.error_for_status()?.json().await?;
         let expires=result["lease_until"].as_u64().context("Missing lease expiry")?;
-        ensure!(expires>now() && expires<=now()+310,"Invalid session lease");
+        validate_lease_renewal(lease.expires_at,expires,now())?;
         lease.expires_at=expires;lease.last_renewed=now();Ok(())
     }
     pub async fn close(&self,grant_id:&str)->Result<()> {
         self.client()?.post(self.endpoint(&format!("grants/{grant_id}/close"))?).bearer_auth(self.device_token.as_ref().context("Not enrolled")?).send().await?.error_for_status()?;Ok(())
     }
+}
+
+fn validate_lease_renewal(previous_expiry:u64,new_expiry:u64,current:u64)->Result<()> {
+    // An in-flight response cannot resurrect authorization after the device's
+    // existing lease expired, even when its proposed new expiry is valid.
+    ensure!(current<previous_expiry,"Session authorization expired");
+    ensure!(new_expiry>current && new_expiry<=current.saturating_add(310),"Invalid session lease");
+    Ok(())
 }
 
 fn replace_state(temporary:&Path,path:&Path)->Result<()> {
@@ -270,6 +279,14 @@ pub fn http_client(timeout_seconds:u64,artifact_redirects:bool)->Result<reqwest:
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn delayed_renewal_cannot_resurrect_expired_authorization() {
+        assert!(validate_lease_renewal(100,399,99).is_ok());
+        assert!(validate_lease_renewal(100,400,100).is_err());
+        assert!(validate_lease_renewal(100,401,101).is_err());
+        assert!(validate_lease_renewal(100,99,99).is_err());
+        assert!(validate_lease_renewal(100,410,99).is_err());
+    }
     fn fixture()->AgentState {
         let key=SigningKey::from_bytes(&[7;32]);let public=STANDARD.encode(key.verifying_key().as_bytes());
         let profile=CompanyProfile{schema:1,company_id:"test-company".into(),revision:1,issued_at:now()-1000,expires_at:now()+3600,management_url:"https://support.example.com".into(),rendezvous:"support.example.com".into(),relay:"support.example.com".into(),transport_public_key:public.clone(),customer:Branding::default(),technician:Branding::default(),allow_unattended:true,updates_paused:true,rollout_percent:100,maintenance_start_utc:0,maintenance_end_utc:0,update_channel:"test".into(),next_profile_public_key:None};

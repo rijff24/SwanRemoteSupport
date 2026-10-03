@@ -2544,6 +2544,14 @@ impl Connection {
             }
         }
         if self.authorized {
+            #[cfg(feature = "swan_custom")]
+            if self.managed_lease.as_ref().map(|lease| swan_agent::protocol::now() < lease.expires_at) != Some(true) {
+                // Reject input immediately at expiry instead of relying on the
+                // next timer tick while packets continue to arrive.
+                self.send_close_reason_no_retry("Company session authorization expired or revoked").await;
+                self.on_close("Managed authorization unavailable", true).await;
+                return false;
+            }
             if matches!(msg.union.as_ref(), Some(message::Union::LoginRequest(_))) {
                 return true;
             }
