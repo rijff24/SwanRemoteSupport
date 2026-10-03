@@ -159,9 +159,14 @@ metadata, wrong trust or edition, unknown phases/protocols and I/O errors fail
 closed. Quarantine persists through subsequent successful installations. No
 technician login token is passed to or restored by rollback.
 
-Windows service/MSI registration rollback and full power-loss acceptance remain
-unfinished. The portable restoration path is implemented but not yet demonstrated
-with signed installed binaries on clean Windows. Component tests cover complete file
+Windows service/MSI registration restoration is implemented through the narrowly
+validated `Restore-ReleaseMsi.ps1` path, but signed native rollback and full
+power-loss acceptance remain unverified. Prepared portable technician rollback
+has restored lab-signed endpoint and agent binaries on Server 2016; native
+installed-identity and quarantine checks passed independently. The original
+SSH harness and app restart remain unresolved, and automatic failure selection
+has not been demonstrated. See [ACCEPTANCE.md](ACCEPTANCE.md) for the scope.
+Component tests cover complete file
 preservation, rejection of tampered/missing sources and unsafe paths, incomplete
 snapshot cleanup, immutable published snapshots, and previous metadata trust and
 sequence checks. Quarantine/receipt regressions cover replay suppression, eligibility
@@ -182,7 +187,8 @@ does not authorize a different package. A missing, corrupt or unverifiable old
 artifact defers the update before installation; keep corresponding release files
 available on company-controlled storage. Retained packages are software artifacts,
 not copies of mutable enrollment or consent. MSI/service restoration still needs
-implementation and signed native tests.
+signed native end-to-end tests, including registration, service/task consistency
+and interruptions during restoration.
 
 The agent and Windows worker launch Windows PowerShell from the OS-resolved
 system directory and restrict module discovery to its built-in modules. This
