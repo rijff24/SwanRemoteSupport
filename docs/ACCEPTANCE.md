@@ -2017,7 +2017,8 @@ without changing another account. WinRM alternate-user process creation was deni
 a scheduled probe never ran, and the alternate-user SSH probe subsequently exited
 with `0xC0000142` before either success or error markers were written. Its profile
 directory exists, but no successful unprivileged process or MSI lifecycle result
-was demonstrated. The probe task remains registered and needs owned cleanup.
+was demonstrated. The specifically owned probe task was subsequently verified
+idle/never-run and removed; the disposable account and profile fixtures remain.
 These are test-environment failures, not proof of technician MSI installation,
 repair, upgrade or uninstall.
 
