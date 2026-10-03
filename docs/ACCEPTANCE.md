@@ -2404,3 +2404,25 @@ staging, and preserves the source bytes. Both complete component runs passed:
 pull request `37124053449` and push `37124051532`, including the isolated Linux
 deployment rehearsal and Windows launcher checks. This test-only commit does
 not change the runtime currently being built in native run `37123744363`.
+
+### MSI evidence bound to tested artifacts (2026-10-03)
+
+The lifecycle fixture at `940c64f` now records the package SHA-256, expected
+installed payload hashes and fixture revision in its retained receipt. Each
+native invocation records the package hash, and the fixture checks that the
+package remains unchanged before and after each operation. Fixture revision
+identifies the test code; it does not imply that older downloaded binaries were
+built from that revision.
+
+Disposable Server 2022 run `37124891111` passed installation, deliberate payload
+removal followed by repair, and uninstall against the pinned `c7d118c` package.
+Evidence artifact `11275180118` passed authenticated SHA-256
+`9940004bb6893f8cade24d18667bc0ebe5cd3140c84aa72ec37d23b3e8c93def`
+and CRC verification. The receipt and all three invocation hashes matched the
+independently retained MSI SHA-256
+`5083a718a1b7f367fe680ada622ca8ce6a55c99f55bf80224c7841d3c257979b`;
+expected executable/agent hashes matched the retained native build. All three
+native logs contained successful zero returns and no `Return value 3`.
+This strengthens artifact-specific lifecycle evidence for that older package;
+it does not cover the new backup runtime, standard-user enrollment, production
+signature acceptance, GUI login or remote desktop sessions.
