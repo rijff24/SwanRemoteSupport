@@ -11,3 +11,16 @@ Project-signed binaries retain the certificate publisher's embedded identity. Co
 The original single-company Tailscale deployment remains available at `swan-single-company-baseline-1.4.9`; its historical build/deployment documents apply to that baseline only.
 
 Before production publication, build from the reviewed public source, verify artifacts and their signatures/hashes, complete the acceptance checks and publish exact corresponding source. Preserve the repository's `LICENCE` and upstream notices.
+
+The Windows workflow also produces `SwanRemoteSupport-build-source.zip` before
+application compilation. It contains the actual tracked source bytes, initialized
+pinned submodule source, and the six explicitly named generated bridge files.
+`BUILD-SOURCE.json` records repository revisions and every included file hash;
+the public workflow in the archive describes subsequent packaging transformations,
+including removal of the portable launcher's DPI manifest entry. Ignored local
+settings, untracked logs, credentials and build binaries are not swept into this
+archive. Missing bridge inputs, source links, unmerged indexes and submodule pin
+mismatches fail the build. The artifact checksum list includes the archive hash.
+Publish this archive alongside the exact source tag, build instructions and
+third-party component source references. Its presence does not prove binary
+reproducibility or replace release acceptance and signing checks.

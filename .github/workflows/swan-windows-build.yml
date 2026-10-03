@@ -125,6 +125,15 @@ jobs:
             exit 1
           fi
 
+      - name: Preserve exact public build inputs including generated bridge source
+        shell: pwsh
+        run: |
+          python3 -m unittest discover -s deployment/windows -p test_build_source.py
+          if ($LASTEXITCODE -ne 0) { throw 'Corresponding source archive checks failed.' }
+          New-Item -ItemType Directory -Path artifacts -Force | Out-Null
+          python3 deployment/windows/archive-build-source.py . artifacts/SwanRemoteSupport-build-source.zip
+          if ($LASTEXITCODE -ne 0) { throw 'Exact build input archive failed.' }
+
       - name: Build branded client
         shell: pwsh
         run: |
@@ -220,6 +229,8 @@ jobs:
           Copy-Item -LiteralPath $setup -Destination artifacts/SwanServerSetup-UNSIGNED-TEST.exe
           Copy-Item -LiteralPath artifacts/server-setup/SOURCE.json -Destination artifacts/SwanServerSetup-SOURCE.json
           Add-Content artifacts/SHA256SUMS.txt ($hash+'  SwanServerSetup-UNSIGNED-TEST.exe')
+          $sourceHash = (Get-FileHash -LiteralPath artifacts/SwanRemoteSupport-build-source.zip -Algorithm SHA256).Hash.ToLowerInvariant()
+          Add-Content artifacts/SHA256SUMS.txt ($sourceHash+'  SwanRemoteSupport-build-source.zip')
 
       - name: Upload unsigned installer and checksum
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -233,6 +244,7 @@ jobs:
             artifacts/SwanRemoteSupport-${{ env.VERSION }}-customer-x64-unsigned.msi
             artifacts/SwanServerSetup-UNSIGNED-TEST.exe
             artifacts/SwanServerSetup-SOURCE.json
+            artifacts/SwanRemoteSupport-build-source.zip
             artifacts/*.msi.build.json
             artifacts/*.msi.installed-files.json
             artifacts/SHA256SUMS.txt
