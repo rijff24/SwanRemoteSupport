@@ -80,15 +80,19 @@ def secret_command(arguments, passphrase, expected_success=True):
             "sqlite_readonly": "attempt to write a readonly database",
             "sqlite_open": "unable to open database file",
             "sqlite_locked": "database is locked",
+            "sqlite_io": "disk I/O error",
+            "readonly_filesystem": "Read-only file system",
+            "sqlite_malformed": "database disk image is malformed",
             "permission": "Permission denied",
             "missing_file": "No such file or directory",
             "tls_path": "Unsupported TLS storage path",
             "backup_exists": "Refusing to overwrite an existing backup",
             "authentication": "Backup password incorrect or backup modified",
         }
-        matched = [name for name, text in categories.items() if text in result.stderr]
+        matched = [name for name, text in categories.items() if text.casefold() in result.stderr.casefold()]
+        codes = re.findall(r"(?:Error code |os error )(\d+)", result.stderr)
         raise RuntimeError("Unexpected encrypted backup/restore command result; exit=" +
-                           str(result.returncode) + "; categories=" + repr(matched))
+                           str(result.returncode) + "; categories=" + repr(matched) + "; codes=" + repr(codes))
     if not expected_success and "Backup password incorrect or backup modified" not in result.stderr:
         raise RuntimeError("Restore failed before demonstrating backup authentication rejection")
 
