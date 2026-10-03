@@ -54,7 +54,8 @@ fn snapshot_transport(directory:&Path,data:&Path,destination:&Path)->Result<()> 
     // cannot occur on a read-only transport mount. Recover a private copy;
     // never ignore WAL frames or change the original transport storage.
     let staging=data.join(format!("backup-transport-source-{}",swan_protocol::random_token()));
-    let mut builder=std::fs::DirBuilder::new();
+    let builder=std::fs::DirBuilder::new();
+    #[cfg(unix)] let mut builder=builder;
     #[cfg(unix)] {use std::os::unix::fs::DirBuilderExt;builder.mode(0o700);}
     builder.create(&staging).context("Create private transport backup staging")?;
     let result=(||->Result<()> {
@@ -70,11 +71,11 @@ fn snapshot_transport(directory:&Path,data:&Path,destination:&Path)->Result<()> 
             #[cfg(windows)] {use std::os::windows::fs::MetadataExt;ensure!(metadata.file_attributes()&0x400==0,"Transport database backup source must not be a reparse point");}
             total=total.checked_add(metadata.len()).context("Transport backup source size overflow")?;
             ensure!(total<=512*1024*1024,"Transport backup source exceeds 512 MiB");
-            let mut input=std::fs::File::open(&source)?;
+            let input=std::fs::File::open(&source)?;
             let mut options=std::fs::OpenOptions::new();options.create_new(true).write(true);
             #[cfg(unix)] {use std::os::unix::fs::OpenOptionsExt;options.mode(0o600);}
             let mut output=options.open(staging.join(name))?;
-            ensure!(std::io::copy(&mut input,&mut output)?==metadata.len(),"Transport database changed during backup; stop transport before export");
+            ensure!(std::io::copy(&mut input.take(metadata.len()+1),&mut output)?==metadata.len(),"Transport database changed during backup; stop transport before export");
         }
         let transport_db=rusqlite::Connection::open(staging.join("db_v2.sqlite3")).context("Open staged transport database for backup")?;
         transport_db.backup(rusqlite::DatabaseName::Main,destination,None).context("Snapshot staged transport database for backup")?;

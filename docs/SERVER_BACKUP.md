@@ -41,8 +41,13 @@ HTTPS configuration and restore places it back in the replacement data directory
 Keep configuration edits stopped during export. Older archives without this
 file remain supported; reconstruct and validate their HTTPS recipe before use.
 
-The transport directory must contain both `id_ed25519` and `id_ed25519.pub`.
-When present, `db_v2.sqlite3` is also snapshotted using SQLite's backup API.
+Stop transport services before exporting their directory, and keep them stopped
+until export completes. The directory must contain both `id_ed25519` and
+`id_ed25519.pub`. When present, `db_v2.sqlite3` and its WAL or rollback journal
+are copied into private temporary storage, recovered there, and snapshotted using
+SQLite's backup API. This preserves committed WAL changes when the stopped
+source is mounted read-only and cannot create shared-memory files. Export does
+not write into that source. Transport database inputs share a 512 MiB copy limit.
 Management uses the same API for its database, including committed WAL data.
 Schema version 2 keeps active and pending profile-signing keys in that database;
 the original `profile-key.hex` file alone is insufficient after rotation. See
@@ -53,7 +58,8 @@ The export does not stop or modify running transport services.
 
 All contents are encrypted with AES-256-GCM and an Argon2-derived key. Existing
 backup files are never overwritten. Temporary plaintext database snapshots are
-removed after archive generation. Archives and plaintext contents have size
+removed after archive generation, including private transport recovery copies.
+Archives and plaintext contents have size
 limits; this is not a general-purpose filesystem backup tool.
 
 Restore into an **empty directory** while the replacement management service
