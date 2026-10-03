@@ -6,6 +6,7 @@ UDP traversal, public reachability or production certificate-renewal evidence.
 """
 import base64
 import json
+import ipaddress
 import pathlib
 import re
 import secrets
@@ -124,7 +125,7 @@ def complete_backup(image, prefix, volumes, lab, proxy_image, transport_image, c
         if (lab / "recovered-transport.pub").read_bytes() != (lab / "transport.pub").read_bytes():
             raise RuntimeError("Replacement changed transport identity")
         for service in ["21115/tcp", "21116/tcp"]:
-            nat_probe(port(names["hbbs"], service))
+            container_nat_probe(names["hbbs"], service)
         with socket.create_connection(("127.0.0.1", port(names["hbbr"], "21117/tcp")), timeout=5):
             pass
         endpoint.request("/api/v1/devices", token=administrator, expected=401)
@@ -185,7 +186,20 @@ def public_file(name, remote, destination):
     raise RuntimeError("Component did not publish its public trust file")
 
 
-def nat_probe(listener):
+def container_nat_probe(name, service):
+    # Docker's loopback publisher may present a loopback peer to hbbs, whose
+    # NAT-test port interprets that peer as an administrative text connection.
+    # Probe the owned bridge endpoint; published host sockets are checked apart.
+    address = docker("inspect", "--format", "{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}", name)
+    parsed = ipaddress.ip_address(address)
+    if not parsed.is_private or parsed.is_loopback or parsed.is_unspecified:
+        raise RuntimeError("NAT probe requires a disposable private bridge endpoint")
+    if service not in ["21115/tcp", "21116/tcp"]:
+        raise RuntimeError("Unexpected NAT-test port")
+    nat_probe(int(service.split("/")[0]), address)
+
+
+def nat_probe(listener, host="127.0.0.1"):
     # TestNatRequest field 20, serial=0, from hbb_common/protos/rendezvous.proto.
     # The one-byte length header follows hbb_common/src/bytes_codec.rs.
     def exact(connection, size):
@@ -209,7 +223,7 @@ def nat_probe(listener):
                 return value, offset
         raise RuntimeError("Invalid NAT response integer")
 
-    with socket.create_connection(("127.0.0.1", listener), timeout=5) as connection:
+    with socket.create_connection((host, listener), timeout=5) as connection:
         connection.sendall(b"\x0c\xa2\x01\x00")
         for _ in range(3):
             first = exact(connection, 1)
@@ -218,7 +232,7 @@ def nat_probe(listener):
             if length > 65536:
                 raise RuntimeError("NAT response exceeds probe limit")
             frame = exact(connection, length)
-            if frame.startswith(b"\xc2\x01"):
+            if frame.startswith(b"\xca\x01"):
                 continue  # Native NAT discovery also skips KeyExchange.
             if not frame.startswith(b"\xaa\x01"):
                 raise RuntimeError("Rendezvous did not return TestNatResponse")
@@ -364,7 +378,7 @@ def main():
                 with socket.create_connection(("127.0.0.1", port(names[role], service)), timeout=5):
                     pass
             for service in ["21115/tcp", "21116/tcp"]:
-                nat_probe(port(names["hbbs"], service))
+                container_nat_probe(names["hbbs"], service)
             status = endpoint.request("/api/v1/status")
             branding = endpoint.request("/api/v1/default-branding")
             branding["display_name"] = "HTTPS Stack Test Company"
@@ -404,7 +418,7 @@ def main():
                 raise RuntimeError("Stack restart changed company or transport trust")
             endpoint.request("/api/v1/devices", token=administrator, expected=401)
             for service in ["21115/tcp", "21116/tcp"]:
-                nat_probe(port(names["hbbs"], service))
+                container_nat_probe(names["hbbs"], service)
             original_login = dict(login, totp_code=authenticator(secret, 1))
             original_token = endpoint.request("/api/v1/login", "POST", body=original_login)["token"]
             original_inventory = endpoint.request("/api/v1/devices", token=original_token)

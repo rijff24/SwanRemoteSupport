@@ -2278,3 +2278,35 @@ combined launcher still needs a newly generated package and native lifecycle
 verification; the observed GUI used the isolated handle diagnostic with the
 existing signed lab package. Original failure evidence and existing services
 remain preserved.
+
+### Combined launcher and deployment-check follow-up (2026-10-03)
+
+The final combined launcher ran in the owned Server 2016 interactive task as
+SwanLabTech, session 1, administrator false. Real installed-publisher verification
+passed; the company-branded technician frontend remained open without a recorded
+launcher failure. The task remains running while it drains inherited GUI output
+pipes. This used the existing signed lab binaries with the development launcher,
+not a newly generated release. GUI MFA login and native connections remain
+unverified: the computer-use helper could not activate the TigerVNC options modal,
+and its documented selection/activation recovery failed. No credentials were
+entered into an uncertain field and no alternative UI injection was used.
+
+The existing guest management service started after its signed executable and
+loopback-only proxy configuration were verified. Normal guest HTTPS validation
+returned 200 for the company profile; the customer process and installer worker
+were preserved. No host service, DNS, firewall or trust settings changed.
+
+Native Windows build 37120044435 was dispatched once from 01d24ab to embed both
+launcher fixes. It is pending; build completion, artifact integrity and generated
+package verification must be recorded separately.
+
+Component run 37120224142 at 6b23cca passed Ubuntu and Windows workspace tests
+and builds, including all three Windows PowerShell technician-launcher cases.
+The Docker context check, image build, company setup and persistence passed after
+adding the three required public inputs to both deny-by-default allowlists.
+The later stack probe failed with a reset on the NAT-test socket. The probe now
+uses the owned container's private bridge address because upstream hbbs treats
+loopback peers on that port as administrative text connections. Published host
+sockets retain separate connection checks. The KeyExchange protobuf tag was also
+corrected to field 25. Actual stack verification of this change is pending; this
+is not public NAT traversal or remote-session evidence.
