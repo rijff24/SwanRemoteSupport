@@ -204,6 +204,22 @@ pub fn restore(data:&Path,source:&Path,password:&str)->Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn failed_transport_snapshot_removes_private_staging_without_changing_source() {
+        let root=std::env::temp_dir().join(format!("swan-failed-transport-backup-{}",swan_protocol::random_token()));
+        let data=root.join("data");let transport=root.join("transport");std::fs::create_dir_all(&data).unwrap();std::fs::create_dir(&transport).unwrap();
+        let db=rusqlite::Connection::open(data.join("management.sqlite3")).unwrap();db.execute_batch("CREATE TABLE identity(value TEXT);").unwrap();drop(db);
+        std::fs::write(data.join("profile-key.hex"),b"fixture key").unwrap();std::fs::write(data.join("setup-token.txt"),b"fixture token").unwrap();
+        let invalid=b"corrupt transport database fixture";
+        std::fs::write(transport.join("db_v2.sqlite3"),invalid).unwrap();
+        std::fs::write(transport.join("id_ed25519"),b"fixture private key").unwrap();std::fs::write(transport.join("id_ed25519.pub"),b"fixture public key").unwrap();
+        let archive=root.join("rejected.backup");
+        let error=export_complete(&data,&archive,"failed backup test passphrase",Some(&transport),None,None).unwrap_err();
+        assert!(format!("{error:#}").contains("transport database"));assert!(!archive.exists());
+        assert_eq!(std::fs::read(transport.join("db_v2.sqlite3")).unwrap(),invalid);
+        assert!(std::fs::read_dir(&data).unwrap().all(|entry|!entry.unwrap().file_name().to_string_lossy().starts_with("backup-")),"Failed export must remove plaintext snapshots and staging");
+        std::fs::remove_dir_all(root).unwrap();
+    }
     #[cfg(unix)]
     #[test]
     fn readonly_transport_wal_export_preserves_committed_peers() {
