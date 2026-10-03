@@ -1529,3 +1529,10 @@ No manual worker start was used. Authenticated build completion by this new work
 service and its MSVC release remain pending. Current-source native CI run
 `37090939153` (`6bd54c21fab4ec8d3203f513c616060af3fd2d26`) was confirmed in progress;
 its result is not yet known.
+
+Worker removal ownership validation and `-WhatIf` were exercised against the
+installed signed GNU service on Server 2016. The original running process ID
+and executable remained unchanged; no service or file was removed. Actual
+removal, retained-data reinstallation and server credential revocation remain
+pending. Native CI run `37090939153` was still in progress on the latest check;
+no duplicate build was dispatched.
