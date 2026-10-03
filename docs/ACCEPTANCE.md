@@ -1966,3 +1966,12 @@ Only owned foreground test processes were stopped; existing services retained
 their prior status. The first harness expected the wrong authentication error text
 and stopped; the corrected fresh-directory rehearsal passed. This is management-only
 native recovery evidence, not transport/TLS restoration or migration rollback.
+
+Deployment backup now has an explicit `--installer-artifacts-directory` option.
+It includes canonical build-UUID ZIP files in the authenticated archive and
+restores them under the replacement data directory, retaining files needed by
+published installer links. Four compiled backup tests passed, including byte-exact
+installer-file recovery, rejection of unfinished uploads, tampered archives,
+unsafe restore paths and prior transport/TLS behavior. This component evidence
+does not demonstrate native installer-download availability after deployment
+restore; that check requires a rebuilt server with this option.

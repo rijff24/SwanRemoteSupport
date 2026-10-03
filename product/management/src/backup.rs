@@ -43,6 +43,13 @@ fn collect_tls(root:&Path,directory:&Path,files:&mut Vec<(String,std::path::Path
     Ok(())
 }
 pub fn export_deployment(data:&Path,destination:&Path,password:&str,transport:Option<&Path>,configuration:Option<&Path>,tls_identity:Option<&Path>,tls_directory:Option<&Path>)->Result<()> {
+    export_deployment_with_artifacts(data,destination,password,transport,configuration,tls_identity,tls_directory,None)
+}
+fn artifact_entry(name:&str)->bool {
+    name.strip_prefix("artifacts/").and_then(|name|name.strip_suffix(".zip"))
+        .is_some_and(|id|uuid::Uuid::parse_str(id).is_ok_and(|parsed|parsed.to_string()==id))
+}
+pub fn export_deployment_with_artifacts(data:&Path,destination:&Path,password:&str,transport:Option<&Path>,configuration:Option<&Path>,tls_identity:Option<&Path>,tls_directory:Option<&Path>,artifacts:Option<&Path>)->Result<()> {
     ensure!(!destination.exists(),"Refusing to overwrite an existing backup");
     let db=rusqlite::Connection::open_with_flags(data.join("management.sqlite3"),rusqlite::OpenFlags::SQLITE_OPEN_READ_ONLY)?;
     let snapshot=data.join(format!("backup-{}.sqlite3",swan_protocol::random_token()));
@@ -64,6 +71,19 @@ pub fn export_deployment(data:&Path,destination:&Path,password:&str,transport:Op
         if let Some(path)=configuration {files.push(("deployment.env".into(),path.to_path_buf()));}
         if let Some(path)=tls_identity {files.push(("tls-identity".into(),path.to_path_buf()));}
         if let Some(directory)=tls_directory {collect_tls(directory,directory,&mut files)?;}
+        if let Some(directory)=artifacts {
+            let metadata=std::fs::symlink_metadata(directory)?;
+            ensure!(metadata.is_dir() && !metadata.file_type().is_symlink(),"Installer artifacts must be a regular directory");
+            #[cfg(windows)] {use std::os::windows::fs::MetadataExt;ensure!(metadata.file_attributes()&0x400==0,"Installer artifacts must not contain reparse points");}
+            for entry in std::fs::read_dir(directory)? {
+                let path=entry?.path();let metadata=std::fs::symlink_metadata(&path)?;
+                ensure!(metadata.is_file() && !metadata.file_type().is_symlink(),"Installer artifacts must contain regular files only");
+                #[cfg(windows)] {use std::os::windows::fs::MetadataExt;ensure!(metadata.file_attributes()&0x400==0,"Installer artifacts must not contain reparse points");}
+                let name=format!("artifacts/{}",path.file_name().and_then(|name|name.to_str()).context("Installer artifact name must be UTF-8")?);
+                ensure!(artifact_entry(&name),"Installer artifact must use its canonical build UUID and ZIP extension; finish uploads before export");
+                ensure!(files.len()<4096,"Too many backup files");files.push((name,path));
+            }
+        }
         let proxy=data.join("Caddyfile");
         match std::fs::symlink_metadata(&proxy) {
             Ok(metadata)=>{
@@ -104,7 +124,7 @@ pub fn restore(data:&Path,source:&Path,password:&str)->Result<()> {
     ensure!((3..=4096).contains(&archive.len()),"Unexpected backup contents");
     let allowed=["management.sqlite3","profile-key.hex","setup-token.txt","transport-id_ed25519","transport-id_ed25519.pub","transport-db.sqlite3","deployment.env","tls-identity","Caddyfile"];
     let mut names=std::collections::HashSet::new();
-    for index in 0..archive.len(){let entry=archive.by_index(index)?;ensure!((allowed.contains(&entry.name()) || tls_entry(entry.name())) && !entry.is_dir() && names.insert(entry.name().to_string()),"Unknown or duplicate backup entry");}
+    for index in 0..archive.len(){let entry=archive.by_index(index)?;ensure!((allowed.contains(&entry.name()) || tls_entry(entry.name()) || artifact_entry(entry.name())) && !entry.is_dir() && names.insert(entry.name().to_string()),"Unknown or duplicate backup entry");}
     let mut portable_names=std::collections::HashSet::new();
     for name in &names {ensure!(portable_names.insert(name.to_ascii_lowercase()),"Backup filenames collide on Windows");}
     for name in &portable_names {
@@ -142,6 +162,23 @@ pub fn restore(data:&Path,source:&Path,password:&str)->Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn installer_artifacts_roundtrip_and_reject_unfinished_or_unsafe_entries() {
+        let root=std::env::temp_dir().join(format!("swan-artifact-backup-{}",swan_protocol::random_token()));
+        let data=root.join("data");let artifacts=data.join("artifacts");std::fs::create_dir_all(&artifacts).unwrap();
+        let db=rusqlite::Connection::open(data.join("management.sqlite3")).unwrap();db.execute_batch("CREATE TABLE builds(id TEXT);INSERT INTO builds VALUES('retained');").unwrap();drop(db);
+        std::fs::write(data.join("profile-key.hex"),b"key").unwrap();std::fs::write(data.join("setup-token.txt"),b"token").unwrap();
+        let id=uuid::Uuid::new_v4().to_string();let name=format!("{id}.zip");std::fs::write(artifacts.join(&name),b"retained installer bytes").unwrap();
+        let archive=root.join("complete.backup");
+        export_deployment_with_artifacts(&data,&archive,"installer backup test password",None,None,None,None,Some(&artifacts)).unwrap();
+        let restored=root.join("restored");restore(&restored,&archive,"installer backup test password").unwrap();
+        assert_eq!(std::fs::read(restored.join("artifacts").join(&name)).unwrap(),b"retained installer bytes");
+        for name in ["artifacts/../outside.zip","artifacts/not-a-build.zip","artifacts/00000000-0000-0000-0000-000000000000.zip/child","artifacts/00000000-0000-0000-0000-000000000000.partial"] {assert!(!artifact_entry(name));}
+        std::fs::write(artifacts.join(format!("{id}.partial")),b"unfinished upload").unwrap();
+        let rejected=root.join("unfinished.backup");
+        assert!(export_deployment_with_artifacts(&data,&rejected,"installer backup test password",None,None,None,None,Some(&artifacts)).is_err());assert!(!rejected.exists());
+        std::fs::remove_dir_all(root).unwrap();
+    }
     #[test]
     fn complete_backup_preserves_transport_configuration_and_tls_and_rejects_tampering() {
         let root=std::env::temp_dir().join(format!("swan-full-backup-{}",swan_protocol::random_token()));

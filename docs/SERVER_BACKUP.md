@@ -25,6 +25,15 @@ swan-management backup company.swan-backup --transport-directory TRANSPORT_DATA 
 
 Alternatively, replace the final option with `--tls-directory HTTPS_STORAGE_DIRECTORY`.
 Both options can be included when the deployment uses separate storage and identity files.
+Add `--installer-artifacts-directory COMPANY_DATA/artifacts` to preserve generated
+customer and technician bundles and their existing download links. Pause builds
+and uploads, and keep management configuration changes stopped during this export.
+Only regular files named with canonical build UUIDs and `.zip` are accepted;
+unfinished `.partial` uploads cause export to fail. Installer files share the
+512 MiB plaintext and 4096-file limits with the rest of the archive. If those
+limits are exceeded, keep the installer directory in a separate protected backup
+and restore it with the matching management database. Management-only export
+omits these files, so its restored build records alone cannot serve old downloads.
 Directory exports reject symbolic links, Windows reparse points, special files,
 unsafe paths, and more than 4096 total files. The 512 MiB total plaintext limit applies.
 When the company data directory contains `Caddyfile`, export also encrypts that
@@ -57,7 +66,7 @@ swan-management restore company.swan-backup
 Set `SWAN_DATA_DIR` to that empty replacement directory before running restore.
 The restorer authenticates and validates the archive before writing contents.
 It permits fixed management filenames and validated relative paths under
-`tls-storage/`, rejects duplicate or Windows-colliding names, file/directory
+`tls-storage/` and canonical build ZIPs under `artifacts/`, rejects duplicate or Windows-colliding names, file/directory
 conflicts and incomplete key pairs, and protects restored files with private Unix permissions or Windows
 ACLs for the invoking account, SYSTEM and Administrators.
 
@@ -73,6 +82,7 @@ protected directory; restore never overwrites external service files:
 | `tls-identity` | Company HTTPS identity location, or replace through certificate reissuance |
 | `tls-storage/` | Complete HTTPS service data directory; copy while that service is stopped |
 | `Caddyfile` | HTTPS recipe in the replacement company data directory; validate paths and hostnames before starting |
+| `artifacts/` | Generated installers in the replacement company data directory; verify stored hashes and both public/customer and protected/technician download behavior |
 
 Keep transport services stopped while placing their restored data. Preserve
 private ownership and permissions appropriate to the service accounts. Use the
