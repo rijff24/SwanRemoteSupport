@@ -1848,3 +1848,16 @@ status and revocation auditing. The harness used guest-loopback HTTP and stopped
 only its owned management process; existing service statuses stayed unchanged.
 This verifies compiled native revocation behavior, not HTTPS/public transport,
 signed distribution, job cancellation during active upload or a real session.
+
+The verified `0a541c7` native management, agent and worker inputs were then signed
+inside the Server 2016 guest using the existing non-exportable private lab
+certificate and pinned company-signing recipe. Every original input hash was
+rechecked, Authenticode status and certificate identity passed, and
+`signtool verify /pa /all /tw` confirmed RFC3161 timestamps without warnings.
+Signed hashes are management
+`bf52a32557e96990616de28380c386b4eae7ece0b523f9677685e8f6c359c8bc`,
+agent `1226def2eee9ade11d4fabd5b49321de5de4744973999fd517c85645086f0ca0`
+and worker `6610f507d02ab4f02dc1080142f113f0c2aab7ec0b10564573216dcb861cad51`.
+The key was not exported; host trust and installed service binaries were not
+changed. These are lab fixtures, not production-signed releases or evidence that
+the new worker has completed a service-mode build.
