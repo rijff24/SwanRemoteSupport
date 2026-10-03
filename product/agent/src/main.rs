@@ -111,12 +111,9 @@ async fn main()->Result<()> {
                 state.apply_pending_update(&update_directory)
             }).await.context("Update helper task failed").and_then(|result|result);
             if customer && (matches!(&outcome,Ok(true)) || outcome.is_err()) {
-                let script=directory.join("Restart-Configuration.ps1");
-                std::fs::write(&script,include_str!("../../../deployment/windows/Restart-Configuration.ps1"))?;
-                let status=swan_agent::update::powershell_command()?.args(["-NoLogo","-NoProfile","-NonInteractive","-ExecutionPolicy","Bypass","-File"]).arg(script).arg("-Directory").arg(&directory).status()?;
-                if !status.success(){
+                if let Err(restart_error)=swan_agent::update::finish_configuration_restart(&directory){
                     if let Err(error)=&outcome {eprintln!("Update remains pending: {error:#}");}
-                    bail!("Configuration task restart failed; inspect the protected update log and resume recovery");
+                    return Err(restart_error).context("Configuration task restart failed; durable recovery will retry");
                 }
             }
             let installed=outcome?;

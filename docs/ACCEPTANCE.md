@@ -29,6 +29,15 @@ not prove a corrected signed automatic upgrade or durable post-commit recovery;
 both still require end-to-end verification. The failed fixture's registered
 MSI remains 1.5.1, with agent state claiming sequence 3, pending reconciliation.
 
+The subsequent recovery change writes a signed `configuration-restart.json`
+marker before committing a customer update. Successful restart removes it;
+the staged recovery task retries it after validating the committed release,
+installed payload and MSI registration. Support sessions remain blocked while
+the marker exists, including after the updater's process lock disappears.
+The agent suite passed again, and the extended session-exclusion regression
+passed. A newly built, signed native agent and an interrupted-update VM test
+are still required to prove this recovery behavior end to end.
+
 ### Windows full-stack company server and technician worker, 3 October
 
 The disposable Windows Server 2016 Standard Evaluation guest (Desktop

@@ -447,6 +447,29 @@ fn save_installed_metadata(directory:&Path,envelope:&SignedEnvelope)->Result<()>
     crate::replace_state(&temporary,&directory.join("installed-release.json"))
 }
 
+#[cfg(windows)]
+pub fn finish_configuration_restart(directory:&Path)->Result<()> {
+    let activity=activity_file(directory)?;
+    fs2::FileExt::try_lock_exclusive(&activity).context("Configuration restart requires update and session exclusion")?;
+    let marker=directory.join("configuration-restart.json");
+    if marker.exists() {
+        ensure!(!directory.join("pending-uninstall").exists(),"Explicit uninstall cancels configuration restart");
+        let state=AgentState::load_for_refresh(directory)?;
+        let envelope:SignedEnvelope=serde_json::from_slice(&std::fs::read(&marker)?)?;
+        let release=validate_previous_release(&state,&envelope,state.last_release_sequence)?;
+        ensure!(release.edition==Edition::Customer,"Configuration restart requires a customer release");
+        let installed:SignedEnvelope=serde_json::from_slice(&std::fs::read(directory.join("installed-release.json"))?)?;
+        ensure!(installed.payload==envelope.payload && installed.signature==envelope.signature,"Restart marker differs from installed release");
+        verify_installed(directory,&release)?;
+        verify_msi_registration(&installer_cache(directory,&release),&release)?;
+    }
+    let status=embedded_powershell_command(include_str!("../../../deployment/windows/Restart-Configuration.ps1"),
+        &[("Directory",directory.to_str().context("Configuration path is not valid Unicode")?)])?.status()?;
+    ensure!(status.success(),"Configuration task restart remains pending");
+    if marker.exists(){std::fs::remove_file(marker)?;}
+    Ok(())
+}
+
 pub(crate) fn validate_previous_release(state:&AgentState,envelope:&SignedEnvelope,previous_sequence:u64)->Result<Release> {
     ensure!(previous_sequence>0,"Rollback requires a recorded signed installation");
     let release:Release=envelope.verify(&public_key(&state.bootstrap.release_public_key)?)?;
@@ -673,6 +696,9 @@ impl AgentState {
             ensure!(sequence>0 && helper==check_directory.join("updates").join(sequence.to_string()).join("swan-agent.exe"),"Recovery task must run from its exact staged helper");
             let receipt_path=check_directory.join("pending-update.json");
             if !receipt_path.exists() || check_directory.join("pending-uninstall").exists(){
+                if state.last_release_sequence==sequence && check_directory.join("configuration-restart.json").exists() && !check_directory.join("pending-uninstall").exists() {
+                    finish_configuration_restart(&check_directory)?;
+                }
                 let installed:SignedEnvelope=serde_json::from_slice(&std::fs::read(check_directory.join("installed-release.json"))?)?;
                 let mut release:Release=installed.verify(&public_key(&state.bootstrap.release_public_key)?)?;
                 ensure!(release.edition==state.bootstrap.edition,"Installed release belongs to another edition");
@@ -752,6 +778,7 @@ impl AgentState {
         save_installed_metadata(directory,&receipt.release)?;
         // A crashed updater may have installed successfully or saved state before
         // removing the receipt. Exact signed executable identity proves either case.
+        if release.edition==Edition::Customer {publish_download(&directory.join("configuration-restart.json"),&serde_json::to_vec(&receipt.release)?)?;}
         self.last_release_sequence=release.sequence;self.save(directory)?;
         std::fs::remove_file(receipt_path)?;Ok(())
     }
@@ -890,6 +917,7 @@ impl AgentState {
         }
         save_installed_metadata(directory,&receipt.release)?;
         retain_installer(&package,&installer_cache(directory,&release),&release)?;
+        if release.edition==Edition::Customer {publish_download(&directory.join("configuration-restart.json"),&serde_json::to_vec(&receipt.release)?)?;}
         latest.last_release_sequence=release.sequence;latest.save(directory)?;
         std::fs::remove_file(receipt_path)?;*self=latest;Ok(true)
     }
@@ -1277,6 +1305,9 @@ mod tests {
         drop(updater);
         assert!(lock_session(&folder).is_err());
         std::fs::remove_file(folder.join("pending-update.json")).unwrap();
+        std::fs::write(folder.join("configuration-restart.json"),b"committed update awaiting restart").unwrap();
+        assert!(lock_session(&folder).is_err());
+        std::fs::remove_file(folder.join("configuration-restart.json")).unwrap();
         assert!(lock_session(&folder).is_ok());std::fs::remove_dir_all(folder).unwrap();
     }
     #[cfg(windows)]
