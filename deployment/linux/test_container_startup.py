@@ -74,7 +74,21 @@ def secret_command(arguments, passphrase, expected_success=True):
     result = subprocess.run(["docker", *arguments], input=passphrase + "\n",
                             capture_output=True, text=True, timeout=90)
     if (result.returncode == 0) != expected_success:
-        raise RuntimeError("Unexpected encrypted backup/restore command result")
+        # Report only known error categories, never captured output: diagnostics
+        # can contain local paths, deployment settings or Docker arguments.
+        categories = {
+            "sqlite_readonly": "attempt to write a readonly database",
+            "sqlite_open": "unable to open database file",
+            "sqlite_locked": "database is locked",
+            "permission": "Permission denied",
+            "missing_file": "No such file or directory",
+            "tls_path": "Unsupported TLS storage path",
+            "backup_exists": "Refusing to overwrite an existing backup",
+            "authentication": "Backup password incorrect or backup modified",
+        }
+        matched = [name for name, text in categories.items() if text in result.stderr]
+        raise RuntimeError("Unexpected encrypted backup/restore command result; exit=" +
+                           str(result.returncode) + "; categories=" + repr(matched))
     if not expected_success and "Backup password incorrect or backup modified" not in result.stderr:
         raise RuntimeError("Restore failed before demonstrating backup authentication rejection")
 
