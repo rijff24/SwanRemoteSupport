@@ -2239,3 +2239,24 @@ The fixture was then advanced to independently verified native build `c7d118c`
 repair and uninstall checks on Server 2025 Datacenter build 26100. Its retained
 result and logs passed authenticated artifact digest and CRC verification. This
 provides current-package lifecycle evidence with the same limited scope above.
+
+### Standard-user technician offline launcher failure and correction
+
+After authorized manual-equivalent lab sign-in, an isolated interactive task
+ran the installed launcher as `SwanLabTech`, session 1, administrator false.
+With management unreachable, Windows PowerShell 5 converted the agent's sync
+stderr into terminating `NativeCommandError`. The launcher stopped before its
+documented cached-branding warning and installed-package verification. Native
+process invocation now observes the actual sync exit code independently of
+PowerShell's stderr handling. A Windows PowerShell fixture demonstrates offline
+startup ordering and denies application launch when installed verification fails;
+its mocked signature gate is control-flow evidence only.
+
+The existing signed lab agent/application independently passed real signature,
+hash and pinned-publisher verification. With only the launcher development fix
+applied, the same owned task reached the offline warning, passed real installed
+verification and started the technician executable under the standard account.
+Its original launcher and failed diagnostic logs remain preserved privately.
+The executable subsequently exited without a visible technician window. This
+fixes the observed launcher failure; graphical startup and native sessions remain
+unverified and require further investigation. No host production service changed.

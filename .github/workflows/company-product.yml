@@ -43,6 +43,12 @@ jobs:
           ./deployment/windows/test_server_removal_plan.ps1
           powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File ./deployment/windows/test_server_removal_plan.ps1
           if ($LASTEXITCODE -ne 0) { throw 'Windows PowerShell removal-plan checks failed.' }
+      - name: Verify technician offline launcher and package rejection
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File ./deployment/windows/test_technician_launcher.ps1
+          if ($LASTEXITCODE -ne 0) { throw 'Windows PowerShell technician launcher checks failed.' }
       - name: Render the Windows setup wizard without installation
         if: runner.os == 'Windows'
         shell: pwsh
