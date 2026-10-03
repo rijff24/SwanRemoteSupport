@@ -1703,3 +1703,20 @@ changed cached profile trust pin. Tests ran as the standard user through actual
 stand in for trust checks. The original installed managed-state hash remained
 unchanged. This is native cached-profile/bootstrap rejection evidence, not
 expired signed-profile, live endpoint rotation, package or session-grant testing.
+
+Installed signed native `6bd54c2` technician and matching management passed live
+company branding and profile signing-key rotation over isolated trusted HTTPS.
+The administrator changed technician display name/color; the installed agent
+synchronized them with a higher revision and unchanged trust pin. With only the
+owned test management process stopped, native `prepare-profile-key` published a
+transition signed by the old key. The client synchronized the authorized next
+key while retaining its current pin. Native activation after that sync switched
+the server key; the next client sync committed the replacement pin and a higher
+revision. Company/edition, release trust, endpoint, consent, device fields and
+installed release sequence 8 remained unchanged. After both isolated listeners
+stopped, installed identity verification succeeded offline and the old bundle's
+bootstrap pin was rejected. Existing service statuses were checked unchanged.
+The first harness attempt stopped before rotation because this compiled profile
+schema lacks the newer support-contact field; the corrected harness tested its
+supported display-name/color fields. This does not establish rendered branding,
+newer contact-field sync, endpoint rotation, customer key rotation or a session.
