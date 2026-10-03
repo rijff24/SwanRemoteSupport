@@ -1476,3 +1476,14 @@ the original company policy. Credentials and raw state remained private.
 This tests the installed native CLI consent path; graphical consent controls,
 actual unattended sessions and termination/rejection of live session grants
 still require separate evidence.
+
+The installed native consent rehearsal also exercised actual HTTPS grant/lease
+APIs: an authorized administrator obtained an unattended signed grant after
+explicit consent, the device claimed it and renewed its live lease, and a second
+claim of the same grant was denied (`403`). After native consent revocation,
+renewal of that claimed grant and issuance of a new unattended grant were both
+denied (`403`). Original company policy and disabled local consent were restored;
+enrollment comparisons passed. Grant bodies, device tokens and account sessions
+were kept private. These are real server authorization checks, not an established
+native remote session: receiver termination after lease expiry and graphical
+technician/customer interaction still require end-to-end verification.
