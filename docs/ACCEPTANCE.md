@@ -1748,8 +1748,9 @@ components: all eleven embedded resource hashes passed, and the unsigned
 Its source receipt records recipe revision `4071147` and the dirty working tree;
 it is a local test package, not a corresponding-source production release.
 The already-running `0a541c7` CI build predates this workflow addition; a subsequent
-full run must verify the new server packaging step. No setup executable was run
-on the host and no host service, firewall, DNS or trust setting was changed.
+full run must verify the new server packaging step. At that stage no setup
+executable was run on the host; no host service, firewall, DNS or trust setting
+was changed.
 
 Installed native `6bd54c2` technician then passed live signed synchronization of
 support contacts, a validated HTTPS shortcut, logo SVG and consent text from the
@@ -1760,3 +1761,17 @@ and consent. After the isolated management/proxy listeners stopped, offline
 installed-identity verification accepted the signed cache without changing its
 hash. Existing service statuses were checked unchanged. This is installed-agent
 metadata synchronization evidence, not visual rendering or shortcut interaction.
+
+The same hash-verified unsigned server setup package subsequently passed its
+explicit `--render-preview` path on the unelevated Windows 11 host. The packaged
+launcher extracted its bundled native management/components, loaded its embedded
+wizard and exited successfully. Visual inspection of the generated 836-by-779
+PNG confirmed Swan branding, the unsigned-test title, hostname and trust inputs,
+bundled component paths and the preview-only status without clipped labels or
+overlapping controls. The PNG SHA-256 is
+`ca0e06e43bba6c841076015b667671895923cb252ba518f8c39ca42672883f53`.
+The owned temporary payload directory was removed and no setup process remained.
+Preview code disables installation and browser actions and does not show the
+interactive form. This verifies packaged extraction and offscreen rendering,
+not elevated installation, interactive setup, production signing or a supported
+Windows compatibility result. No host service, firewall, DNS or trust was changed.
