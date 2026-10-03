@@ -1890,3 +1890,15 @@ bootstrap checks passed; unauthenticated download returned 401. This package
 contains matching current native payloads, but was not installed in this test.
 Production signing, service-mode completion and rendered technician/session
 behavior remain open.
+
+The matching `0a541c7` technician bundle subsequently passed its actual
+`Install-Company.ps1` setup under the non-administrator `swanlabtech` account on
+Server 2016. Separate fresh application-data directories preserved the earlier
+installation. Installed EXE and agent hashes matched the approved signed inputs,
+native installed-identity verification and HTTPS signed configuration sync passed,
+sequence 11 was recorded and the pending-install marker cleared. No customer
+device identity, enrollment token or unattended consent was created. The existing
+Start-menu shortcut was restored, owned management/proxy processes stopped, and
+existing service statuses remained unchanged. This is real portable technician
+installation evidence; rendered login, authorized inventory, native sessions,
+MSI installation and the remaining Windows matrix are still unverified.
