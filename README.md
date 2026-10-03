@@ -11,7 +11,7 @@
 > [!IMPORTANT]
 > **Swan Remote Support** is evolving into a configurable AGPL product that each company hosts independently. Its server manages branding, enrollment, technician authorization and approved updates; customer and technician apps use signed company configuration. Start with the [company product build/deployment guide](product/README.md) and [acceptance report](docs/ACCEPTANCE.md). This is a development branch, not a production release. Native sessions, installers, recovery and the complete Windows matrix still require verification. The original Swan/Tailscale deployment is preserved at tag `swan-single-company-baseline-1.4.9`.
 
-Continuing on the live server? Use the evidence-first [server continuation prompt](docs/SERVER_CONTINUATION_PROMPT.md).
+Maintaining the preserved Swan/Tailscale deployment? Use its historical [server continuation prompt](docs/SERVER_CONTINUATION_PROMPT.md).
 
 **[Code signing policy](docs/CODE_SIGNING_POLICY.md):** Production publication requires an approved signing provider, valid signatures and completed release checks. No signing approval or free signing of arbitrary company builds is assumed.
 
