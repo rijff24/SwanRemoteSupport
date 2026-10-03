@@ -1413,3 +1413,22 @@ running customer service and configuration watcher, one installed agent process,
 and preserved identity/token/consent comparisons. This is a second completed
 automatic upgrade, **not interrupted-update recovery evidence**. The interruption
 harness must observe a reliable execution boundary on a new candidate.
+
+### Interrupted staged helper: recovery pending
+
+A new private signed MSI `1.5.6` (SHA-256
+`426995bfa864ea0081b3acee7ad544baadb5763291f467bcd688f8563c2aea0b`)
+was imported and approved as `7-Customer-test`. The guarded lab harness observed
+its live staged `apply-update` helper, verified its exact executable hash,
+release/previous sequence and registered SYSTEM recovery action, then terminated
+only helper PID `772`. This interruption was intentional; no MSI child, service,
+worker or host process was terminated. Immediate inspection found MSI `1.5.5`,
+sequence `6`, the retained pending-update receipt, unchanged enrollment/consent,
+and the original running customer service and configuration watcher. The staged
+helper was absent and its recovery task was Ready with the normal retry scheduled
+for `2026-10-03T02:25:25Z`. Recovery completion is not yet demonstrated.
+
+Source now offloads final configuration verification/restart from async `main`
+to `spawn_blocking`, preserving existing error propagation. Windows GNU
+`cargo check --manifest-path product/Cargo.toml -p swan-agent --locked` passed.
+This change is not part of the installed source `4768d53` test binary.

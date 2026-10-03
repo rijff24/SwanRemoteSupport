@@ -111,7 +111,10 @@ async fn main()->Result<()> {
                 state.apply_pending_update(&update_directory)
             }).await.context("Update helper task failed").and_then(|result|result);
             if customer && (matches!(&outcome,Ok(true)) || outcome.is_err()) {
-                if let Err(restart_error)=swan_agent::update::finish_configuration_restart(&directory){
+                let restart_directory=directory.clone();
+                let restart=tokio::task::spawn_blocking(move ||swan_agent::update::finish_configuration_restart(&restart_directory))
+                    .await.context("Configuration restart task failed").and_then(|result|result);
+                if let Err(restart_error)=restart {
                     if let Err(error)=&outcome {eprintln!("Update remains pending: {error:#}");}
                     return Err(restart_error).context("Configuration task restart failed; durable recovery will retry");
                 }
