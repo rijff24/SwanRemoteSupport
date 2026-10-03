@@ -2082,7 +2082,12 @@ pub fn rustdesk_interval(i: Interval) -> ThrottledInterval {
 
 pub fn load_custom_client() {
     #[cfg(feature = "swan_custom")]
-    load_swan_client_defaults();
+    {
+        load_swan_client_defaults();
+        // Company configuration has its own pinned trust key. Never load an
+        // upstream custom.txt over the managed security and routing policy.
+        return;
+    }
 
     #[cfg(debug_assertions)]
     if let Ok(data) = std::fs::read_to_string("./custom.txt") {
@@ -2107,79 +2112,7 @@ pub fn load_custom_client() {
 
 #[cfg(feature = "swan_custom")]
 fn load_swan_client_defaults() {
-    const APP_NAME: &str = "Swan Remote Support";
-    const RENDEZVOUS_SERVER: &str = env!("RENDEZVOUS_SERVER");
-    const RS_PUB_KEY: &str = env!("RS_PUB_KEY");
-    const RELAY_SERVER: Option<&str> = option_env!("RELAY_SERVER");
-    const API_SERVER: Option<&str> = option_env!("API_SERVER");
-
-    *config::APP_NAME.write().unwrap() = APP_NAME.to_owned();
-
-    // Keep every Swan build pinned to the intended self-hosted network. The
-    // Tailscale rendezvous/relay address and Ed25519 public key are public
-    // routing/trust configuration values, not credentials.
-    let mut overrides = config::OVERWRITE_SETTINGS.write().unwrap();
-    overrides.insert(
-        keys::OPTION_CUSTOM_RENDEZVOUS_SERVER.to_owned(),
-        RENDEZVOUS_SERVER.to_owned(),
-    );
-    overrides.insert(keys::OPTION_KEY.to_owned(), RS_PUB_KEY.to_owned());
-    if let Some(relay_server) = RELAY_SERVER.filter(|value| !value.trim().is_empty()) {
-        overrides.insert(
-            keys::OPTION_RELAY_SERVER.to_owned(),
-            relay_server.to_owned(),
-        );
-    }
-    if let Some(api_server) = API_SERVER.filter(|value| !value.trim().is_empty()) {
-        overrides.insert(keys::OPTION_API_SERVER.to_owned(), api_server.to_owned());
-    }
-    // Never replace this branded client with an upstream public-network build.
-    // Swan updates must be built, tested, and signed through the Swan release
-    // process.
-    overrides.insert(keys::OPTION_ALLOW_AUTO_UPDATE.to_owned(), "N".to_owned());
-    drop(overrides);
-
-    // This managed-support edition is installed in person by Swan Computing.
-    // It is ready for unattended operation only after the express setup tool
-    // creates a unique permanent password on that specific device.
-    let mut defaults = config::DEFAULT_SETTINGS.write().unwrap();
-    defaults.insert(keys::OPTION_APPROVE_MODE.to_owned(), "password".to_owned());
-    defaults.insert(
-        keys::OPTION_VERIFICATION_METHOD.to_owned(),
-        "use-permanent-password".to_owned(),
-    );
-    defaults.insert(
-        keys::OPTION_TEMPORARY_PASSWORD_LENGTH.to_owned(),
-        "10".to_owned(),
-    );
-    defaults.insert(
-        keys::OPTION_ALLOW_ONLY_CONN_WINDOW_OPEN.to_owned(),
-        "N".to_owned(),
-    );
-    drop(defaults);
-
-    // Customer devices receive support but do not initiate outbound RustDesk
-    // sessions. Network/server controls are hidden so the embedded Tailscale
-    // configuration cannot be accidentally replaced. The tray and stop-service
-    // controls remain visible so the computer owner can see and pause support.
-    let mut hard_settings = config::HARD_SETTINGS.write().unwrap();
-    hard_settings.insert("conn-type".to_owned(), "incoming".to_owned());
-    hard_settings.insert("disable-account".to_owned(), "Y".to_owned());
-    hard_settings.insert("disable-ab".to_owned(), "Y".to_owned());
-    drop(hard_settings);
-
-    let mut builtin_settings = config::BUILTIN_SETTINGS.write().unwrap();
-    builtin_settings.insert(
-        keys::OPTION_HIDE_NETWORK_SETTINGS.to_owned(),
-        "Y".to_owned(),
-    );
-    builtin_settings.insert(keys::OPTION_HIDE_SERVER_SETTINGS.to_owned(), "Y".to_owned());
-    builtin_settings.insert(keys::OPTION_HIDE_PROXY_SETTINGS.to_owned(), "Y".to_owned());
-    builtin_settings.insert(keys::OPTION_DISABLE_CHANGE_ID.to_owned(), "Y".to_owned());
-    builtin_settings.insert(
-        keys::OPTION_ALLOW_LOGON_SCREEN_PASSWORD.to_owned(),
-        "Y".to_owned(),
-    );
+    crate::managed::apply_defaults();
 }
 
 fn read_custom_client_advanced_settings(

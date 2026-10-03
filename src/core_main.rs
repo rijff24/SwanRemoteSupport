@@ -269,6 +269,8 @@ pub fn core_main() -> Option<Vec<String>> {
                     Ok(_) => translate("Installation Successful!".to_string()),
                     Err(err) => {
                         println!("Failed with error: {err}");
+                        #[cfg(feature = "swan_custom")]
+                        std::process::exit(1);
                         translate("Installation failed!".to_string())
                     }
                 };

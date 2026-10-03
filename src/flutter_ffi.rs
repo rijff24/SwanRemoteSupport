@@ -2810,7 +2810,20 @@ pub fn main_get_printer_names() -> SyncReturn<String> {
     return SyncReturn("".to_owned());
 }
 
+/// Login tokens and grant proof keys stay in Rust process memory, shared by
+/// this app's Flutter window engines. Connections return opaque local handles.
+pub fn main_company_request(request:String,sink:StreamSink<String>)->ResultType<()> {
+    #[cfg(feature = "swan_custom")]
+    {return flutter::async_tasks::company_request(request,sink);}
+    #[cfg(not(feature = "swan_custom"))]
+    {let _=request; sink.add("{\"ok\":false,\"error\":\"Managed company edition required\"}".into());Ok(())}
+}
+
 pub fn main_get_common(key: String) -> String {
+    #[cfg(feature = "swan_custom")]
+    if key == "company-overview" {
+        return crate::ipc::get_config("company-overview").ok().flatten().unwrap_or_else(crate::managed::overview);
+    }
     if key == "is-printer-installed" {
         #[cfg(target_os = "windows")]
         {
@@ -2900,6 +2913,13 @@ pub fn main_get_common_sync(key: String) -> SyncReturn<String> {
 }
 
 pub fn main_set_common(_key: String, _value: String) {
+    #[cfg(feature = "swan_custom")]
+    if (_key == "company-revoke-unattended" && _value == "N") || (_key == "company-allow-unattended" && _value == "Y") {
+        if let Err(error) = crate::ipc::set_config(&_key, _value) {
+            log::error!("Cannot change company unattended support: {}", error);
+        }
+        return;
+    }
     #[cfg(target_os = "windows")]
     if _key == "install-printer" && crate::platform::is_win_10_or_greater() {
         std::thread::spawn(move || {

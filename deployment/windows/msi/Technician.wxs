@@ -1,0 +1,42 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Package Name="Swan Remote Support Technician" Manufacturer="Swan Remote Support" Version="$(var.Version)" UpgradeCode="A4374699-436F-4917-9A4E-223F62A9E634" Scope="perUser" InstallerVersion="500" Language="1033">
+    <MajorUpgrade DowngradeErrorMessage="A newer Swan Remote Support Technician version is already installed." Schedule="afterInstallInitialize" />
+    <MediaTemplate EmbedCab="yes" />
+    <CustomAction Id="CancelUpdateRecovery" FileRef="AgentExe" ExeCommand="cancel-update-recovery" Execute="deferred" Impersonate="yes" Return="check" />
+    <CustomAction Id="RestoreUpdateRecovery" FileRef="AgentExe" ExeCommand="restore-update-recovery" Execute="rollback" Impersonate="yes" Return="check" />
+    <InstallExecuteSequence>
+      <Custom Action="RestoreUpdateRecovery" Before="CancelUpdateRecovery" Condition="REMOVE = &quot;ALL&quot; AND NOT UPGRADINGPRODUCTCODE AND NOT SWAN_RECOVERY" />
+      <Custom Action="CancelUpdateRecovery" Before="RemoveFiles" Condition="REMOVE = &quot;ALL&quot; AND NOT UPGRADINGPRODUCTCODE AND NOT SWAN_RECOVERY" />
+    </InstallExecuteSequence>
+    <Property Id="ARPNOMODIFY" Value="1" />
+    <Property Id="WINDOWSBUILD"><RegistrySearch Id="WindowsBuild" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion" Name="CurrentBuildNumber" Type="raw" Bitness="always64" /></Property>
+    <Property Id="INSTALLATIONTYPE"><RegistrySearch Id="InstallationType" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion" Name="InstallationType" Type="raw" Bitness="always64" /></Property>
+    <Property Id="OSARCH"><RegistrySearch Id="NativeArchitecture" Root="HKLM" Key="SYSTEM\CurrentControlSet\Control\Session Manager\Environment" Name="PROCESSOR_ARCHITECTURE" Type="raw" Bitness="always64" /></Property>
+    <Launch Condition="Installed OR (VersionNT64 AND OSARCH = &quot;AMD64&quot; AND WINDOWSBUILD &gt;= 10240 AND (INSTALLATIONTYPE = &quot;Client&quot; OR INSTALLATIONTYPE = &quot;Server&quot;))" Message="Windows 10/11 x64 or Windows Server with Desktop Experience is required." />
+    <StandardDirectory Id="LocalAppDataFolder">
+      <Directory Id="INSTALLFOLDER" Name="SwanRemoteSupport-Technician">
+        <Component Id="TechnicianExecutable" Guid="E2E2A30E-CC9D-5642-9553-BFB3191BF22E" Bitness="always64">
+          <File Id="TechnicianExe" Name="SwanRemoteSupport-Technician.exe" Source="$(var.TechnicianExe)" />
+          <RegistryValue Root="HKCU" Key="Software\SwanRemoteSupport\Technician" Name="Executable" Type="integer" Value="1" KeyPath="yes" />
+          <RemoveFolder Id="RemoveTechnicianFolder" On="uninstall" />
+        </Component>
+        <Component Id="ConfigurationAgent" Guid="5E8AE9B0-EA42-5C7B-B65C-A74560185608" Bitness="always64">
+          <File Id="AgentExe" Name="swan-agent.exe" Source="$(var.AgentExe)" />
+          <RegistryValue Root="HKCU" Key="Software\SwanRemoteSupport\Technician" Name="Agent" Type="integer" Value="1" KeyPath="yes" />
+        </Component>
+        <Component Id="TechnicianLauncher" Guid="9B9E9523-BABF-547E-8BC6-0D583818A384" Bitness="always64">
+          <File Id="Launcher" Name="Open-Technician.ps1" Source="$(var.Launcher)" />
+          <Shortcut Id="TechnicianShortcut" Directory="ProgramMenuFolder" Name="Swan Remote Support Technician" Target="[System64Folder]WindowsPowerShell\v1.0\powershell.exe" Arguments="-NoLogo -NoProfile -ExecutionPolicy Bypass -File &quot;[INSTALLFOLDER]Open-Technician.ps1&quot;" WorkingDirectory="INSTALLFOLDER" />
+          <RegistryValue Root="HKCU" Key="Software\SwanRemoteSupport\Technician" Name="Launcher" Type="integer" Value="1" KeyPath="yes" />
+        </Component>
+        <Component Id="LicenseNotice" Guid="5C987B06-E04B-5D27-A24B-2B8E139B697E" Bitness="always64">
+          <File Id="License" Name="LICENSE.txt" Source="$(var.License)" />
+          <RegistryValue Root="HKCU" Key="Software\SwanRemoteSupport\Technician" Name="License" Type="integer" Value="1" KeyPath="yes" />
+        </Component>
+      </Directory>
+    </StandardDirectory>
+    <Feature Id="Technician" Title="Technician application" Level="1">
+      <ComponentRef Id="TechnicianExecutable" /><ComponentRef Id="ConfigurationAgent" /><ComponentRef Id="TechnicianLauncher" /><ComponentRef Id="LicenseNotice" />
+    </Feature>
+  </Package>
+</Wix>
