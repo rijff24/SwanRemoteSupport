@@ -15,6 +15,7 @@ $installation=Join-Path ([Environment]::GetFolderPath('LocalApplicationData')) '
 if(Test-Path -LiteralPath $installation){throw 'Existing technician installation must be preserved.'}
 New-Item -ItemType Directory -Path $root | Out-Null
 function Invoke-Msi([string[]]$Arguments,[string]$LogName){
+ if($Arguments.Count -ne 2 -or $Arguments[0] -notin @('/i','/fa','/x') -or $Arguments[1] -cne $packagePath -or $LogName -notmatch '^(install|repair|uninstall)\.log$'){throw 'Invalid MSI lifecycle command binding.'}
  $log=Join-Path $root $LogName
  $all=@($Arguments)+@('/qn','/norestart','/l*v',$log)
  if(@($all|Where-Object {$_ -match '["\r\n]'}).Count){throw 'Unsupported MSI argument'}
@@ -34,14 +35,14 @@ function Verify-Payload {
  }
  if(-not(Test-Path -LiteralPath $registry)){throw 'Technician MSI registration missing.'}
 }
-Invoke-Msi @('/i',$packagePath) 'install.log'
+Invoke-Msi -Arguments @('/i',$packagePath) -LogName 'install.log'
 Verify-Payload
 $repairTarget=[IO.Path]::GetFullPath((Join-Path $installation 'SwanRemoteSupport-Technician.exe'))
 if(-not $repairTarget.StartsWith([IO.Path]::GetFullPath($installation)+'\',[StringComparison]::OrdinalIgnoreCase)){throw 'Repair target escaped owned installation.'}
 Remove-Item -LiteralPath $repairTarget
-Invoke-Msi @('/fa',$packagePath) 'repair.log'
+Invoke-Msi -Arguments @('/fa',$packagePath) -LogName 'repair.log'
 Verify-Payload
-Invoke-Msi @('/x',$packagePath) 'uninstall.log'
+Invoke-Msi -Arguments @('/x',$packagePath) -LogName 'uninstall.log'
 foreach($name in $expected.Keys){if(Test-Path -LiteralPath (Join-Path $installation $name)){throw 'MSI payload remains after uninstall.'}}
 if(Test-Path -LiteralPath $registry){throw 'MSI registration remains after uninstall.'}
 $version=Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion'
