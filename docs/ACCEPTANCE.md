@@ -15,8 +15,20 @@ and restore accepts its fixed filename in the protected replacement directory.
 The complete backup test verifies its exact contents alongside transport keys,
 environment and nested TLS storage. All three backup tests passed, including
 wrong-password, tampering, nonempty-target and unsafe archive rejection.
-Existing archives without the configuration remain supported. A full Windows
-deployment restore using this correction is still unverified.
+Existing archives without the configuration remain supported.
+
+The actual Windows GNU development CLI from `b6d7f78` then exported the
+disposable Server 2016 management database and restored it into a separate
+protected directory. A wrong password failed before creating its target.
+Restored profile-signing material, setup token and Caddy recipe matched the
+original files; the management database was restored. The original HTTPS
+service remained healthy throughout, and no service control was performed.
+This is management/archive evidence: restored services were not started,
+database/account semantics were not exercised, and transport/TLS storage
+was not included in this narrower rehearsal. The coordinated full-server
+rehearsal command was rejected by automatic approval review with only
+“blocked by policy”; it was not executed. Full Windows deployment restore
+using this correction remains unverified.
 
 ### Automatic MSI update failure and focused corrections, 3 October
 

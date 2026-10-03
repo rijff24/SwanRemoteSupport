@@ -19,9 +19,22 @@ On each attempt, the staged helper checks its location, the signed pending
 receipt, edition, sequence and its own hash/publisher. It resumes only that exact
 release or its durably prepared rollback. Public artifact retries send no
 credentials. Existing activity locks prevent concurrent installation or support
-sessions. Logs remain in the private update folder. When the receipt is absent,
-or uninstall cancellation is present, the task removes only its own verified
-task registration and does not install software.
+sessions. Logs remain in the private update folder. A customer update writes
+signed `configuration-restart.json` before committing its release. If installation
+committed but the watcher restart failed, its recovery task verifies the exact
+installed release, payload and MSI registration, then retries the restart under
+the activity lock. The marker blocks sessions and another automatic update until
+restart succeeds. An older release's recovery task cannot restart a newer release.
+When both recovery markers are absent, or uninstall cancellation is present, the
+task removes only its own verified task registration and does not install software.
+
+Before replacing customer files, the helper stops only the validated installation-
+owned SYSTEM configuration task, releasing the previous agent executable. MSI
+completion additionally requires the signed package's product code and version
+to be registered with Windows Installer. Matching executable hashes alone do not
+prove that an MSI with unchanged binaries installed. Explicit verified setup or
+repair checks the same registration and takes responsibility for registering its
+watcher before retiring an earlier restart marker.
 
 Explicit MSI uninstall writes `pending-uninstall` before file removal, blocking
 new sessions and automatic recovery. Paired uninstall rollback restores the
