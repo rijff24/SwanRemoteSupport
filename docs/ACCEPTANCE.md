@@ -1790,3 +1790,24 @@ SHA-256 was
 The key was never serialized, the synthetic HTTPS address was never contacted,
 and installed company state was not used. This proves native cached-profile time
 rejection, not live expiry during a remote session or refresh of an expired cache.
+
+Native `6bd54c2` portable technician recovery was exercised in a separate
+standard-user-owned directory on Server 2016 using private lab-signed binaries.
+The harness cloned the sequence-8 installation, prepared verified signed
+rollback snapshots and a synthetic sequence-9 `rolling_back` receipt, then
+damaged only its disposable canonical endpoint and agent. The signed staged
+helper restored both exact binaries, removed the pending receipt and recorded
+`failed-update.json` with phase `rolled_back`, failed sequence 9 and previous
+sequence 8. An independent read-only verifier confirmed both restored hashes,
+byte-identical company state and installed metadata against the source
+installation, retained sequence 8, unchanged empty technician device fields and
+disabled unattended consent. The native `verify-installed` command accepted the
+restored installation and its pinned publisher.
+
+The original SSH harness has not returned a terminal result; its post-recovery
+app restart and cleanup command remain unresolved. Therefore this is verified
+post-recovery state for a prepared rollback, not a complete automatic-update
+failure/rollback test, replay-rejection test, GUI acceptance, MSI recovery or
+power-loss evidence. The synthetic receipt SHA-256 is
+`f3e7059dfd47309c406b2bbe0e988ee697bbc8cd8d8ed92bd3ba8aab1b2ce126`;
+fixture files and signing material remain outside Git.
