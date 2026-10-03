@@ -45,12 +45,15 @@ def complete_backup(image, prefix, volumes, lab, proxy_image, transport_image, c
               "--tmpfs", "/tmp", "--security-opt", "no-new-privileges:true"]
     read_password = "IFS= read -r SWAN_BACKUP_PASSPHRASE; export SWAN_BACKUP_PASSPHRASE; "
     try:
-        secret_command(common + ["--mount", "type=volume,src=" + management + ",dst=/var/lib/swan",
-            "--mount", "type=volume,src=" + transport + ",dst=/transport,readonly",
-            "--mount", "type=volume,src=" + tls + ",dst=/tls,readonly",
-            "--mount", "type=bind,src=" + str(lab / "local-test.env") + ",dst=/local-test.env,readonly",
-            "--entrypoint", "sh", image, "-ec", read_password +
-            "exec swan-management backup /var/lib/swan/complete.swanbackup --transport-directory /transport --tls-directory /tls --deployment-env /local-test.env"], password)
+        # Distinct exports exercise the same stopped, read-only transport/TLS
+        # sources repeatedly. A failed export is not retried or overwritten.
+        for filename in ["complete.swanbackup", "export-check-1.swanbackup", "export-check-2.swanbackup"]:
+            secret_command(common + ["--mount", "type=volume,src=" + management + ",dst=/var/lib/swan",
+                "--mount", "type=volume,src=" + transport + ",dst=/transport,readonly",
+                "--mount", "type=volume,src=" + tls + ",dst=/tls,readonly",
+                "--mount", "type=bind,src=" + str(lab / "local-test.env") + ",dst=/local-test.env,readonly",
+                "--entrypoint", "sh", image, "-ec", read_password +
+                "exec swan-management backup /var/lib/swan/" + filename + " --transport-directory /transport --tls-directory /tls --deployment-env /local-test.env"], password)
         restore = common + ["--mount", "type=volume,src=" + management + ",dst=/input,readonly",
             "--mount", "type=volume,src=" + restored + ",dst=/var/lib/swan",
             "--env", "SWAN_DATA_DIR=/var/lib/swan/restored", "--entrypoint", "sh", image, "-ec",
