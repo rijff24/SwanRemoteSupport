@@ -1902,3 +1902,13 @@ Start-menu shortcut was restored, owned management/proxy processes stopped, and
 existing service statuses remained unchanged. This is real portable technician
 installation evidence; rendered login, authorized inventory, native sessions,
 MSI installation and the remaining Windows matrix are still unverified.
+
+Installed `0a541c7` technician CLI authentication then passed under the same
+standard user against the matching native HTTPS management fixture. A new local
+technician account completed MFA login; inventory/history requests succeeded
+with empty results, replay of the consumed MFA code was denied, and worker
+administration privileges were denied. Logout invalidated subsequent inventory
+access. Managed identity stayed unchanged and no login token was stored in managed
+state. Temporary account credentials were removed by the harness. This verifies
+installed-agent authentication and role enforcement, not rendered login, populated
+authorized inventory or a native remote session.
