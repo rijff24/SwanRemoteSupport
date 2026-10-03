@@ -1993,3 +1993,46 @@ services retained their status. This supersedes the component-only installer
 restore limitation above, but remains guest-loopback HTTP and lab signing evidence;
 native transport/TLS recovery, migration rollback and production publication remain
 unverified.
+
+Native eleven-entry technician MSI generation passed with the lab-signed GNU
+management build `b0cb740` and worker `8ec66d2`. The worker's signed SHA-256 is
+`ce86aebf44178f93a981b4c296c3eecebb01cd8da923e75e7799884c01051117`;
+the signed MSI fixture is
+`bef611e1904bb0b6ecb183da38aa502cf52a68c66589f208408bba17824cddea`.
+Both passed publisher and required RFC3161 timestamp verification. The MSI uses
+recipe `8ec66d2`, version 1.5.7 and the retained signed `0a541c7` technician/agent
+payloads; this is a mixed-source lab fixture, not a production source release.
+Build `7373f93d-e7d3-40e8-b1e6-9e31dda99081` completed over trusted guest HTTPS;
+the generated bundle SHA-256 is
+`5c4b2f105e4afe6f238aa659d5a505c4e617aa4c808ec2d9e219dd305ff26957`.
+Its eleven entries, company bootstrap and downloaded hash passed, and public
+technician download returned 401. Installation was not performed.
+
+A new disposable standard account was prepared for MSI lifecycle testing, with
+its password confined to the protected guest fixture. Initial harness failures
+used a reserved PowerShell variable, assumed a nonexistent public-key location,
+and generated a password that failed Windows complexity checks. The last failure
+partially created the specifically marked account; its unset password was repaired
+without changing another account. WinRM alternate-user process creation was denied;
+a scheduled probe never ran, and the alternate-user SSH probe subsequently exited
+with `0xC0000142` before either success or error markers were written. Its profile
+directory exists, but no successful unprivileged process or MSI lifecycle result
+was demonstrated. The probe task remains registered and needs owned cleanup.
+These are test-environment failures, not proof of technician MSI installation,
+repair, upgrade or uninstall.
+
+CI run `37097192689` for `9c6bdbb9e2923d0b6dae50076a99670ee76013e6`
+completed successfully. Artifact `11265830031` was downloaded with authenticated
+provenance and archive SHA-256
+`a01d6eab9a21b7c9e4b4ebd07ed51aa77fbdc744c48dcb9b9789972a6a9f1699`;
+all 22 flat entries passed bounded ZIP/CRC extraction and published payload checksums.
+The included server setup SHA-256 is
+`63846db80c82c29ad0ac3f0f5984d9deb6cba9ea708255c2f12b62192dca891d`.
+Reflection-only inspection verified its exact twelve-resource recipe, all eleven
+payload hashes, matching embedded/external source receipt and matching standalone
+management binary. Six fixed setup source inputs matched the public commit, allowing
+normal Git checkout line endings; transport/HTTPS component hashes matched their
+pins. The receipt declares a dirty CI working tree, so these checks do not establish
+whole-tree source cleanliness, production signing or actual server installation.
+The later `e9cda62` native CI run `37099948400` also completed successfully; its
+artifact verification is in progress.
