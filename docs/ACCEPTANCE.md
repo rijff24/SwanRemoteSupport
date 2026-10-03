@@ -1732,10 +1732,12 @@ succeeded with the new endpoint persisted. Existing service statuses were
 checked unchanged. This verifies HTTPS URL/port migration, not DNS hostname
 migration, transport endpoint migration or a native session.
 
-Native CI run `37095431510` is confirmed in progress for exact source
+Native CI run `37095431510` completed successfully for exact source
 `0a541c78609e8e3438e3c577abb352d714812b18`, covering implementation changes after
-the earlier verified native build. Its outputs remain unverified until successful
-completion and artifact checks.
+the earlier verified native build. All four jobs, including the branded Windows
+x64 build, passed. Its outputs remain unverified until download, provenance and
+artifact checks complete; build success alone does not establish native runtime
+acceptance.
 
 The Windows workflow now includes pinned transport/HTTPS archive preparation,
 unsigned company-server setup compilation, source-manifest publication and its
