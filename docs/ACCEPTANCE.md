@@ -1775,3 +1775,16 @@ Preview code disables installation and browser actions and does not show the
 interactive form. This verifies packaged extraction and offscreen rendering,
 not elevated installation, interactive setup, production signing or a supported
 Windows compatibility result. No host service, firewall, DNS or trust was changed.
+
+The hash-verified native `6bd54c2` configuration agent also passed
+`deployment/windows/test-native-profile-time.py` on the Windows 11 host using
+four isolated synthetic-company cached profiles. An ephemeral Ed25519 key signed
+each profile and Python independently verified each signature before invoking
+the actual native `verify-bootstrap` command. The valid control passed; expired,
+future-issued and invalid-lifetime profiles were rejected with the profile-time
+validation error, and all fixture state files remained byte-identical. Agent
+SHA-256 was
+`870ead5b2307c289d3e94542b53756488ea0ae6e2a558ed4131e9e49e6eaa9ee`.
+The key was never serialized, the synthetic HTTPS address was never contacted,
+and installed company state was not used. This proves native cached-profile time
+rejection, not live expiry during a remote session or refresh of an expired cache.
