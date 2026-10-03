@@ -1822,3 +1822,12 @@ installer was executed and no sequence advanced. This proves native explicit
 package verification enforces the recorded failed-release watermark; automatic
 discovery, rollout of a later release and the original harness terminal result
 remain unverified.
+
+Using the same sequence-10 metadata and restored native agent, a Server 2016
+negative package check flipped one byte at offset 4096 in a disposable copy of
+the real lab-signed technician EXE. Native `verify-package` rejected the damaged
+copy with a hash-validation error. The preceding intact-package positive control
+had passed. The original package, company state, installed metadata and rollback
+quarantine stayed unchanged, and no installer was executed. This verifies native
+package-byte tamper rejection; it does not establish interrupted installation or
+automatic-update acceptance.
