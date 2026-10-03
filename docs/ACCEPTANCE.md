@@ -1861,3 +1861,19 @@ and worker `6610f507d02ab4f02dc1080142f113f0c2aab7ec0b10564573216dcb861cad51`.
 The key was not exported; host trust and installed service binaries were not
 changed. These are lab fixtures, not production-signed releases or evidence that
 the new worker has completed a service-mode build.
+
+Matching lab-signed `0a541c7` native management and foreground worker then passed
+real customer and technician bundle generation over the isolated guest HTTPS
+endpoint. The administrator imported/approved earlier signed lab payloads from
+`4768d53` and `6840d91` and queued both jobs. Customer job
+`2d2fd057-850f-4d56-9340-8d51644d3cf1` completed with bundle SHA-256
+`fd374569c890dc48aedcabd37d44f1b70f64e5d3b197e84e5d9b5db71b71522e`;
+technician job `48303891-6097-4dbc-b09a-3e2b6cedbab1` completed with
+`b7bbd3a197c2aba4c18e61645d9497bddc711f5009070667f478cf44d2cee648`.
+Both downloaded hashes, ten-entry bundle recipes and company HTTPS URL/profile
+pin/edition bootstraps matched. Customer download was public; technician download
+required authentication and the unauthenticated request returned 401. Owned test
+processes were stopped and existing service statuses were preserved. No bundle
+was installed. This verifies current native server/worker generation using earlier
+payloads, not newest-client installation, worker service-mode completion, public
+Internet connectivity or production signing.
