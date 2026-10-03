@@ -2232,3 +2232,10 @@ CRC. This covers MSI payload lifecycle under the CI account, not company setup,
 standard-user installation, graphical sessions, signing or full Server 2025
 acceptance. The local Server 2025 VM remains unbooted because available host
 memory is below its configured safety reserve; existing services were preserved.
+
+The fixture was then advanced to independently verified native build `c7d118c`
+(run `37110881152`), including its current agent hash. Run `37115549339`, fixture
+`8ad9b17c75405da0d0363635f7ba19a901c29c3a`, passed the same actual MSI install,
+repair and uninstall checks on Server 2025 Datacenter build 26100. Its retained
+result and logs passed authenticated artifact digest and CRC verification. This
+provides current-package lifecycle evidence with the same limited scope above.
