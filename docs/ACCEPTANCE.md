@@ -1575,3 +1575,17 @@ customer service statuses remained unchanged. Credentials, logs and test data
 stay outside Git. This unsigned GNU fixture does not establish production
 MSVC signing, HTTPS deployment, cancellation of a real in-flight worker build,
 or the complete fresh-company installer workflow.
+
+Native Windows CI run `37090939153` completed successfully for exact source
+`6bd54c21fab4ec8d3203f513c616060af3fd2d26`. Installer artifact `11263621948`
+was downloaded outside Git and verified against GitHub's archive SHA-256
+`e91bfb162cc8ac5bf1428fadffd057b1741514c505ae987c68f41d7b605a9c7a`
+(109,618,735 bytes). All 19 flat ZIP entries passed bounded extraction, CRC and
+published payload checksum checks. This includes customer/technician EXE and MSI
+test packages and matching MSVC management, agent and worker executables.
+Management SHA-256: `58dc0db9e3aaaf1cf3fda3a4552ce5b8e4766721c5877d59d840d1d85a31531e`;
+worker: `c33a766574a5a91ff57fc1661af2ace7c3799aace8df3490c599fd96cf375f7c`;
+agent: `870ead5b2307c289d3e94542b53756488ea0ae6e2a558ed4131e9e49e6eaa9ee`.
+These are unsigned build outputs, not production releases or installation/session
+acceptance. Changes after this source, including worker logging, removal and
+administrator revocation, require separate native verification.
