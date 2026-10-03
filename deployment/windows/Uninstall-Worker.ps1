@@ -17,7 +17,7 @@ $signature=Get-AuthenticodeSignature -LiteralPath $executable
 if($signature.Status -ne 'Valid' -or $signature.SignerCertificate.Thumbprint -ine $receipt.publisher_thumbprint){throw 'Worker publisher no longer matches the installation receipt.'}
 if($PSCmdlet.ShouldProcess('SwanInstallerWorker','Stop and remove the owned service and executable; retain private artifacts and receipt')){
  $controller=Get-Service SwanInstallerWorker
- if($controller.Status -ne [ServiceProcess.ServiceControllerStatus]::Stopped){Stop-Service SwanInstallerWorker;$controller.WaitForStatus([ServiceProcess.ServiceControllerStatus]::Stopped,[TimeSpan]::FromSeconds(30))}
+ try{if($controller.Status -ne [ServiceProcess.ServiceControllerStatus]::Stopped){Stop-Service SwanInstallerWorker;$controller.WaitForStatus([ServiceProcess.ServiceControllerStatus]::Stopped,[TimeSpan]::FromSeconds(30))}}finally{$controller.Dispose()}
  if($service.ProcessId -ne 0 -and (Get-CimInstance Win32_Process -Filter "ProcessId=$($service.ProcessId)")){throw 'Worker process remains alive; retain all files.'}
  & sc.exe delete SwanInstallerWorker|Out-Null
  if($LASTEXITCODE -ne 0){throw 'Worker service deletion failed; retain all files.'}
