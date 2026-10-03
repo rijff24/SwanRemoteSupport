@@ -1635,3 +1635,17 @@ Payloads were earlier signed lab releases from `4768d53` (customer MSI) and
 `6840d91` (technician EXE), not newly signed `6bd54c2` client packages. This proves
 the matching native server/worker generation path, not worker service completion,
 fresh client installation, production publication, or remote-session acceptance.
+
+A second real generation test used matching `6bd54c2` native management, worker,
+technician executable and configuration agent. The technician executable was
+lab-signed with verified timestamp, SHA-256
+`cb1d7cfcf4d429a1ecf59d9e5018e2686c40f04c477a420bda7e4106524461da`.
+Signed test release sequence 8 named the exact public source and matching signed
+agent. The isolated administrator imported/approved it and queued job
+`de8d3b0a-e3ab-42ce-a322-4ed6c686b6e0`; the worker completed the ten-file bundle
+with SHA-256 `345920e00869e3a6488c4867a16c25c493ee904db9cd3a71189d7da38b013579`.
+Unauthenticated download returned 401; authenticated download, hash verification
+and company/edition bootstrap checks passed. Owned test processes were stopped
+and existing service statuses checked. This removes the earlier technician
+payload source mismatch for generation evidence. Standard-user installation,
+technician login and real sessions remain unverified for this new bundle.
