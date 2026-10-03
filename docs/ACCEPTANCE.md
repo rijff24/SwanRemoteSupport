@@ -6,6 +6,29 @@ native support session or a clean-machine installation.
 
 ## Evidence obtained
 
+### Automatic MSI update failure and focused corrections, 3 October
+
+The signed Server 2016 customer fixture approved release sequence 3 (MSI
+1.5.2) after verifying pause, zero-percent rollout and closed maintenance
+window rejection. Its agent committed sequence 3 and removed the pending
+receipt, but Windows Installer still registered MSI 1.5.1. Both packages
+contained the same signed native binaries: checking executable hashes alone
+incorrectly skipped installation. The helper also failed to restart the
+already-running configuration watcher. **This automatic upgrade failed
+acceptance; a committed sequence is not proof of an installed MSI upgrade.**
+
+The correction checks the signed package's product code and version against
+Windows Installer before skipping installation, after installation and during
+explicit completion recovery. A read-only test on the actual guest accepted
+its registered 1.5.1 and rejected 1.5.2. The restart script now stops only the
+validated installation-owned SYSTEM task before its bounded wait. Executing
+that script in the disposable guest replaced exactly one watcher and preserved
+device identity, credentials and consent. Agent tests passed (21 passed,
+two explicitly gated integration fixtures ignored). These focused checks do
+not prove a corrected signed automatic upgrade or durable post-commit recovery;
+both still require end-to-end verification. The failed fixture's registered
+MSI remains 1.5.1, with agent state claiming sequence 3, pending reconciliation.
+
 ### Windows full-stack company server and technician worker, 3 October
 
 The disposable Windows Server 2016 Standard Evaluation guest (Desktop

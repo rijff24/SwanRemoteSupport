@@ -376,6 +376,16 @@ pub fn verify_msi_release_identity(package:&Path,release:&Release)->Result<()> {
 }
 
 #[cfg(windows)]
+fn verify_msi_registration(package:&Path,release:&Release)->Result<()> {
+    if release.format!="msi" {return Ok(());}
+    let identity=verify_msi_identity(package,release)?;
+    let status=embedded_powershell_command(include_str!("../../../deployment/windows/Verify-MsiRegistration.ps1"),
+        &[("ProductCode",&identity.product_code),("Version",&release.version)])?.status()?;
+    ensure!(status.success(),"Expected MSI product and version are not installed; recovery remains pending");
+    Ok(())
+}
+
+#[cfg(windows)]
 fn msi_install_command(package:&Path,release:&Release)->Result<std::process::Command> {
     verify_msi_identity(package,release)?;
     let output=embedded_powershell_command(include_str!("../../../deployment/windows/Get-MsiInstallMode.ps1"),
@@ -737,6 +747,7 @@ impl AgentState {
         verify_installed(directory,&release)?;
         let cache=installer_cache(directory,&release);
         let package=if cache.is_file(){cache.clone()}else{directory.join("updates").join(release.sequence.to_string()).join(format!("SwanRemoteSupport-install.{}",release.format))};
+        verify_msi_registration(&package,&release)?;
         retain_installer(&package,&cache,&release)?;
         save_installed_metadata(directory,&receipt.release)?;
         // A crashed updater may have installed successfully or saved state before
@@ -835,7 +846,7 @@ impl AgentState {
         ensure!(digest(std::fs::read(&package)?).eq_ignore_ascii_case(&release.sha256),"Staged installer hash mismatch");
         verify_publisher(&package,&release)?;
         let installation=(||->Result<()> {
-        if let Err(error)=verify_installed(directory,&release) {
+        if let Err(error)=verify_installed(directory,&release).and_then(|()|verify_msi_registration(&package,&release)) {
             eprintln!("Installed payload requires recovery: {error:#}");
             if let Some(previous)=receipt.previous_release.as_ref(){
                 verify_rollback_snapshot(&latest,&folder.join("rollback"),previous,receipt.previous_sequence)?;
@@ -865,6 +876,7 @@ impl AgentState {
             }
         }
         verify_installed(directory,&release)?;
+        verify_msi_registration(&package,&release)?;
         Ok(())
         })();
         if let Err(error)=installation {
