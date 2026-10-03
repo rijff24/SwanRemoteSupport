@@ -1401,3 +1401,15 @@ Its SDK timestamp verification passed and its signed metadata was accepted as
 this candidate. The recovery task source validates its exact staged helper,
 principal and command, with startup and five-minute retry triggers; runtime
 recovery still requires direct evidence.
+
+Release `6-Customer-test` was then approved and the installed updater started as
+SYSTEM. The intended interruption harness incorrectly interpreted receipt phase
+`installing` as evidence that MSI execution had begun; this phase is assigned
+before helper execution. Its guard failed without terminating any process. A
+follow-up guarded interruption attempt found installation already completed and
+also terminated nothing. The original update was neither restarted nor replaced.
+Final inspection showed registered MSI `1.5.5`, sequence `6`, no recovery markers,
+running customer service and configuration watcher, one installed agent process,
+and preserved identity/token/consent comparisons. This is a second completed
+automatic upgrade, **not interrupted-update recovery evidence**. The interruption
+harness must observe a reliable execution boundary on a new candidate.
