@@ -1,17 +1,24 @@
 name: Company product components
 on:
   workflow_dispatch:
+    inputs:
+      technician_msi_only:
+        description: Test the pinned unsigned technician MSI on a disposable Windows runner
+        type: boolean
+        default: false
   push:
     paths: ['product/**', 'deployment/**', '.dockerignore', '.github/workflows/company-product.yml']
   pull_request:
     paths: ['product/**', 'deployment/**', '.dockerignore', '.github/workflows/company-product.yml']
 permissions:
   contents: read
+  actions: read
 concurrency:
   group: ${{ github.workflow }}-${{ github.event_name == 'workflow_dispatch' && github.run_id || github.ref }}
   cancel-in-progress: ${{ github.event_name != 'workflow_dispatch' }}
 jobs:
   verify:
+    if: github.event_name != 'workflow_dispatch' || !inputs.technician_msi_only
     strategy:
       matrix:
         os: [ubuntu-24.04, windows-2022]
@@ -38,6 +45,7 @@ jobs:
           powershell.exe -NoProfile -NonInteractive -STA -ExecutionPolicy Bypass -File ./deployment/windows/Setup-Server.ps1 -RenderPreview "$env:RUNNER_TEMP/server-setup-preview.png"
           if ($LASTEXITCODE -ne 0) { throw 'Server setup preview failed.' }
   linux-deployment:
+    if: github.event_name != 'workflow_dispatch' || !inputs.technician_msi_only
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
@@ -49,3 +57,46 @@ jobs:
         run: python3 deployment/linux/test_container_startup.py swan-management:test
       - name: Rehearse pinned HTTPS and transport components with an isolated test CA
         run: python3 deployment/linux/test_container_stack.py swan-management:test
+  technician-msi-lifecycle:
+    if: github.event_name == 'workflow_dispatch' && inputs.technician_msi_only
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - name: Verify the pinned completed unsigned build
+        uses: actions/github-script@d7906e4ad0b1822421a7e6a35d5ca353c962f410 # v6
+        with:
+          script: |
+            const run = await github.rest.actions.getWorkflowRun({owner: context.repo.owner, repo: context.repo.repo, run_id: 37103083258});
+            if (run.data.conclusion !== 'success' || run.data.head_sha !== '11faae30b0dac275c7d8c795ca3c3c134ded36c9') {
+              throw new Error('Pinned native build provenance failed');
+            }
+      - name: Download the pinned unsigned build inputs
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: SwanRemoteSupport-1.5.0-x64-unsigned
+          run-id: 37103083258
+          github-token: ${{ github.token }}
+          path: artifacts
+      - name: Verify payload hashes before MSI execution
+        shell: pwsh
+        run: |
+          $expected = @{}
+          foreach ($line in Get-Content artifacts/SHA256SUMS.txt) {
+            if ($line -match '^([a-f0-9]{64})\s+\*?(.+)$') {
+              if ($expected.ContainsKey($Matches[2])) { throw 'Duplicate artifact checksum.' }
+              $expected[$Matches[2]] = $Matches[1]
+            }
+          }
+          foreach ($name in @('SwanRemoteSupport-1.5.0-technician-x64-unsigned.msi','SwanRemoteSupport-1.5.0-technician-x64-unsigned.exe','swan-agent.exe')) {
+            if (-not $expected.ContainsKey($name) -or (Get-FileHash -LiteralPath (Join-Path artifacts $name) -Algorithm SHA256).Hash.ToLowerInvariant() -ne $expected[$name]) { throw 'Pinned MSI payload checksum failed.' }
+          }
+      - name: Test unsigned MSI install repair and uninstall
+        shell: pwsh
+        run: ./deployment/windows/test_technician_msi_lifecycle.ps1 -Package artifacts/SwanRemoteSupport-1.5.0-technician-x64-unsigned.msi -TechnicianExecutable artifacts/SwanRemoteSupport-1.5.0-technician-x64-unsigned.exe -AgentExecutable artifacts/swan-agent.exe
+      - name: Preserve MSI lifecycle evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: technician-msi-lifecycle
+          if-no-files-found: ignore
+          path: ${{ runner.temp }}/swan-msi-lifecycle-*/**
