@@ -1519,3 +1519,13 @@ created a new owned process PID `1856` with the same service executable identity
 This is service lifecycle evidence, not an authenticated completed build or
 reboot-startup result. Native build artifacts now include `Install-Worker.ps1`
 alongside the worker binary for matched-source deployment testing.
+
+The signed GNU worker service also passed guest reboot startup. A new Server 2016
+boot time was observed, SCM automatically launched the owned worker as PID `1556`,
+and no desktop session was logged in. Protected service environment values and
+worker executable hash matched private pre-reboot comparisons. The company and
+customer services were Running; customer enrollment/token/consent were preserved.
+No manual worker start was used. Authenticated build completion by this new worker
+service and its MSVC release remain pending. Current-source native CI run
+`37090939153` (`6bd54c21fab4ec8d3203f513c616060af3fd2d26`) was confirmed in progress;
+its result is not yet known.
