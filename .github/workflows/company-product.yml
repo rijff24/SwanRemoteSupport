@@ -87,6 +87,9 @@ jobs:
               $expected[$Matches[2]] = $Matches[1]
             }
           }
+          # This older build's checksum list covers installers only. Pin its
+          # agent hash from the independently verified GitHub artifact archive.
+          $expected['swan-agent.exe'] = 'cd2bdbc5c14cca1b9b24c16fe22f590cca96eb92cf45465085b3880dcd109631'
           foreach ($name in @('SwanRemoteSupport-1.5.0-technician-x64-unsigned.msi','SwanRemoteSupport-1.5.0-technician-x64-unsigned.exe','swan-agent.exe')) {
             if (-not $expected.ContainsKey($name) -or (Get-FileHash -LiteralPath (Join-Path artifacts $name) -Algorithm SHA256).Hash.ToLowerInvariant() -ne $expected[$name]) { throw 'Pinned MSI payload checksum failed.' }
           }
