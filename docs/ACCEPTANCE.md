@@ -1361,3 +1361,28 @@ and both customer service and configuration watcher were running. This used the
 existing source `6840d91` server/worker packaging recipe with source `4768d53`
 endpoint binaries. It proves this explicit lab upgrade, not automatic rollout,
 interrupted recovery, current-source worker packaging or the Windows matrix.
+
+### Corrected automatic MSI upgrade: Server 2016
+
+A new lab MSI `1.5.4` was built from the same signed source `4768d53` endpoint
+payload as `1.5.3`, specifically exercising the case where executable hashes
+match but registered MSI version must change. The final signed MSI SHA-256 is
+`c1dad7360fd47a4eb773b4405b55caa217558f49b47341e4d3b3940b690d6ea0`;
+SDK timestamp verification passed. Signed release `5-Customer-test` was imported,
+approved, and enabled with full rollout and open maintenance window. An expired
+administrator session stopped the first harness attempt before release approval
+or update task creation; a fresh private MFA login allowed the actual attempt.
+
+The installed corrected agent's `update` command ran as SYSTEM through task
+`SwanLab-CustomerUpdate5`; it downloaded and launched its signed staged helper.
+While helper PID `3384` was live, the receipt moved through installation and
+configuration restart. Windows Installer changed from `1.5.3` to `1.5.4` before
+release sequence committed from `4` to `5`. Final inspection found no pending
+setup, update, or configuration-restart markers, one installed agent process,
+a running configuration watcher and customer service, and task exit `0`.
+Device identity, enrollment token, unattended consent and consent revision were
+compared privately and preserved. No helper was restarted because of observation
+timeouts. This demonstrates the corrected matching-payload automatic MSI upgrade
+on Server 2016 build `14393`, using private lab publisher trust. It does not prove
+interrupted recovery, active-session coordination, reboot behavior, automatic
+technician upgrades, other Windows versions or production signing approval.
