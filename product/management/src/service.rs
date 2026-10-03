@@ -691,11 +691,14 @@ mod worker_completion_tests {
                 ("release.json".into(),serde_json::to_vec_pretty(&signed_release).unwrap()),
             ];
             for (name,bytes) in COMPANY_BUNDLE_TEXT_FILES {entries.push((name.into(),bundle_text(bytes).unwrap()));}
-            assert_eq!(entries.len(),10);
+            let recipe_count=5+COMPANY_BUNDLE_TEXT_FILES.len();
+            assert_eq!(entries.len(),recipe_count);
             let verify=|bytes:&[u8]|validate_worker_bundle(bytes,&job,&release,&company.verifying_key(),&trust).is_ok();
             let valid=archive(&entries);assert!(verify(&valid),"Complete {edition:?}/{format} bundle was rejected");
             let helper=entries.iter().position(|(name,_)|name=="Get-MsiInstallMode.ps1").unwrap();
             let mut altered=entries.clone();altered[helper].1=b"altered script".to_vec();assert!(!verify(&archive(&altered)));
+            let uninstall=entries.iter().position(|(name,_)|name=="Uninstall-Technician.ps1").unwrap();
+            let mut altered=entries.clone();altered[uninstall].1=b"altered uninstall script".to_vec();assert!(!verify(&archive(&altered)));
             let mut missing=entries.clone();missing.remove(helper);assert!(!verify(&archive(&missing)));
             let mut extra=entries.clone();extra.push(("extra.dll".into(),b"unexpected".to_vec()));assert!(!verify(&archive(&extra)));
             let mut renamed=entries.clone();renamed[helper].0="Get-MsiInstallM0de.ps1".into();assert!(!verify(&archive(&renamed)));
@@ -724,9 +727,10 @@ mod worker_completion_tests {
             let mut duplicate=entries.clone();duplicate.push((String::from_utf8(alias.to_vec()).unwrap(),entries[helper].1.clone()));
             let mut duplicate=archive(&duplicate);
             for offset in 0..=duplicate.len()-alias.len() {if &duplicate[offset..offset+alias.len()]==alias {duplicate[offset..offset+alias.len()].copy_from_slice(canonical);}}
-            assert_eq!(zip::ZipArchive::new(std::io::Cursor::new(&duplicate)).unwrap().len(),10,"Regression must exercise hidden physical duplicates");
+            assert_eq!(zip::ZipArchive::new(std::io::Cursor::new(&duplicate)).unwrap().len(),recipe_count,"Regression must exercise hidden physical duplicates");
             assert!(!verify(&duplicate));
-            let footer=duplicate.len()-22;duplicate[footer+8..footer+12].copy_from_slice(&[10,0,10,0]);
+            let footer=duplicate.len()-22;let count=(recipe_count as u16).to_le_bytes();
+            duplicate[footer+8..footer+10].copy_from_slice(&count);duplicate[footer+10..footer+12].copy_from_slice(&count);
             assert!(!verify(&duplicate),"Forged entry counts cannot hide duplicate records");
             let mut expired=profile.clone();expired.expires_at=now();let expired=SignedEnvelope::sign(&expired,&company).unwrap();
             let mut expired_entries=entries.clone();expired_entries[3].1=serde_json::to_vec_pretty(&expired).unwrap();

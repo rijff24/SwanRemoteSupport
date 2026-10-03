@@ -1,5 +1,14 @@
 # Signed installed payload identity
 
+Portable technician bundles now include `Uninstall-Technician.ps1` and install a
+dedicated Start-menu removal shortcut. The uninstaller verifies installed identity,
+acquires session exclusion, cancels automatic recovery and removes fixed application
+files while retaining company state for reinstall. MSI installations use Windows
+installed-app removal. The bundle recipe now contains eleven entries; rebuild
+management and workers together and regenerate packages. Compiled exact-recipe
+tests reject altered uninstall scripts. Native uninstall/reinstall acceptance is
+still required before publication.
+
 Release metadata now requires `installed_files`, an array of objects containing
 relative `path` and SHA-256 `sha256`. Customer manifests cover the final Flutter
 payload: the installed Swan executable, native libraries and application assets.

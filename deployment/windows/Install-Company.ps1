@@ -136,5 +136,14 @@ if ($bootstrap.edition -eq 'customer') {
     $shortcut.WorkingDirectory = $editionDirectory
     $shortcut.IconLocation = $portable
     $shortcut.Save()
+    if ($release.format -eq 'exe') {
+        Copy-Item -LiteralPath (Join-Path $root 'Uninstall-Technician.ps1') -Destination (Join-Path $editionDirectory 'Uninstall-Technician.ps1') -Force
+        $uninstallShortcut=$shell.CreateShortcut((Join-Path ([Environment]::GetFolderPath('Programs')) 'Uninstall Swan Remote Support Technician.lnk'))
+        $uninstallShortcut.TargetPath=Join-Path $env:SystemRoot 'System32/WindowsPowerShell/v1.0/powershell.exe'
+        $uninstallShortcut.Arguments='-NoLogo -NoProfile -ExecutionPolicy Bypass -File "'+(Join-Path $editionDirectory 'Uninstall-Technician.ps1')+'"'
+        $uninstallShortcut.WorkingDirectory=$editionDirectory
+        $uninstallShortcut.IconLocation=$portable
+        $uninstallShortcut.Save()
+    }
     Write-Host 'Technician application installed. Use the Start menu shortcut to sign in and request support sessions.'
 }
