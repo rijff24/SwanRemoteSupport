@@ -1925,3 +1925,12 @@ The VM viewer became targetable again after refreshing and activating its
 returned window. Its screenshot showed the disposable Server 2016 desktop is
 locked. Graphical tests await manual unlock under the computer-use skill; no
 authentication dialog or security setting was automated.
+
+Standard-user portable repair passed for the installed `0a541c7` technician on
+Server 2016. After preserving a hash-verified backup, the harness replaced only
+the disposable installed EXE with four invalid bytes and ran the actual bundle
+`Install-Company.ps1 -Repair`. The signed executable was restored to its exact
+expected hash, native installed-identity verification passed, managed state stayed
+byte-identical at sequence 11, and the pending-install marker cleared. The prior
+Start-menu shortcut was restored. This proves damaged portable EXE repair, not
+MSI repair, agent-loss repair or remote-session behavior.
