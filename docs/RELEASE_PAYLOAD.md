@@ -32,7 +32,7 @@ executable identity. Initial installation, repair, update completion, installed
 metadata verification and recovery verify customer file hashes and reject
 unlisted DLLs or EXEs. Paths resolving outside the installed directory fail.
 The agent has its separate signed release hash and is checked during initial
-installation; agent replacement during updates remains incomplete.
+installation and replacement through the staged update helper.
 
 RustDesk's copied `RuntimeBroker_rustdesk.exe` is Windows-owned and cannot be
 listed in project metadata. Verification instead requires its bytes to match
@@ -43,15 +43,17 @@ clean-machine testing.
 
 This is a development metadata change. Previously generated releases without
 the mandatory manifest are rejected; do not weaken validation to import them.
-No production compatibility or signing approval is implied. Full real signed
-payload installation, update replacement, rollback and native behavior remain
-acceptance requirements.
+No production compatibility or signing approval is implied. Private lab-signed
+customer MSI installation and automatic replacement have passed on Server 2016.
+Rollback, the remaining Windows compatibility matrix and native session behavior
+remain acceptance requirements; see [ACCEPTANCE.md](ACCEPTANCE.md).
 
 Interrupted-update receipts also block new managed sessions after the updater
 process exits or releases its activity lock. Recovery rechecks Windows support
 and the installed agent hash and publisher as well as the endpoint payload.
-An old or missing agent cannot be accepted as a completed release. Agent replacement is implemented through a staged signed helper; its real
-Windows installation and full rollback behavior remain unverified. A release
+An old or missing agent cannot be accepted as a completed release. Agent replacement
+is implemented through a staged signed helper and has passed private lab-signed
+customer updates on Server 2016. Full rollback behavior remains unverified. A release
 stays pending until its full installed identity is restored and verified.
 
 Automatic updates now stage both the installer and agent and verify their
@@ -96,8 +98,11 @@ usable offline. Recovery rechecks the unchanged receipt and session exclusion
 before handoff. Permission and other staging I/O errors remain errors rather
 than being treated as missing files. Complete customer/MSI rollback and canonical-agent
 recovery remain incomplete. Graphical technician update coordination and this
-staging recovery still require native end-to-end verification. Signed clean-machine tests
-are required before claiming interruption or self-update acceptance.
+staging recovery from missing or damaged files still require native end-to-end
+verification. A Server 2016 lab test interrupted the helper before MSI execution;
+the normal scheduled retry completed the selected signed customer MSI and agent
+update, preserving identity and consent. This demonstrates forward recovery for
+that interruption point, not power-loss recovery during MSI or technician updates.
 
 Recovery validation is shared by completion, retry and helper execution. Its
 regression tests reject wrong keys/editions, tampering, conflicting sequences
@@ -107,8 +112,9 @@ persistence. Automatic retries use a durable five-minute attempt delay. Explicit
 checks. A failed helper requests restart of the matching customer task, provided
 its installed agent still has a valid signature; pending receipts continue to
 block sessions. Corrupt or missing canonical agents still require recovery from
-a verified staged helper or explicit setup/repair. Actual scheduled-task and
-power-loss behavior remain unverified.
+a verified staged helper or explicit setup/repair. Scheduled forward retry and
+post-upgrade reboot persistence have passed on Server 2016 with private lab trust.
+Power-loss behavior remains unverified.
 
 New automatic updates require a previously recorded signed installation. Before
 writing their pending receipt, they verify the current installed release and
