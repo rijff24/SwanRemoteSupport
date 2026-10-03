@@ -1716,7 +1716,23 @@ revision. Company/edition, release trust, endpoint, consent, device fields and
 installed release sequence 8 remained unchanged. After both isolated listeners
 stopped, installed identity verification succeeded offline and the old bundle's
 bootstrap pin was rejected. Existing service statuses were checked unchanged.
-The first harness attempt stopped before rotation because this compiled profile
-schema lacks the newer support-contact field; the corrected harness tested its
-supported display-name/color fields. This does not establish rendered branding,
-newer contact-field sync, endpoint rotation, customer key rotation or a session.
+The first harness attempt stopped before rotation because the optional empty
+support-contact field was omitted from serialized JSON and PowerShell attempted
+to assign a missing property. Source inspection confirms `6bd54c2` supports that
+field; the corrected harness tested display-name/color fields. This does not
+establish rendered branding, contact-field sync, customer key rotation or a session.
+
+The installed native `6bd54c2` technician subsequently passed signed management
+endpoint migration between two guest-only HTTPS listeners on the same lab DNS
+name. It learned the new URL through the existing signed profile, committed a
+higher revision, and synchronized again after the old listener was retired.
+Company/edition, both trust pins, installed release sequence 8, device fields
+and consent remained unchanged. Offline installed-identity verification then
+succeeded with the new endpoint persisted. Existing service statuses were
+checked unchanged. This verifies HTTPS URL/port migration, not DNS hostname
+migration, transport endpoint migration or a native session.
+
+Native CI run `37095431510` is confirmed in progress for exact source
+`0a541c78609e8e3438e3c577abb352d714812b18`, covering implementation changes after
+the earlier verified native build. Its outputs remain unverified until successful
+completion and artifact checks.
