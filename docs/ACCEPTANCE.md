@@ -2346,3 +2346,33 @@ passing exports. Distinct management/transport open and snapshot error contexts
 and redacted error-category reporting were added; no captured backup output or
 credentials are printed. The precise failed operation has not yet been reproduced
 with those contexts. Backup reliability remains an open concern.
+
+### Read-only transport WAL defect reproduced and corrected (2026-10-03)
+
+The Unix regression `readonly_transport_wal_export_preserves_committed_peers`
+failed in run `37123006043` at source `8fc7ed0`: transport snapshot returned
+SQLite code 14 when committed WAL frames existed, the source directory was
+read-only, and no shared-memory file existed. This reproduces a concrete defect
+with the same error code as the earlier intermittent exports; those earlier
+logs did not identify the precise failed operation.
+
+Transport export now copies the stopped database and its WAL/rollback journal
+into private writable staging, lets SQLite recover and snapshot that copy, and
+removes fixed temporary files and the owned directory afterward. Copies are
+bounded to the declared file length plus one byte and a combined 512 MiB limit;
+regular-file/reparse checks reject unsafe sources. The original transport
+storage is untouched. Transport must remain stopped for a consistent multi-file
+copy, as documented in `SERVER_BACKUP.md`.
+
+The regression passed at `f71773bd54190d14ad0332ff1ac6e5213f3f879b`, verifying
+restored committed peer data, unchanged source database/WAL bytes and cleanup of
+plaintext snapshots/staging. Both full component runs passed: push `37123392820`
+and pull request `37123395298`, including Windows tests/builds and the complete
+Linux deployment/export/restore rehearsal. Local Windows GNU type checking also
+passed; local test execution was unavailable because that toolchain lacked
+`libgcc_eh`, and is not counted as a test pass.
+
+A new full native build `37123744363` was dispatched once from the verified
+`f71773b` source to package this runtime fix. It is still pending. The earlier
+`01d24ab` installer archive remains in its original live download process;
+no partial download was replaced or treated as verified.
