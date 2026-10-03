@@ -6,6 +6,28 @@ native support session or a clean-machine installation.
 
 ## Evidence obtained
 
+### Restricted technician account on installed Windows server, 3 October
+
+The installed Server 2016 company service created a separate technician-role
+account, with credentials and TOTP material retained only in protected lab
+files. Actual HTTPS MFA login passed. Before group assignment, raw inventory
+was empty, a grant for the approved customer device was denied, and the
+administrator account-list endpoint rejected the technician. Assignment to
+the lab support group exposed exactly its one approved device. The technician
+session then signed out. An initial PowerShell fixture assertion counted an
+empty JSON array as one pipeline item; inspection of the raw `[]` response
+corrected that harness error. These are real server-role checks, not proof of
+login or a remote session in the installed graphical technician app.
+
+Fresh private unattended media for Server 2025 Standard Evaluation Desktop
+Experience selects image 2 after reading the official ISO's WIM metadata.
+Its credentials and SSH keys are distinct from the Server 2016 fixture. The
+older uninitialized boot-only Server 2025 VM was retired with its disk preserved
+to prepare this setup. The new fixture remains stopped: the host had about
+2.5 GiB available, below its 4 GiB allocation plus host reserve. The working
+Server 2016 VM and host production services remain running. This is preparation,
+not a Server 2025 installation or compatibility pass.
+
 ### HTTPS configuration backup correction, 3 October
 
 Review of the installed Windows server found that its company-data `Caddyfile`
