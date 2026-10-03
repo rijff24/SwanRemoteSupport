@@ -1912,3 +1912,16 @@ access. Managed identity stayed unchanged and no login token was stored in manag
 state. Temporary account credentials were removed by the harness. This verifies
 installed-agent authentication and role enforcement, not rendered login, populated
 authorized inventory or a native remote session.
+
+The installed `0a541c7` technician also passed standard-user offline
+`verify-installed`: a loopback TCP probe confirmed the isolated company endpoint
+refused connections, the native agent accepted its cached profile and signed
+installed release/publisher, and managed state stayed byte-identical. The first
+harness attempt used an administrator-only CIM query and failed before native
+verification; replacing it with the unprivileged connection-refused probe
+preserved the offline precondition. This does not authorize offline remote access.
+
+The VM viewer became targetable again after refreshing and activating its
+returned window. Its screenshot showed the disposable Server 2016 desktop is
+locked. Graphical tests await manual unlock under the computer-use skill; no
+authentication dialog or security setting was automated.
