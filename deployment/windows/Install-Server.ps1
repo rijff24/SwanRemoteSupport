@@ -70,6 +70,9 @@ try {
     New-ItemProperty -Path $serviceRegistry -Name Environment -PropertyType MultiString -Value $serviceEnvironment -Force | Out-Null
     & sc.exe failure SwanCompanyServer reset= 86400 actions= restart/60000/restart/60000/restart/300000 | Out-Null
     if ($LASTEXITCODE -ne 0) { throw 'Cannot configure company service recovery.' }
+    # Component supervision reports Stopped with a nonzero exit code after cleanup.
+    & sc.exe failureflag SwanCompanyServer 1 | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw 'Cannot enable recovery for reported company service failures.' }
     if ($fullStack) {
         New-NetFirewallRule -Name 'SwanCompanyServer-TCP' -Group 'SwanCompanyServer' -DisplayName 'Swan company HTTPS and transport' -Direction Inbound -Action Allow -Protocol TCP -LocalPort 80,443,21115,21116,21117 | Out-Null
         $createdRules += 'SwanCompanyServer-TCP'

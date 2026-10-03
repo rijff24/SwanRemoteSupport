@@ -2133,3 +2133,24 @@ port-24442 endpoint, which served only the two named lab inputs alongside its
 management proxy. Company policy was not implicitly changed, unrelated active
 jobs were checked before enqueue, and component pins were unchanged. The startup
 crash's cause and wider Windows server stability remain unresolved.
+
+Five further validations of the same pinned Caddy executable and isolated
+configuration passed on Server 2016, each returning exit code 0 and `Valid
+configuration`. An initial harness used `Start-Process` process objects whose exit
+codes were unavailable; those observations were not counted as passes. Direct
+native exit-code capture produced the verified results. No listeners were opened
+and existing company service statuses were preserved. This does not resolve the
+earlier startup crash or prove long-running service stability.
+
+Review of service failure handling found that management and worker report
+`Stopped` with nonzero Win32 exit codes, while their installers configured recovery
+actions without enabling recovery on those reported failures. Both installers now
+set `sc.exe failureflag SERVICE 1` and fail setup if that configuration fails.
+Microsoft documents the required flag in
+[SERVICE_FAILURE_ACTIONS_FLAG](https://learn.microsoft.com/en-us/windows/win32/api/winsvc/ns-winsvc-service_failure_actions_flag).
+A separate unsigned, protected Server 2016 fixture demonstrated actual SCM restart
+after a non-crash error stop, plus no restart after a successful requested stop.
+The fixture service was disabled/stopped/deleted during cleanup and existing product
+service statuses were preserved. Installer parsing and diff checks passed. This
+proves the native recovery mechanism, not installation or reboot of the changed
+product packages; no existing product service recovery settings were changed.

@@ -50,6 +50,9 @@ try{
  New-ItemProperty -LiteralPath $registry -Name Environment -PropertyType MultiString -Value $environment|Out-Null
  & sc.exe failure SwanInstallerWorker reset= 86400 actions= restart/60000/restart/60000/restart/300000|Out-Null
  if($LASTEXITCODE -ne 0){throw 'Cannot configure worker recovery.'}
+ # The worker reports Stopped with a nonzero exit code for fatal runtime errors.
+ & sc.exe failureflag SwanInstallerWorker 1|Out-Null
+ if($LASTEXITCODE -ne 0){throw 'Cannot enable recovery for reported worker failures.'}
  Start-Service SwanInstallerWorker
  (Get-Service SwanInstallerWorker).WaitForStatus([ServiceProcess.ServiceControllerStatus]::Running,[TimeSpan]::FromSeconds(30))
  @{schema=1;service='SwanInstallerWorker';executable_sha256=(Get-FileHash $destination).Hash;publisher_thumbprint=$PublisherThumbprint}|ConvertTo-Json|Set-Content -LiteralPath (Join-Path $data 'installation.json')
