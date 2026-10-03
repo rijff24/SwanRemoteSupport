@@ -1496,3 +1496,19 @@ contained both capabilities disabled. Test grants were closed and the original
 group policy restored. This verifies live server policy reduction and grant
 capability issuance; it does not prove receiving-device input/clipboard denial
 or termination of an established native session.
+
+### Windows worker SCM installation rehearsal
+
+The worker service source `03a8739` built with the pinned Windows GNU debug
+ toolchain (`cargo build --manifest-path product/Cargo.toml -p swan-worker --locked`).
+Unsigned SHA-256 is `04f361a9b9c25521041f0482ced1870fa079295cb18abd88a53bc9a22ab8ae6d`;
+its separately timestamped lab-signed copy is
+`f5a4dfb3528ea9794b148dabc2edd80f1c61b1d033cb869fdd20b4411038df8f`.
+The new installer initially stopped before mutation because PowerShell 5 hides
+`C:\ProgramData` without `Get-Item -Force`; the corrected parent check allowed
+installation. On Server 2016 build `14393`, `SwanInstallerWorker` started as
+LocalSystem with automatic startup (PID `1020`). A real standard-user SSH session
+could read neither the service registry environment nor its protected installation
+receipt. Credentials were never printed. Signed build completion under this new
+service, stop/restart, reboot, removal and log collection remain unverified or
+unfinished. This GNU fixture is not a production release or MSVC matrix result.

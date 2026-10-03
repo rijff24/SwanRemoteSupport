@@ -20,7 +20,7 @@ if($config.worker_token.Length -lt 32 -or $config.worker_token.Length -gt 256){t
 $install=Join-Path $env:ProgramFiles 'Swan Installer Worker'
 $data=Join-Path $env:ProgramData 'SwanInstallerWorker'
 if((Get-Service -ErrorAction Stop|Where-Object {$_.Name -ceq 'SwanInstallerWorker'}) -or (Test-Path -LiteralPath $install) -or (Test-Path -LiteralPath $data)){throw 'Existing worker installation must be inspected; replacement is not automatic.'}
-foreach($parent in @($env:ProgramFiles,$env:ProgramData)){if((Get-Item -LiteralPath $parent).Attributes -band [IO.FileAttributes]::ReparsePoint){throw 'Worker installation parent cannot be a reparse point.'}}
+foreach($parent in @($env:ProgramFiles,$env:ProgramData)){if((Get-Item -LiteralPath $parent -Force).Attributes -band [IO.FileAttributes]::ReparsePoint){throw 'Worker installation parent cannot be a reparse point.'}}
 New-Item -ItemType Directory -Path $install,$data|Out-Null
 foreach($directory in @($install,$data)){
  & icacls.exe $directory '/inheritance:r' '/grant:r' '*S-1-5-18:(OI)(CI)F' '*S-1-5-32-544:(OI)(CI)F'|Out-Null
