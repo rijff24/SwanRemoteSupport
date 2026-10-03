@@ -2165,3 +2165,16 @@ The management executable remains the unchanged CI build from `11faae3`, hash
 `de623e216e4ef2b81785c18615fc23e83e4716c894225ed620a860e2aea9f817`.
 The clean installer receipt does not establish full runtime reproducibility.
 The package was inspected without launching its wizard or installing services.
+
+The new Windows corresponding-source archive was exercised against clean checkout
+`c7d118c4b655d401c14fd95672ae2aff3b5ed679` and the six generated bridge inputs from
+its running native CI build. GitHub artifact provenance and SHA-256 verified those
+inputs before writing the previously absent ignored generated source files.
+The archive included 1,107 source files and pinned `hbb_common` revision
+`7e1c392c62d39c364127307cd408421dd5f8cfb0`. Every archived file hash and ZIP CRC
+passed; two independently written archives had identical SHA-256
+`74a7de90d0b3bc17782203b53605c917be3811dced1eefbc5ad1d2be64a4163c`.
+Four focused fixture checks separately verified private/untracked file exclusion,
+generated input completeness, matching/mismatched submodule pins and link denial.
+This proves the source archive operation with real build inputs, not complete
+native compilation, binary reproducibility, signing or release acceptance.
