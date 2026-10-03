@@ -1693,3 +1693,13 @@ coordinate input and subsequent Escape input failed with `failed to activate
 captured window`. No guest login, credential entry or technician UI test was
 completed. The existing VM/services remained running. This is a UI-tool blocker
 for that viewer path, not evidence of a Swan application failure or session pass.
+
+The installed signed MSVC `6bd54c2` technician agent passed a positive cached
+profile/bootstrap control and rejected eight disposable altered copies:
+invalid profile signature, modified signed payload, accepted-revision rollback,
+wrong installer company, edition, management domain, profile trust pin, and
+changed cached profile trust pin. Tests ran as the standard user through actual
+`verify-bootstrap`; JSON was written without a BOM so parser failures did not
+stand in for trust checks. The original installed managed-state hash remained
+unchanged. This is native cached-profile/bootstrap rejection evidence, not
+expired signed-profile, live endpoint rotation, package or session-grant testing.
