@@ -2052,6 +2052,9 @@ were preserved. This supersedes the unsuccessful standard-user process probes
 above, but does not demonstrate MSI installation, repair or uninstall. Earlier
 noninteractive MSI attempts also returned `1601`; an interactive desktop test is
 still required before attributing this failure to the product or environment.
+Read-only inspection after both attempts confirmed sequence 0, a retained
+failed-setup marker and no installed technician executable or configuration agent.
+The event-log summary did not establish a specific installer-service root cause.
 After those attempts, ownership checks confirmed no established sessions on the
 temporary SSH listener. Its task, guest firewall rule and QEMU host forward were
 removed. The original SSH banner and SSH/WinRM forwards were verified, existing
@@ -2062,3 +2065,28 @@ Native Windows CI run `37103083258` for
 `11faae30b0dac275c7d8c795ca3c3c134ded36c9` completed successfully in all four jobs.
 Artifact download and verification are in progress. CI success does not establish
 clean-machine installation, native remote sessions or Windows matrix acceptance.
+
+That download subsequently completed. Archive `5cb668d823167a5516020ec395289eff067cc10d29f5e4ba1a940e789e44d7b5`
+(134,259,819 bytes) passed authenticated provenance, bounded ZIP/CRC extraction
+and published checksums for all 23 entries. The server setup hash is
+`fd604e329d444d201c59c4feb41fbd477cb63eb17488285b7e8627e1fb39f886`.
+Reflection-only inspection verified its exact twelve-resource recipe, all eleven
+payload hashes, embedded/external source receipt equality and matching standalone
+management executable. Six fixed source inputs matched public commit `11faae3`,
+allowing Git checkout line endings, and component pins matched. The receipt still
+reports a dirty CI working tree; whole-tree cleanliness, production signing and
+actual setup installation remain unproven.
+
+The same archive's native MSVC agent
+`cd2bdbc5c14cca1b9b24c16fe22f590cca96eb92cf45465085b3880dcd109631`
+passed the expanded offline profile harness on the development Windows host.
+Harness SHA-256 was
+`2844f6148f7d2304010f6a74a0fa03871538fa10a2e8b9d0612576c5cce68fd7`.
+All twelve cases passed: a valid cached profile was accepted; expired, future,
+invalid-lifetime, tampered-branding, wrong-signing-key, wrong-company and older
+revision profiles were rejected; company, edition, trust-key and endpoint
+substitution in installer bootstrap were rejected. Each negative case matched
+its specific expected error, and both state and bootstrap bytes remained unchanged.
+Keys were ephemeral and not serialized. This is native CLI trust verification
+against synthetic local fixtures, without network, installation, rendered branding
+or remote-session evidence.
