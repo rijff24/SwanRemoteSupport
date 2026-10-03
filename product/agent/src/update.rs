@@ -1068,6 +1068,9 @@ pub(crate) fn test_failed_release_quarantine(state:&AgentState,release:&Release,
         std::fs::write(preparation.join("pending-update.json"),&pending_bytes).unwrap();
         std::fs::write(preparation.join("pending-uninstall"),b"explicit fixture cancellation").unwrap();
         let mut requested=installer.clone();requested.sequence=3;
+        // This fixture exercises interrupted setup, using the runner's signed
+        // OS binary. Its metadata must support the host running the test.
+        requested.windows_versions=swan_protocol::WINDOWS_VERSIONS.iter().map(|version|(*version).into()).collect();
         let mut invalid=requested.clone();invalid.sha256=digest(b"wrong verified setup bytes");
         assert!(state.prepare_installation(&preparation,&SignedEnvelope::sign(&invalid,key).unwrap(),&source,false).is_err());
         assert!(!preparation.join("pending-install.json").exists());

@@ -47,6 +47,7 @@ product/worker/**
 !product/worker/src/
 product/worker/src/**
 !product/worker/src/main.rs
+!product/worker/src/windows.rs
 !branding/
 branding/**
 !branding/swan-support-mark.svg
@@ -56,6 +57,8 @@ deployment/**
 deployment/windows/**
 !deployment/windows/Install-Company.ps1
 !deployment/windows/Open-Technician.ps1
+!deployment/windows/Uninstall-Technician.ps1
+!deployment/windows/Verify-MsiRegistration.ps1
 !deployment/windows/Verify-Package.ps1
 !deployment/windows/Get-MsiIdentity.ps1
 !deployment/windows/Get-MsiInstallMode.ps1
