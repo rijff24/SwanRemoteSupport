@@ -19,6 +19,16 @@ empty JSON array as one pipeline item; inspection of the raw `[]` response
 corrected that harness error. These are real server-role checks, not proof of
 login or a remote session in the installed graphical technician app.
 
+The installed technician agent from native source `6840d91`, verified against
+its package hash and private lab Authenticode publisher, subsequently passed
+actual HTTPS MFA login as that technician, authorized device inventory,
+session-history retrieval and logout. Reusing its logged-out session was
+rejected. Its company-state file remained byte-for-byte unchanged, so this
+flow persisted no credentials there. Execution used the Administrator Windows
+lab harness while the company account had technician permissions. Standard-user
+CLI authentication, graphical login and native remote connections remain
+unverified; earlier standard-user installation/rendering evidence is separate.
+
 Fresh private unattended media for Server 2025 Standard Evaluation Desktop
 Experience selects image 2 after reading the official ISO's WIM metadata.
 Its credentials and SSH keys are distinct from the Server 2016 fixture. The
