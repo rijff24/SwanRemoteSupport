@@ -42,11 +42,11 @@ Internet reachability, other Windows versions, or production signing approval.
 The subsequent standard-user bundle installation passed HTTPS company setup
 and profile pinning, then failed package verification with Windows access
 denied: the agent attempted to write its verifier beside the package in the
-administrator-extracted, read-only bundle directory. The agent now runs its
+administrator-extracted bundle's protected verifier file. The agent now runs its
 embedded verifier as an encoded PowerShell command with quoted literal
 arguments, without creating or trusting a helper in that directory. A rebuilt
 GNU development agent passed package verification under the same standard
-account against the same signed package and read-only directory. Its agent
+account against the same signed package and protected verifier file. Its agent
 suite passed 21 tests with two explicit integration fixtures ignored. This is
 verification regression evidence only: the replacement development agent is
 unsigned, was not published in a bundle, and has not completed installation.
@@ -103,6 +103,40 @@ The actual installed state remained unchanged by those negative tests. This
 proves agent cache behavior while management is unavailable, not visual branding
 in Flutter, operation on a completely disconnected network, or offline permission
 to establish a support session.
+
+### Standard-user technician installation and read-only verification
+
+The actual worker-generated technician EXE bundle from `6840d91` completed
+installation from the standard account's Downloads directory. Package,
+installed application and signed-agent verification passed; sequence one was
+recorded and the pending marker cleared. The Start menu shortcut targets the
+installed launcher. That launcher refreshed branding to revision two and
+started the native app in the standard desktop session. Its rendered Flutter
+screen shows the updated company name/logo, company HTTPS domain, username,
+password and authenticator fields, plus product/upstream/AGPL attribution.
+This proves installation and login-screen rendering, not successful GUI login,
+inventory interaction or a remote session.
+
+Further inspection showed that the earlier verifier regression covered an
+administrator-owned helper file, rather than a directory denying every write.
+Compatibility, MSI identity and MSI mode helpers still wrote beside inputs.
+They now execute embedded scripts with encoded commands and literal arguments.
+A new guest fixture explicitly grants the standard account read/execute only;
+an attempted new file was denied. A rebuilt unsigned development agent verified
+both the signed technician EXE and signed customer MSI from that fixture, without
+changing any directory inputs. The customer verification fixture contains only
+public bootstrap/profile information and no device credential. The agent suite
+passed 21 tests with two integration fixtures ignored, including rejection of
+a publisher string attempting to execute a command; no injection file appeared.
+These changes still require a new native build and signed bundle verification.
+
+The [native build at `82c8c65`](https://github.com/rijff24/SwanRemoteSupport/actions/runs/37076900806)
+passed. Its 18-entry unsigned artifact was downloaded, checked against GitHub's
+SHA-256 `9f9728adfda93a9cf15f8ade9338ae5986f3ebfc83d6c49c305c9f6ce6db697f`,
+and extracted with path, size, CRC and published payload checksum verification.
+It predates setup-replacement recovery and the remaining read-only helper fixes.
+No production signing, new package installation or compatibility claim follows
+from this build alone.
 
 ### Earlier component evidence
 

@@ -277,21 +277,25 @@ pub fn powershell_command()->Result<std::process::Command> {
 fn verify_publisher(path:&Path,release:&Release)->Result<()> {
     // Packages may reside in a read-only deployment share. Execute the embedded
     // verifier without writing beside the package or trusting a mutable helper.
-    let encoded=publisher_verification_command(path,release)?;
-    let status=powershell_command()?.args(["-NoLogo","-NoProfile","-NonInteractive","-ExecutionPolicy","Bypass","-EncodedCommand"])
-        .arg(encoded).status()?;
+    let status=embedded_powershell_command(include_str!("../../../deployment/windows/Verify-Package.ps1"),&[
+        ("Path",path.to_str().context("Package path is not valid Unicode")?),
+        ("Publisher",&release.publisher),("CertificateSha256",&release.publisher_certificate_sha256),("Sha256",&release.sha256),
+    ])?.status()?;
     ensure!(status.success(),"Package publisher verification failed");Ok(())
 }
 
-#[cfg(any(windows,test))]
-fn publisher_verification_command(path:&Path,release:&Release)->Result<String> {
+#[cfg(windows)]
+fn embedded_powershell_command(script:&str,arguments:&[(&str,&str)])->Result<std::process::Command> {
     let literal=|value:&str|format!("'{}'",value.replace('\'',"''"));
-    let command=format!("& {{\n{}\n}} -Path {} -Publisher {} -CertificateSha256 {} -Sha256 {}",
-        include_str!("../../../deployment/windows/Verify-Package.ps1"),
-        literal(path.to_str().context("Package path is not valid Unicode")?),
-        literal(&release.publisher),literal(&release.publisher_certificate_sha256),literal(&release.sha256));
-    let bytes:Vec<u8>=command.encode_utf16().flat_map(u16::to_le_bytes).collect();
-    Ok(STANDARD.encode(bytes))
+    let mut script=format!("$ProgressPreference='SilentlyContinue'; & {{\n{script}\n}}");
+    for (name,value) in arguments {
+        ensure!(name.starts_with(|character:char|character.is_ascii_alphabetic()) && name.bytes().all(|byte|byte.is_ascii_alphanumeric()),"Invalid embedded helper parameter");
+        script.push_str(&format!(" -{name} {}",literal(value)));
+    }
+    let bytes:Vec<u8>=script.encode_utf16().flat_map(u16::to_le_bytes).collect();
+    let mut command=powershell_command()?;
+    command.args(["-NoLogo","-NoProfile","-NonInteractive","-ExecutionPolicy","Bypass","-EncodedCommand"]).arg(STANDARD.encode(bytes));
+    Ok(command)
 }
 
 #[cfg(windows)]
@@ -351,9 +355,8 @@ fn validate_msi_identity(identity:&MsiIdentity,edition:&Edition,version:&str)->R
 
 #[cfg(windows)]
 fn read_msi_identity(package:&Path)->Result<MsiIdentity> {
-    let script=package.parent().context("Missing MSI directory")?.join("Get-MsiIdentity.ps1");
-    std::fs::write(&script,include_str!("../../../deployment/windows/Get-MsiIdentity.ps1"))?;
-    let output=powershell_command()?.args(["-NoLogo","-NoProfile","-NonInteractive","-ExecutionPolicy","Bypass","-File"]).arg(script).arg("-Package").arg(package).output()?;
+    let output=embedded_powershell_command(include_str!("../../../deployment/windows/Get-MsiIdentity.ps1"),
+        &[("Package",package.to_str().context("MSI path is not valid Unicode")?)])?.output()?;
     ensure!(output.status.success(),"Cannot inspect MSI identity without installation");
     let identity:MsiIdentity=serde_json::from_slice(&output.stdout)?;
     Ok(identity)
@@ -375,11 +378,8 @@ pub fn verify_msi_release_identity(package:&Path,release:&Release)->Result<()> {
 #[cfg(windows)]
 fn msi_install_command(package:&Path,release:&Release)->Result<std::process::Command> {
     verify_msi_identity(package,release)?;
-    let script=package.parent().context("Missing update directory")?.join("Get-MsiInstallMode.ps1");
-    std::fs::write(&script,include_str!("../../../deployment/windows/Get-MsiInstallMode.ps1"))?;
-    let output=powershell_command()?
-        .args(["-NoLogo","-NoProfile","-NonInteractive","-ExecutionPolicy","Bypass","-File"])
-        .arg(script).arg("-Package").arg(package).output()?;
+    let output=embedded_powershell_command(include_str!("../../../deployment/windows/Get-MsiInstallMode.ps1"),
+        &[("Package",package.to_str().context("MSI path is not valid Unicode")?)])?.output()?;
     ensure!(output.status.success(),"Unable to determine MSI installation or repair mode");
     let mode=std::str::from_utf8(&output.stdout)?.trim();
     ensure!(matches!(mode,"/i"|"/fvamus"),"Unexpected MSI installation mode");
@@ -409,10 +409,8 @@ pub fn verify_repair_package(state:&AgentState,directory:&Path,envelope:&SignedE
 }
 
 #[cfg(windows)]
-fn verify_compatibility(directory:&Path,release:&Release)->Result<()> {
-    let script=directory.join("Get-WindowsCompatibility.ps1");
-    std::fs::write(&script,include_str!("../../../deployment/windows/Get-WindowsCompatibility.ps1"))?;
-    let output=powershell_command()?.args(["-NoLogo","-NoProfile","-NonInteractive","-ExecutionPolicy","Bypass","-File"]).arg(script).output()?;
+fn verify_compatibility(_directory:&Path,release:&Release)->Result<()> {
+    let output=embedded_powershell_command(include_str!("../../../deployment/windows/Get-WindowsCompatibility.ps1"),&[])?.output()?;
     ensure!(output.status.success(),"Unsupported Windows version or installation type");
     let platform=String::from_utf8(output.stdout)?;
     ensure!(release.windows_versions.iter().any(|v|v==platform.trim()),"Release does not support this Windows version");Ok(())
@@ -1029,6 +1027,10 @@ pub(crate) fn test_failed_release_quarantine(state:&AgentState,release:&Release,
         assert_eq!(std::fs::read(preparation.join("managed-state.json")).unwrap(),initial_state);
         let mut wrong_publisher=installer.clone();wrong_publisher.publisher="Unapproved publisher".into();
         assert!(retain_installer(&source,&target,&wrong_publisher).is_err());
+        let injected=folder.join("publisher-injection.txt");
+        wrong_publisher.publisher=format!("Unapproved'; Set-Content -LiteralPath '{}' -Value injected; #",injected.display());
+        assert!(retain_installer(&source,&target,&wrong_publisher).is_err());
+        assert!(!injected.exists(),"Publisher values must remain literal arguments, never commands");
         assert!(staged_hash_matches(&target,&installer.sha256).unwrap(),"Publisher rejection retains the previous complete cache");
         let mut wrong_certificate=installer.clone();wrong_certificate.publisher_certificate_sha256="0".repeat(64);
         assert!(retain_installer(&source,&target,&wrong_certificate).is_err());
