@@ -49,6 +49,48 @@ fn artifact_entry(name:&str)->bool {
     name.strip_prefix("artifacts/").and_then(|name|name.strip_suffix(".zip"))
         .is_some_and(|id|uuid::Uuid::parse_str(id).is_ok_and(|parsed|parsed.to_string()==id))
 }
+fn snapshot_transport(directory:&Path,data:&Path,destination:&Path)->Result<()> {
+    // A stopped WAL database can need SHM initialization or recovery, which
+    // cannot occur on a read-only transport mount. Recover a private copy;
+    // never ignore WAL frames or change the original transport storage.
+    let staging=data.join(format!("backup-transport-source-{}",swan_protocol::random_token()));
+    let mut builder=std::fs::DirBuilder::new();
+    #[cfg(unix)] {use std::os::unix::fs::DirBuilderExt;builder.mode(0o700);}
+    builder.create(&staging).context("Create private transport backup staging")?;
+    let result=(||->Result<()> {
+        let mut total=0u64;
+        for name in ["db_v2.sqlite3","db_v2.sqlite3-wal","db_v2.sqlite3-journal"] {
+            let source=directory.join(name);
+            let metadata=match std::fs::symlink_metadata(&source) {
+                Ok(value)=>value,
+                Err(error) if error.kind()==std::io::ErrorKind::NotFound && name!="db_v2.sqlite3"=>continue,
+                Err(error)=>return Err(error).context("Inspect stopped transport backup source"),
+            };
+            ensure!(metadata.is_file() && !metadata.file_type().is_symlink(),"Transport database backup source must be a regular file");
+            #[cfg(windows)] {use std::os::windows::fs::MetadataExt;ensure!(metadata.file_attributes()&0x400==0,"Transport database backup source must not be a reparse point");}
+            total=total.checked_add(metadata.len()).context("Transport backup source size overflow")?;
+            ensure!(total<=512*1024*1024,"Transport backup source exceeds 512 MiB");
+            let mut input=std::fs::File::open(&source)?;
+            let mut options=std::fs::OpenOptions::new();options.create_new(true).write(true);
+            #[cfg(unix)] {use std::os::unix::fs::OpenOptionsExt;options.mode(0o600);}
+            let mut output=options.open(staging.join(name))?;
+            ensure!(std::io::copy(&mut input,&mut output)?==metadata.len(),"Transport database changed during backup; stop transport before export");
+        }
+        let transport_db=rusqlite::Connection::open(staging.join("db_v2.sqlite3")).context("Open staged transport database for backup")?;
+        transport_db.backup(rusqlite::DatabaseName::Main,destination,None).context("Snapshot staged transport database for backup")?;
+        Ok(())
+    })();
+    // Only remove the fixed files in the directory created by this operation.
+    // SQLite handles are dropped before cleanup, including on a failed snapshot.
+    for name in ["db_v2.sqlite3","db_v2.sqlite3-wal","db_v2.sqlite3-shm","db_v2.sqlite3-journal"] {
+        match std::fs::remove_file(staging.join(name)) {
+            Ok(())=>{},Err(error) if error.kind()==std::io::ErrorKind::NotFound=>{},
+            Err(error)=>return Err(error).context("Remove private transport backup staging file"),
+        }
+    }
+    std::fs::remove_dir(&staging).context("Remove private transport backup staging directory")?;
+    result
+}
 pub fn export_deployment_with_artifacts(data:&Path,destination:&Path,password:&str,transport:Option<&Path>,configuration:Option<&Path>,tls_identity:Option<&Path>,tls_directory:Option<&Path>,artifacts:Option<&Path>)->Result<()> {
     ensure!(!destination.exists(),"Refusing to overwrite an existing backup");
     let db=rusqlite::Connection::open_with_flags(data.join("management.sqlite3"),rusqlite::OpenFlags::SQLITE_OPEN_READ_ONLY).context("Open management database for backup")?;
@@ -63,8 +105,7 @@ pub fn export_deployment_with_artifacts(data:&Path,destination:&Path,password:&s
             files.push(("transport-id_ed25519".into(),directory.join("id_ed25519")));files.push(("transport-id_ed25519.pub".into(),directory.join("id_ed25519.pub")));
             if directory.join("db_v2.sqlite3").exists(){
                 let transport_snapshot=data.join(format!("backup-transport-{}.sqlite3",swan_protocol::random_token()));snapshots.push(transport_snapshot.clone());
-                let transport_db=rusqlite::Connection::open_with_flags(directory.join("db_v2.sqlite3"),rusqlite::OpenFlags::SQLITE_OPEN_READ_ONLY).context("Open transport database for backup")?;
-                transport_db.backup(rusqlite::DatabaseName::Main,&transport_snapshot,None).context("Snapshot transport database for backup")?;
+                snapshot_transport(directory,data,&transport_snapshot)?;
                 files.push(("transport-db.sqlite3".into(),transport_snapshot));
             }
         }
@@ -177,6 +218,7 @@ mod tests {
         // Model stopped transport storage with committed WAL frames and no SHM
         // file, as a read-only backup mount may present it after interruption.
         for name in ["db_v2.sqlite3","db_v2.sqlite3-wal"]{std::fs::copy(original.join(name),transport.join(name)).unwrap();}
+        let source_database=std::fs::read(transport.join("db_v2.sqlite3")).unwrap();let source_wal=std::fs::read(transport.join("db_v2.sqlite3-wal")).unwrap();
         std::fs::write(transport.join("id_ed25519"),b"fixture private key").unwrap();std::fs::write(transport.join("id_ed25519.pub"),b"fixture public key").unwrap();
         std::fs::set_permissions(&transport,std::fs::Permissions::from_mode(0o555)).unwrap();
         let probe=transport.join("write-probe");
@@ -190,6 +232,8 @@ mod tests {
         let source_unchanged=!transport.join("db_v2.sqlite3-shm").exists();
         std::fs::set_permissions(&transport,std::fs::Permissions::from_mode(0o755)).unwrap();drop(writer);
         result.unwrap();assert!(source_unchanged,"Export must not write into read-only transport storage");
+        assert_eq!(std::fs::read(transport.join("db_v2.sqlite3")).unwrap(),source_database);assert_eq!(std::fs::read(transport.join("db_v2.sqlite3-wal")).unwrap(),source_wal);
+        assert!(std::fs::read_dir(&data).unwrap().all(|entry|!entry.unwrap().file_name().to_string_lossy().starts_with("backup-")),"Plaintext snapshots and staging must be removed");
         let restored=root.join("restored");restore(&restored,&archive,"readonly WAL test passphrase").unwrap();
         let db=rusqlite::Connection::open(restored.join("transport-db.sqlite3")).unwrap();
         assert_eq!(db.query_row("SELECT id FROM peers",[],|row|row.get::<_,String>(0)).unwrap(),"committed WAL peer");drop(db);
