@@ -1345,3 +1345,19 @@ This is a private upgrade candidate, not an approved production release.
 It has not yet been imported, installed, or tested through automatic rollout.
 The existing repaired installation remains version `1.5.2`; full automatic
 upgrade and interruption/recovery acceptance remain outstanding.
+
+The corrected candidate was subsequently imported as `4-Customer-test`, approved
+while automatic rollout was paused, and bundled by the existing authenticated
+Windows worker (PID `3568`). Build `9506bd95-b3da-4119-877b-06255a2a9e60`
+completed; public bundle SHA-256 is
+`e28a2f73f79d9e86342f2ca0a817498b32d1d58859ca5e68693fee5dc6fc6c52`.
+The public download's hash was checked before extracting and invoking its normal
+bundled installer, without repair mode. On Server 2016 build `14393`, the explicit
+upgrade completed with registered MSI version `1.5.3` and release sequence `4`.
+The installed main and agent match the corrected signed hashes listed above.
+Device identity, enrollment token, unattended consent and consent revision were
+compared privately and remained unchanged; the pending setup marker was absent,
+and both customer service and configuration watcher were running. This used the
+existing source `6840d91` server/worker packaging recipe with source `4768d53`
+endpoint binaries. It proves this explicit lab upgrade, not automatic rollout,
+interrupted recovery, current-source worker packaging or the Windows matrix.
