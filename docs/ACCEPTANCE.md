@@ -2154,3 +2154,14 @@ The fixture service was disabled/stopped/deleted during cleanup and existing pro
 service statuses were preserved. Installer parsing and diff checks passed. This
 proves the native recovery mechanism, not installation or reboot of the changed
 product packages; no existing product service recovery settings were changed.
+
+A fresh unsigned server setup package was subsequently compiled from clean
+installer checkout `87a1b7f85881d31d7f43d61c5fe7bfe0ffd1048a`. All eleven embedded
+payload hashes passed the builder's verification; reflection confirmed twelve
+resources including the source receipt and the updated service recovery flag.
+Package SHA-256:
+`a5ef288f8747c44e7a3e44b9dfea027bfc207aebd428a53054186afa91107b13`.
+The management executable remains the unchanged CI build from `11faae3`, hash
+`de623e216e4ef2b81785c18615fc23e83e4716c894225ed620a860e2aea9f817`.
+The clean installer receipt does not establish full runtime reproducibility.
+The package was inspected without launching its wizard or installing services.
