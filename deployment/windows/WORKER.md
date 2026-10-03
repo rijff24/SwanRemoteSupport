@@ -48,8 +48,12 @@ LocalSystem, automatic startup and SCM restart policy. It creates no inbound
 firewall rule. Keep the original configuration file protected too. A manually
 started foreground worker does not survive reboot. Verify authenticated build
 completion, standard-user credential denial, service stop/restart and startup
-after reboot before deployment; signed VM evidence for this new service path is
-still pending. Service output is appended to protected `C:\ProgramData\SwanInstallerWorker\worker-service.log`; runtime log verification and log rotation remain pending.
+after reboot before deployment. Disposable Server 2016 testing verified a signed
+GNU service fixture's startup, stop/restart, reboot persistence and standard-user
+credential denial. Authenticated build completion with the paired current server
+and production MSVC package verification remain pending. Service output is
+appended to protected `C:\ProgramData\SwanInstallerWorker\worker-service.log`;
+runtime capture and standard-user log denial passed. Log rotation remains pending.
 Prevent a foreground worker from running alongside the service against the same
 output directory.
 
@@ -73,8 +77,9 @@ Remove an owned installation with administrator `Uninstall-Worker.ps1`; use
 executable hash and publisher before stopping anything. It retains private
 artifacts and the receipt, and does not remove the original configuration file.
 Reinstallation currently refuses retained data; preserve it before planning a
-replacement. Removal does not revoke the server-side worker token. Removal and
-reinstallation VM acceptance are still pending.
+replacement. Removal does not revoke the server-side worker token. Disposable
+Server 2016 removal and reinstallation passed after explicitly archiving retained
+data; automatic migration of retained data remains unverified.
 
 Administrators can list worker IDs and disabled status with `GET /api/v1/workers`
 and permanently disable a credential with `DELETE /api/v1/workers/{worker_id}`,

@@ -566,6 +566,10 @@ async fn builds(State(s):State<Shared>,headers:HeaderMap)->ApiResult {
 async fn claim_build(State(s):State<Shared>,headers:HeaderMap)->ApiResult {
     s.worker(&headers)?;let worker=digest(token(&headers)?);
     let mut db=s.db.lock().unwrap();let tx=db.transaction()?;
+    // Recheck under the claim transaction: revocation may follow the initial
+    // authentication check before this request acquires the database lock.
+    let enabled:bool=tx.query_row("SELECT EXISTS(SELECT 1 FROM workers WHERE token_hash=?1 AND disabled=0)",[&worker],|r|r.get(0))?;
+    if !enabled{return Err(unauthorized());}
     // Expired claims are retryable; worker output is named by immutable job ID.
     tx.execute("UPDATE builds SET state='queued',worker='' WHERE state IN ('running','uploaded') AND claimed_at<?1",[now().saturating_sub(3600)])?;
     let row:Option<(String,String)>=tx.query_row("SELECT id,body FROM builds WHERE state='queued' ORDER BY rowid LIMIT 1",[],|r|Ok((r.get(0)?,r.get(1)?))).optional()?;
@@ -617,6 +621,24 @@ mod worker_completion_tests {
             }
             let events:i64=db.query_row("SELECT COUNT(*) FROM audit WHERE event='worker.revoked' AND actor='admin' AND target='worker'",[],|r|r.get(0)).unwrap();assert_eq!(events,2);
         }
+        use tower::ServiceExt;
+        let app=router(store.clone());
+        for (method,path,credential,expected) in [
+            ("GET","/api/v1/workers",None,StatusCode::UNAUTHORIZED),
+            ("GET","/api/v1/workers",Some(technician.as_str()),StatusCode::UNAUTHORIZED),
+            ("GET","/api/v1/workers",Some(admin.as_str()),StatusCode::OK),
+            ("DELETE","/api/v1/workers/worker",Some(technician.as_str()),StatusCode::UNAUTHORIZED),
+            ("DELETE","/api/v1/workers/worker",Some(admin.as_str()),StatusCode::OK),
+            ("DELETE","/api/v1/workers/missing",Some(admin.as_str()),StatusCode::NOT_FOUND),
+            ("POST","/api/v1/worker/claim",Some(credential.as_str()),StatusCode::UNAUTHORIZED),
+            ("PUT","/api/v1/worker/builds/uploaded/artifact",Some(credential.as_str()),StatusCode::UNAUTHORIZED),
+        ] {
+            let mut request=axum::http::Request::builder().method(method).uri(path);
+            if let Some(credential)=credential {request=request.header(header::AUTHORIZATION,format!("Bearer {credential}"));}
+            let response=app.clone().oneshot(request.body(axum::body::Body::empty()).unwrap()).await.unwrap();
+            assert_eq!(response.status(),expected,"{method} {path}");
+        }
+        drop(app);
         drop(store);std::fs::remove_dir_all(directory).unwrap();
     }
     #[test]
