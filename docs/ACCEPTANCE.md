@@ -1750,3 +1750,13 @@ it is a local test package, not a corresponding-source production release.
 The already-running `0a541c7` CI build predates this workflow addition; a subsequent
 full run must verify the new server packaging step. No setup executable was run
 on the host and no host service, firewall, DNS or trust setting was changed.
+
+Installed native `6bd54c2` technician then passed live signed synchronization of
+support contacts, a validated HTTPS shortcut, logo SVG and consent text from the
+isolated administrator profile API. The harness explicitly added omitted
+optional JSON properties before publication. The client committed a higher
+profile revision while preserving bootstrap ownership/trust, release sequence 8
+and consent. After the isolated management/proxy listeners stopped, offline
+installed-identity verification accepted the signed cache without changing its
+hash. Existing service statuses were checked unchanged. This is installed-agent
+metadata synchronization evidence, not visual rendering or shortcut interaction.
