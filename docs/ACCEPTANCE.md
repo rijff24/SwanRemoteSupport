@@ -2202,3 +2202,18 @@ MSI payload lifecycle evidence under the CI account, not standard-user company
 setup, enrollment, signature acceptance, a graphical session, or the full Server
 2022 compatibility matrix. The separate Server 2016 standard-user error 1601
 remains unresolved.
+
+### Published native build and corresponding source integrity
+
+Native Windows run `37110881152`, source
+`c7d118c4b655d401c14fd95672ae2aff3b5ed679`, passed all four jobs. The downloaded
+24-file artifact matched GitHub's authenticated SHA-256
+`c08f556d0ba316754886559e03dae33980f66cc832503e00b14c25b553336cc4`;
+ZIP CRC, bounded extraction and published checksums passed. Its corresponding
+source archive independently matched 1,101 public Git files, including the pinned
+submodule, and six verified generated bridge files. All source manifest hashes
+passed. The server setup's exact resource recipe, eleven payload hashes, embedded
+source receipt, six packaging source inputs and component pins also passed.
+The receipt truthfully records a dirty build working tree. This verifies supplied
+build inputs and artifact integrity; it does not establish bit-for-bit binary
+reproducibility, production signing or the outstanding Windows acceptance tests.
