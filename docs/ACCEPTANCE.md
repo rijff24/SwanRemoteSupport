@@ -2178,3 +2178,27 @@ Four focused fixture checks separately verified private/untracked file exclusion
 generated input completeness, matching/mismatched submodule pins and link denial.
 This proves the source archive operation with real build inputs, not complete
 native compilation, binary reproducibility, signing or release acceptance.
+
+### Technician MSI lifecycle on a disposable Windows CI runner
+
+Independent run `37112721733` completed successfully using fixture source
+`76e89b6fffc9acd602679b8049a7520b6739ba08` and the pinned unsigned technician
+MSI/application/agent from successful native build `11faae3`. Build provenance,
+installer checksums and the independently verified agent hash were checked before
+execution. The downloaded evidence artifact passed its GitHub SHA-256 and ZIP CRC.
+Its result identifies Windows Server 2022 Datacenter, build 20348, installation
+type `Server`. Native MSI install, forced repair after removal of the owned
+technician executable, and uninstall all returned 0. Installed/repaired executable
+and agent hashes matched the inputs; technician registry registration existed
+after installation/repair and was absent after uninstall. Uninstall also removed
+both payload executables, and the actual update-cancellation custom action passed.
+
+Earlier CI fixture attempts stopped at a missing agent checksum or timed out
+without installer logs. Named array binding and quoting only file arguments
+corrected the command invocation; the final run retained invocation records and
+all three native MSI logs. Those failed fixtures are not installation passes.
+No host installation or existing lab-service change occurred. This is unsigned
+MSI payload lifecycle evidence under the CI account, not standard-user company
+setup, enrollment, signature acceptance, a graphical session, or the full Server
+2022 compatibility matrix. The separate Server 2016 standard-user error 1601
+remains unresolved.
