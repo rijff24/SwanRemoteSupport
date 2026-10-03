@@ -2260,3 +2260,21 @@ Its original launcher and failed diagnostic logs remain preserved privately.
 The executable subsequently exited without a visible technician window. This
 fixes the observed launcher failure; graphical startup and native sessions remain
 unverified and require further investigation. No host production service changed.
+
+The subsequent Application Error event identifies the portable technician EXE
+itself, exception `0xc0000409`, offset `0x2ab55`. An owned interactive diagnostic
+launched the unchanged signed EXE with explicit standard input/output/error pipes.
+It returned zero and spawned `rustdesk.exe` in the same standard-user session;
+the actual window displayed the cached company technician name, teal swan/gear
+mark, company HTTPS domain, support link, username/password/TOTP fields and
+product/license attribution. No technician login or native connection passed.
+
+The launcher now supplies and asynchronously drains the portable wrapper's
+standard handles, keeping the readers alive until inherited child pipes close.
+The Windows PowerShell fixture additionally spawns a child that writes 128 KiB
+to each output stream after its parent exits, and verifies child completion
+before launcher return. All three launcher control-flow cases pass. The final
+combined launcher still needs a newly generated package and native lifecycle
+verification; the observed GUI used the isolated handle diagnostic with the
+existing signed lab package. Original failure evidence and existing services
+remain preserved.

@@ -25,5 +25,23 @@ if (-not (Test-Path -LiteralPath $portable)) {
 if ($LASTEXITCODE -ne 0) { throw 'Technician installed identity or pinned publisher verification failed.' }
 # Login, inventory and ticket creation take place in the graphical application.
 # No password, MFA code, token or grant is passed in process arguments/environment.
-& $portable
-if ($LASTEXITCODE -ne 0) { throw 'Technician application could not start.' }
+# The portable GUI wrapper can abort with invalid inherited console handles in
+# a hidden Windows PowerShell session. Supply real pipes and drain both streams.
+# Keep the readers alive until the spawned application's inherited pipes close.
+$portableStart = [Diagnostics.ProcessStartInfo]::new()
+$portableStart.FileName = $portable
+$portableStart.WorkingDirectory = $env:SWAN_STATE_DIR
+$portableStart.UseShellExecute = $false
+$portableStart.RedirectStandardInput = $true
+$portableStart.RedirectStandardOutput = $true
+$portableStart.RedirectStandardError = $true
+$portableProcess = [Diagnostics.Process]::Start($portableStart)
+try {
+    $portableProcess.StandardInput.Close()
+    $output = $portableProcess.StandardOutput.ReadToEndAsync()
+    $errors = $portableProcess.StandardError.ReadToEndAsync()
+    $portableProcess.WaitForExit()
+    if ($portableProcess.ExitCode -ne 0) { throw 'Technician application could not start.' }
+    $null = $output.GetAwaiter().GetResult()
+    $null = $errors.GetAwaiter().GetResult()
+} finally { $portableProcess.Dispose() }
