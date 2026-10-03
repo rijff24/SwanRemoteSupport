@@ -1512,3 +1512,10 @@ could read neither the service registry environment nor its protected installati
 receipt. Credentials were never printed. Signed build completion under this new
 service, stop/restart, reboot, removal and log collection remain unverified or
 unfinished. This GNU fixture is not a production release or MSVC matrix result.
+
+Controlled SCM stop/restart of the signed GNU worker service passed: the verified
+installed worker process PID `1020` exited after Stop-Service, and Start-Service
+created a new owned process PID `1856` with the same service executable identity.
+This is service lifecycle evidence, not an authenticated completed build or
+reboot-startup result. Native build artifacts now include `Install-Worker.ps1`
+alongside the worker binary for matched-source deployment testing.

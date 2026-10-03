@@ -185,6 +185,7 @@ jobs:
           cargo build --manifest-path product/Cargo.toml --workspace --release --locked
           Copy-Item product/target/release/swan-*.exe artifacts/
           Copy-Item deployment/windows/Install-Company.ps1,deployment/windows/Open-Technician.ps1,deployment/windows/Verify-Package.ps1,deployment/windows/Get-WindowsCompatibility.ps1 artifacts/
+          Copy-Item deployment/windows/Install-Worker.ps1 artifacts/
           Copy-Item LICENCE artifacts/
 
       - name: Build unsigned customer and technician MSIs with pinned WiX
@@ -218,6 +219,7 @@ jobs:
             artifacts/SHA256SUMS.txt
             artifacts/swan-*.exe
             artifacts/Install-Company.ps1
+            artifacts/Install-Worker.ps1
             artifacts/Open-Technician.ps1
             artifacts/Verify-Package.ps1
             artifacts/Get-WindowsCompatibility.ps1
