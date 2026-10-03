@@ -2376,3 +2376,31 @@ A new full native build `37123744363` was dispatched once from the verified
 `f71773b` source to package this runtime fix. It is still pending. The earlier
 `01d24ab` installer archive remains in its original live download process;
 no partial download was replaced or treated as verified.
+
+### Native package provenance and failed-export cleanup (2026-10-03)
+
+The original download of native run `37120044435` completed successfully.
+Its 24-file archive passed authenticated artifact SHA-256
+`61a7618abd11fa1a60138f7ec944499e7d18460f1a86ff1fc6153c884d77f452`,
+ZIP CRC and published payload checksums. Independent checks verified all 11
+embedded server setup resources, embedded/external source receipt agreement,
+standalone management payload agreement, six public setup source inputs and
+pinned transport/proxy hashes. The published source archive matched 1,103
+public Git files at `01d24ab` plus six independently verified generated bridge
+files. Its working-tree-dirty flag is retained; matching archived inputs is
+source provenance, not proof of a clean checkout or binary reproducibility.
+
+The packaged technician launcher matched its exact public source after line
+ending normalization. The technician MSI, portable executable and agent hashes
+matched their build manifest. The retained CI lifecycle receipt does not include
+an independent hash of the tested MSI; its successful install/repair/uninstall
+evidence remains scoped to that CI job and must not imply fresh-company or
+standard-user acceptance. These artifacts predate the `f71773b` backup fix.
+
+At `5ae76f3`, `failed_transport_snapshot_removes_private_staging_without_changing_source`
+passed in actual Windows MSVC and Linux test logs. The fixture verifies that
+an invalid transport database fails export, leaves no archive or private plaintext
+staging, and preserves the source bytes. Both complete component runs passed:
+pull request `37124053449` and push `37124051532`, including the isolated Linux
+deployment rehearsal and Windows launcher checks. This test-only commit does
+not change the runtime currently being built in native run `37123744363`.
