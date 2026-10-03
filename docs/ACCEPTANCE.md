@@ -2217,3 +2217,18 @@ source receipt, six packaging source inputs and component pins also passed.
 The receipt truthfully records a dirty build working tree. This verifies supplied
 build inputs and artifact integrity; it does not establish bit-for-bit binary
 reproducibility, production signing or the outstanding Windows acceptance tests.
+
+### Technician MSI lifecycle on Server 2025
+
+Run `37115402384`, fixture source `908b447f7117c08f63315a8fbdff924b1edd4cd0`,
+passed on a disposable Windows Server 2025 Datacenter runner, build 26100,
+installation type `Server`. It consumed the same pinned unsigned build `11faae3`
+as the Server 2022 lifecycle fixture. Actual installation, forced repair after
+deleting the owned executable, and uninstall each returned zero. Payload hashes
+and registry presence/removal checks passed. The retained invocation records,
+result and native MSI logs were downloaded only after checking the successful
+run/source; the evidence artifact matched its authenticated GitHub digest and ZIP
+CRC. This covers MSI payload lifecycle under the CI account, not company setup,
+standard-user installation, graphical sessions, signing or full Server 2025
+acceptance. The local Server 2025 VM remains unbooted because available host
+memory is below its configured safety reserve; existing services were preserved.
