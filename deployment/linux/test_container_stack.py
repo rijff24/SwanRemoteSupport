@@ -196,7 +196,15 @@ def container_nat_probe(name, service):
         raise RuntimeError("NAT probe requires a disposable private bridge endpoint")
     if service not in ["21115/tcp", "21116/tcp"]:
         raise RuntimeError("Unexpected NAT-test port")
-    nat_probe(int(service.split("/")[0]), address)
+    try:
+        nat_probe(int(service.split("/")[0]), address)
+    except OSError as error:
+        # Preserve startup evidence before the fixture removes its containers.
+        # hbbs output contains its public transport identity, not management
+        # credentials; never collect environment/configuration or private files.
+        state = docker("inspect", "--format", "{{json .State}}", name)
+        logs = docker("logs", "--tail", "30", name)
+        raise RuntimeError("Owned hbbs NAT probe failed on " + service + "; state=" + state + "; log=" + logs) from error
 
 
 def nat_probe(listener, host="127.0.0.1"):
