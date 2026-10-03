@@ -1432,3 +1432,16 @@ Source now offloads final configuration verification/restart from async `main`
 to `spawn_blocking`, preserving existing error propagation. Windows GNU
 `cargo check --manifest-path product/Cargo.toml -p swan-agent --locked` passed.
 This change is not part of the installed source `4768d53` test binary.
+
+The normal scheduled retry ran at approximately `2026-10-03T02:25:25Z` without
+manual task start or helper relaunch. Its result was `0` and one staged helper
+was observed live. Subsequent inspection found registered MSI `1.5.6`, committed
+sequence `7`, no pending setup/update/restart markers, running customer service
+and configuration watcher, one installed agent process, and preserved private
+identity/token/consent comparisons. The staged helper had exited. This demonstrates
+automatic forward recovery after terminating the verified pre-install staged
+helper on Server 2016 build `14393`, using private lab signing trust. The completed
+recovery task was still Ready with its next normal cleanup check scheduled for
+`02:30:30Z`; self-removal has not yet been observed. Power loss during MSI,
+rollback after installer failure, reboot/startup recovery, active remote sessions
+and other Windows versions remain separate acceptance requirements.
