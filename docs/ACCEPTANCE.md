@@ -2426,3 +2426,20 @@ native logs contained successful zero returns and no `Return value 3`.
 This strengthens artifact-specific lifecycle evidence for that older package;
 it does not cover the new backup runtime, standard-user enrollment, production
 signature acceptance, GUI login or remote desktop sessions.
+
+### Authorization expiry boundary (2026-10-03)
+
+Review identified that an in-flight renewal response could extend an already
+expired device-side lease. At `391541e`, renewal rejects an expired lease before
+the request and again before applying the response. The request timeout is
+bounded by the remaining lease time and the normal 15-second limit. The receiving
+native app also closes an authorized connection on an incoming packet when its
+lease has expired, instead of relying only on the next periodic timer tick.
+
+`delayed_renewal_cannot_resurrect_expired_authorization` passed in independently
+read Linux and Windows MSVC logs from pull-request run `37125172883`. Both full
+component runs passed, including push `37125170016` and the isolated Linux
+deployment rehearsal. Local Windows GNU type checking passed. These prove the
+renewal validation regression, not a live native session or its termination.
+Native build `37125194672` is running from this exact source; build `37123744363`
+contains the earlier backup fix and cannot validate the new expiry behavior.
