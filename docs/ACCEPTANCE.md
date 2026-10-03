@@ -1547,3 +1547,5 @@ comparison confirmed the real token was absent from the log. Cleanup restored
 the original service environment and restarted the logging-enabled worker.
 This proves runtime stderr capture for this GNU service fixture; standard-user
 log denial, rotation and authenticated build completion remain to verify.
+
+A real standard-user SSH session on Server 2016 was denied reading the created worker-service.log. Native CI run 37090939153 remains in progress; no replacement run was dispatched. Runtime log rotation and authenticated service build completion remain unverified.
