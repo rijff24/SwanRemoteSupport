@@ -1559,4 +1559,5 @@ running/uploaded jobs, denied revoked claims/completion, rejected late uploads,
 preserved unrelated/completed jobs, and audit records. This is local backend
 coverage; the new endpoints still require paired-server VM verification. Native
 run 37090939153 has progressed to Build branded client for source 6bd54c2.
-`nWorker revocation is now available in the installer administration view. JavaScript syntax validation passed. The eight locked worker-completion tests passed again with real Axum route checks for unauthenticated and technician denial, administrator list/revoke, unknown-worker 404 and revoked claim/upload 401. Claims recheck credential status inside their database transaction to close the authentication-to-claim revocation race. These route tests do not replace paired-server VM acceptance.
+
+Worker revocation is now available in the installer administration view. JavaScript syntax validation passed. The eight locked worker-completion tests passed again with real Axum route checks for unauthenticated and technician denial, administrator list/revoke, unknown-worker 404 and revoked claim/upload 401. Claims recheck credential status inside their database transaction to close the authentication-to-claim revocation race. These route tests do not replace paired-server VM acceptance.
