@@ -1319,3 +1319,29 @@ No lab signing key was exported, no host trust store changed, and no production
 signing approval was obtained. This validates one EXE signing integration, not
 signed MSI publication, worker consumption, complete company installation,
 automatic updates or native sessions. Raw logs and test artifacts stay private.
+
+### Corrected customer upgrade candidate: source 4768d53
+
+The complete customer payload from successful native CI run `37083233120`
+was extracted read-only from its MSI with 7-Zip; no MSI action was executed.
+All 96 installed-file hashes matched the CI manifest. The native application,
+which embeds the agent library, is included alongside the standalone corrected
+agent; this avoids retaining the older application's session-lock behavior.
+
+A separate payload copy was built into lab MSI `1.5.3` with pinned WiX
+`5.0.2+aa65968c`. The build used `UnsignedTest` because the private disposable
+publisher is trusted only inside the guest, not on the host. The main executable,
+agent, and final MSI were independently signed in Server 2016 build `14393`
+using the non-exportable lab certificate and explicit RFC3161 timestamp endpoint.
+The signing integration required successful SDK `signtool verify /pa /all /tw`.
+
+- Signed native main SHA-256: `89a92acab159d2b34ddaf3e99ebcaa6ad1a45c6450876598b48237c1fc531a2b`.
+- Signed agent SHA-256: `1e02bdc3dd0302dc7cfd6a6d9b5c65512e46c0ed3fa2dbeb4e977c98659b113b`.
+- Unsigned MSI SHA-256: `5ae64da9b413994e94bee388c15c06142d5ac00e633f158aef490df8e91af3c2`.
+- Signed MSI SHA-256: `ed87625128fe6c84738cf7b6fd084da25413ddd538dd8896bac0af74efcbd6f1`.
+- Installed manifest SHA-256: `0f9e04800d770eeda45eadb043468923fc57e71e5b4d6a5e75711dec4eaef568`.
+
+This is a private upgrade candidate, not an approved production release.
+It has not yet been imported, installed, or tested through automatic rollout.
+The existing repaired installation remains version `1.5.2`; full automatic
+upgrade and interruption/recovery acceptance remain outstanding.
