@@ -213,6 +213,19 @@ jobs:
           $customerHash = (Get-FileHash -LiteralPath $customerOutput -Algorithm SHA256).Hash.ToLowerInvariant()
           Add-Content artifacts/SHA256SUMS.txt ($customerHash+'  '+[IO.Path]::GetFileName($customerOutput))
 
+      - name: Verify unsigned technician MSI installation repair and uninstall
+        shell: pwsh
+        run: |
+          ./deployment/windows/test_technician_msi_lifecycle.ps1 -Package 'artifacts/SwanRemoteSupport-${{ env.VERSION }}-technician-x64-unsigned.msi' -TechnicianExecutable 'artifacts/SwanRemoteSupport-${{ env.VERSION }}-technician-x64-unsigned.exe' -AgentExecutable artifacts/swan-agent.exe
+
+      - name: Preserve technician MSI lifecycle evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: technician-msi-lifecycle
+          if-no-files-found: ignore
+          path: ${{ runner.temp }}/swan-msi-lifecycle-*/**
+
       - name: Build unsigned company server setup with pinned components
         shell: powershell
         run: |
