@@ -1675,3 +1675,12 @@ outside Git, removed after use, and cleared from the child process environment.
 Owned proxy/server processes were stopped after the result. This proves the
 installed agent's authentication API path only: graphical MFA login, nonempty
 authorized inventory, device selection and native remote sessions remain open.
+
+With the isolated HTTPS listener confirmed stopped, the installed `6bd54c2`
+technician agent's `verify-installed` succeeded as the standard user using its
+cached signed company profile. The managed-state hash was unchanged. This is
+offline agent/installed-identity evidence; rendered offline branding remains
+untested. Desktop-control capability was revalidated against the existing
+disposable QEMU viewer and its Windows lock screen observed. No graphical
+technician login or native session was established. Host free memory remained
+approximately 2.5 GiB, below the second-VM launch guard.
