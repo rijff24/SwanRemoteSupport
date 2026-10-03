@@ -1561,3 +1561,17 @@ coverage; the new endpoints still require paired-server VM verification. Native
 run 37090939153 has progressed to Build branded client for source 6bd54c2.
 
 Worker revocation is now available in the installer administration view. JavaScript syntax validation passed. The eight locked worker-completion tests passed again with real Axum route checks for unauthenticated and technician denial, administrator list/revoke, unknown-worker 404 and revoked claim/upload 401. Claims recheck credential status inside their database transaction to close the authentication-to-claim revocation race. These route tests do not replace paired-server VM acceptance.
+
+Source `11fd72a` management was built with locked dependencies and tested as a
+separate process on disposable Windows Server 2016 Desktop Experience, build
+14393. Test binary SHA-256:
+`3ad52ad04c4af5be55e29a1bef036d2b5a9dbc2a0f7832931ccb880117b5959a`.
+A fresh private data directory and guest loopback HTTP listener passed company
+setup, subsequent MFA login, worker creation, enabled claim, unauthenticated
+worker-list denial, credential-free administrator listing, administrator
+revocation, disabled status, audit event, and revoked claim/upload 401 responses.
+The owned test process was stopped afterward; existing company, worker and
+customer service statuses remained unchanged. Credentials, logs and test data
+stay outside Git. This unsigned GNU fixture does not establish production
+MSVC signing, HTTPS deployment, cancellation of a real in-flight worker build,
+or the complete fresh-company installer workflow.
