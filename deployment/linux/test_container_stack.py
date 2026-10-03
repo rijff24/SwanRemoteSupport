@@ -197,7 +197,18 @@ def container_nat_probe(name, service):
     if service not in ["21115/tcp", "21116/tcp"]:
         raise RuntimeError("Unexpected NAT-test port")
     try:
-        nat_probe(int(service.split("/")[0]), address)
+        deadline = time.monotonic() + 30
+        while True:
+            try:
+                nat_probe(int(service.split("/")[0]), address)
+                break
+            except ConnectionRefusedError:
+                # Published proxy sockets and the public-key file can become
+                # ready before hbbs binds its own listener. Wait on the same
+                # owned container; malformed replies are never retried.
+                if time.monotonic() >= deadline:
+                    raise
+                time.sleep(0.2)
     except OSError as error:
         # Preserve startup evidence before the fixture removes its containers.
         # hbbs output contains its public transport identity, not management
