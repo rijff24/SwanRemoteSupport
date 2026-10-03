@@ -752,9 +752,14 @@ impl AgentState {
         }
         verify_compatibility(directory,&release)?;
         verify_installed(directory,&release)?;
+        verify_msi_registration(package,&release)?;
         retain_installer(package,&installer_cache(directory,&release),&release)?;
         save_installed_metadata(directory,envelope)?;
         latest.last_release_sequence=release.sequence;latest.save(directory)?;
+        // Explicit verified setup takes responsibility for registering and
+        // starting its watcher after this command returns.
+        let restart_marker=directory.join("configuration-restart.json");
+        if restart_marker.exists(){std::fs::remove_file(restart_marker)?;}
         if setup_marker.exists(){std::fs::remove_file(setup_marker)?;}
         let uninstall_marker=directory.join("pending-uninstall");
         if uninstall_marker.exists(){std::fs::remove_file(uninstall_marker)?;}
@@ -872,6 +877,13 @@ impl AgentState {
         let package=folder.join(format!("SwanRemoteSupport-install.{}",release.format));
         ensure!(digest(std::fs::read(&package)?).eq_ignore_ascii_case(&release.sha256),"Staged installer hash mismatch");
         verify_publisher(&package,&release)?;
+        if release.edition==Edition::Customer {
+            let script=folder.join("Stop-Configuration.ps1");
+            std::fs::write(&script,include_str!("../../../deployment/windows/Restart-Configuration.ps1"))?;
+            let status=powershell_command()?.args(["-NoLogo","-NoProfile","-NonInteractive","-ExecutionPolicy","Bypass","-File"])
+                .arg(script).arg("-Directory").arg(directory).arg("-StopOnly").status()?;
+            ensure!(status.success(),"Configuration watcher could not stop; signed update recovery remains pending");
+        }
         let installation=(||->Result<()> {
         if let Err(error)=verify_installed(directory,&release).and_then(|()|verify_msi_registration(&package,&release)) {
             eprintln!("Installed payload requires recovery: {error:#}");
@@ -926,6 +938,7 @@ impl AgentState {
         #[cfg(windows)] {
             ensure!(!directory.join("pending-uninstall").exists(),"Explicit uninstall cancels automatic updates");
             ensure!(!directory.join("pending-install.json").exists(),"Company setup recovery is required before automatic updates");
+            ensure!(!directory.join("configuration-restart.json").exists(),"Committed update requires configuration restart recovery before another update");
             if directory.join("pending-update.json").exists(){
                 return self.resume_pending_update_online(directory,false).await;
             }
@@ -961,6 +974,7 @@ impl AgentState {
             ensure!(!directory.join("pending-install.json").exists(),"Company setup started while the update was downloading");
             ensure!(!directory.join("pending-uninstall").exists(),"Explicit uninstall started while the update was downloading");
             ensure!(!receipt_path.exists(),"Another update already requires recovery");
+            ensure!(!directory.join("configuration-restart.json").exists(),"Another update awaits configuration restart");
             // Re-read consent and enrollment immediately before installation.
             let latest=AgentState::load(&directory)?;
             if !update_policy_open(&latest)?{return Ok(None);}

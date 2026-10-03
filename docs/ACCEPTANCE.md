@@ -38,6 +38,16 @@ The agent suite passed again, and the extended session-exclusion regression
 passed. A newly built, signed native agent and an interrupted-update VM test
 are still required to prove this recovery behavior end to end.
 
+The updater now quiesces the validated configuration task before replacing
+customer files, including updates launched independently of the watcher.
+The disposable Server 2016 test confirmed that stop-only left no installed
+watcher process, then restart created exactly one watcher and preserved
+identity and consent. Explicit setup completion also checks MSI registration
+and retires a previous restart marker only after verifying its installation;
+another automatic update is rejected while restart recovery remains pending.
+The Windows GNU agent build passed. These changes still need verification in
+the signed native update flow.
+
 ### Windows full-stack company server and technician worker, 3 October
 
 The disposable Windows Server 2016 Standard Evaluation guest (Desktop

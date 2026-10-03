@@ -1,8 +1,8 @@
 [CmdletBinding()]
-param([Parameter(Mandatory=$true)][string]$Directory)
+param([Parameter(Mandatory=$true)][string]$Directory, [switch]$StopOnly)
 $ErrorActionPreference = 'Stop'
 $expectedAgent = [IO.Path]::GetFullPath((Join-Path $Directory 'swan-agent.exe'))
-if ((Get-AuthenticodeSignature -LiteralPath $expectedAgent).Status -ne 'Valid') { throw 'Installed agent cannot be restarted until its signature is valid.' }
+if (-not $StopOnly -and (Get-AuthenticodeSignature -LiteralPath $expectedAgent).Status -ne 'Valid') { throw 'Installed agent cannot be restarted until its signature is valid.' }
 $deadline = [DateTime]::UtcNow.AddSeconds(30)
 $stopRequested = $false
 do {
@@ -17,5 +17,6 @@ do {
     if ([DateTime]::UtcNow -ge $deadline) { throw 'Previous configuration task has not exited.' }
     Start-Sleep -Milliseconds 100
 } while ($true)
+if ($StopOnly) { return }
 $task | Enable-ScheduledTask | Out-Null
 $task | Start-ScheduledTask
