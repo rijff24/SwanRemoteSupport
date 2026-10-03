@@ -1684,6 +1684,7 @@ dependencies = [
  "swan-agent",
  "swan-protocol",
  "tokio",
+ "windows-service",
  "zip",
 ]
 

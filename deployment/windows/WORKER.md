@@ -32,11 +32,13 @@ trust configuration for HTTPS; do not disable certificate validation. Keep
 private TLS and signing keys on their owning server/signing provider. The worker
 needs public trust pins, not the project signing private key.
 
-The current executable is a foreground process. For unattended operation, the
-company must supply a process supervisor that starts it under a dedicated account
-at boot, loads protected configuration, records protected logs and restarts it
-after process failure. The repository does not yet supply a Windows worker
-service/startup installer; do not assume a manually started worker survives
+The executable supports foreground operation and a Windows SCM entrypoint
+(`swan-worker.exe --service`, service name `SwanInstallerWorker`). For unattended
+operation, installation tooling must register it under an appropriate account
+at boot, load protected configuration, record protected logs and restart it
+after process failure. The service handles SCM stop/shutdown requests. The
+repository does not yet supply a Windows worker
+service/startup installer or signed VM verification of this entrypoint; do not assume a manually started worker survives
 reboot. Prevent concurrent supervisors from starting duplicate workers against
 the same output directory. Verify startup and a completed job after reboot.
 

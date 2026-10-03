@@ -4,8 +4,26 @@ use std::{io::Write,path::{Path,PathBuf}};
 use swan_agent::Bootstrap;
 use swan_protocol::*;
 
-#[tokio::main]
-async fn main()->Result<()> {
+#[cfg(windows)]
+mod windows;
+
+fn main()->Result<()> {
+    #[cfg(windows)]
+    if std::env::args().any(|argument|argument=="--service") {return windows::dispatch();}
+    // This executable entrypoint owns the foreground runtime; SCM creates its
+    // runtime on the separate service entrypoint thread before calling run.
+    let (_stop,receiver)=tokio::sync::oneshot::channel();
+    tokio::runtime::Runtime::new()?.block_on(run(receiver))
+}
+
+async fn run(mut stop:tokio::sync::oneshot::Receiver<()>)->Result<()> {
+    tokio::select! {
+        _=&mut stop=>Ok(()),
+        outcome=run_worker()=>outcome,
+    }
+}
+
+async fn run_worker()->Result<()> {
     ensure!(cfg!(windows),"Installer worker requires Windows for Authenticode verification");
     let server=std::env::var("SWAN_MANAGEMENT_URL").context("Set SWAN_MANAGEMENT_URL")?;https_url(&server)?;
     let token=std::env::var("SWAN_WORKER_TOKEN").context("Set SWAN_WORKER_TOKEN")?;
