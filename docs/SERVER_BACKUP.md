@@ -149,3 +149,12 @@ on both servers and replay was denied. Existing-backup overwrite, nonempty resto
 wrong passwords and a changed ciphertext byte were rejected; authentication failures
 created no target files. This rehearsal used guest-loopback HTTP for API comparisons
 and did not exercise transport, TLS restoration or database migration rollback.
+
+The updated native Windows management build at `b0cb740` then passed the same
+rehearsal with `--installer-artifacts-directory`. Its replacement Server 2016
+server served one customer bundle publicly and two technician bundles only after
+authentication; unauthenticated technician requests returned 401. All downloaded
+files matched their pre-backup recorded SHA-256 hashes. Trust, accounts, worker
+state, releases and MFA/replay protections remained intact. This uses a locally
+built GNU executable with the disposable lab publisher, and guest-loopback HTTP;
+it does not establish production signing, public connectivity or live transport recovery.

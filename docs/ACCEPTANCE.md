@@ -1975,3 +1975,21 @@ installer-file recovery, rejection of unfinished uploads, tampered archives,
 unsafe restore paths and prior transport/TLS behavior. This component evidence
 does not demonstrate native installer-download availability after deployment
 restore; that check requires a rebuilt server with this option.
+
+That installer-download check subsequently passed with native Windows source
+`b0cb74045487003b2ba179f210ebfcc700e7b537`, built with locked dependencies using
+Rust 1.90.0 GNU. Unsigned management SHA-256 was
+`fbaaa1c0611734b42e8362c323fe7bdab241f294e6b89ddf5b690bd92705048a`;
+the lab-signed fixture was
+`645d17ab2dac1fad4789ee629cc23353d6e1af2ccd219bd959bdb7fc8c1953a6`
+and passed Authenticode and required RFC3161 timestamp verification. Encrypted
+export/restore of the isolated company's database and generated installer files
+produced a replacement Server 2016 server that served the customer bundle publicly,
+denied unauthenticated downloads of both technician bundles with 401, and served
+both after MFA authentication. All three downloaded hashes matched the retained
+build records. Trust, signed profile, accounts, devices, workers, releases and
+MFA/replay behavior passed the prior comparison and negative checks. Existing
+services retained their status. This supersedes the component-only installer
+restore limitation above, but remains guest-loopback HTTP and lab signing evidence;
+native transport/TLS recovery, migration rollback and production publication remain
+unverified.
