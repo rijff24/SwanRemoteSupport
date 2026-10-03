@@ -130,3 +130,12 @@ retains its pending device despite revocation in the replacement. Private key
 contents never leave the volumes. This supersedes the earlier local transport
 restore limitation above; remote desktop sessions, public ACME renewal,
 post-backup reconciliation and migration rollback remain unverified.
+
+The compiled, lab-signed `0a541c7` Windows management executable also passed an
+isolated Server 2016 management-only export/restore rehearsal. The restored
+server retained identical signed profile bytes, signing/setup files, accounts,
+devices, worker revocation state and approved releases. Administrator MFA worked
+on both servers and replay was denied. Existing-backup overwrite, nonempty restore,
+wrong passwords and a changed ciphertext byte were rejected; authentication failures
+created no target files. This rehearsal used guest-loopback HTTP for API comparisons
+and did not exercise transport, TLS restoration or database migration rollback.

@@ -1954,3 +1954,15 @@ preserved managed state byte-for-byte. This verifies the new source script with
 an older ten-entry bundle; generation and installation of the new eleven-entry
 recipe, graphical uninstall confirmation, MSI removal and complete cleanup remain
 unverified. The matching native build for source `e9cda62` has been dispatched.
+
+The lab-signed native `0a541c7` management server passed an encrypted backup and
+restore rehearsal in separate protected Server 2016 directories. Signing/setup
+file hashes and the complete signed profile remained identical. Original and
+replacement guest-loopback servers returned identical account, device, worker
+and approved-release state; MFA login and replay denial passed independently.
+Backup overwrite and restore into a nonempty directory were denied. Wrong-password
+and byte-tampered archives failed authentication before creating target files.
+Only owned foreground test processes were stopped; existing services retained
+their prior status. The first harness expected the wrong authentication error text
+and stopped; the corrected fresh-directory rehearsal passed. This is management-only
+native recovery evidence, not transport/TLS restoration or migration rollback.
