@@ -1737,7 +1737,7 @@ Native CI run `37095431510` completed successfully for exact source
 the earlier verified native build. All four jobs, including the branded Windows
 x64 build, passed. Its outputs remain unverified until download, provenance and
 artifact checks complete; build success alone does not establish native runtime
-acceptance.
+acceptance. Subsequent verification and runtime evidence is recorded below.
 
 The Windows workflow now includes pinned transport/HTTPS archive preparation,
 unsigned company-server setup compilation, source-manifest publication and its
@@ -1831,3 +1831,20 @@ had passed. The original package, company state, installed metadata and rollback
 quarantine stayed unchanged, and no installer was executed. This verifies native
 package-byte tamper rejection; it does not establish interrupted installation or
 automatic-update acceptance.
+
+Native run `37095431510` artifacts for exact source
+`0a541c78609e8e3438e3c577abb352d714812b18` subsequently passed authenticated
+GitHub provenance checks, the authoritative archive SHA-256
+`1e77ecd393173b0a10cababc01b39d0d28bc177c5fbe8a5406bfc1148b17229b`,
+bounded flat-file extraction, ZIP CRC checks and published payload checksums.
+Twenty files were verified outside Git. These remain unsigned build artifacts.
+
+The verified native MSVC management binary (SHA-256
+`9046b27c9e7b6afdb581ee84a2c4d8a3c1128b34a138daf354cbd3603c2ab3e6`)
+then passed a fresh isolated Server 2016 company setup and MFA login, worker
+creation and enabled claim, administrator-only credential-free worker listing,
+revocation, subsequent claim/upload authentication denial, persisted disabled
+status and revocation auditing. The harness used guest-loopback HTTP and stopped
+only its owned management process; existing service statuses stayed unchanged.
+This verifies compiled native revocation behavior, not HTTPS/public transport,
+signed distribution, job cancellation during active upload or a real session.
