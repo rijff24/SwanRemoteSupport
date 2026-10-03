@@ -1942,5 +1942,15 @@ installed-identity verification passed, managed state stayed byte-identical at
 sequence 11 and the pending-install marker cleared. Protected fixture backups
 and the previous Start-menu shortcut were retained/restored. This establishes
 explicit portable-bundle repair of a corrupt agent, not automatic recovery from
-a missing canonical agent or MSI/service repair. Portable technician distribution
-still lacks a dedicated uninstall entry point; this remains distribution work.
+a missing canonical agent or MSI/service repair.
+
+The portable technician uninstaller added in `e9cda62` passed as a standard user
+on the disposable Server 2016 machine using the existing signed `0a541c7`
+installation. `-WhatIf` left files and recovery state unchanged. Confirmed removal
+cancelled update recovery and removed the fixed application files while retaining
+company state. Reinstall through the trusted existing bundle restored the payload,
+passed native installed-identity verification, cleared the uninstall marker and
+preserved managed state byte-for-byte. This verifies the new source script with
+an older ten-entry bundle; generation and installation of the new eleven-entry
+recipe, graphical uninstall confirmation, MSI removal and complete cleanup remain
+unverified. The matching native build for source `e9cda62` has been dispatched.

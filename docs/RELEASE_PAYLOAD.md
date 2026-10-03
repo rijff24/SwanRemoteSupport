@@ -6,8 +6,10 @@ acquires session exclusion, cancels automatic recovery and removes fixed applica
 files while retaining company state for reinstall. MSI installations use Windows
 installed-app removal. The bundle recipe now contains eleven entries; rebuild
 management and workers together and regenerate packages. Compiled exact-recipe
-tests reject altered uninstall scripts. Native uninstall/reinstall acceptance is
-still required before publication.
+tests reject altered uninstall scripts. The new source uninstaller passed a
+standard-user Server 2016 dry run, removal and trusted-bundle reinstall using the
+signed `0a541c7` payload: company state remained byte-identical and recovery was
+cancelled. A freshly generated eleven-entry bundle remains a publication gate.
 
 Release metadata now requires `installed_files`, an array of objects containing
 relative `path` and SHA-256 `sha256`. Customer manifests cover the final Flutter
