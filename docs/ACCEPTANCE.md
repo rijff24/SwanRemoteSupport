@@ -2310,3 +2310,39 @@ loopback peers on that port as administrative text connections. Published host
 sockets retain separate connection checks. The KeyExchange protobuf tag was also
 corrected to field 25. Actual stack verification of this change is pending; this
 is not public NAT traversal or remote-session evidence.
+
+### Native launcher packaging and Linux export follow-up (2026-10-03)
+
+Native build [37120044435](https://github.com/rijff24/SwanRemoteSupport/actions/runs/37120044435)
+passed all four jobs from `01d24ab97cef1c7d9d29da252c55ea33a747c18f`,
+including both MSIs and company server setup. Its technician lifecycle evidence
+artifact `11273971224`, SHA-256
+`ba8e4a0d4967cb0f0dfdaf068578cc75b89736c622e2f3687f0928bbb825ba42`,
+passed authenticated digest verification and ZIP CRC. The actual retained native
+logs show zero returns for install, repair and uninstall and no `Return value 3`.
+The fixture's payload and registration checks passed on Windows Server 2022
+Datacenter build 20348. This is unsigned MSI payload lifecycle under the CI
+account; standard-user company enrollment, GUI authentication, signed upgrades
+and native remote sessions remain separate requirements. Main package download
+and independent payload/source verification are still pending.
+
+The new run's six-file generated bridge artifact `11273340217`, SHA-256
+`79f58d06a556f10da21d83d064e13c7de81a160c236299f70b5f61bfbfa46264`,
+passed source-revision, digest, recipe and CRC verification. This is generated
+build-input integrity, not binary reproducibility.
+
+Both component runs at `d724321` passed: push `37121916090` and pull request
+`37121918050`. Their Linux deployment checks include the corrected private-bridge
+NAT protocol probe, bounded readiness of the same owned container, three distinct
+complete exports from stopped read-only transport/TLS volumes, authentication
+failure without restore writes, actual restore, and retained company, transport,
+TLS, MFA, device and consent identity. Host-published sockets retain separate
+checks. This remains an isolated deployment rehearsal, not external NAT traversal
+or an authorized remote desktop session.
+
+Earlier parallel Linux runs intermittently failed complete export with SQLite
+error code 14 (`SQLITE_CANTOPEN`). They remain failed evidence despite subsequent
+passing exports. Distinct management/transport open and snapshot error contexts
+and redacted error-category reporting were added; no captured backup output or
+credentials are printed. The precise failed operation has not yet been reproduced
+with those contexts. Backup reliability remains an open concern.
