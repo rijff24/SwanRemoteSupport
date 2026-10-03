@@ -29,9 +29,19 @@ profile revision 7, and derived the original public profile trust from its
 active signing key. Its enabled administrator retained password/MFA material;
 the approved device retained unattended consent off. All four imported release
 envelopes verified with the original release trust, including approved sequence
-3. These checks output no credentials or private keys. This is management/archive
-evidence: restored services and MFA login were not exercised, and transport/TLS
-storage was not included in this narrower rehearsal. The coordinated full-server
+3. These checks output no credentials or private keys.
+
+A protected copy of those restored management files subsequently started the
+same Windows GNU development CLI as an isolated loopback HTTP backend on the
+test host, with transport components disabled. Its signed profile verified under
+the original pinned key. Actual administrator MFA login, TOTP replay rejection,
+approved-device inventory, preserved unattended consent off, anonymous inventory
+and grant denial, denial of an unattended grant without consent, retained release
+approval and logout invalidation all passed. The owned rehearsal process stopped
+afterward. The original VM service was not modified. This proves restored
+management behavior; it does not prove a restored Windows SCM deployment,
+HTTPS front end or transport, and transport/TLS storage was not included in
+this narrower rehearsal. The coordinated full-server
 rehearsal command was rejected by automatic approval review with only
 “blocked by policy”; it was not executed. Full Windows deployment restore
 using this correction remains unverified.
