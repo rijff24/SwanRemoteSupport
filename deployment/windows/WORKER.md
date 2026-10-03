@@ -75,3 +75,11 @@ artifacts and the receipt, and does not remove the original configuration file.
 Reinstallation currently refuses retained data; preserve it before planning a
 replacement. Removal does not revoke the server-side worker token. Removal and
 reinstallation VM acceptance are still pending.
+
+Administrators can list worker IDs and disabled status with `GET /api/v1/workers`
+and permanently disable a credential with `DELETE /api/v1/workers/{worker_id}`,
+using their authenticated administrator session. Revocation atomically cancels
+that worker's running and uploaded builds and records an audit event. Queue new
+jobs for a replacement worker; cancelled claims cannot complete later. Completed
+packages remain available, so withdraw their release separately if its published
+packages must also be disabled. The list never returns tokens or token hashes.

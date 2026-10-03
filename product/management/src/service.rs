@@ -192,7 +192,8 @@ pub fn router(store:Shared)->Router {
         .route("/api/v1/releases/{id}/approve",post(approve_release).delete(withdraw_release))
         .route("/api/v1/device/update",get(device_update))
         .route("/api/v1/user/update",get(technician_update))
-        .route("/api/v1/workers",post(create_worker))
+        .route("/api/v1/workers",get(workers).post(create_worker))
+        .route("/api/v1/workers/{id}",axum::routing::delete(revoke_worker))
         .route("/api/v1/builds",get(builds).post(create_build))
         .route("/api/v1/worker/claim",post(claim_build))
         .route("/api/v1/worker/builds/{id}",put(finish_build))
@@ -532,6 +533,22 @@ async fn create_worker(State(s):State<Shared>,headers:HeaderMap)->ApiResult {
     s.db.lock().unwrap().execute("INSERT INTO workers(id,token_hash) VALUES(?1,?2)",params![id,digest(&credential)])?;
     s.audit(&user,"worker.created",&id)?;Ok(Json(json!({"worker_id":id,"worker_token":credential})))
 }
+async fn workers(State(s):State<Shared>,headers:HeaderMap)->ApiResult {
+    s.user(&headers,true)?;let db=s.db.lock().unwrap();
+    let mut statement=db.prepare("SELECT id,disabled FROM workers ORDER BY rowid DESC")?;
+    let rows=statement.query_map([],|r|Ok(json!({"worker_id":r.get::<_,String>(0)?,"disabled":r.get::<_,bool>(1)?})))?.collect::<Result<Vec<_>,_>>()?;
+    Ok(Json(json!(rows)))
+}
+async fn revoke_worker(State(s):State<Shared>,headers:HeaderMap,Path(id):Path<String>)->ApiResult {
+    let actor=s.user(&headers,true)?;let mut db=s.db.lock().unwrap();let tx=db.transaction()?;
+    let worker:Option<String>=tx.query_row("SELECT token_hash FROM workers WHERE id=?1",[&id],|r|r.get(0)).optional()?;
+    let worker=worker.ok_or(ApiError(StatusCode::NOT_FOUND,"Unknown worker"))?;
+    tx.execute("UPDATE workers SET disabled=1 WHERE id=?1",[&id])?;
+    // A revoked claim must never become retryable through the expiry sweep.
+    let cancelled=tx.execute("UPDATE builds SET state='failed',result=?1 WHERE worker=?2 AND state IN ('running','uploaded')",params![json!({"artifact_url":"","sha256":"","log":"Installer worker revoked"}).to_string(),worker])?;
+    tx.execute("INSERT INTO audit(at,actor,event,target) VALUES(?1,?2,'worker.revoked',?3)",params![now(),actor,id])?;
+    tx.commit()?;Ok(Json(json!({"ok":true,"cancelled_builds":cancelled})))
+}
 #[derive(Deserialize)]
 struct BuildRequest { release_id:String }
 async fn create_build(State(s):State<Shared>,headers:HeaderMap,Json(input):Json<BuildRequest>)->ApiResult {
@@ -560,6 +577,48 @@ struct BuildResult { success:bool, artifact_url:String,sha256:String,log:String 
 #[cfg(test)]
 mod worker_completion_tests {
     use super::*;
+    #[tokio::test]
+    async fn administrator_revocation_cancels_claims_and_hides_credentials() {
+        let directory=std::env::temp_dir().join(format!("swan-worker-revocation-{}",random_token()));
+        let store=Arc::new(Store::open(&directory).unwrap());
+        let admin=random_token();let technician=random_token();let credential=random_token();let worker=digest(&credential);
+        {
+            let db=store.db.lock().unwrap();
+            for (id,role,token) in [("admin","admin",&admin),("technician","technician",&technician)] {
+                db.execute("INSERT INTO users(id,username,password_hash,totp_secret,role) VALUES(?1,?1,'unused','unused',?2)",params![id,role]).unwrap();
+                db.execute("INSERT INTO sessions VALUES(?1,?2,?3)",params![digest(token),id,now()+3600]).unwrap();
+            }
+            db.execute("INSERT INTO workers(id,token_hash) VALUES('worker',?1)",[&worker]).unwrap();
+            for state in ["running","uploaded","completed"] {
+                db.execute("INSERT INTO builds(id,body,state,worker,claimed_at) VALUES(?1,'{}',?1,?2,0)",params![state,worker]).unwrap();
+            }
+            db.execute("INSERT INTO builds(id,body,state,worker) VALUES('other','{}','running','other-worker')",[]).unwrap();
+        }
+        let headers=|token:&str| {let mut h=HeaderMap::new();h.insert(header::AUTHORIZATION,format!("Bearer {token}").parse().unwrap());h};
+        assert!(workers(State(store.clone()),HeaderMap::new()).await.is_err());
+        assert!(revoke_worker(State(store.clone()),headers(&technician),Path("worker".into())).await.is_err());
+        assert!(store.worker(&headers(&credential)).is_ok());
+        let listing=workers(State(store.clone()),headers(&admin)).await.ok().unwrap().0;
+        assert_eq!(listing,json!([{"worker_id":"worker","disabled":false}]));
+        assert!(!listing.to_string().contains(&worker));assert!(!listing.to_string().contains(&credential));
+        let result=revoke_worker(State(store.clone()),headers(&admin),Path("worker".into())).await.ok().unwrap().0;
+        assert_eq!(result["cancelled_builds"],2);
+        assert!(store.worker(&headers(&credential)).is_err());
+        assert!(claim_build(State(store.clone()),headers(&credential)).await.is_err());
+        assert!(persist_verified_artifact(&store,"uploaded",&worker,b"late bundle").is_err());
+        let result=BuildResult{success:false,artifact_url:String::new(),sha256:String::new(),log:"Late completion".into()};
+        assert!(finish_build(State(store.clone()),headers(&credential),Path("running".into()),Json(result)).await.is_err());
+        assert_eq!(revoke_worker(State(store.clone()),headers(&admin),Path("worker".into())).await.ok().unwrap().0["cancelled_builds"],0);
+        assert!(matches!(revoke_worker(State(store.clone()),headers(&admin),Path("missing".into())).await,Err(ApiError(StatusCode::NOT_FOUND,_))));
+        {
+            let db=store.db.lock().unwrap();
+            for (id,expected) in [("running","failed"),("uploaded","failed"),("completed","completed"),("other","running")] {
+                let state:String=db.query_row("SELECT state FROM builds WHERE id=?1",[id],|r|r.get(0)).unwrap();assert_eq!(state,expected);
+            }
+            let events:i64=db.query_row("SELECT COUNT(*) FROM audit WHERE event='worker.revoked' AND actor='admin' AND target='worker'",[],|r|r.get(0)).unwrap();assert_eq!(events,2);
+        }
+        drop(store);std::fs::remove_dir_all(directory).unwrap();
+    }
     #[test]
     fn compressed_artifact_hash_checks_expanded_limit_and_crc() {
         use std::io::Write;

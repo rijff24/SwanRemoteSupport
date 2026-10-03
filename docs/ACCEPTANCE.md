@@ -1551,3 +1551,11 @@ log denial, rotation and authenticated build completion remain to verify.
 A real standard-user SSH session on Server 2016 was denied reading the created worker-service.log. Native CI run 37090939153 remains in progress; no replacement run was dispatched. Runtime log rotation and authenticated service build completion remain unverified.
 
 Actual owned-worker removal and reinstallation passed on Server 2016 with signed GNU source 148eae7. The service and executable were removed, the unchanged protected receipt and artifacts were retained, and the lab explicitly archived that owned data directory before reinstalling. The worker, company server and customer services were Running afterward. Removal now disposes its ServiceController before SCM deletion to avoid retaining a deletion-blocking handle. This is not automatic retained-data migration or server-side credential revocation evidence.
+
+Administrator worker listing and revocation now have management handler coverage.
+The locked worker-completion test group passes all eight tests, including
+credential-free listing, rejected technician revocation, atomic cancellation of
+running/uploaded jobs, denied revoked claims/completion, rejected late uploads,
+preserved unrelated/completed jobs, and audit records. This is local backend
+coverage; the new endpoints still require paired-server VM verification. Native
+run 37090939153 has progressed to Build branded client for source 6bd54c2.
