@@ -6,6 +6,18 @@ native support session or a clean-machine installation.
 
 ## Evidence obtained
 
+### Corrected native Windows build inputs, 3 October
+
+Native Windows x64 workflow `37083233120` completed successfully for exact source
+`4768d530ebc79f84e84260bed42db608dd439c9c`, including the MSI registration,
+watcher quiescence and durable restart-recovery changes. Artifact `11259832707`
+was downloaded and verified: 109,625,027 bytes, archive SHA-256
+`9419bbb73e3a99514e794e6684f3fd5884483dd7dbf6f0b5e1cd1df55abc737f`.
+All 18 entries passed path/size/CRC and published payload-checksum checks.
+These are unsigned build inputs. Signing, installation and corrected automatic
+upgrade/interruption tests have not yet passed for this source. Its management
+binary predates the HTTPS-recipe backup correction at `b6d7f78`.
+
 ### Restricted technician account on installed Windows server, 3 October
 
 The installed Server 2016 company service created a separate technician-role
