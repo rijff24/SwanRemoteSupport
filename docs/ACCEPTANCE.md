@@ -1386,3 +1386,18 @@ timeouts. This demonstrates the corrected matching-payload automatic MSI upgrade
 on Server 2016 build `14393`, using private lab publisher trust. It does not prove
 interrupted recovery, active-session coordination, reboot behavior, automatic
 technician upgrades, other Windows versions or production signing approval.
+
+A subsequent invocation of the installed signed agent's `update` command returned
+`Update handed off: false` while release `5` remained the highest approved release
+and newer `6-Customer-test` was imported but unapproved. Sequence stayed `5`, no
+pending-update marker appeared, and private identity/token/consent comparisons
+passed. This verifies the installed-release no-op and that the unapproved newer
+candidate did not reach installation; it is not a forged-metadata replay test.
+
+The private interrupted-upgrade candidate is MSI `1.5.5`, source `4768d53`,
+signed SHA-256 `c1d8d2f937e047b424fb68077c61beb83dd5da59aedd1a5d40821768f52107dd`.
+Its SDK timestamp verification passed and its signed metadata was accepted as
+`6-Customer-test`, unapproved. No interruption or recovery test has yet run for
+this candidate. The recovery task source validates its exact staged helper,
+principal and command, with startup and five-minute retry triggers; runtime
+recovery still requires direct evidence.
