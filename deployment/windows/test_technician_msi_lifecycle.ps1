@@ -22,7 +22,8 @@ function Invoke-Msi([string[]]$Arguments,[string]$LogName){
  $start=[Diagnostics.ProcessStartInfo]::new()
  $start.FileName=Join-Path $env:SystemRoot 'System32\msiexec.exe'
  $start.UseShellExecute=$false
- $start.Arguments=($all|ForEach-Object {'"'+$_+'"'}) -join ' '
+ $start.Arguments=($all|ForEach-Object {if($_.StartsWith('/')){$_}else{'"'+$_+'"'}}) -join ' '
+ [ordered]@{executable=$start.FileName;arguments=$start.Arguments;installer_service=(Get-Service msiserver).Status.ToString();started_utc=[DateTime]::UtcNow.ToString('o')}|ConvertTo-Json|Set-Content -LiteralPath (Join-Path $root ($LogName+'.invocation.json'))
  $process=[Diagnostics.Process]::Start($start)
  try{
   if(-not $process.WaitForExit(120000)){throw 'MSI still running; inspect its process and retained log before retrying.'}
