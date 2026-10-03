@@ -71,15 +71,15 @@ jobs:
         uses: actions/github-script@d7906e4ad0b1822421a7e6a35d5ca353c962f410 # v6
         with:
           script: |
-            const run = await github.rest.actions.getWorkflowRun({owner: context.repo.owner, repo: context.repo.repo, run_id: 37103083258});
-            if (run.data.conclusion !== 'success' || run.data.head_sha !== '11faae30b0dac275c7d8c795ca3c3c134ded36c9') {
+            const run = await github.rest.actions.getWorkflowRun({owner: context.repo.owner, repo: context.repo.repo, run_id: 37110881152});
+            if (run.data.conclusion !== 'success' || run.data.head_sha !== 'c7d118c4b655d401c14fd95672ae2aff3b5ed679') {
               throw new Error('Pinned native build provenance failed');
             }
       - name: Download the pinned unsigned build inputs
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: SwanRemoteSupport-1.5.0-x64-unsigned
-          run-id: 37103083258
+          run-id: 37110881152
           github-token: ${{ github.token }}
           path: artifacts
       - name: Verify payload hashes before MSI execution
@@ -94,7 +94,7 @@ jobs:
           }
           # This older build's checksum list covers installers only. Pin its
           # agent hash from the independently verified GitHub artifact archive.
-          $expected['swan-agent.exe'] = 'cd2bdbc5c14cca1b9b24c16fe22f590cca96eb92cf45465085b3880dcd109631'
+          $expected['swan-agent.exe'] = 'c54da22a3d70f337d8a28ffb940549dbedfa303503a552b92d30b5a536d2ce26'
           foreach ($name in @('SwanRemoteSupport-1.5.0-technician-x64-unsigned.msi','SwanRemoteSupport-1.5.0-technician-x64-unsigned.exe','swan-agent.exe')) {
             if (-not $expected.ContainsKey($name) -or (Get-FileHash -LiteralPath (Join-Path artifacts $name) -Algorithm SHA256).Hash.ToLowerInvariant() -ne $expected[$name]) { throw 'Pinned MSI payload checksum failed.' }
           }
