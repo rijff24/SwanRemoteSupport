@@ -6,6 +6,18 @@ native support session or a clean-machine installation.
 
 ## Evidence obtained
 
+### HTTPS configuration backup correction, 3 October
+
+Review of the installed Windows server found that its company-data `Caddyfile`
+was omitted from encrypted backups, even when certificate storage was included.
+Export now includes that optional configuration, rejects links/reparse points,
+and restore accepts its fixed filename in the protected replacement directory.
+The complete backup test verifies its exact contents alongside transport keys,
+environment and nested TLS storage. All three backup tests passed, including
+wrong-password, tampering, nonempty-target and unsafe archive rejection.
+Existing archives without the configuration remain supported. A full Windows
+deployment restore using this correction is still unverified.
+
 ### Automatic MSI update failure and focused corrections, 3 October
 
 The signed Server 2016 customer fixture approved release sequence 3 (MSI

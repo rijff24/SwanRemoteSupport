@@ -27,6 +27,10 @@ Alternatively, replace the final option with `--tls-directory HTTPS_STORAGE_DIRE
 Both options can be included when the deployment uses separate storage and identity files.
 Directory exports reject symbolic links, Windows reparse points, special files,
 unsafe paths, and more than 4096 total files. The 512 MiB total plaintext limit applies.
+When the company data directory contains `Caddyfile`, export also encrypts that
+HTTPS configuration and restore places it back in the replacement data directory.
+Keep configuration edits stopped during export. Older archives without this
+file remain supported; reconstruct and validate their HTTPS recipe before use.
 
 The transport directory must contain both `id_ed25519` and `id_ed25519.pub`.
 When present, `db_v2.sqlite3` is also snapshotted using SQLite's backup API.
@@ -68,6 +72,7 @@ protected directory; restore never overwrites external service files:
 | `deployment.env` | Private deployment environment configuration |
 | `tls-identity` | Company HTTPS identity location, or replace through certificate reissuance |
 | `tls-storage/` | Complete HTTPS service data directory; copy while that service is stopped |
+| `Caddyfile` | HTTPS recipe in the replacement company data directory; validate paths and hostnames before starting |
 
 Keep transport services stopped while placing their restored data. Preserve
 private ownership and permissions appropriate to the service accounts. Use the

@@ -64,6 +64,17 @@ pub fn export_deployment(data:&Path,destination:&Path,password:&str,transport:Op
         if let Some(path)=configuration {files.push(("deployment.env".into(),path.to_path_buf()));}
         if let Some(path)=tls_identity {files.push(("tls-identity".into(),path.to_path_buf()));}
         if let Some(directory)=tls_directory {collect_tls(directory,directory,&mut files)?;}
+        let proxy=data.join("Caddyfile");
+        match std::fs::symlink_metadata(&proxy) {
+            Ok(metadata)=>{
+                ensure!(metadata.is_file() && !metadata.file_type().is_symlink(),"HTTPS configuration must be a regular file");
+                #[cfg(windows)] {use std::os::windows::fs::MetadataExt;ensure!(metadata.file_attributes()&0x400==0,"HTTPS configuration must not be a reparse point");}
+                files.push(("Caddyfile".into(),proxy));
+            },
+            Err(error) if error.kind()==std::io::ErrorKind::NotFound=>{},
+            Err(error)=>return Err(error).context("Cannot inspect HTTPS configuration for backup"),
+        }
+        ensure!(files.len()<=4096,"Too many backup files");
         let mut total=0u64;
         for (name,path) in files {
             let size=std::fs::metadata(&path)?.len();total=total.checked_add(size).context("Backup size overflow")?;
@@ -91,7 +102,7 @@ pub fn restore(data:&Path,source:&Path,password:&str)->Result<()> {
     let plaintext=cipher.decrypt(Nonce::from_slice(nonce),&bytes[offset+28..]).map_err(|_|anyhow::anyhow!("Backup password incorrect or backup modified"))?;
     let mut archive=zip::ZipArchive::new(Cursor::new(plaintext))?;
     ensure!((3..=4096).contains(&archive.len()),"Unexpected backup contents");
-    let allowed=["management.sqlite3","profile-key.hex","setup-token.txt","transport-id_ed25519","transport-id_ed25519.pub","transport-db.sqlite3","deployment.env","tls-identity"];
+    let allowed=["management.sqlite3","profile-key.hex","setup-token.txt","transport-id_ed25519","transport-id_ed25519.pub","transport-db.sqlite3","deployment.env","tls-identity","Caddyfile"];
     let mut names=std::collections::HashSet::new();
     for index in 0..archive.len(){let entry=archive.by_index(index)?;ensure!((allowed.contains(&entry.name()) || tls_entry(entry.name())) && !entry.is_dir() && names.insert(entry.name().to_string()),"Unknown or duplicate backup entry");}
     let mut portable_names=std::collections::HashSet::new();
@@ -143,12 +154,14 @@ mod tests {
         let tls_storage=root.join("caddy");let certificate=tls_storage.join("certificates/acme.example/company.example/company.key");
         std::fs::create_dir_all(certificate.parent().unwrap()).unwrap();std::fs::write(&certificate,b"ACME private key fixture").unwrap();
         std::fs::write(tls_storage.join("account.json"),b"ACME account fixture").unwrap();
+        std::fs::write(data.join("Caddyfile"),b"company.example { reverse_proxy 127.0.0.1:24440 }").unwrap();
         let archive=root.join("complete.swan-backup");export_deployment(&data,&archive,"complete backup passphrase",Some(&transport),Some(&configuration),Some(&tls),Some(&tls_storage)).unwrap();
         let destination=root.join("restored");restore(&destination,&archive,"complete backup passphrase").unwrap();
         assert_eq!(std::fs::read(destination.join("transport-id_ed25519")).unwrap(),b"private transport key");assert_eq!(std::fs::read(destination.join("transport-id_ed25519.pub")).unwrap(),b"public transport key");
         assert_eq!(std::fs::read(destination.join("deployment.env")).unwrap(),std::fs::read(configuration).unwrap());assert_eq!(std::fs::read(destination.join("tls-identity")).unwrap(),std::fs::read(tls).unwrap());
         assert_eq!(std::fs::read(destination.join("tls-storage/certificates/acme.example/company.example/company.key")).unwrap(),std::fs::read(certificate).unwrap());
         assert_eq!(std::fs::read(destination.join("tls-storage/account.json")).unwrap(),b"ACME account fixture");
+        assert_eq!(std::fs::read(destination.join("Caddyfile")).unwrap(),std::fs::read(data.join("Caddyfile")).unwrap());
         let db=rusqlite::Connection::open(destination.join("transport-db.sqlite3")).unwrap();assert_eq!(db.query_row("SELECT id FROM peers",[],|row|row.get::<_,String>(0)).unwrap(),"retained peer");drop(db);
         let mut modified=std::fs::read(&archive).unwrap();let last=modified.len()-1;modified[last]^=1;let tampered=root.join("tampered.swan-backup");std::fs::write(&tampered,modified).unwrap();
         let rejected=root.join("rejected");assert!(restore(&rejected,&tampered,"complete backup passphrase").is_err());assert!(!rejected.exists());
