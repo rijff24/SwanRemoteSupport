@@ -1589,3 +1589,18 @@ agent: `870ead5b2307c289d3e94542b53756488ea0ae6e2a558ed4131e9e49e6eaa9ee`.
 These are unsigned build outputs, not production releases or installation/session
 acceptance. Changes after this source, including worker logging, removal and
 administrator revocation, require separate native verification.
+
+The matching native MSVC management, worker and agent from `6bd54c2` were signed
+inside disposable Server 2016 using its private, nonexportable lab certificate.
+All three passed Authenticode plus `signtool verify /pa /all /tw` timestamp
+verification. Signed SHA-256 values: management
+`27285aa8b371f38d26ab91c16a00c3a27fbc90e42c03085ab8e358e4b8ef8ef7`, worker
+`f147d31480e40d436f32c160cd47b22c821129c2a39652bcbe81e8d11b42bc13`, agent
+`68cef92acfc983445c59fc43da7e5817096ae76cde2e6260c2f8bc47113c01fd`.
+The signed MSVC management executable then passed a fresh isolated company setup,
+MFA login, worker creation, authenticated empty-queue claim, unauthenticated
+claim denial and worker creation audit test over guest loopback HTTP. Cleanup
+stopped that owned test process and verified existing service statuses unchanged.
+This is native server runtime and lab signing evidence; it does not prove HTTPS
+worker build completion, Windows service installation of these binaries, client
+sessions, the wider Windows matrix, or production signing approval.
