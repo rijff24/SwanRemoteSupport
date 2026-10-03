@@ -1663,3 +1663,15 @@ unattended consent. The isolated management/proxy processes were stopped after
 the user result, with existing service statuses unchanged. This is standard-user
 portable installation evidence using isolated application data, not default-path
 MSI installation, rendered branding, graphical MFA login or an actual session.
+
+The installed `6bd54c2` technician agent passed real standard-user CLI
+authentication against the isolated HTTPS management server. An administrator
+created a technician role with a private authenticator secret. MFA login,
+empty fresh-company device inventory and session history succeeded. Reusing the
+same MFA code was rejected; the technician token could not create a worker;
+logout revoked subsequent inventory access. The managed-state hash remained
+unchanged and contained no returned session token. Test credentials were held
+outside Git, removed after use, and cleared from the child process environment.
+Owned proxy/server processes were stopped after the result. This proves the
+installed agent's authentication API path only: graphical MFA login, nonempty
+authorized inventory, device selection and native remote sessions remain open.
