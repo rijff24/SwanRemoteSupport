@@ -51,9 +51,9 @@ fn artifact_entry(name:&str)->bool {
 }
 pub fn export_deployment_with_artifacts(data:&Path,destination:&Path,password:&str,transport:Option<&Path>,configuration:Option<&Path>,tls_identity:Option<&Path>,tls_directory:Option<&Path>,artifacts:Option<&Path>)->Result<()> {
     ensure!(!destination.exists(),"Refusing to overwrite an existing backup");
-    let db=rusqlite::Connection::open_with_flags(data.join("management.sqlite3"),rusqlite::OpenFlags::SQLITE_OPEN_READ_ONLY)?;
+    let db=rusqlite::Connection::open_with_flags(data.join("management.sqlite3"),rusqlite::OpenFlags::SQLITE_OPEN_READ_ONLY).context("Open management database for backup")?;
     let snapshot=data.join(format!("backup-{}.sqlite3",swan_protocol::random_token()));
-    db.backup(rusqlite::DatabaseName::Main,&snapshot,None)?;
+    db.backup(rusqlite::DatabaseName::Main,&snapshot,None).context("Snapshot management database for backup")?;
     let mut snapshots=vec![snapshot.clone()];
     let result=(||->Result<()> {
         let mut archive=zip::ZipWriter::new(Cursor::new(Vec::new()));
@@ -63,8 +63,8 @@ pub fn export_deployment_with_artifacts(data:&Path,destination:&Path,password:&s
             files.push(("transport-id_ed25519".into(),directory.join("id_ed25519")));files.push(("transport-id_ed25519.pub".into(),directory.join("id_ed25519.pub")));
             if directory.join("db_v2.sqlite3").exists(){
                 let transport_snapshot=data.join(format!("backup-transport-{}.sqlite3",swan_protocol::random_token()));snapshots.push(transport_snapshot.clone());
-                let transport_db=rusqlite::Connection::open_with_flags(directory.join("db_v2.sqlite3"),rusqlite::OpenFlags::SQLITE_OPEN_READ_ONLY)?;
-                transport_db.backup(rusqlite::DatabaseName::Main,&transport_snapshot,None)?;
+                let transport_db=rusqlite::Connection::open_with_flags(directory.join("db_v2.sqlite3"),rusqlite::OpenFlags::SQLITE_OPEN_READ_ONLY).context("Open transport database for backup")?;
+                transport_db.backup(rusqlite::DatabaseName::Main,&transport_snapshot,None).context("Snapshot transport database for backup")?;
                 files.push(("transport-db.sqlite3".into(),transport_snapshot));
             }
         }

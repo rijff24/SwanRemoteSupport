@@ -77,6 +77,10 @@ def secret_command(arguments, passphrase, expected_success=True):
         # Report only known error categories, never captured output: diagnostics
         # can contain local paths, deployment settings or Docker arguments.
         categories = {
+            "management_open": "Open management database for backup",
+            "management_snapshot": "Snapshot management database for backup",
+            "transport_open": "Open transport database for backup",
+            "transport_snapshot": "Snapshot transport database for backup",
             "sqlite_readonly": "attempt to write a readonly database",
             "sqlite_open": "unable to open database file",
             "sqlite_locked": "database is locked",
