@@ -1877,3 +1877,16 @@ processes were stopped and existing service statuses were preserved. No bundle
 was installed. This verifies current native server/worker generation using earlier
 payloads, not newest-client installation, worker service-mode completion, public
 Internet connectivity or production signing.
+
+Matching `0a541c7` technician distribution then passed using the newly lab-signed
+technician EXE and matching agent, signed release metadata sequence 11, and the
+same native management/worker pair. Technician EXE SHA-256 is
+`fe29807746ec9f406031f10f5872083b13e1374a7fa2f35b0d077a8221fb8722`;
+its signature, pinned lab certificate and RFC3161 timestamp were verified in the
+guest. Job `456c3b0a-dfa4-48ad-8cf7-1ae24024abef` produced bundle
+`64d7b7b3119ec794b08d1cee8e205f2ed81b687062b1490c19883a8caedec019`.
+Authenticated download, hash, ten-entry recipe and HTTPS/profile-pin/edition
+bootstrap checks passed; unauthenticated download returned 401. This package
+contains matching current native payloads, but was not installed in this test.
+Production signing, service-mode completion and rendered technician/session
+behavior remain open.
