@@ -1934,3 +1934,13 @@ expected hash, native installed-identity verification passed, managed state stay
 byte-identical at sequence 11, and the pending-install marker cleared. The prior
 Start-menu shortcut was restored. This proves damaged portable EXE repair, not
 MSI repair, agent-loss repair or remote-session behavior.
+
+A separate standard-user test then damaged only the installed `0a541c7`
+configuration agent with four invalid bytes and ran the same trusted portable
+bundle repair. The bundle's staged signed agent completed repair, native
+installed-identity verification passed, managed state stayed byte-identical at
+sequence 11 and the pending-install marker cleared. Protected fixture backups
+and the previous Start-menu shortcut were retained/restored. This establishes
+explicit portable-bundle repair of a corrupt agent, not automatic recovery from
+a missing canonical agent or MSI/service repair. Portable technician distribution
+still lacks a dedicated uninstall entry point; this remains distribution work.
