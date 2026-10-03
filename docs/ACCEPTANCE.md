@@ -18,6 +18,15 @@ These are unsigned build inputs. Signing, installation and corrected automatic
 upgrade/interruption tests have not yet passed for this source. Its management
 binary predates the HTTPS-recipe backup correction at `b6d7f78`.
 
+The corrected agent was subsequently signed in the disposable Server 2016
+guest using its private nonexportable lab certificate. SDK verification
+`/pa /all /tw` passed with an RFC3161 timestamp; unsigned input hash
+`e9ec48b545204f5ad8a4f0e3cb2816189a42b49e7144fe8187e1ce92782b580b`
+remained unchanged, and signed output hash is
+`1e02bdc3dd0302dc7cfd6a6d9b5c65512e46c0ed3fa2dbeb4e977c98659b113b`.
+This proves private lab signing only. The corrected agent is not yet installed,
+and no production signing approval or corrected automatic upgrade is claimed.
+
 ### Restricted technician account on installed Windows server, 3 October
 
 The installed Server 2016 company service created a separate technician-role
@@ -110,8 +119,19 @@ that script in the disposable guest replaced exactly one watcher and preserved
 device identity, credentials and consent. Agent tests passed (21 passed,
 two explicitly gated integration fixtures ignored). These focused checks do
 not prove a corrected signed automatic upgrade or durable post-commit recovery;
-both still require end-to-end verification. The failed fixture's registered
-MSI remains 1.5.1, with agent state claiming sequence 3, pending reconciliation.
+both still require end-to-end verification. At the failure, the registered MSI
+was 1.5.1 while agent state claimed sequence 3.
+
+The existing authenticated Windows worker then generated a public repair bundle
+for the exact already-approved sequence 3 package (job
+`07e60da5-3900-4453-91bc-334dadbd7f7f`, bundle SHA-256
+`a8e2c3a76c18fbbbac18822cfae7be60688ef04ed10fa66283bd365cfe654bc8`).
+Normal bundled `Install-Company.ps1 -Repair` completed in the disposable guest.
+Windows Installer now registers MSI 1.5.2 and agent state remains sequence 3.
+Device identity, credential, consent and consent revision were preserved,
+the setup marker was removed, and both customer service and watcher run.
+This reconciles the earlier failure using the historical `6840d91` signed
+payload; it does not prove the corrected agent's automatic-update behavior.
 
 The subsequent recovery change writes a signed `configuration-restart.json`
 marker before committing a customer update. Successful restart removes it;
