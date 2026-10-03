@@ -1649,3 +1649,17 @@ and company/edition bootstrap checks passed. Owned test processes were stopped
 and existing service statuses checked. This removes the earlier technician
 payload source mismatch for generation evidence. Standard-user installation,
 technician login and real sessions remain unverified for this new bundle.
+
+The generated current technician bundle then passed portable installation through
+its actual `Install-Company.ps1` as a real nonadministrator on Server 2016. The
+test explicitly isolated LOCALAPPDATA/APPDATA beneath the user's disposable test
+directory to preserve the existing technician setup; the previous Start menu
+shortcut was restored afterward. The company domain confirmation was supplied
+explicitly. Signed configuration bootstrap, package verification, installed
+technician and agent hashes, `verify-installed`, online signed-profile sync,
+company/edition identity, release sequence 8 and cleared installation marker
+checks passed. The technician state contained no customer device enrollment or
+unattended consent. The isolated management/proxy processes were stopped after
+the user result, with existing service statuses unchanged. This is standard-user
+portable installation evidence using isolated application data, not default-path
+MSI installation, rendered branding, graphical MFA login or an actual session.
