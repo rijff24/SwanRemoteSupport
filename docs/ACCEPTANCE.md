@@ -1614,3 +1614,24 @@ Both owned test processes were stopped after verification; existing service
 statuses remained unchanged. No host DNS, trust, firewall or service setting was
 changed. This establishes isolated HTTPS management runtime, not public
 reachability or completed worker generation.
+
+Matching lab-signed native MSVC management and worker source `6bd54c2` completed
+real customer and technician build jobs on isolated Server 2016 over trusted
+guest HTTPS. The administrator configured the isolated company endpoint,
+imported and approved signed test releases, created a worker credential and
+queued both jobs through the API. The foreground worker verified signed inputs,
+generated bundles, uploaded them and reported successful completion. Downloaded
+bundles matched the reported hashes and each contained the exact ten-file recipe
+with the correct company endpoint, profile trust pin and edition in bootstrap.
+Customer job `4ebc6935-83ff-4214-9763-257b354346e2`:
+`7b6d797dfe3a7bf7095a65293025995067d715cd73c5777ab6bf5cb1bf3d4e9c`.
+Technician job `1604fde0-6007-4af7-8994-04cdcf21b706`:
+`73783c1d987691bec8ca802a2b443c98a00619b1fa2980b049443fceb342f4be`.
+Customer download succeeded without authentication; technician download returned
+401 without authentication and succeeded with the administrator session. Cleanup
+stopped the owned foreground worker, proxy and management processes and checked
+existing service statuses. Test credentials and artifacts remain outside Git.
+Payloads were earlier signed lab releases from `4768d53` (customer MSI) and
+`6840d91` (technician EXE), not newly signed `6bd54c2` client packages. This proves
+the matching native server/worker generation path, not worker service completion,
+fresh client installation, production publication, or remote-session acceptance.
