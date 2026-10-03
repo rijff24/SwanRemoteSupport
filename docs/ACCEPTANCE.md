@@ -1604,3 +1604,13 @@ stopped that owned test process and verified existing service statuses unchanged
 This is native server runtime and lab signing evidence; it does not prove HTTPS
 worker build completion, Windows service installation of these binaries, client
 sessions, the wider Windows matrix, or production signing approval.
+
+The signed native `6bd54c2` management fixture also passed trusted HTTPS access
+through a separately launched Caddy instance on a guest loopback port. Its
+company signing identity was distinct from the existing disposable deployment.
+The proxy reused the existing guest-only lab certificate read-only, with its
+admin API and automatic HTTPS management disabled and separate proxy storage.
+Both owned test processes were stopped after verification; existing service
+statuses remained unchanged. No host DNS, trust, firewall or service setting was
+changed. This establishes isolated HTTPS management runtime, not public
+reachability or completed worker generation.
