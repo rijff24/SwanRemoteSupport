@@ -1536,3 +1536,14 @@ and executable remained unchanged; no service or file was removed. Actual
 removal, retained-data reinstallation and server credential revocation remain
 pending. Native CI run `37090939153` was still in progress on the latest check;
 no duplicate build was dispatched.
+
+Worker service logging source `148eae7` was built with the pinned Windows GNU
+ toolchain and separately lab-signed (SHA-256
+`facfd31f73a1949031523e88ad0213d65c973f71fe37c4fcd453749e97dceea5`).
+The disposable service's previous executable and receipt were preserved privately
+before controlled replacement. Temporarily substituting an invalid worker token
+produced `Worker polling failed: 401` in the protected service log. A private
+comparison confirmed the real token was absent from the log. Cleanup restored
+the original service environment and restarted the logging-enabled worker.
+This proves runtime stderr capture for this GNU service fixture; standard-user
+log denial, rotation and authenticated build completion remain to verify.
