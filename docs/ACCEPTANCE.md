@@ -1684,3 +1684,12 @@ untested. Desktop-control capability was revalidated against the existing
 disposable QEMU viewer and its Windows lock screen observed. No graphical
 technician login or native session was established. Host free memory remained
 approximately 2.5 GiB, below the second-VM launch guard.
+
+Graphical test preparation encountered a desktop-tool limitation: the existing
+TigerVNC lab viewer accepted mouse/keyboard input and exposed the VM lock screen,
+but its menu key did not expose the guest secure-attention command. A second
+viewer connection dialog exposed its owned options dialog to observation; both
+coordinate input and subsequent Escape input failed with `failed to activate
+captured window`. No guest login, credential entry or technician UI test was
+completed. The existing VM/services remained running. This is a UI-tool blocker
+for that viewer path, not evidence of a Swan application failure or session pass.
