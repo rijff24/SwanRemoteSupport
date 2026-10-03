@@ -1811,3 +1811,14 @@ failure/rollback test, replay-rejection test, GUI acceptance, MSI recovery or
 power-loss evidence. The synthetic receipt SHA-256 is
 `f3e7059dfd47309c406b2bbe0e988ee697bbc8cd8d8ed92bd3ba8aab1b2ce126`;
 fixture files and signing material remain outside Git.
+
+The restored Server 2016 technician fixture subsequently passed native
+`verify-package` quarantine checks. Correctly signed metadata for failed sequence
+9 was rejected specifically as quarantined; correctly signed sequence-10
+metadata for the same trusted lab package passed signature, hash and publisher
+verification as a positive control. Company state, installed metadata and the
+quarantine receipt remained byte-identical before/after both commands. No
+installer was executed and no sequence advanced. This proves native explicit
+package verification enforces the recorded failed-release watermark; automatic
+discovery, rollout of a later release and the original harness terminal result
+remain unverified.
