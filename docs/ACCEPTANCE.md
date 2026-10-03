@@ -2006,7 +2006,7 @@ Build `7373f93d-e7d3-40e8-b1e6-9e31dda99081` completed over trusted guest HTTPS;
 the generated bundle SHA-256 is
 `5c4b2f105e4afe6f238aa659d5a505c4e617aa4c808ec2d9e219dd305ff26957`.
 Its eleven entries, company bootstrap and downloaded hash passed, and public
-technician download returned 401. Installation was not performed.
+technician download returned 401. The later installation attempts below failed.
 
 A new disposable standard account was prepared for MSI lifecycle testing, with
 its password confined to the protected guest fixture. Initial harness failures
@@ -2035,5 +2035,30 @@ management binary. Six fixed setup source inputs matched the public commit, allo
 normal Git checkout line endings; transport/HTTPS component hashes matched their
 pins. The receipt declares a dirty CI working tree, so these checks do not establish
 whole-tree source cleanliness, production signing or actual server installation.
-The later `e9cda62` native CI run `37099948400` also completed successfully; its
-artifact verification is in progress.
+The later `e9cda62` native CI run `37099948400` also completed successfully. Its
+archive SHA-256 was
+`f80696b2705ab43e550a5e5eb8c5dc6802e35ecc72ef1ac50b8abad6f7fb46b0`;
+all 23 flat entries passed bounded ZIP/CRC extraction and published checksums.
+
+A separately owned, loopback-forwarded SSH listener subsequently demonstrated
+execution as the new standard Windows user with its actual LocalAppData profile
+and no administrator membership. The original SSH listener was retained. The
+generated eleven-entry bundle reached native technician MSI installation, which
+returned `1601`. Its failed-setup marker was retained. Starting the guest Windows
+Installer service without changing its Manual startup mode and explicitly retrying
+the failed setup returned `1601` again. The isolated management/proxy processes
+were stopped after both failed attempts, and existing company service statuses
+were preserved. This supersedes the unsuccessful standard-user process probes
+above, but does not demonstrate MSI installation, repair or uninstall. Earlier
+noninteractive MSI attempts also returned `1601`; an interactive desktop test is
+still required before attributing this failure to the product or environment.
+After those attempts, ownership checks confirmed no established sessions on the
+temporary SSH listener. Its task, guest firewall rule and QEMU host forward were
+removed. The original SSH banner and SSH/WinRM forwards were verified, existing
+company service statuses were preserved, and private account/profile/failure
+evidence was retained. No host firewall or production service was changed.
+
+Native Windows CI run `37103083258` for
+`11faae30b0dac275c7d8c795ca3c3c134ded36c9` completed successfully in all four jobs.
+Artifact download and verification are in progress. CI success does not establish
+clean-machine installation, native remote sessions or Windows matrix acceptance.
