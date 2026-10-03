@@ -49,7 +49,7 @@ firewall rule. Keep the original configuration file protected too. A manually
 started foreground worker does not survive reboot. Verify authenticated build
 completion, standard-user credential denial, service stop/restart and startup
 after reboot before deployment; signed VM evidence for this new service path is
-still pending. Service log collection and safe removal tooling remain unfinished.
+still pending. Service log collection remains unfinished.
 Prevent a foreground worker from running alongside the service against the same
 output directory.
 
@@ -67,3 +67,11 @@ rotation; old completed builds are invalidated by the management service.
 See [signing requirements](../../docs/WINDOWS_CODE_SIGNING.md),
 [company signing integration](COMPANY-SIGNING.md), and
 [acceptance evidence](../../docs/ACCEPTANCE.md) before production publication.
+
+Remove an owned installation with administrator `Uninstall-Worker.ps1`; use
+`-WhatIf` to inspect the operation first. It verifies service identity, receipt,
+executable hash and publisher before stopping anything. It retains private
+artifacts and the receipt, and does not remove the original configuration file.
+Reinstallation currently refuses retained data; preserve it before planning a
+replacement. Removal does not revoke the server-side worker token. Removal and
+reinstallation VM acceptance are still pending.
