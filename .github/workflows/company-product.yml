@@ -6,6 +6,11 @@ on:
         description: Test the pinned unsigned technician MSI on a disposable Windows runner
         type: boolean
         default: false
+      technician_msi_os:
+        description: Disposable Windows runner for the MSI lifecycle test
+        type: choice
+        options: [windows-2022, windows-2025]
+        default: windows-2022
   push:
     paths: ['product/**', 'deployment/**', '.dockerignore', '.github/workflows/company-product.yml']
   pull_request:
@@ -59,7 +64,7 @@ jobs:
         run: python3 deployment/linux/test_container_stack.py swan-management:test
   technician-msi-lifecycle:
     if: github.event_name == 'workflow_dispatch' && inputs.technician_msi_only
-    runs-on: windows-2022
+    runs-on: ${{ inputs.technician_msi_os || 'windows-2022' }}
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
       - name: Verify the pinned completed unsigned build
@@ -100,6 +105,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: technician-msi-lifecycle
+          name: technician-msi-lifecycle-${{ inputs.technician_msi_os || 'windows-2022' }}
           if-no-files-found: ignore
           path: ${{ runner.temp }}/swan-msi-lifecycle-*/**
