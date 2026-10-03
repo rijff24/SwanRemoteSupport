@@ -33,14 +33,25 @@ private TLS and signing keys on their owning server/signing provider. The worker
 needs public trust pins, not the project signing private key.
 
 The executable supports foreground operation and a Windows SCM entrypoint
-(`swan-worker.exe --service`, service name `SwanInstallerWorker`). For unattended
-operation, installation tooling must register it under an appropriate account
-at boot, load protected configuration, record protected logs and restart it
-after process failure. The service handles SCM stop/shutdown requests. The
-repository does not yet supply a Windows worker
-service/startup installer or signed VM verification of this entrypoint; do not assume a manually started worker survives
-reboot. Prevent concurrent supervisors from starting duplicate workers against
-the same output directory. Verify startup and a completed job after reboot.
+(`swan-worker.exe --service`, service name `SwanInstallerWorker`). Install it from
+an administrator PowerShell session with `Install-Worker.ps1 -Executable <path>
+-ConfigurationPath <private-json-path> -PublisherThumbprint <trusted-thumbprint>`.
+The JSON file must contain exactly four string fields: `management_url`,
+`worker_token`, `release_public_key` and `profile_public_key`. Obtain their actual
+values through company setup and authenticated worker registration; never commit
+this file or share the token.
+
+The installer checks the source and copied executable's publisher, refuses an
+existing installation, protects its directories, and stores the service's secret
+environment in a registry key restricted to SYSTEM and administrators. It uses
+LocalSystem, automatic startup and SCM restart policy. It creates no inbound
+firewall rule. Keep the original configuration file protected too. A manually
+started foreground worker does not survive reboot. Verify authenticated build
+completion, standard-user credential denial, service stop/restart and startup
+after reboot before deployment; signed VM evidence for this new service path is
+still pending. Service log collection and safe removal tooling remain unfinished.
+Prevent a foreground worker from running alongside the service against the same
+output directory.
 
 Approve a compatible release on the server, queue a customer or technician build,
 and inspect its terminal status, protected log and artifact hash. Customer bundle
