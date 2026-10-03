@@ -1487,3 +1487,12 @@ enrollment comparisons passed. Grant bodies, device tokens and account sessions
 were kept private. These are real server authorization checks, not an established
 native remote session: receiver termination after lease expiry and graphical
 technician/customer interaction still require end-to-end verification.
+
+The actual HTTPS group-permission API was tested against the enrolled Server 2016
+device: after claiming an attended grant with the original support permissions,
+removing keyboard and clipboard permission from `lab-support` caused renewal of
+that existing broader grant to be denied (`403`). A newly issued signed grant
+contained both capabilities disabled. Test grants were closed and the original
+group policy restored. This verifies live server policy reduction and grant
+capability issuance; it does not prove receiving-device input/clipboard denial
+or termination of an established native session.
