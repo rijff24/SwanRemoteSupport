@@ -58,6 +58,8 @@ mod whiteboard;
 
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 mod updater;
+#[cfg(feature = "swan_custom")]
+mod managed;
 
 mod ui_cm_interface;
 mod ui_interface;

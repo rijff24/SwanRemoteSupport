@@ -77,41 +77,7 @@ fn install_android_deps() {
     println!("cargo:rustc-link-lib=OpenSLES");
 }
 
-fn validate_swan_build_environment() {
-    if std::env::var_os("CARGO_FEATURE_SWAN_CUSTOM").is_none() {
-        return;
-    }
-
-    // These are public routing/trust values, not credentials. Environment
-    // variables can override them for a test build, while ordinary Swan
-    // builds remain zero-configuration and pinned to the private Tailscale
-    // deployment.
-    const DEFAULT_RENDEZVOUS_SERVER: &str = "100.82.236.84";
-    const DEFAULT_RELAY_SERVER: &str = "100.82.236.84";
-    const DEFAULT_RS_PUB_KEY: &str = "I0s1JvqJ19WDNKBLFY+FC5HekcOqNWPpH+6xGmKUQLI=";
-
-    for (variable, default_value) in [
-        ("RENDEZVOUS_SERVER", DEFAULT_RENDEZVOUS_SERVER),
-        ("RELAY_SERVER", DEFAULT_RELAY_SERVER),
-        ("RS_PUB_KEY", DEFAULT_RS_PUB_KEY),
-    ] {
-        println!("cargo:rerun-if-env-changed={variable}");
-        let value = std::env::var(variable)
-            .ok()
-            .filter(|value| !value.trim().is_empty())
-            .unwrap_or_else(|| default_value.to_owned());
-        println!("cargo:rustc-env={variable}={value}");
-    }
-
-    println!("cargo:rerun-if-env-changed=API_SERVER");
-    println!(
-        "cargo:rustc-env=API_SERVER={}",
-        std::env::var("API_SERVER").unwrap_or_default()
-    );
-}
-
 fn main() {
-    validate_swan_build_environment();
     hbb_common::gen_version();
     install_android_deps();
     #[cfg(all(windows, feature = "inline"))]

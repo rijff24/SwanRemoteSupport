@@ -316,6 +316,8 @@ pub struct Connection {
     port_forward_address: String,
     tx_to_cm: mpsc::UnboundedSender<ipc::Data>,
     authorized: bool,
+    #[cfg(feature = "swan_custom")]
+    managed_lease: Option<swan_agent::Lease>,
     require_2fa: Option<totp_rs::TOTP>,
     keyboard: bool,
     clipboard: bool,
@@ -449,6 +451,13 @@ const SEND_TIMEOUT_OTHER: u64 = SEND_TIMEOUT_VIDEO * 10;
 const SESSION_TIMEOUT: Duration = Duration::from_secs(30);
 
 impl Connection {
+    #[cfg(feature = "swan_custom")]
+    fn managed_permission_cap(&self,name:&str)->bool {
+        let Some(lease)=self.managed_lease.as_ref() else {return false};
+        if swan_agent::protocol::now()>=lease.expires_at {return false;}
+        let p=&lease.permissions;
+        match name {"keyboard"=>p.keyboard,"clipboard"=>p.clipboard,"audio"=>p.audio,"file"=>p.file,"restart"=>p.restart,"recording"=>p.recording,"block_input"=>p.block_input,"privacy_mode"=>p.privacy_mode,_=>false}
+    }
     pub async fn start(
         addr: SocketAddr,
         stream: super::Stream,
@@ -517,6 +526,8 @@ impl Connection {
             port_forward_address: "".to_owned(),
             tx_to_cm,
             authorized: false,
+            #[cfg(feature = "swan_custom")]
+            managed_lease: None,
             keyboard: Self::permission(keys::OPTION_ENABLE_KEYBOARD, &control_permissions),
             clipboard: Self::permission(keys::OPTION_ENABLE_CLIPBOARD, &control_permissions),
             audio: Self::permission(keys::OPTION_ENABLE_AUDIO, &control_permissions),
@@ -709,6 +720,8 @@ impl Connection {
                             conn.chat_unanswered = false;
                         }
                         ipc::Data::SwitchPermission{name, enabled} => {
+                            #[cfg(feature = "swan_custom")]
+                            let enabled=enabled && conn.managed_permission_cap(&name);
                             log::info!("Change permission {} -> {}", name, enabled);
                             if &name == "keyboard" {
                                 conn.keyboard = enabled;
@@ -1065,6 +1078,18 @@ impl Connection {
                     }
                 }
                 _ = second_timer.tick() => {
+                    #[cfg(feature = "swan_custom")]
+                    if let Some(lease) = conn.managed_lease.as_mut() {
+                        let expired = swan_agent::protocol::now() >= lease.expires_at;
+                        let renewal_failed = !expired
+                            && swan_agent::protocol::now().saturating_sub(lease.last_renewed) >= 60
+                            && crate::managed::renew(lease).await.is_err();
+                        if expired || renewal_failed {
+                            conn.send_close_reason_no_retry("Company session authorization expired or revoked").await;
+                            conn.on_close("Managed authorization unavailable", true).await;
+                            break;
+                        }
+                    }
                     #[cfg(windows)]
                     conn.portable_check();
                     raii::AuthedConnID::check_wake_lock_on_setting_changed();
@@ -1613,6 +1638,11 @@ impl Connection {
     // Returns whether this connection should be kept alive.
     // `true` does not necessarily mean authorization succeeded (e.g. REQUIRE_2FA case).
     async fn send_logon_response_and_keep_alive(&mut self) -> bool {
+        #[cfg(feature = "swan_custom")]
+        if self.managed_lease.as_ref().map(|lease| swan_agent::protocol::now() < lease.expires_at) != Some(true) {
+            self.send_login_error("A valid company session grant is required").await;
+            return false;
+        }
         if self.authorized {
             return true;
         }
@@ -2514,6 +2544,14 @@ impl Connection {
             }
         }
         if self.authorized {
+            #[cfg(feature = "swan_custom")]
+            if self.managed_lease.as_ref().map(|lease| swan_agent::protocol::now() < lease.expires_at) != Some(true) {
+                // Reject input immediately at expiry instead of relying on the
+                // next timer tick while packets continue to arrive.
+                self.send_close_reason_no_retry("Company session authorization expired or revoked").await;
+                self.on_close("Managed authorization unavailable", true).await;
+                return false;
+            }
             if matches!(msg.union.as_ref(), Some(message::Union::LoginRequest(_))) {
                 return true;
             }
@@ -2523,13 +2561,47 @@ impl Connection {
         }
         // After handling CloseReason messages, proceed to process other message types
         if let Some(message::Union::LoginRequest(lr)) = msg.union {
+            #[cfg(feature = "swan_custom")]
+            if self.managed_lease.is_none() {
+                match crate::managed::claim(&lr.password, &self.hash.challenge, &Config::get_id()).await {
+                    Ok(lease) => {
+                        let p=&lease.permissions;
+                        self.keyboard &= p.keyboard;self.clipboard &= p.clipboard;
+                        self.audio &= p.audio;self.file &= p.file;self.restart &= p.restart;
+                        self.recording &= p.recording;self.block_input &= p.block_input;
+                        self.privacy_mode &= p.privacy_mode;self.managed_lease=Some(lease);
+                        // Advertise the actual grant bounds before processing
+                        // login options or any subsequent privileged packets.
+                        for (permission,enabled) in [
+                            (Permission::Keyboard,self.keyboard),(Permission::Clipboard,self.clipboard),
+                            (Permission::Audio,self.audio),(Permission::File,self.file),
+                            (Permission::Restart,self.restart),(Permission::Recording,self.recording),
+                            (Permission::BlockInput,self.block_input),(Permission::PrivacyMode,self.privacy_mode),
+                        ] {self.send_permission(permission,enabled).await;}
+                    },
+                    Err(_) => {
+                        self.send_login_error("Company session authorization denied").await;
+                        return false;
+                    }
+                }
+            }
             self.handle_login_request_without_validation(&lr).await;
             if self.authorized {
                 return true;
             }
             self.reset_session_scope_for_login();
+            #[cfg(feature = "swan_custom")]
+            if matches!(lr.union.as_ref(), Some(login_request::Union::Terminal(_)) | Some(login_request::Union::PortForward(_)) | Some(login_request::Union::ViewCamera(_))) {
+                self.send_login_error("This company edition permits desktop support and file transfer only").await;
+                return false;
+            }
             match lr.union {
                 Some(login_request::Union::FileTransfer(ft)) => {
+                    #[cfg(feature = "swan_custom")]
+                    if !self.managed_permission_cap("file") {
+                        self.send_login_error("Company grant denies file transfer").await;
+                        return false;
+                    }
                     if !Self::permission(
                         keys::OPTION_ENABLE_FILE_TRANSFER,
                         &self.control_permissions,
@@ -2672,6 +2744,19 @@ impl Connection {
             let allow_logon_screen_password =
                 crate::get_builtin_option(keys::OPTION_ALLOW_LOGON_SCREEN_PASSWORD) == "Y"
                     && is_logon();
+
+            #[cfg(feature = "swan_custom")]
+            {
+                // Server-verified technician identity replaces all password/recent-session paths.
+                if self.managed_lease.as_ref().map(|lease| lease.unattended) == Some(true) {
+                    if !self.send_logon_response_and_keep_alive().await { return false; }
+                    self.try_start_cm(lr.my_id, lr.my_name, self.authorized);
+                } else {
+                    self.try_start_cm(lr.my_id, lr.my_name, false);
+                    self.send_login_error(crate::client::LOGIN_MSG_NO_PASSWORD_ACCESS).await;
+                }
+                return true;
+            }
 
             if (password::approve_mode() == ApproveMode::Click && !allow_logon_screen_password)
                 || password::approve_mode() == ApproveMode::Both && !password::has_valid_password()
@@ -4781,6 +4866,17 @@ impl Connection {
     }
 
     async fn on_close(&mut self, reason: &str, lock: bool) {
+        #[cfg(feature = "swan_custom")]
+        if let Some(lease)=self.managed_lease.take() {
+            let grant_id=lease.grant_id.clone();drop(lease);
+            // Local stop does not wait for a management endpoint to respond.
+            tokio::spawn(async move {
+                match swan_agent::AgentState::load_for_refresh(&swan_agent::state_directory()) {
+                    Ok(state)=>if let Err(error)=state.close(&grant_id).await {log::warn!("Cannot report company session closure: {}",error);},
+                    Err(error)=>log::warn!("Cannot load company state for session closure: {}",error),
+                }
+            });
+        }
         if self.closed {
             return;
         }
@@ -5325,6 +5421,13 @@ impl Connection {
     }
 
     fn authorized_scope_violation(&self, msg: &Message) -> Option<&'static str> {
+        #[cfg(feature = "swan_custom")]
+        match msg.union.as_ref() {
+            Some(message::Union::AudioFrame(_)) | Some(message::Union::VoiceCallRequest(_)) | Some(message::Union::VoiceCallResponse(_)) if !self.managed_permission_cap("audio") => return Some("Company grant denies audio"),
+            Some(message::Union::FileAction(_)) | Some(message::Union::FileResponse(_)) if !self.managed_permission_cap("file") => return Some("Company grant denies file transfer"),
+            Some(message::Union::Cliprdr(_)) if !self.managed_permission_cap("file") || !self.managed_permission_cap("clipboard") => return Some("Company grant denies clipboard file transfer"),
+            _=>{}
+        }
         let Some(conn_type) = self.authed_conn_type() else {
             return (!Self::is_connection_housekeeping_message(msg)).then_some("session.auth_type");
         };

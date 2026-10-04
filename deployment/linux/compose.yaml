@@ -1,0 +1,48 @@
+name: swan-company-server
+services:
+  management:
+    build:
+      context: ../..
+      dockerfile: deployment/linux/Dockerfile
+    restart: unless-stopped
+    environment:
+      SWAN_RELEASE_PUBLIC_KEY: ${SWAN_RELEASE_PUBLIC_KEY:?Set the trusted project release public key}
+    volumes:
+      - management-data:/var/lib/swan
+    networks: [management]
+    security_opt: [no-new-privileges:true]
+    read_only: true
+    tmpfs: [/tmp]
+  https:
+    image: caddy:2.10.2@sha256:c3d7ee5d2b11f9dc54f947f68a734c84e9c9666c92c88a7f30b9cba5da182adb
+    restart: unless-stopped
+    environment:
+      SWAN_HOST: ${SWAN_HOST:?Set the public company server hostname}
+    ports: ["80:80", "443:443", "443:443/udp"]
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    networks: [management]
+  hbbs:
+    image: rustdesk/rustdesk-server:1.1.15@sha256:10818ec05b179039c6660f4d8e74b303f0db2858bbad2b18e24992ea22d54cd6
+    command: ["hbbs", "-r", "${SWAN_HOST}:21117", "-k", "_"]
+    restart: unless-stopped
+    ports: ["21115:21115", "21116:21116", "21116:21116/udp"]
+    volumes: ["transport-data:/root"]
+    networks: [transport]
+  hbbr:
+    image: rustdesk/rustdesk-server:1.1.15@sha256:10818ec05b179039c6660f4d8e74b303f0db2858bbad2b18e24992ea22d54cd6
+    command: ["hbbr", "-k", "_"]
+    restart: unless-stopped
+    ports: ["21117:21117"]
+    volumes: ["transport-data:/root"]
+    networks: [transport]
+networks:
+  management:
+  transport:
+volumes:
+  management-data:
+  transport-data:
+  caddy-data:
+  caddy-config:

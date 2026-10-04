@@ -1,3 +1,4 @@
+import 'company_contact_links.dart';
 import 'dart:async';
 import 'dart:io';
 import 'dart:convert';
@@ -5,11 +6,13 @@ import 'dart:convert';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_hbb/common.dart';
 import 'package:flutter_hbb/common/widgets/animated_rotation_widget.dart';
 import 'package:flutter_hbb/common/widgets/custom_password.dart';
 import 'package:flutter_hbb/consts.dart';
 import 'package:flutter_hbb/desktop/pages/connection_page.dart';
+import 'package:flutter_hbb/desktop/pages/company_technician_page.dart';
 import 'package:flutter_hbb/desktop/pages/desktop_setting_page.dart';
 import 'package:flutter_hbb/desktop/pages/desktop_tab_page.dart';
 import 'package:flutter_hbb/desktop/widgets/update_progress.dart';
@@ -50,6 +53,31 @@ class _DesktopHomePageState extends State<DesktopHomePage>
   var watchIsInputMonitoring = false;
   var watchIsCanRecordAudio = false;
   Timer? _updateTimer;
+  Timer? _companyRefreshTimer;
+  bool _companyConsentBusy = false;
+
+  Future<void> _changeCompanyConsent(bool enabled) async {
+    if (_companyConsentBusy) return;
+    setState(() { _companyConsentBusy = true; });
+    String message;
+    try {
+      final text = await bind.mainCompanyRequest(request: jsonEncode({
+        'action': 'customer-consent', 'enabled': enabled,
+      })).first.timeout(const Duration(seconds: 25));
+      final response = jsonDecode(text) as Map<String, dynamic>;
+      if (response['ok'] != true) throw StateError('Consent not confirmed');
+      final data = response['data'] as Map<String, dynamic>;
+      if (data['unattended'] != enabled) throw StateError('Consent not confirmed');
+      message = enabled ? 'Unattended access enabled.'
+          : data['server_synced'] == true ? 'Unattended access revoked.'
+          : 'Unattended access revoked on this computer. Server synchronization is pending.';
+    } catch (_) {
+      message = 'The consent change was not confirmed. Check the support status before relying on it.';
+    } finally {
+      if (mounted) setState(() { _companyConsentBusy = false; });
+    }
+    if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+  }
   bool isCardClosed = false;
 
   final RxBool _editHover = false.obs;
@@ -60,6 +88,9 @@ class _DesktopHomePageState extends State<DesktopHomePage>
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    if (bind.mainGetAppNameSync() == '$swanManagedAppName Technician' && bind.isOutgoingOnly()) {
+      return const CompanyTechnicianPage();
+    }
     final isIncomingOnly = bind.isIncomingOnly();
     return _buildBlock(
         child: Row(
@@ -80,7 +111,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
   Widget buildLeftPane(BuildContext context) {
     final isIncomingOnly = bind.isIncomingOnly();
     final isOutgoingOnly = bind.isOutgoingOnly();
-    final isSwanManagedClient = bind.mainGetAppNameSync() == swanManagedAppName;
+    final isSwanManagedClient = bind.mainGetAppNameSync() == swanManagedAppName && isIncomingOnly;
     final children = <Widget>[
       if (!isOutgoingOnly && !isSwanManagedClient) buildPresetPasswordWarning(),
       if (bind.isCustomClient())
@@ -88,7 +119,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
           alignment: Alignment.center,
           child: loadPowered(context),
         ),
-      Align(
+      if (!isSwanManagedClient) Align(
         alignment: Alignment.center,
         child: loadLogo(),
       ),
@@ -194,30 +225,41 @@ class _DesktopHomePageState extends State<DesktopHomePage>
 
   Widget buildSwanManagedOverview(BuildContext context) {
     return FutureBuilder<String>(
-      future: bind.mainGetCommon(key: 'permanent-password-set'),
+      future: bind.mainGetCommon(key: 'company-overview'),
       builder: (context, snapshot) {
-        final isReady = snapshot.data == 'true';
-        final statusColor = isReady ? const Color(0xFF0A7D5A) : Colors.orange;
+        Map<String, dynamic> company = {};
+        try {
+          company = jsonDecode(snapshot.data ?? '{}') as Map<String, dynamic>;
+        } catch (_) {}
+        final configured = company['configured'] == true && company['enrolled'] == true;
+        final isReady = configured && company['profile_valid'] == true;
+        final color = company['primary_color'] as String? ?? '#007F82';
+        final brandColor = RegExp(r'^#[0-9a-fA-F]{6}$').hasMatch(color)
+            ? Color(0xFF000000 | int.parse(color.substring(1), radix: 16))
+            : const Color(0xFF007F82);
+        final statusColor = isReady ? brandColor : Colors.orange;
         final statusIcon = isReady ? Icons.verified_user : Icons.warning_amber;
         final statusTitle = isReady
-            ? 'Ready for unattended support'
-            : 'Swan setup is not complete';
+            ? (company['unattended'] == true ? 'Unattended support enabled' : 'Customer approval required')
+            : (configured ? 'Company authorization is unavailable' : 'Company setup is not complete');
         final statusText = isReady
-            ? 'This computer can receive private Swan Computing support while it is connected to Tailscale.'
-            : 'A Swan technician must finish express setup and securely record this computer\'s unique support credentials.';
+            ? 'Only company-authorized technicians can request access. Your company must approve this device before support begins.'
+            : (configured ? 'Cached company branding is shown. A fresh signed configuration is required before support can begin.' : 'Run the company setup included with your download to verify its server and enroll this computer.');
 
         return Padding(
           padding: const EdgeInsets.fromLTRB(20, 16, 16, 8),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              if ((company['logo_svg'] as String? ?? '').isNotEmpty)
+                Padding(padding: const EdgeInsets.only(bottom: 12), child: SvgPicture.string(company['logo_svg'] as String, height: 64, width: 180)),
               Text(
-                'Managed by Swan Computing',
+                company['display_name'] as String? ?? 'Swan Remote Support',
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: 8),
               Text(
-                'Remote support is configured for Swan Computing\'s private Tailscale network. The device ID and password are hidden from this customer screen.',
+                company['consent_text'] as String? ?? 'Support requires a verified company configuration. No public-network fallback is permitted.',
                 style: Theme.of(context).textTheme.bodySmall,
               ),
               const SizedBox(height: 16),
@@ -254,8 +296,40 @@ class _DesktopHomePageState extends State<DesktopHomePage>
                 ),
               ),
               const SizedBox(height: 12),
+              Obx(() => TextButton.icon(
+                onPressed: () async { await start_service(svcStopped.value); },
+                icon: Icon(svcStopped.value ? Icons.play_arrow : Icons.stop_circle_outlined),
+                label: Text(svcStopped.value ? 'Resume support' : 'Stop support'),
+              )),
+              CompanyContactLinks(company: company),
+              if (company['unattended'] == true)
+                TextButton.icon(
+                  onPressed: _companyConsentBusy ? null : () => _changeCompanyConsent(false),
+                  icon: const Icon(Icons.shield_outlined),
+                  label: const Text('Revoke unattended access'),
+                ),
+              if (isReady && company['unattended'] != true && company['allow_unattended'] == true)
+                TextButton.icon(
+                  onPressed: _companyConsentBusy ? null : () async {
+                    final accepted = await showDialog<bool>(
+                      context: context,
+                      builder: (dialogContext) => AlertDialog(
+                        title: const Text('Allow unattended support?'),
+                        content: Text('Approved technicians from ${company['display_name']} can connect while you are absent, including at the Windows sign-in screen. You can revoke this permission here at any time.\n\nCompany server: ${company['domain']}\n\n${company['consent_text'] ?? ''}'),
+                        actions: [
+                          TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: const Text('Cancel')),
+                          TextButton(onPressed: () => Navigator.of(dialogContext).pop(true), child: const Text('Allow ongoing support')),
+                        ],
+                      ),
+                    );
+                    if (accepted != true || !mounted) return;
+                    await _changeCompanyConsent(true);
+                  },
+                  icon: const Icon(Icons.shield_outlined),
+                  label: const Text('Allow unattended support'),
+                ),
               Text(
-                'The computer owner can use the tray icon to view or stop the support service.',
+                'Use the tray icon to view sessions. Powered by Swan Remote Support and RustDesk · AGPL-3.0.',
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ],
@@ -775,6 +849,11 @@ class _DesktopHomePageState extends State<DesktopHomePage>
   @override
   void initState() {
     super.initState();
+    if (bind.mainGetAppNameSync().startsWith(swanManagedAppName)) {
+      _companyRefreshTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+        if (mounted) setState(() {});
+      });
+    }
     _updateTimer = periodic_immediate(const Duration(seconds: 1), () async {
       await gFFI.serverModel.fetchID();
       final error = await bind.mainGetError();
@@ -957,6 +1036,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
     _uniLinksSubscription?.cancel();
     Get.delete<RxBool>(tag: 'stop-service');
     _updateTimer?.cancel();
+    _companyRefreshTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }

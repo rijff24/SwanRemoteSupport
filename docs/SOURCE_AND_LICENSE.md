@@ -1,17 +1,26 @@
 # Source availability and licensing
 
-Swan Remote Support is a modified RustDesk client distributed under the GNU Affero General Public License v3.0. Anyone receiving a Swan binary must be able to obtain the complete corresponding source for that exact version, including Swan modifications, build scripts, pinned build configuration, and licence notices.
+Swan Remote Support retains RustDesk attribution and AGPL-3.0 licensing. Publish complete corresponding source for every distributed release, including endpoint, management, protocol and worker changes, build scripts, pinned toolchains/dependencies and license notices. Release metadata must identify the exact immutable public source tag. Keep the source revisions for packaged rendezvous/relay components public in the transport manifest.
 
-The corresponding-source link in every release must point to the immutable public Git tag that produced that binary. A private source copy offered only on request is not the selected release model for this project. The public server address and Ed25519 public key may appear in source; they do not grant access without Tailscale authorization and a device-specific Swan password.
+Each company hosts its own deployment. Company names, logos, colors and public bootstrap/profile trust information customize the product; they do not grant technician access. The configurable product uses enrollment, group authorization, signed session grants and receiving-device enforcement. New packages do not require Tailscale or collect reusable legacy support passwords.
 
-Never publish:
+Never publish company private transport/configuration keys, device credentials, technician/admin tokens, TOTP seeds, signing private keys/PFX passwords, backup decryption material, customer data or private operational logs. Installers carry public bootstrap information only. Machine-specific test/deployment settings and all test credentials belong in ignored local environment/data files.
 
-- the RustDesk server's private `id_ed25519` key;
-- customer device IDs/passwords or customer data;
-- Tailscale auth keys, API/OAuth secrets, or exported session credentials;
-- code-signing keys, PFX files, passwords, or recovery material; or
-- production logs, backup contents, or support-session recordings.
+Project-signed binaries retain the certificate publisher's embedded identity. Company branding assets do not change that identity. Changing embedded resources requires new signed binaries and the corresponding public source/build description. Never supply a project signing private key to company servers or workers.
 
-The official Tailscale Windows MSI is downloaded separately from Tailscale, is not modified or rebranded, and is not part of Swan's AGPL corresponding source. Tailscale's open-source client code is BSD 3-Clause licensed, while its official Windows product and hosted service have additional licensing and service terms. See [Tailscale deployment](TAILSCALE_DEPLOYMENT.md).
+The original single-company Tailscale deployment remains available at `swan-single-company-baseline-1.4.9`; its historical build/deployment documents apply to that baseline only.
 
-Before publishing a release, run a repository-history and artifact secret scan, build from a clean checkout, verify the release hashes and signatures, and confirm the public tag matches the exact source used. Retain upstream RustDesk attribution and the repository's `LICENCE` file.
+Before production publication, build from the reviewed public source, verify artifacts and their signatures/hashes, complete the acceptance checks and publish exact corresponding source. Preserve the repository's `LICENCE` and upstream notices.
+
+The Windows workflow also produces `SwanRemoteSupport-build-source.zip` before
+application compilation. It contains the actual tracked source bytes, initialized
+pinned submodule source, and the six explicitly named generated bridge files.
+`BUILD-SOURCE.json` records repository revisions and every included file hash;
+the public workflow in the archive describes subsequent packaging transformations,
+including removal of the portable launcher's DPI manifest entry. Ignored local
+settings, untracked logs, credentials and build binaries are not swept into this
+archive. Missing bridge inputs, source links, unmerged indexes and submodule pin
+mismatches fail the build. The artifact checksum list includes the archive hash.
+Publish this archive alongside the exact source tag, build instructions and
+third-party component source references. Its presence does not prove binary
+reproducibility or replace release acceptance and signing checks.

@@ -1,0 +1,25 @@
+# Local company-server testing
+
+For offline-consent recovery tests, set `SWAN_TEST_FAULTS=1` in the private test
+environment file. The loopback HTTPS proxy responds with HTTP 503 while a file
+named `simulate-offline` exists inside that test data directory. There is no
+HTTP control endpoint. The lifecycle script creates and removes this file,
+checks durable local revocation while offline, then starts the real agent
+watcher and verifies that recovered server authorization denies unattended
+grants. Use this only with the isolated local test proxy.
+
+An optional second script argument selects a separately built executable
+directory: `node deployment/windows/test-company-lifecycle.js PRIVATE_ENV_FILE
+PRIVATE_BINARY_DIRECTORY`. This permits testing newer agent/server builds
+without replacing running test or production executables. Recorded hashes use
+that directory.
+
+Each company runs its own management, rendezvous, relay and Windows build worker. The project does not operate a shared hosting or signing service.
+
+Copy `local-test.env.example` to `local-test.env`, build `product/Cargo.toml`, then run `Start-LocalTest.ps1` from the repository root. The launcher reads named settings as data and binds management to loopback. `local-test.env` and `swan-data/` are ignored by Git. The data directory contains the database, private profile-signing key and setup token; its Windows ACL permits the current user, administrators and SYSTEM.
+
+The default local administration address is http://127.0.0.1:18080. Use the one-time token in `swan-data/local-test/setup-token.txt` for initial setup. Do not paste the token into issues or build logs. Existing RustDesk services are independent of this test process.
+
+This loopback HTTP listener is for administration smoke tests. Endpoint enrollment and profile synchronization require HTTPS with a trusted certificate. `local-https.js` provides an isolated loopback proxy using PFX/password settings from the ignored environment file. Debug agents accept a DER test certificate through `SWAN_TEST_CA_FILE`; release builds ignore this variable and use operating-system trust roots. Certificate validation remains enabled. Public direct and relay testing requires a company-owned reachable endpoint and a separate external test machine.
+
+Verified on this development machine: management starts, administration responds with HTTP 200, and seventeen product-workspace tests pass. `node deployment/windows/test-company-lifecycle.js PATH_TO_PRIVATE_ENV_FILE` also passed against a fresh HTTPS proxy and newly built agent/server: company setup, device enrollment, approval denial, technician MFA/group inventory and session history, logout credential revocation, consent denial, grant replay denial, signed branding sync and device revocation. The script records executable hashes in the protected data directory and refuses an already configured company. For another run, create a separate empty data directory and environment file, choose unused loopback ports, and copy the public DER test certificate into that directory as `localhost.cer`; preserve earlier databases and results. This API integration uses a test device ID and does not demonstrate native remote desktop. The native Flutter/RustDesk integration, production signatures, complete installers, update installation/recovery and clean-machine Windows compatibility remain release requirements; this development build is not a production release.

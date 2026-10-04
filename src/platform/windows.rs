@@ -1286,7 +1286,34 @@ fn get_subkey(name: &str, wow: bool) -> String {
     }
 }
 
+#[cfg(feature = "swan_custom")]
+fn swan_msi_product_code() -> ResultType<Option<String>> {
+    if crate::get_app_name()!="Swan Remote Support" {return Ok(None);}
+    let machine=RegKey::predef(HKEY_LOCAL_MACHINE);
+    let registration=match machine.open_subkey(r"Software\SwanRemoteSupport\Customer") {
+        Ok(key)=>key,
+        Err(error) if error.kind()==std::io::ErrorKind::NotFound=>return Ok(None),
+        Err(error)=>return Err(error.into()),
+    };
+    let code:String=registration.get_value("ProductCode")?;
+    let bytes=code.as_bytes();
+    if bytes.len()!=38 || bytes[0]!=b'{' || bytes[37]!=b'}' || !bytes[1..37].iter().enumerate().all(|(index,byte)| {
+        if [8,13,18,23].contains(&index){*byte==b'-'}else{byte.is_ascii_hexdigit()}
+    }) {bail!("Invalid Swan MSI product identity");}
+    let uninstall=machine.open_subkey(format!(r"Software\Microsoft\Windows\CurrentVersion\Uninstall\{code}"))?;
+    let installer:u32=uninstall.get_value("WindowsInstaller")?;
+    let name:String=uninstall.get_value("DisplayName")?;
+    if installer!=1 || name!="Swan Remote Support" {bail!("Swan MSI identity does not match the installed product");}
+    Ok(Some(code))
+}
+
 fn get_valid_subkey() -> String {
+    #[cfg(feature = "swan_custom")]
+    match swan_msi_product_code() {
+        Ok(Some(code))=>return get_subkey(&code,false),
+        Ok(None)=>{},
+        Err(error)=>log::error!("Swan MSI registration could not be verified: {error}"),
+    }
     let subkey = get_subkey(IS1, false);
     if !get_reg_of(&subkey, "InstallLocation").is_empty() {
         return subkey;
@@ -1773,10 +1800,10 @@ fn get_before_uninstall(kill_self: bool) -> String {
     format!(
         "
     chcp 65001
-    sc stop {app_name}
-    sc delete {app_name}
+    sc stop \"{app_name}\"
+    sc delete \"{app_name}\"
     taskkill /F /IM {broker_exe}
-    taskkill /F /IM {app_name}.exe{filter}
+    taskkill /F /IM \"{app_name}.exe\"{filter}
     reg delete HKEY_CLASSES_ROOT\\.{ext} /f
     reg delete HKEY_CLASSES_ROOT\\{ext} /f
     netsh advfirewall firewall delete rule name=\"{app_name} Service\"
@@ -1798,6 +1825,15 @@ fn get_before_uninstall(kill_self: bool) -> String {
 /// is included in the generated uninstall script. If `uninstall_printer` is `false`, the printer
 /// related command is omitted from the script.
 fn get_uninstall(kill_self: bool, uninstall_printer: bool) -> String {
+    #[cfg(feature = "swan_custom")]
+    match swan_msi_product_code() {
+        Ok(Some(code))=>return format!("msiexec.exe /x {code} /passive /norestart"),
+        Ok(None)=>{},
+        Err(error)=>{
+            log::error!("Refusing uninstall with invalid Swan MSI registration: {error}");
+            return "echo Swan MSI registration is invalid. Use Windows installed apps to remove the package.\r\nexit /b 1".into();
+        }
+    }
     let reg_uninstall_string = get_reg("UninstallString");
     if reg_uninstall_string.to_lowercase().contains("msiexec.exe") {
         return reg_uninstall_string;
@@ -1833,7 +1869,43 @@ fn get_uninstall(kill_self: bool, uninstall_printer: bool) -> String {
 }
 
 pub fn uninstall_me(kill_self: bool) -> ResultType<()> {
-    run_cmds(get_uninstall(kill_self, true), true, "uninstall")
+    #[cfg(feature = "swan_custom")]
+    if let Some(code) = swan_msi_product_code()? {
+        // Resolve the Windows-owned executable without PATH or environment lookup.
+        let mut directory = vec![0u16; 32768];
+        let length = unsafe {
+            winapi::um::sysinfoapi::GetSystemDirectoryW(
+                directory.as_mut_ptr(), directory.len() as u32,
+            )
+        } as usize;
+        if length == 0 || length >= directory.len() {
+            bail!("Unable to resolve the Windows Installer executable");
+        }
+        let executable = PathBuf::from(OsString::from_wide(&directory[..length]))
+            .join("msiexec.exe");
+        if !run_uac(&executable.to_string_lossy(), &format!("/x {code} /passive /norestart"))? {
+            bail!("Windows Installer was not started; uninstall was cancelled or failed");
+        }
+        if kill_self {
+            std::process::exit(0);
+        }
+        return Ok(());
+    }
+    let commands=get_uninstall(kill_self,true);
+    #[cfg(feature = "swan_custom")]
+    let commands=if crate::get_app_name()=="Swan Remote Support" {
+        let mut directory=vec![0u16;32768];
+        let length=unsafe{winapi::um::sysinfoapi::GetSystemDirectoryW(directory.as_mut_ptr(),directory.len() as u32)} as usize;
+        if length==0 || length>=directory.len(){bail!("Cannot resolve trusted Windows PowerShell for uninstall cancellation");}
+        let powershell=PathBuf::from(OsString::from_wide(&directory[..length])).join("WindowsPowerShell/v1.0/powershell.exe");
+        let script=include_str!("../../deployment/windows/Cancel-CustomerExeRecovery.ps1");
+        let bytes:Vec<u8>=script.encode_utf16().flat_map(|word|word.to_le_bytes()).collect();
+        let encoded=crate::encode64(bytes);
+        // This fixed script runs inside the existing elevated uninstall batch,
+        // before stopping the service or deleting any installed files.
+        format!("\"{}\" -NoLogo -NoProfile -NonInteractive -EncodedCommand {}\r\nif errorlevel 1 exit /b 1\r\n{}",powershell.display(),encoded,commands)
+    }else{commands};
+    run_cmds(commands, true, "uninstall")
 }
 
 fn write_cmds(cmds: String, ext: &str, tip: &str) -> ResultType<std::path::PathBuf> {
@@ -1897,11 +1969,20 @@ fn run_cmds(cmds: String, show: bool, tip: &str) -> ResultType<()> {
     let tmp_fn = tmp.to_str().unwrap_or("");
     // https://github.com/rustdesk/rustdesk/issues/6786#issuecomment-1879655410
     // Specify cmd.exe explicitly to avoid the replacement of cmd commands.
-    let res = runas::Command::new("cmd.exe")
+    let res = if is_root() {
+        // SYSTEM update workers run without an interactive UAC desktop.
+        let mut directory=vec![0u16;32768];
+        let length=unsafe{winapi::um::sysinfoapi::GetSystemDirectoryW(directory.as_mut_ptr(),directory.len() as u32)} as usize;
+        if length==0 || length>=directory.len(){bail!("Cannot resolve Windows command processor");}
+        let system=PathBuf::from(OsString::from_wide(&directory[..length]));
+        std::process::Command::new(system.join("cmd.exe")).args(["/C",tmp_fn]).current_dir(&system)
+            .creation_flags(if show {0}else{winapi::um::winbase::CREATE_NO_WINDOW}).status()
+            .and_then(|status|if status.success(){Ok(())}else{Err(std::io::Error::new(std::io::ErrorKind::Other,"SYSTEM installation command failed"))})
+    }else{runas::Command::new("cmd.exe")
         .args(&["/C", &tmp_fn])
         .show(show)
         .force_prompt(true)
-        .status();
+        .status().map(|_| ())};
     if !show {
         allow_err!(std::fs::remove_file(tmp));
     }
@@ -3165,11 +3246,11 @@ pub fn uninstall_service(show_new_window: bool, _: bool) -> bool {
     let cmds = format!(
         "
     chcp 65001
-    sc stop {app_name}
-    sc delete {app_name}
+    sc stop \"{app_name}\"
+    sc delete \"{app_name}\"
     if exist \"%PROGRAMDATA%\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\{app_name} Tray.lnk\" del /f /q \"%PROGRAMDATA%\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\{app_name} Tray.lnk\"
     taskkill /F /IM {broker_exe}
-    taskkill /F /IM {app_name}.exe{filter}
+    taskkill /F /IM \"{app_name}.exe\"{filter}
     ",
         app_name = crate::get_app_name(),
         broker_exe = WIN_TOPMOST_INJECTED_PROCESS_EXE,
@@ -3195,7 +3276,7 @@ pub fn install_service() -> bool {
     let cmds = format!(
         "
 chcp 65001
-taskkill /F /IM {app_name}.exe{filter}
+taskkill /F /IM \"{app_name}.exe\"{filter}
 cscript \"{tray_shortcut}\"
 copy /Y \"{tmp_path}\\{app_name} Tray.lnk\" \"%PROGRAMDATA%\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\\"
 {import_config}
@@ -3399,8 +3480,8 @@ reg add {subkey} /f /v EstimatedSize /t REG_DWORD /d {size}
     let cmds = format!(
         "
 chcp 65001
-sc stop {app_name}
-taskkill /F /IM {app_name}.exe{filter}
+sc stop \"{app_name}\"
+taskkill /F /IM \"{app_name}.exe\"{filter}
 {reg_cmd}
 {copy_exe}
 {rename_exe}
@@ -3688,12 +3769,12 @@ fn get_import_config(exe: &str) -> String {
         return "".to_string();
     }
     format!("
-sc stop {app_name}
-sc delete {app_name}
-sc create {app_name} binpath= \"\\\"{exe}\\\" --import-config \\\"{config_path}\\\"\" start= auto DisplayName= \"{app_name} Service\"
-sc start {app_name}
-sc stop {app_name}
-sc delete {app_name}
+sc stop \"{app_name}\"
+sc delete \"{app_name}\"
+sc create \"{app_name}\" binpath= \"\\\"{exe}\\\" --import-config \\\"{config_path}\\\"\" start= auto DisplayName= \"{app_name} Service\"
+sc start \"{app_name}\"
+sc stop \"{app_name}\"
+sc delete \"{app_name}\"
 ",
     app_name = crate::get_app_name(),
     config_path=Config::file().to_str().unwrap_or(""),
@@ -3711,8 +3792,8 @@ if exist \"%PROGRAMDATA%\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\{ap
 ", app_name = crate::get_app_name())
     } else {
         format!("
-sc create {app_name} binpath= \"\\\"{exe}\\\" --service\" start= auto DisplayName= \"{app_name} Service\"
-sc start {app_name}
+sc create \"{app_name}\" binpath= \"\\\"{exe}\\\" --service\" start= auto DisplayName= \"{app_name} Service\"
+sc start \"{app_name}\"
 ",
     app_name = crate::get_app_name())
     }
