@@ -2475,3 +2475,13 @@ SHA-256 `659aa1ee0a18f18dcb30494e4a13937aeeeeb4eb4cec5c0f859d74aa37cdead2`,
 CRC and native successful install/repair/uninstall log checks on Server 2022
 build 20348. Its older fixture lacks package hashes in the receipt; standard-user
 enrollment, GUI login and native remote sessions remain unverified.
+
+The authorization-expiry native build's MSI evidence artifact `11274947759`
+also passed authenticated digest
+`4dc584d2a4cbdc62f1e247ff76395173ead5364b4ffc0e12555e2091e533ab60`,
+CRC and successful native install/repair/uninstall log checks. Its receipt and
+all invocation records identify fixture `391541e` and MSI SHA-256
+`91b63c8cb2f164d25955c10ae82b8e5bc7dc2d10ac9ae3b99680a42f4132d33f`.
+Comparison of that recorded package/payload identity with the main downloaded
+archive remains pending; the archive's original process is still running.
+This evidence remains limited to unsigned Server 2022 CI payload lifecycle.
