@@ -2443,3 +2443,35 @@ deployment rehearsal. Local Windows GNU type checking passed. These prove the
 renewal validation regression, not a live native session or its termination.
 Native build `37125194672` is running from this exact source; build `37123744363`
 contains the earlier backup fix and cannot validate the new expiry behavior.
+
+### Native backup runtime verification (2026-10-04)
+
+Native runs `37123744363` (`f71773b`, backup fix) and `37125194672`
+(`391541e`, authorization expiry fix) completed successfully. The latter's
+package download remains pending independent verification. The former's archive
+`11275251202` passed SHA-256
+`bb99ad350b2f633cf738fc91028e2e80794b77575229e688a3a84322ee841125`,
+CRC and payload checksum verification. Independent checks matched 11 embedded
+server resources, six setup source inputs, component pins, 1,103 public Git
+files and six generated bridge files. The dirty-checkout flag remains retained;
+this is source provenance, not binary reproducibility.
+
+The verified native management executable SHA-256
+`f193918d1c089172c5de88ca62fd7d56323498f36050b53619ccc4693aa5fa55`
+passed a synthetic Windows CLI export/restore rehearsal. Its stopped transport
+fixture contained committed WAL frames and no SHM, with a read-only directory
+ACL verified by a denied write probe. Restore retained the committed peer row
+and management trust files. Source bytes stayed unchanged, no SHM appeared in
+the source, and plaintext staging was removed. Invalid transport export left no
+archive or staging; tampered restore created no destination. Fixture setup first
+failed because Windows PowerShell inherited incompatible module paths; correcting
+only the child process environment allowed the actual runtime test to execute.
+No existing service, company database or host security setting was changed.
+This is native CLI behavior with synthetic data, not service deployment or a
+real-company disaster recovery test.
+
+The build's retained MSI lifecycle artifact `11274617033` independently passed
+SHA-256 `659aa1ee0a18f18dcb30494e4a13937aeeeeb4eb4cec5c0f859d74aa37cdead2`,
+CRC and native successful install/repair/uninstall log checks on Server 2022
+build 20348. Its older fixture lacks package hashes in the receipt; standard-user
+enrollment, GUI login and native remote sessions remain unverified.
