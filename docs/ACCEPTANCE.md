@@ -2731,3 +2731,32 @@ the native connection through its window were not confirmed. The guest state
 was preserved for diagnosis; the cause of the unresponsiveness is unproven.
 Relay operation, session closure for this attempt, and post-failure recovery
 remain unverified.
+
+### Private signed packages and standard-user attempt, 21 October
+
+Source `bd1350012227f226db168be51bc823d3f086e493` now has private-lab
+customer and technician 1.5.7 MSI wrappers, plus signed agent and worker inputs.
+Authenticode publisher, pinned certificate and RFC3161 timestamp checks passed
+in the signing guest. This is company lab signing, not project signing approval.
+Signed release metadata for test channel sequence 8 was prepared and locally
+verified; it has not been imported, approved or rolled out.
+
+On the disposable Server 2025 build 26100 guest, a new non-administrator account
+verified the signed technician MSI's expected hash, publisher and certificate.
+Its background scheduled-task installation then failed with MSI exit 1601:
+the raw log reports access denied (0x80070005) connecting to Windows Installer.
+Repair and uninstall were not attempted. The account needed an explicit batch
+logon right to start the task; it was never added to Administrators. This failed
+background test does not establish interactive standard-user install behavior.
+The result, wrapper and raw MSI log were exported and retained privately.
+The VM console subsequently showed a black display while administrative remote
+access remained available; an interactive rerun is still outstanding.
+
+The second guest cannot yet reach the company HTTPS service because that
+service binds only to the first guest's loopback address. Automatic approval
+review rejected the proposed private-NIC listener addition and service restart
+with only "blocked by policy." No listener change was applied. A reviewable
+private draft and an explicit approval request remain pending. The initial peer
+HTTPS request timed out; this is not a passing negative certificate test.
+Cross-machine native sessions and the runtime configuration fixes remain
+unverified. Host RustDesk and its transport servers were not stopped.
