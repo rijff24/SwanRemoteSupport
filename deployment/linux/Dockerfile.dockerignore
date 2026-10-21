@@ -71,4 +71,4 @@ deployment/windows/**
 !deployment/windows/Remove-Configuration.ps1
 !deployment/windows/Update-RecoveryTask.ps1
 !deployment/windows/Update-UninstallCancellation.ps1
-!deployment/windows/Commit-CustomerUninstall.ps1
+!deployment/windows/Commit-Uninstall.ps1

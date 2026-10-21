@@ -21,11 +21,13 @@ async fn main()->Result<()> {
     match command {
         "rollback-protocol"=>println!("1"),
         #[cfg(windows)]
-        "commit-customer-uninstall"=>{
+        "commit-uninstall"=>{
             // The signed MSI embeds a separate agent copy: its installed copy
             // has already been removed when the commit script executes.
-            let directory=PathBuf::from(args.get(2).context("Missing customer uninstall state directory")?);
-            swan_agent::update::commit_customer_uninstall(&directory)?;
+            let edition=args.get(2).context("Missing uninstall edition")?;
+            ensure!(matches!(edition.as_str(),"customer"|"technician"),"Invalid uninstall edition");
+            let directory=PathBuf::from(args.get(3).context("Missing uninstall state directory")?);
+            swan_agent::update::commit_uninstall(&directory,edition)?;
         }
         #[cfg(windows)]
         "cancel-update-recovery"|"restore-update-recovery"=>{

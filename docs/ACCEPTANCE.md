@@ -3037,3 +3037,15 @@ available until transaction commit. Local Windows PowerShell 5 regression checks
 and all three MSI-authoring tests pass; CI, rebuilt signed packages and actual
 repeated uninstall/rollback verification remain pending. The failed candidate
 has not been published or approved for production.
+
+An independent technician-only `1.5.8` lifecycle attempt was subsequently stopped
+by the fresh-install guard before installation: the earlier successfully
+uninstalled technician product had left its cancellation marker, cancellation
+rollback JSON and helper script in the per-user directory. No technician MSI was
+registered. This is a blocked test precondition, not a passed or failed technician
+MSI execution. The commit cleanup now covers both editions: SYSTEM/canonical
+ProgramData for customer, impersonated user/canonical LocalApplicationData for
+technician. Both use an embedded agent so removal does not delete the executable
+needed for commit. Local fixture checks reject arbitrary paths for either edition;
+MSI-authoring tests also assert the technician action retains user context.
+New binaries, signed packages, repeated removal and rollback still need validation.

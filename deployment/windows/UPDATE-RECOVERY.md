@@ -46,6 +46,10 @@ executable. It retains `pending-uninstall`, identity and consent. Failed removal
 retains rollback information until Windows Installer invokes rollback. This avoids
 a successful uninstall leaving a record that blocks the next removal after a bare
 MSI reinstall. Real repeated install/uninstall verification of this fix is pending.
+The technician MSI uses the same commit cleanup in the installing user's context
+and restricts its state path to that user's local application data. Customer
+cleanup runs under SYSTEM and restricts its path to the machine-wide customer
+directory. Neither edition deletes the cancellation marker or company identity.
 Software
 rollback narrowly uninstalls its verified failed MSI with `SWAN_RECOVERY=1`,
 excluding user-uninstall cancellation actions. Only explicit verified setup or

@@ -1,9 +1,9 @@
 $ErrorActionPreference='Stop'
-$script=Join-Path $PSScriptRoot 'Commit-CustomerUninstall.ps1'
+$script=Join-Path $PSScriptRoot 'Commit-Uninstall.ps1'
 $tokens=$null;$errors=$null
 $ast=[System.Management.Automation.Language.Parser]::ParseFile($script,[ref]$tokens,[ref]$errors)
 if ($errors.Count) { throw 'Uninstall commit script failed parsing.' }
-$function=$ast.Find({param($node) $node -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $node.Name -eq 'Complete-CustomerUninstall'},$true)
+$function=$ast.Find({param($node) $node -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $node.Name -eq 'Complete-Uninstall'},$true)
 if ($null -eq $function) { throw 'Commit cleanup function missing.' }
 . ([ScriptBlock]::Create($function.Extent.Text))
 $root=Join-Path ([IO.Path]::GetTempPath()) ('swan-uninstall-commit-'+[Guid]::NewGuid().ToString('N'))
@@ -19,21 +19,23 @@ try {
     [IO.File]::WriteAllText($task,'{"enabled":true,"running":false}')
     [IO.File]::WriteAllText($agent,'inert installed agent fixture')
     $rejected=$false
-    try { Complete-CustomerUninstall -Directory $root } catch { $rejected=$true }
+    try { Complete-Uninstall -Directory $root } catch { $rejected=$true }
     if (-not $rejected -or -not (Test-Path $cancellation)) { throw 'Commit ran before agent removal.' }
     Remove-Item -LiteralPath $agent
     # The real entrypoint must reject arbitrary directories even though the
     # pure cleanup function is exercised here against private temporary files.
-    $rejected=$false
-    try { & $script -Directory $root } catch { $rejected=$true }
-    if (-not $rejected -or -not (Test-Path $cancellation)) { throw 'Canonical state-directory guard failed.' }
+    foreach($edition in @('customer','technician')) {
+        $rejected=$false
+        try { & $script -Directory $root -Edition $edition } catch { $rejected=$true }
+        if (-not $rejected -or -not (Test-Path $cancellation)) { throw 'Canonical edition state-directory guard failed.' }
+    }
     [IO.File]::WriteAllText($task,'{"enabled":"invalid","running":false}')
     $rejected=$false
-    try { Complete-CustomerUninstall -Directory $root } catch { $rejected=$true }
+    try { Complete-Uninstall -Directory $root } catch { $rejected=$true }
     if (-not $rejected -or -not (Test-Path $cancellation) -or -not (Test-Path $marker)) { throw 'Invalid task record partially cleared cancellation.' }
     [IO.File]::WriteAllText($task,'{"enabled":true,"running":false}')
-    Complete-CustomerUninstall -Directory $root
-    Complete-CustomerUninstall -Directory $root
+    Complete-Uninstall -Directory $root
+    Complete-Uninstall -Directory $root
     if ((Test-Path $cancellation) -or (Test-Path $task) -or -not (Test-Path $marker)) { throw 'Commit did not preserve cancellation while clearing rollback records.' }
     # A later removal can now create its own rollback; rollback must retain
     # the earlier completed uninstall's cancellation rather than enabling support.
@@ -45,4 +47,4 @@ try {
     foreach ($path in @($agent,$marker,$cancellation,$task,$state)) { if (Test-Path -LiteralPath $path) { Remove-Item -LiteralPath $path } }
     Remove-Item -LiteralPath $root
 }
-Write-Output 'Customer uninstall commit regression checks passed; no installed application or task changed.'
+Write-Output 'Uninstall commit regression checks passed for both editions; no installed application or task changed.'

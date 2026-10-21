@@ -61,12 +61,26 @@ class CustomerMsiTests(unittest.TestCase):
             self.assertEqual(commit.attrib["Execute"], "commit")
             self.assertEqual(commit.attrib["Impersonate"], "no")
             self.assertEqual(commit.attrib["Return"], "check")
-            self.assertEqual(commit.attrib["ExeCommand"], 'commit-customer-uninstall "[STATEFOLDER]."')
+            self.assertEqual(commit.attrib["ExeCommand"], 'commit-uninstall customer "[STATEFOLDER]."')
             commit_scheduling = tree.find(".//w:InstallExecuteSequence/w:Custom[@Action='CommitCompanyUninstall']", ns)
             self.assertEqual(commit_scheduling.attrib["After"], "RemoveCompanyConfigurationTask")
             self.assertEqual(commit_scheduling.attrib["Condition"], scheduling.attrib["Condition"])
             installed_files = tree.findall(".//w:File", ns)
             self.assertEqual(len(installed_files), len(files)+1)
+
+    def test_technician_uninstall_commit_retains_user_context(self):
+        import xml.etree.ElementTree as ET
+        tree = ET.parse(Path(__file__).with_name("msi") / "Technician.wxs")
+        ns = {"w": msi.NAMESPACE}
+        action = tree.find(".//w:CustomAction[@Id='CommitTechnicianUninstall']", ns)
+        self.assertEqual(action.attrib["BinaryRef"], "UninstallCommitAgent")
+        self.assertEqual(action.attrib["ExeCommand"], 'commit-uninstall technician "[INSTALLFOLDER]."')
+        self.assertEqual(action.attrib["Execute"], "commit")
+        self.assertEqual(action.attrib["Impersonate"], "yes")
+        self.assertEqual(action.attrib["Return"], "check")
+        sequence = tree.find(".//w:InstallExecuteSequence/w:Custom[@Action='CommitTechnicianUninstall']", ns)
+        self.assertEqual(sequence.attrib["After"], "CancelUpdateRecovery")
+        self.assertEqual(sequence.attrib["Condition"], 'REMOVE = "ALL" AND NOT UPGRADINGPRODUCTCODE AND NOT SWAN_RECOVERY')
 
     def test_component_identity_survives_version_and_payload_changes(self):
         with tempfile.TemporaryDirectory() as folder:

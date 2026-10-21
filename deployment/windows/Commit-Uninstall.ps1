@@ -1,7 +1,7 @@
 [CmdletBinding()]
-param([Parameter(Mandatory=$true)][string]$Directory)
+param([Parameter(Mandatory=$true)][string]$Directory,[Parameter(Mandatory=$true)][ValidateSet('customer','technician')][string]$Edition)
 $ErrorActionPreference='Stop'
-function Complete-CustomerUninstall {
+function Complete-Uninstall {
     param([Parameter(Mandatory=$true)][string]$Directory)
     $folder=Get-Item -LiteralPath $Directory
     if (-not $folder.PSIsContainer -or ($folder.Attributes -band [IO.FileAttributes]::ReparsePoint)) { throw 'Unsafe uninstall state directory.' }
@@ -24,6 +24,6 @@ function Complete-CustomerUninstall {
     # update recovery cannot reinstall software the customer just uninstalled.
     foreach ($path in $records) { Remove-Item -LiteralPath $path }
 }
-$expected=Join-Path ([Environment]::GetFolderPath('CommonApplicationData')) 'SwanRemoteSupport'
-if ([IO.Path]::GetFullPath($Directory).TrimEnd('\') -ine [IO.Path]::GetFullPath($expected).TrimEnd('\')) { throw 'Uninstall commit requires the canonical customer state directory.' }
-Complete-CustomerUninstall -Directory $Directory
+$expected=if($Edition -eq 'customer'){Join-Path ([Environment]::GetFolderPath('CommonApplicationData')) 'SwanRemoteSupport'}else{Join-Path ([Environment]::GetFolderPath('LocalApplicationData')) 'SwanRemoteSupport-Technician'}
+if ([IO.Path]::GetFullPath($Directory).TrimEnd('\') -ine [IO.Path]::GetFullPath($expected).TrimEnd('\')) { throw 'Uninstall commit requires the canonical edition state directory.' }
+Complete-Uninstall -Directory $Directory
