@@ -3494,3 +3494,27 @@ this test explicitly and requires one executed passing test. Compilation,
 test results and real driver/session behavior remain pending. This is a source
 correction, not a claim of completed packet-injection acceptance or an updated
 installed customer app.
+
+### Native tampered-cache check and legacy-install UI correction, 22 October
+
+The existing lab-signed technician `c0bf4b4` portable ran as standard user
+SwanLabTech on Server 2016 14393.693 with a separate cached-state fixture.
+Only the decoded technician display name was changed, retaining the original
+signature. Independent Ed25519 verification accepted the original envelope and
+rejected the modified one. The GUI showed “Company setup is not complete,” no
+company branding, no technician login or device inventory. The untrusted name
+did not appear. It closed normally (exit/task result 0); the native process was
+absent, both working services stayed running, and the source fixture hash was
+unchanged. Local evidence/verifier are under `technician-c0bf-gui-20261021` and
+`Verify-Lab16C0bfTamper20261022.py`. Network isolation used only the test process's
+proxy environment; no firewall or server settings changed. This verifies local
+cached-profile rejection, not hostile-HTTPS sync or the other profile negatives.
+
+The test also exposed a legacy “Click to upgrade” card because another version
+was installed in the guest. The button was not clicked. Source now hides legacy
+installation/download cards for both stable managed application identities,
+including an invalid company configuration. Managed UI installation entry points
+and the legacy `--update` command refuse the operation; the company agent and
+explicit bundle's silent-installer path remain available. Compilation and native
+verification of this correction remain pending. The previously dispatched
+`3c4fb57` build predates this correction and cannot validate it.

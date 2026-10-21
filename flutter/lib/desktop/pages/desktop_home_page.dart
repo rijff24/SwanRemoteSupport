@@ -582,6 +582,13 @@ class _DesktopHomePageState extends State<DesktopHomePage>
   }
 
   Widget buildHelpCards(String updateUrl) {
+    final appName = bind.mainGetAppNameSync();
+    if (appName == swanManagedAppName ||
+        appName == '$swanManagedAppName Technician') {
+      // Managed installation and updates require the company bundle/agent,
+      // including when cached company configuration cannot be verified.
+      return const SizedBox.shrink();
+    }
     if (!bind.isCustomClient() &&
         updateUrl.isNotEmpty &&
         !isCardClosed &&
