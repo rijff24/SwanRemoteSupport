@@ -2557,9 +2557,27 @@ test fixture used the wrong protobuf field; its correction exposed interleaved
 parallel test output. The final fixture runs sequentially and retains strict
 failure and control checks; a compilation failure does not count as reproduction.
 
-The Linux candidate rendezvous and relay build succeeded; the Windows build
-and independent artifact verification remain pending. Existing distribution
-pins and running lab services have not
-been replaced. Passing these network regressions does not establish native
-session authorization, Server 2016 candidate compatibility, external NAT
-traversal, relay fallback, or release readiness.
+Both candidate executable builds succeeded. The four downloaded candidate and
+regression artifacts passed their authenticated archive digests, ZIP integrity,
+receipt, patch, lock, and public recipe checks. The Windows candidate artifact
+`12344418248` has SHA-256
+`be388753b8b3edf3530dceea59137b1477300cb67eb46d6cc1a12a584c4e3049`.
+The source receipt identifies PR merge `c09c4bd8ac85f86e1f0fd10d2853a09b266545a4`;
+its parent includes `e7953c9`, and archived recipe files match that reviewed
+revision. This is input provenance, not binary reproducibility.
+
+On the existing Server 2016 build 14393 guest, candidate `hbbs.exe` SHA-256
+`83d402b48cec61513b6a0e3a6277c648b31a6ccbce0b87eee022b96ca746a443`
+and `hbbr.exe` SHA-256
+`8ba65379f7a025cad6ec0520d481af62c135e117ac58ac7b460c7b1afbf751cd`
+both started and reported version 1.1.14, as specified by the pinned upstream
+Cargo package. The candidate rendezvous server then answered real IPv4 and
+IPv6 `RegisterPeer` datagrams with a request for a public key. It used separate
+ports and a fresh database/key directory, logged no UDP failure, and was stopped
+after the test. The temporary loopback artifact transfer server was also stopped.
+Existing company, worker, customer and technician processes remained running.
+
+Existing distribution pins and lab services have not been replaced. These
+unsigned candidate checks establish startup and basic registration on Server
+2016; they do not establish a native authorized session, relay operation,
+external NAT traversal, complete Windows compatibility, or release readiness.
