@@ -53,6 +53,31 @@ class BuildSourceTests(unittest.TestCase):
                 source.archive(root, output)
             self.assertFalse(output.exists())
 
+    def test_component_archive_preserves_embedded_inputs_without_client_bridges_or_private_files(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder) / "checkout"
+            self.fixture(root)
+            names = ("product/Cargo.lock", "product/management/src/main.rs", "deployment/windows/Install-SwanRemoteSupport.cmd",
+                     "branding/swan-support-mark.svg", "LICENCE", ".cargo/config.toml", ".dockerignore")
+            for name in names:
+                path = root / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_bytes(b"public build input\r\n")
+                subprocess.run(["git", "-C", str(root), "add", name], check=True, capture_output=True)
+            (root / "product/private.env").write_text("private canary", encoding="utf-8")
+            # A component build does not initialize or consume desktop bridges.
+            for name in source.BRIDGE_FILES:
+                (root / name).unlink()
+            output, repeated = Path(folder) / "component.zip", Path(folder) / "repeated.zip"
+            self.assertEqual(source.archive(root, output, True), source.archive(root, repeated, True))
+            with zipfile.ZipFile(output) as package:
+                receipt = json.loads(package.read("BUILD-SOURCE.json"))
+                self.assertEqual(receipt["generated_bridge_files"], [])
+                self.assertEqual(set(receipt["files"]), set(names))
+                self.assertEqual(set(package.namelist()), {"BUILD-SOURCE.json", *("source/" + name for name in names)})
+                for name in names:
+                    self.assertEqual(package.read("source/" + name), b"public build input\r\n")
+
     def test_submodule_pin_mismatch_is_rejected(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder) / "checkout"

@@ -32,6 +32,12 @@ jobs:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
       - name: Install pinned Rust
         run: rustup toolchain install 1.90.0 --profile minimal
+      - name: Preserve company component source inputs
+        shell: bash
+        run: |
+          python -m unittest discover -s deployment/windows -p test_build_source.py
+          mkdir -p component-artifacts
+          python deployment/windows/archive-build-source.py . component-artifacts/CompanyComponents-source.zip --components-only
       - name: Test security and management
         run: cargo +1.90.0 test --manifest-path product/Cargo.toml --workspace --locked
       - name: Build components
@@ -61,6 +67,31 @@ jobs:
         run: |
           powershell.exe -NoProfile -NonInteractive -STA -ExecutionPolicy Bypass -File ./deployment/windows/Setup-Server.ps1 -RenderPreview "$env:RUNNER_TEMP/server-setup-preview.png"
           if ($LASTEXITCODE -ne 0) { throw 'Server setup preview failed.' }
+      - name: Record unsigned component hashes and build provenance
+        shell: bash
+        run: |
+          python - <<'PY'
+          import hashlib, json, os, pathlib, shutil, subprocess
+          root = pathlib.Path('component-artifacts')
+          suffix = '.exe' if os.name == 'nt' else ''
+          hashes = {}
+          for name in ('swan-management', 'swan-agent', 'swan-worker'):
+              source = pathlib.Path('product/target/release') / (name + suffix)
+              destination = root / source.name
+              shutil.copyfile(source, destination)
+              hashes[destination.name] = hashlib.sha256(destination.read_bytes()).hexdigest()
+          hashes['CompanyComponents-source.zip'] = hashlib.sha256((root / 'CompanyComponents-source.zip').read_bytes()).hexdigest()
+          record = {'schema': 1, 'source': os.environ['GITHUB_SHA'], 'repository': os.environ['GITHUB_REPOSITORY'],
+                    'rustc': subprocess.check_output(['rustc', '+1.90.0', '-Vv'], text=True),
+                    'unsigned_test_inputs': True, 'production_approved': False, 'sha256': hashes}
+          (root / 'SOURCE.json').write_text(json.dumps(record, indent=2), encoding='utf-8')
+          PY
+      - name: Upload unsigned company component test inputs and corresponding source
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: CompanyComponents-${{ matrix.os }}-UNSIGNED-TEST
+          path: component-artifacts/
+          if-no-files-found: error
   linux-deployment:
     if: github.event_name != 'workflow_dispatch' || !inputs.technician_msi_only
     runs-on: ubuntu-24.04

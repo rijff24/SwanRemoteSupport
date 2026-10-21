@@ -15,6 +15,15 @@ cargo +1.90.0 build --manifest-path product/Cargo.toml --workspace --release --l
 
 Windows production builds use MSVC. GNU compilation has verified the product components on the local development machine. Native endpoint builds additionally require the pinned Flutter and vcpkg dependencies in `.github/workflows/swan-windows-build.yml`; the company-product CI separately checks Windows and Linux management components. The root application enables management integration with the `swan_custom` feature.
 
+Successful company-product CI jobs export `CompanyComponents-<runner>-UNSIGNED-TEST`
+artifacts containing the management service, configuration agent and worker,
+their SHA-256 values, compiler/source revision metadata and a source-input archive.
+The archive preserves tracked component, branding and deployment inputs with their
+actual build-time bytes; private environment files and desktop bridge generation
+are excluded. Rebuild from its `source/` folder using the commands above. These
+are unsigned verification inputs, not production releases or complete desktop
+installation bundles. The installer worker still requires Windows.
+
 ## Implemented development flows
 
 - One-time setup, local password/TOTP authentication with replay checks, administrator and technician roles, group access, pending device enrollment, revocation and auditing.

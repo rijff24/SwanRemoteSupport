@@ -29,7 +29,7 @@ def safe_path(value):
     return path
 
 
-def collect(root):
+def collect(root, components_only=False):
     files, repositories = {}, {}
 
     def repository(directory, prefix="", expected=None):
@@ -45,6 +45,11 @@ def collect(root):
                 raise ValueError("Unmerged source index")
             relative = name.decode("utf-8")
             safe_path(relative)
+            if components_only and not (
+                prefix + relative in ("LICENCE", ".cargo/config.toml", ".dockerignore")
+                or (prefix + relative).startswith(("product/", "deployment/", "branding/"))
+            ):
+                continue
             archive_name = prefix + relative
             path = directory / relative
             if path.is_symlink() or not path.resolve().is_relative_to(root):
@@ -61,7 +66,7 @@ def collect(root):
                 raise ValueError("Unsupported source file mode")
 
     repository(root)
-    for name in BRIDGE_FILES:
+    for name in (() if components_only else BRIDGE_FILES):
         path = root / name
         if not path.is_file() or path.is_symlink() or not path.resolve().is_relative_to(root):
             raise ValueError("Generated bridge source missing or unsafe")
@@ -69,12 +74,12 @@ def collect(root):
     return files, repositories
 
 
-def archive(root, output):
+def archive(root, output, components_only=False):
     root = root.resolve(strict=True)
-    files, repositories = collect(root)
+    files, repositories = collect(root, components_only)
     # Explicit exclusive creation prevents silently replacing release evidence.
-    manifest = {"schema": 1, "snapshot": "before-application-compilation",
-                "repositories": repositories, "generated_bridge_files": list(BRIDGE_FILES),
+    manifest = {"schema": 1, "snapshot": "before-component-compilation" if components_only else "before-application-compilation",
+                "repositories": repositories, "generated_bridge_files": [] if components_only else list(BRIDGE_FILES),
                 "files": {}}
     with output.open("xb") as destination, zipfile.ZipFile(destination, "w", compression=zipfile.ZIP_DEFLATED) as package:
         for name, (path, mode) in sorted(files.items()):
@@ -103,5 +108,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("root", type=Path)
     parser.add_argument("output", type=Path)
+    parser.add_argument("--components-only", action="store_true", help="Archive company components and their deployment inputs without unrelated client submodules or generated bridges")
     args = parser.parse_args()
-    print(archive(args.root, args.output))
+    print(archive(args.root, args.output, args.components_only))

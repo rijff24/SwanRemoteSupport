@@ -2903,3 +2903,44 @@ bundle acceptance for this recipe remain pending. Server and worker must use
 the matching updated recipe. The customer installation guide now describes the
 configurable company flow and links the Tailscale instructions to the preserved
 baseline rather than presenting them as current setup.
+
+### Real setup elevation handoff and native guard build, 21 October
+
+The actual Server 2016 UAC broker was exercised from the existing standard lab
+account in interactive session 1 using setup source
+`0d17a30cd2e323f87e798eabab5aa53918096d3f`. The expanded prompt showed the exact
+pinned setup path, bootstrap path and confirmed test domain. Authentication used
+only the disposable VM's administrator. The parent received elevated exit code 1
+from the unsigned inert-agent fixture and correctly reported failure. Its task
+completed successfully as a test, with the parent still non-administrator.
+An independent fingerprint comparison preserved installed customer identity,
+credential, unattended consent/revision and installed release. This verifies
+actual elevation and failed-child propagation; it is not successful installation
+or remote-session control of a UAC secure desktop.
+
+The native guard workflow `39631663952` completed successfully. Its native log
+records exactly one executed passing
+`hbbs_http::sync::managed_sync_tests::managed_sync_rejects_legacy_endpoint_and_unsigned_options`
+test (0 failures, 71 filtered out). Artifact `12365255815` is 141,969,478 bytes,
+with GitHub SHA-256 `8de1a2b18ffffa86106d24dbbc2f641dec225c802b9f7d18afa5417282a3c391`.
+The existing download is live and progressing; archive/source validation,
+private signing and installed runtime rejection of legacy traffic remain open.
+This build predates the new company-bundle CMD entry point.
+
+Hosted Windows CI exposed a setup-test input bug: .NET Framework flushed a UTF-8
+byte-order mark into redirected stdin at process creation, before a replacement
+writer could be attached. Setup safely rejected the resulting hostname mismatch.
+That failure was reproduced locally with a BOM-emitting console input encoding.
+The fixture now selects a BOM-free encoding during process creation and restores
+the previous encoding immediately; both the reproduced environment and normal
+Windows PowerShell run pass. Production hostname confirmation was not relaxed.
+Hosted CI verification of this correction is pending.
+
+The component workflow now preserves corresponding component/deployment source
+before compilation and exports unsigned test binaries with source/compiler
+metadata and hashes after successful checks. The source archiver's component
+mode omits unrelated client bridges/submodules and private untracked files while
+preserving actual file bytes; all five source archive tests pass locally.
+These new artifacts and their provenance still require CI validation. Production
+signing, matching company server/worker runtime, public connectivity, complete
+Windows coverage and the remaining session/update/restore gates remain open.

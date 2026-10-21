@@ -65,12 +65,17 @@ try {
     $start.Arguments='/d /s /c ""'+(Join-Path $bundle 'Install-SwanRemoteSupport.cmd')+'""'
     $start.UseShellExecute=$false;$start.CreateNoWindow=$true
     $start.RedirectStandardInput=$true;$start.RedirectStandardOutput=$true;$start.RedirectStandardError=$true
-    $process=[Diagnostics.Process]::Start($start)
+    # .NET Framework creates and flushes its stdin writer during Process.Start,
+    # before StandardInput is first accessed. Set its encoding at creation time.
+    $previousInputEncoding=[Console]::InputEncoding
+    try {
+        [Console]::InputEncoding=[Text.UTF8Encoding]::new($false)
+        $process=[Diagnostics.Process]::Start($start)
+    } finally { [Console]::InputEncoding=$previousInputEncoding }
     $stdout=$process.StandardOutput.ReadToEndAsync();$stderr=$process.StandardError.ReadToEndAsync()
     # Windows PowerShell may select a BOM-emitting encoding for redirected
     # input on hosted runners. Supply the same plain hostname a user types.
-    $inputWriter=[IO.StreamWriter]::new($process.StandardInput.BaseStream,[Text.UTF8Encoding]::new($false))
-    try { $inputWriter.WriteLine('company.test') } finally { $inputWriter.Dispose() }
+    $process.StandardInput.WriteLine('company.test');$process.StandardInput.Close()
     if(-not $process.WaitForExit(60000)){throw 'Setup fixture did not exit; inspect the owned test process'}
     $output=$stdout.GetAwaiter().GetResult()+$stderr.GetAwaiter().GetResult()
     if($process.ExitCode -ne 1 -or $output -notmatch 'Configuration agent is not trusted.' -or $output -notmatch 'Setup did not complete.'){
