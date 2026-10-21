@@ -22,6 +22,46 @@ fn profile_fixture()->CompanyProfile {
 }
 
 #[tokio::test]
+async fn first_run_preserves_company_branding_and_update_policy_atomically() {
+    let directory=std::env::temp_dir().join(format!("swan-first-run-{}",random_token()));
+    let store=Arc::new(Store::open(&directory).unwrap());let app=router(store.clone());
+    let (_,status)=request(&app,"/api/v1/status","GET",None,Value::Null).await;
+    let key=public_key(status["profile_public_key"].as_str().unwrap()).unwrap();
+    let secret=Secret::generate_secret().to_encoded().to_string();
+    let generator=TOTP::new(Algorithm::SHA1,6,1,30,Secret::Encoded(secret.clone()).to_bytes().unwrap()).unwrap();
+    let mut profile=profile_fixture();
+    for (brand,name,color,url) in [(&mut profile.customer,"Example customer care","#123456","https://example.org/customer"),(&mut profile.technician,"Example service desk","#654321","https://example.org/technician")] {
+        brand.display_name=name.into();brand.primary_color=color.into();brand.support_url=url.into();
+        brand.support_contacts="Company help desk".into();brand.consent_text="Only approve a known technician.".into();
+        brand.logo_svg="<svg><path d=\"M0 0\"/></svg>".into();
+        brand.shortcuts=vec![BrandingShortcut{label:name.into(),url:format!("{url}/help")}];
+    }
+    profile.allow_unattended=false;profile.updates_paused=true;profile.rollout_percent=23;
+    profile.update_channel="test".into();profile.maintenance_start_utc=23;profile.maintenance_end_utc=4;
+    let submitted=serde_json::to_value(&profile).unwrap();
+    let setup=json!({"profile":submitted,"username":"owner","password":"example company setup password","totp_secret":secret,"totp_code":generator.generate(now())});
+    let token=std::fs::read_to_string(directory.join("setup-token.txt")).unwrap();
+    let mut invalid=setup.clone();invalid["profile"]["rollout_percent"]=json!(101);
+    assert_eq!(request(&app,"/api/v1/setup","POST",Some(&token),invalid).await.0,StatusCode::BAD_REQUEST);
+    let db=rusqlite::Connection::open_with_flags(directory.join("management.sqlite3"),rusqlite::OpenFlags::SQLITE_OPEN_READ_ONLY).unwrap();
+    for table in ["profile","users","audit"] {
+        let count:i64=db.query_row(&format!("SELECT COUNT(*) FROM {table}"),[],|row|row.get(0)).unwrap();
+        assert_eq!(count,0,"Invalid first-run policy must leave company and account creation uncommitted");
+    }
+    assert_eq!(request(&app,"/api/v1/setup","POST",Some(&token),setup).await.0,StatusCode::OK);
+    let (status,envelope)=request(&app,"/api/v1/profile","GET",None,Value::Null).await;assert_eq!(status,StatusCode::OK);
+    let signed:SignedEnvelope=serde_json::from_value(envelope).unwrap();let received:CompanyProfile=signed.verify(&key).unwrap();
+    assert_ne!(received.company_id,"fixture");assert_eq!(received.revision,1);
+    let stored:String=db.query_row("SELECT body FROM profile WHERE id=1",[],|row|row.get(0)).unwrap();
+    for mut actual in [serde_json::to_value(received).unwrap(),serde_json::from_str::<Value>(&stored).unwrap()] {
+        for field in ["company_id","revision","issued_at","expires_at"] {actual[field]=submitted[field].clone();}
+        assert_eq!(actual,submitted,"Initial signed and persisted policy must retain every submitted company setting");
+    }
+    let admins:i64=db.query_row("SELECT COUNT(*) FROM users WHERE username='owner' AND role='admin' AND disabled=0 AND last_totp_step>=0",[],|row|row.get(0)).unwrap();assert_eq!(admins,1);
+    drop(db);drop(app);drop(store);std::fs::remove_dir_all(directory).unwrap();
+}
+
+#[tokio::test]
 async fn enrollment_mfa_and_grants_fail_closed() {
     let directory=std::env::temp_dir().join(format!("swan-api-{}",random_token()));
     let store=Arc::new(Store::open(&directory).unwrap());let app=router(store.clone());
