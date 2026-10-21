@@ -2974,4 +2974,10 @@ handshake before claiming jobs: the worker checks an authenticated recipe endpoi
 and the server checks the matching versioned digest on every claim before queue
 mutation. Old or different recipes are rejected explicitly. Source regression
 checks cover preserved queued/expired claims on mismatch and preflight responses
-from old/incompatible servers; CI and installed worker verification are pending.
+from old/incompatible servers. Push workflow `39644529161` and PR workflow
+`39644541313` passed for revision
+`481439d62af5189706a1b83263af53d603f7de19`. Windows and Linux logs confirm the
+recipe normalization/content regression, management claim-compatibility regression
+and real loopback HTTP worker preflight regression executed and passed. Linux
+deployment checks also passed. Independently downloaded executable and installed
+worker verification of this change remain pending.
