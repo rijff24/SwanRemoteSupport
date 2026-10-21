@@ -2622,3 +2622,31 @@ This establishes an attended local session and enforced grant closure with the
 candidate transport. It does not establish natural lease-expiry behavior, data
 transfer or clipboard-content correctness, unattended access, separate-machine
 input, external NAT traversal, relay fallback, or the full Windows test matrix.
+
+### Reboot and relay-test follow-up (2026-10-21)
+
+The disposable Server 2016 guest was shut down and relaunched with a USB tablet.
+The company server, installer worker and customer service started automatically;
+HTTPS worked, and device identity, consent and release sequence were preserved.
+The manual parallel transport task was restarted separately. The viewer's
+connection-refused dialog during shutdown cleared after reconnecting. Absolute
+pointer input subsequently selected the actual customer Accept button without
+the previous relative-pointer compensation. Windows displayed Shutdown Event
+Tracker, so clean shutdown-event logging is not claimed.
+
+The existing customer payload again remained on `unconfigured.invalid` after
+startup despite accepting profile revision 16. Restarting only that lab service
+recovered registration. This reproduces the pending configuration-retry fix;
+it is not evidence that the new native build has passed. Build `39600988305`
+reached the branded-client compilation step after its prerequisite jobs passed.
+
+The parallel server reported `ALWAYS_USE_RELAY=Y`, but the subsequent accepted
+session still logged a secure local TCP connection (`is_local: true`). The
+server preference therefore did not make this same-machine test a relay test.
+Desktop video appeared after customer approval at 15:04 lab time. Later the
+guest display stopped changing, both WinRM probes timed out, and SSH timed out
+during banner exchange while QEMU reported the VM running. Attempts to close
+the native connection through its window were not confirmed. The guest state
+was preserved for diagnosis; the cause of the unresponsiveness is unproven.
+Relay operation, session closure for this attempt, and post-failure recovery
+remain unverified.
