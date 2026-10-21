@@ -44,11 +44,10 @@ if ($bootstrap.edition -eq 'customer') {
     $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
     if (-not ([Security.Principal.WindowsPrincipal]::new($identity)).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) { throw 'Run customer setup as administrator.' }
 }
-New-Item -ItemType Directory -Force -Path $editionDirectory | Out-Null
 if ($bootstrap.edition -eq 'customer') {
-    & icacls.exe $editionDirectory '/inheritance:r' '/grant:r' '*S-1-5-18:(OI)(CI)F' '*S-1-5-32-544:(OI)(CI)F' | Out-Null
-    if ($LASTEXITCODE -ne 0) { throw 'Cannot protect customer configuration directory.' }
-}
+    & $agent prepare-customer-directory $editionDirectory
+    if ($LASTEXITCODE -ne 0) { throw 'Customer configuration directory is not trusted. Preserve and investigate existing data before setup.' }
+} else { New-Item -ItemType Directory -Force -Path $editionDirectory | Out-Null }
 $env:SWAN_STATE_DIR = $editionDirectory
 if (-not (Test-Path -LiteralPath (Join-Path $editionDirectory 'managed-state.json'))) {
     & $agent setup $BootstrapPath --accept-company

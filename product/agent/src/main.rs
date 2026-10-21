@@ -21,6 +21,11 @@ async fn main()->Result<()> {
     match command {
         "rollback-protocol"=>println!("1"),
         #[cfg(windows)]
+        "prepare-customer-directory"=>{
+            let directory=PathBuf::from(args.get(2).context("Missing customer state directory")?);
+            swan_agent::update::prepare_customer_directory(&directory,true)?;
+        }
+        #[cfg(windows)]
         "commit-uninstall"=>{
             // The signed MSI embeds a separate agent copy: its installed copy
             // has already been removed when the commit script executes.
@@ -32,13 +37,11 @@ async fn main()->Result<()> {
         #[cfg(windows)]
         "cancel-update-recovery"|"restore-update-recovery"=>{
             let executable=std::env::current_exe()?;
-            ensure!(executable.file_name().is_some_and(|name|name.to_string_lossy().eq_ignore_ascii_case("swan-agent.exe")),"Uninstall cancellation requires the installed agent");
-            let installed_directory=executable.parent().context("Missing installed agent directory")?;
-            let script=installed_directory.join("Update-UninstallCancellation.ps1");
-            std::fs::write(&script,include_str!("../../../deployment/windows/Update-UninstallCancellation.ps1"))?;
-            let status=swan_agent::update::powershell_command()?.args(["-NoLogo","-NoProfile","-NonInteractive","-ExecutionPolicy","Bypass","-File"]).arg(script).arg("-Directory").arg(installed_directory)
-                .arg("-Operation").arg(if command=="cancel-update-recovery" {"cancel"}else{"restore"}).status()?;
-            ensure!(status.success(),"Uninstall update cancellation failed");
+            let directory=if let Some(path)=args.get(2){PathBuf::from(path)}else{
+                ensure!(executable.file_name().is_some_and(|name|name.to_string_lossy().eq_ignore_ascii_case("swan-agent.exe")),"Uninstall cancellation requires the installed agent");
+                executable.parent().context("Missing installed agent directory")?.to_owned()
+            };
+            swan_agent::update::uninstall_cancellation(&directory,command=="restore-update-recovery",false)?;
         }
         #[cfg(windows)]
         "recover-update-task"=>{
@@ -47,32 +50,19 @@ async fn main()->Result<()> {
         #[cfg(windows)]
         "remove-configuration-task"|"restore-configuration-task"=>{
             let executable=std::env::current_exe()?;
-            let installed_directory=executable.parent().context("Missing installed agent directory")?;
-            ensure!(executable.file_name().is_some_and(|name|name.to_string_lossy().eq_ignore_ascii_case("swan-agent.exe")),"Uninstall cleanup requires the installed configuration agent");
-            let cancellation_script=installed_directory.join("Update-UninstallCancellation.ps1");
-            std::fs::write(&cancellation_script,include_str!("../../../deployment/windows/Update-UninstallCancellation.ps1"))?;
-            let cancellation=|operation:&str|->Result<()> {
-                let status=swan_agent::update::powershell_command()?.args(["-NoLogo","-NoProfile","-NonInteractive","-ExecutionPolicy","Bypass","-File"]).arg(&cancellation_script).arg("-Directory").arg(installed_directory).arg("-Operation").arg(operation).status()?;
-                ensure!(status.success(),"Uninstall recovery cancellation failed");Ok(())
+            let directory=if let Some(path)=args.get(2){PathBuf::from(path)}else{
+                ensure!(executable.file_name().is_some_and(|name|name.to_string_lossy().eq_ignore_ascii_case("swan-agent.exe")),"Uninstall cleanup requires the installed configuration agent");
+                executable.parent().context("Missing installed agent directory")?.to_owned()
             };
-            if command=="remove-configuration-task" {cancellation("cancel")?;}
-            // MSI invokes the installed binary under SYSTEM before removing it.
-            // The script checks the exact task executable, arguments and owner.
-            let (name,contents)=if command=="remove-configuration-task" {
-                ("Remove-Configuration.ps1",include_str!("../../../deployment/windows/Remove-Configuration.ps1"))
-            }else{("Restore-Configuration.ps1",include_str!("../../../deployment/windows/Restore-Configuration.ps1"))};
-            let script=installed_directory.join(name);
-            std::fs::write(&script,contents)?;
-            let status=swan_agent::update::powershell_command()?.args(["-NoLogo","-NoProfile","-NonInteractive","-ExecutionPolicy","Bypass","-File"]).arg(&script).arg("-Directory").arg(installed_directory).status()?;
-            std::fs::remove_file(&script)?;
-            ensure!(status.success(),"Company configuration task cleanup failed");
-            if command=="restore-configuration-task" {cancellation("restore")?;}
+            swan_agent::update::configuration_task_removal(&directory,command=="restore-configuration-task")?;
         }
         "setup"=>{
             let file=args.get(2).context("Usage: swan-agent setup bootstrap.json --accept-company")?;
             ensure!(args.iter().any(|a|a=="--accept-company"),"Review the company HTTPS domain and trust key; pass --accept-company only after confirming them");
-            ensure!(!directory.join("managed-state.json").exists(),"Already configured; refuse to silently change company ownership");
             let input:Bootstrap=serde_json::from_slice(&std::fs::read(file)?)?;
+            #[cfg(windows)]
+            if input.edition==Edition::Customer {swan_agent::update::prepare_customer_directory(&directory,std::env::var_os("SWAN_STATE_DIR").is_none())?;}
+            ensure!(!directory.join("managed-state.json").exists(),"Already configured; refuse to silently change company ownership");
             println!("Connecting to company domain {}",input.management_url);
             bootstrap(input).await?.save(&directory)?;
             println!("Company verified and profile pinned.");

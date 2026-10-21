@@ -88,14 +88,17 @@ def author(source, agent, version):
     component = element(state, "Component", Id="ConfigurationAgent", Guid=str(uuid.uuid5(UPGRADE, "configuration-agent")).upper(), Bitness="always64")
     element(component, "File", Id="ConfigurationAgentExe", Name="swan-agent.exe", Source=str(agent), KeyPath="yes")
     element(feature, "ComponentRef", Id="ConfigurationAgent")
-    element(package, "CustomAction", Id="RemoveCompanyConfigurationTask", FileRef="ConfigurationAgentExe",
-            ExeCommand="remove-configuration-task", Execute="deferred", Impersonate="no", Return="check")
-    element(package, "CustomAction", Id="RestoreCompanyConfigurationTask", FileRef="ConfigurationAgentExe",
-            ExeCommand="restore-configuration-task", Execute="rollback", Impersonate="no", Return="check")
     element(package, "Binary", Id="UninstallCommitAgent", SourceFile=str(agent))
+    element(package, "CustomAction", Id="PrepareCustomerState", BinaryRef="UninstallCommitAgent",
+            ExeCommand='prepare-customer-directory "[STATEFOLDER]."', Execute="deferred", Impersonate="no", Return="check")
+    element(package, "CustomAction", Id="RemoveCompanyConfigurationTask", BinaryRef="UninstallCommitAgent",
+            ExeCommand='remove-configuration-task "[STATEFOLDER]."', Execute="deferred", Impersonate="no", Return="check")
+    element(package, "CustomAction", Id="RestoreCompanyConfigurationTask", BinaryRef="UninstallCommitAgent",
+            ExeCommand='restore-configuration-task "[STATEFOLDER]."', Execute="rollback", Impersonate="no", Return="check")
     element(package, "CustomAction", Id="CommitCompanyUninstall", BinaryRef="UninstallCommitAgent",
             ExeCommand='commit-uninstall customer "[STATEFOLDER]."', Execute="commit", Impersonate="no", Return="check")
     sequence = element(package, "InstallExecuteSequence")
+    element(sequence, "Custom", Action="PrepareCustomerState", Before="CreateFolders", Condition='NOT (REMOVE = "ALL")')
     element(sequence, "Custom", Action="RestoreCompanyConfigurationTask", Before="RemoveCompanyConfigurationTask",
             Condition='REMOVE = "ALL" AND NOT UPGRADINGPRODUCTCODE AND NOT SWAN_RECOVERY')
     element(sequence, "Custom", Action="RemoveCompanyConfigurationTask", Before="RemoveFiles",

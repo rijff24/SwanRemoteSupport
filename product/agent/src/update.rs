@@ -293,6 +293,43 @@ pub fn commit_uninstall(directory:&Path,edition:&str)->Result<()> {
 }
 
 #[cfg(windows)]
+pub fn prepare_customer_directory(directory:&Path,canonical:bool)->Result<()> {
+    let status=embedded_powershell_command(include_str!("../../../deployment/windows/Prepare-CustomerDirectory.ps1"),
+        &[("Directory",directory.to_str().context("Customer state path is not valid Unicode")?),("Scope",if canonical{"canonical"}else{"custom"})])?.status()?;
+    ensure!(status.success(),"Customer state directory is not trusted or private");Ok(())
+}
+
+#[cfg(windows)]
+fn validate_uninstall_directory(directory:&Path,customer:bool)->Result<()> {
+    let guard=r#"param([string]$Directory,[string]$Edition)
+$ErrorActionPreference='Stop'
+$expected=if($Edition -eq 'customer'){Join-Path ([Environment]::GetFolderPath('CommonApplicationData')) 'SwanRemoteSupport'}else{Join-Path ([Environment]::GetFolderPath('LocalApplicationData')) 'SwanRemoteSupport-Technician'}
+if([IO.Path]::GetFullPath($Directory).TrimEnd('\') -ine [IO.Path]::GetFullPath($expected).TrimEnd('\')){throw 'Uninstall requires the canonical edition directory.'}
+"#;
+    let status=embedded_powershell_command(guard,&[("Directory",directory.to_str().context("Uninstall path is not valid Unicode")?),("Edition",if customer{"customer"}else{"technician"})])?.status()?;
+    ensure!(status.success(),"Invalid uninstall state directory");Ok(())
+}
+
+#[cfg(windows)]
+pub fn uninstall_cancellation(directory:&Path,restore:bool,customer:bool)->Result<()> {
+    validate_uninstall_directory(directory,customer)?;
+    let status=embedded_powershell_command(include_str!("../../../deployment/windows/Update-UninstallCancellation.ps1"),
+        &[("Directory",directory.to_str().context("Uninstall state path is not valid Unicode")?),("Operation",if restore{"restore"}else{"cancel"})])?.status()?;
+    ensure!(status.success(),"Uninstall recovery cancellation failed");Ok(())
+}
+
+#[cfg(windows)]
+pub fn configuration_task_removal(directory:&Path,restore:bool)->Result<()> {
+    validate_uninstall_directory(directory,true)?;
+    if !restore {uninstall_cancellation(directory,false,true)?;}
+    let script=if restore {include_str!("../../../deployment/windows/Restore-Configuration.ps1")}else{include_str!("../../../deployment/windows/Remove-Configuration.ps1")};
+    let status=embedded_powershell_command(script,&[("Directory",directory.to_str().context("Configuration state path is not valid Unicode")?)])?.status()?;
+    ensure!(status.success(),"Company configuration task cleanup failed");
+    if restore {uninstall_cancellation(directory,true,true)?;}
+    Ok(())
+}
+
+#[cfg(windows)]
 fn embedded_powershell_command(script:&str,arguments:&[(&str,&str)])->Result<std::process::Command> {
     let literal=|value:&str|format!("'{}'",value.replace('\'',"''"));
     let mut script=format!("$ProgressPreference='SilentlyContinue'; & {{\n{script}\n}}");

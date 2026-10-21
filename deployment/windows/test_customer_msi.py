@@ -44,7 +44,8 @@ class CustomerMsiTests(unittest.TestCase):
             location = tree.find(".//w:SetProperty[@Id='ARPINSTALLLOCATION']", ns)
             self.assertEqual(location.attrib["Value"], "[INSTALLFOLDER]")
             cleanup = tree.find(".//w:CustomAction[@Id='RemoveCompanyConfigurationTask']", ns)
-            self.assertEqual(cleanup.attrib["FileRef"], "ConfigurationAgentExe")
+            self.assertEqual(cleanup.attrib["BinaryRef"], "UninstallCommitAgent")
+            self.assertEqual(cleanup.attrib["ExeCommand"], 'remove-configuration-task "[STATEFOLDER]."')
             self.assertEqual(cleanup.attrib["Execute"], "deferred")
             self.assertEqual(cleanup.attrib["Impersonate"], "no")
             scheduling = tree.find(".//w:InstallExecuteSequence/w:Custom[@Action='RemoveCompanyConfigurationTask']", ns)
@@ -52,6 +53,8 @@ class CustomerMsiTests(unittest.TestCase):
             self.assertEqual(scheduling.attrib["Condition"], 'REMOVE = "ALL" AND NOT UPGRADINGPRODUCTCODE AND NOT SWAN_RECOVERY')
             rollback = tree.find(".//w:CustomAction[@Id='RestoreCompanyConfigurationTask']", ns)
             self.assertEqual(rollback.attrib["Execute"], "rollback")
+            self.assertEqual(rollback.attrib["BinaryRef"], "UninstallCommitAgent")
+            self.assertEqual(rollback.attrib["ExeCommand"], 'restore-configuration-task "[STATEFOLDER]."')
             rollback_scheduling = tree.find(".//w:InstallExecuteSequence/w:Custom[@Action='RestoreCompanyConfigurationTask']", ns)
             self.assertEqual(rollback_scheduling.attrib["Before"], "RemoveCompanyConfigurationTask")
             embedded = tree.find(".//w:Binary[@Id='UninstallCommitAgent']", ns)
@@ -65,6 +68,14 @@ class CustomerMsiTests(unittest.TestCase):
             commit_scheduling = tree.find(".//w:InstallExecuteSequence/w:Custom[@Action='CommitCompanyUninstall']", ns)
             self.assertEqual(commit_scheduling.attrib["After"], "RemoveCompanyConfigurationTask")
             self.assertEqual(commit_scheduling.attrib["Condition"], scheduling.attrib["Condition"])
+            preparation = tree.find(".//w:CustomAction[@Id='PrepareCustomerState']", ns)
+            self.assertEqual(preparation.attrib["BinaryRef"], "UninstallCommitAgent")
+            self.assertEqual(preparation.attrib["ExeCommand"], 'prepare-customer-directory "[STATEFOLDER]."')
+            self.assertEqual(preparation.attrib["Execute"], "deferred")
+            self.assertEqual(preparation.attrib["Impersonate"], "no")
+            preparation_sequence = tree.find(".//w:InstallExecuteSequence/w:Custom[@Action='PrepareCustomerState']", ns)
+            self.assertEqual(preparation_sequence.attrib["Before"], "CreateFolders")
+            self.assertEqual(preparation_sequence.attrib["Condition"], 'NOT (REMOVE = "ALL")')
             installed_files = tree.findall(".//w:File", ns)
             self.assertEqual(len(installed_files), len(files)+1)
 
@@ -81,6 +92,11 @@ class CustomerMsiTests(unittest.TestCase):
         sequence = tree.find(".//w:InstallExecuteSequence/w:Custom[@Action='CommitTechnicianUninstall']", ns)
         self.assertEqual(sequence.attrib["After"], "CancelUpdateRecovery")
         self.assertEqual(sequence.attrib["Condition"], 'REMOVE = "ALL" AND NOT UPGRADINGPRODUCTCODE AND NOT SWAN_RECOVERY')
+        for name, command in (("CancelUpdateRecovery", "cancel-update-recovery"), ("RestoreUpdateRecovery", "restore-update-recovery")):
+            action = tree.find(".//w:CustomAction[@Id='" + name + "']", ns)
+            self.assertEqual(action.attrib["BinaryRef"], "UninstallCommitAgent")
+            self.assertEqual(action.attrib["ExeCommand"], command + ' "[INSTALLFOLDER]."')
+            self.assertEqual(action.attrib["Impersonate"], "yes")
 
     def test_component_identity_survives_version_and_payload_changes(self):
         with tempfile.TemporaryDirectory() as folder:

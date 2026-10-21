@@ -62,6 +62,12 @@ jobs:
         run: |
           powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File ./deployment/windows/test_uninstall_commit.ps1
           if ($LASTEXITCODE -ne 0) { throw 'Uninstall commit checks failed.' }
+      - name: Verify private customer state creation and unsafe-state rejection
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File ./deployment/windows/test_customer_directory.ps1 -RequireAdministratorCases
+          if ($LASTEXITCODE -ne 0) { throw 'Customer state directory checks failed.' }
       - name: Verify company setup entry point and trust rejection
         if: runner.os == 'Windows'
         shell: pwsh

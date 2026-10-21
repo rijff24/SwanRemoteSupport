@@ -72,3 +72,4 @@ deployment/windows/**
 !deployment/windows/Update-RecoveryTask.ps1
 !deployment/windows/Update-UninstallCancellation.ps1
 !deployment/windows/Commit-Uninstall.ps1
+!deployment/windows/Prepare-CustomerDirectory.ps1

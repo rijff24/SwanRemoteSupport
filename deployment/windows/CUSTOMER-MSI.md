@@ -16,6 +16,18 @@ RuntimeBroker into the application directory and removes that copy on uninstall;
 it does not redistribute a project copy of Microsoft's binary. Runtime verification
 compares its hash with the current Windows system binary.
 
+Before creating installation folders or starting the service, the MSI uses its
+embedded release agent to prepare the machine-wide customer state directory.
+The helper creates a missing directory with SYSTEM/Administrators ownership and
+permissions atomically, then checks existing files and directories without
+adopting unsafe owners, permissions or reparse points. Unsafe pre-existing state
+must be preserved and investigated; setup does not silently trust it by changing
+its ACL. Explicit company setup uses the same helper before reading saved trust.
+The MSI also executes its embedded agent for uninstall/rollback, rather than
+trusting the installed agent or mutable helper scripts in that state directory.
+New package installation and standard-user negative access checks for this
+hardening remain required before release.
+
 ```powershell
 ./deployment/windows/Build-CustomerMsi.ps1 `
   -WixExe C:/BuildTools/WiX/bin/wix.exe -SourceDirectory C:/Release/swan-client `

@@ -3097,3 +3097,48 @@ existing guest after prior package tests, not a new clean snapshot. Company
 enrollment/identity preservation, standard-user technician installation, automatic
 updates, interrupted-removal rollback and native desktop sessions remain separate
 acceptance gates.
+
+### Actual MSI rollback and customer state permissions, 21 October
+
+Two private `1.5.10` fault-injection MSIs were built from native `c0bf4b4` and
+component `053a52e` inputs. Their only injected behavior was an opt-in deferred
+failure after `RemoveFiles`; the fixtures were lab-signed, not approved or
+published as releases. Both editions passed installation and baseline repair,
+the deliberately failing uninstall returned the expected 1603, full installed
+payload/registration were restored, subsequent repair passed, and normal
+uninstall succeeded. Independent raw-log checks verified actual deferred file
+removal before `LabFailRemoval` returned 1, followed by rollback. Ten operations
+matched their expected outcomes, including exactly two intentional failures.
+
+The customer test created an owned, disabled SYSTEM configuration watcher before
+fault injection. Rollback restored its exact agent path, `watch` argument,
+SYSTEM principal and disabled state. Both editions retained the prior uninstall
+cancellation marker and cleared temporary rollback records after restoration;
+the final normal removal committed. These are installer rollback results on
+Server 2019 `17763.3650`, not management database backup/restore, migration,
+enrollment or native-session results.
+
+A read-only post-uninstall ACL inspection found that the bare-MSI customer state
+directory retained inherited standard-user write access. Earlier company setup
+applied an ACL, but bare installation/removal also needs an independent trust
+boundary. No unauthorized session or privilege escalation was demonstrated.
+This is nevertheless a release-blocking permissions finding: cleanup must not
+execute mutable scripts from a directory that another user can populate, and
+setup must not adopt an untrusted existing state directory merely by changing
+its ACL.
+
+The fix adds atomic private-directory creation and owner/ACL/reparse inspection
+before MSI folder creation/service startup and before explicit setup reads saved
+trust. It rejects unsafe existing objects unchanged and checks for existing
+writable directory handles. Both MSIs use embedded agent copies for cleanup;
+the agent executes its embedded PowerShell helpers directly instead of writing
+and executing mutable helper files beside configuration data. All four MSI
+authoring checks, five source-archive checks and entry-point/commit fixtures pass
+locally. The directory helper's real administrator filesystem cases passed on
+Server 2019, including private creation, trusted reuse, rejection of a foreign
+file owner and rejection of a writable existing directory without changing it.
+The first harness run correctly rejected unsafe state but Windows PowerShell
+treated its redirected stderr as a terminating native error; the harness now
+observes bounded child exit codes directly. Compilation/CI and new signed MSI
+positive and standard-user negative tests remain pending. Existing company
+services and their enrollment were not modified by these changes.

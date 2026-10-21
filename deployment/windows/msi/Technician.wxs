@@ -2,9 +2,9 @@
   <Package Name="Swan Remote Support Technician" Manufacturer="Swan Remote Support" Version="$(var.Version)" UpgradeCode="A4374699-436F-4917-9A4E-223F62A9E634" Scope="perUser" InstallerVersion="500" Language="1033">
     <MajorUpgrade DowngradeErrorMessage="A newer Swan Remote Support Technician version is already installed." Schedule="afterInstallInitialize" />
     <MediaTemplate EmbedCab="yes" />
-    <CustomAction Id="CancelUpdateRecovery" FileRef="AgentExe" ExeCommand="cancel-update-recovery" Execute="deferred" Impersonate="yes" Return="check" />
-    <CustomAction Id="RestoreUpdateRecovery" FileRef="AgentExe" ExeCommand="restore-update-recovery" Execute="rollback" Impersonate="yes" Return="check" />
     <Binary Id="UninstallCommitAgent" SourceFile="$(var.AgentExe)" />
+    <CustomAction Id="CancelUpdateRecovery" BinaryRef="UninstallCommitAgent" ExeCommand="cancel-update-recovery &quot;[INSTALLFOLDER].&quot;" Execute="deferred" Impersonate="yes" Return="check" />
+    <CustomAction Id="RestoreUpdateRecovery" BinaryRef="UninstallCommitAgent" ExeCommand="restore-update-recovery &quot;[INSTALLFOLDER].&quot;" Execute="rollback" Impersonate="yes" Return="check" />
     <CustomAction Id="CommitTechnicianUninstall" BinaryRef="UninstallCommitAgent" ExeCommand="commit-uninstall technician &quot;[INSTALLFOLDER].&quot;" Execute="commit" Impersonate="yes" Return="check" />
     <InstallExecuteSequence>
       <Custom Action="RestoreUpdateRecovery" Before="CancelUpdateRecovery" Condition="REMOVE = &quot;ALL&quot; AND NOT UPGRADINGPRODUCTCODE AND NOT SWAN_RECOVERY" />
