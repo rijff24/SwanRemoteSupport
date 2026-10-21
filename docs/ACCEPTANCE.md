@@ -2539,3 +2539,27 @@ No invalid certificate was accepted. The viewer's relative mouse mapping also
 misplaced clicks; full-screen keyboard capture allowed verified keyboard-only
 form navigation. Adding a USB controller live was rejected by the VM's PCI bus,
 so no live USB hardware change succeeded.
+
+### Candidate Windows UDP correction (2026-10-21)
+
+An isolated Winsock probe on Server 2016 build 14393 reproduced error 10014
+when an IPv4 destination was passed to a dual-stack IPv6 UDP socket. The same
+probe delivered its datagram when the destination used an IPv4-mapped IPv6
+address. No existing service or network configuration changed for this probe.
+
+Commit `e7953c9` provides pinned public transport inputs, two reviewed patches,
+and workflow run `39596805961`. The Windows 2022 baseline reproduced error
+10014 in the actual shared Rust UDP message path while the IPv4 and IPv6
+controls passed. After destination normalization, all three real socket tests
+passed on Windows and Ubuntu 24.04. The tests cover protobuf message delivery,
+raw datagram delivery, IPv4 sockets, and native IPv6 destinations. An earlier
+test fixture used the wrong protobuf field; its correction exposed interleaved
+parallel test output. The final fixture runs sequentially and retains strict
+failure and control checks; a compilation failure does not count as reproduction.
+
+The Linux candidate rendezvous and relay build succeeded; the Windows build
+and independent artifact verification remain pending. Existing distribution
+pins and running lab services have not
+been replaced. Passing these network regressions does not establish native
+session authorization, Server 2016 candidate compatibility, external NAT
+traversal, relay fallback, or release readiness.
