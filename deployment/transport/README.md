@@ -51,3 +51,11 @@ and runs the existing real HTTPS, enrollment and encrypted complete backup/resto
 rehearsal against its immutable local image ID. It validates the embedded public
 recipe receipt before creating the rehearsal stack. These integration checks
 still do not prove native direct/relay sessions or public reachability.
+
+After a successful rehearsal, CI retains
+`MaintainedTransport-Linux-x64-UNSIGNED-TEST`: both Linux x86-64 binaries,
+`transport-build-source.zip`, `SWAN-SOURCE.json`, AGPL license and a hash manifest
+binding them to the immutable image ID and packaging revision. Extraction uses
+an owned stopped container, checks executable architecture and the archived UDP
+patch, and runs no candidate executable. This artifact remains a test input;
+it is not a signed release or a published production container image.

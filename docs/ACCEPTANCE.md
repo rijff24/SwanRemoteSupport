@@ -3182,3 +3182,50 @@ specific user approval is pending. Actual compiled-MSI negative tests, repeated
 uninstall rollback with this hardened agent, enrollment, approved automatic
 updates and native remote sessions remain unverified. These six lifecycle passes
 do not complete the Server 2022 acceptance matrix or qualify a production release.
+
+### Hardened MSI rollback on Server 2022, 21 October
+
+The same native `c0bf4b4` and hardened agent `6503614` were used in private
+`1.5.12` uninstall fault fixtures, explicitly named `LAB ROLLBACK FIXTURE`.
+They add an opt-in deferred failure after `RemoveFiles`; no distributable
+installer or production behavior was changed. The signed fixture hashes were
+`f614883f22eecc70055a351308eb3e688af58af6508b68372a16d45974ba5d30`
+(customer) and
+`024fbf1ab80b778af8ad098c1e214817752d234e4d7968be96e08310a9c99eb3`
+(technician), using the disposable lab publisher only.
+
+On the Server 2022 `20348.587` guest after the preceding lifecycle tests, both
+editions installed and repaired, the injected uninstall returned the expected
+1603, subsequent repair succeeded, and normal uninstall committed. Ten operations
+matched their expected results, including exactly two deliberate failures.
+Independent raw-log checks proved actual file removal preceded each injected
+error. Full payload hashes and installed registration were restored; cancellation
+markers survived; temporary rollback records cleared. The customer's owned,
+disabled SYSTEM watcher was restored with its exact action and disabled state,
+then removed during successful final uninstall. Evidence is retained privately
+in `windows-server2022-rollback-6503614/verified-rollback.json` with all phase
+reports and logs. This verifies MSI transaction recovery, not interrupted
+automatic updates, company database recovery, native sessions or standard-user
+file-access denial.
+
+### Maintained Linux transport integration, 21 October
+
+Source `143cd645f50de787edde0e3eb67027b84015fe35`, workflow run `39664079574`,
+passed Windows/Linux components and the Linux deployment job `119444360250`.
+The new candidate image used the pinned public transport and shared-submodule
+sources, reviewed patches and Rust toolchain. Its independent public recipe
+revision was `6503614`; the build archived 140 exact source/recipe files inside
+the image. Source archive SHA-256 was
+`a0d56be100851d183eab986533fe9028c2c8a52c8bd31691f92facca14d2cb68`.
+
+The real Docker rehearsal passed with the maintained image's immutable ID:
+HTTPS trust validation/untrusted-CA rejection, profile signatures, MFA,
+enrollment/logout, local NAT-test protocol responses and complete encrypted
+management/transport/TLS recovery into replacement containers retaining original
+trust. Both the previous upstream stack and maintained stack passed. These
+checks do not prove native desktop sessions, UDP NAT traversal, public ACME,
+Internet direct/relay access or production readiness. The explicit candidate
+Compose override supports fresh isolated deployments; normal distribution pins
+remain unchanged pending those acceptance checks. A subsequent change exports
+candidate binaries and corresponding source as a retained CI artifact; that
+new export step still requires its own successful CI execution.
