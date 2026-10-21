@@ -5426,6 +5426,12 @@ impl Connection {
 
     fn authorized_scope_violation(&self, msg: &Message) -> Option<&'static str> {
         #[cfg(feature = "swan_custom")]
+        if let Some(violation) = Self::managed_control_scope_violation(
+            self.keyboard && self.managed_permission_cap("keyboard"), msg,
+        ) {
+            return Some(violation);
+        }
+        #[cfg(feature = "swan_custom")]
         match msg.union.as_ref() {
             Some(message::Union::AudioFrame(_)) | Some(message::Union::VoiceCallRequest(_)) | Some(message::Union::VoiceCallResponse(_)) if !self.managed_permission_cap("audio") => return Some("Company grant denies audio"),
             Some(message::Union::FileAction(_)) | Some(message::Union::FileResponse(_)) if !self.managed_permission_cap("file") => return Some("Company grant denies file transfer"),
@@ -5436,6 +5442,20 @@ impl Connection {
             return (!Self::is_connection_housekeeping_message(msg)).then_some("session.auth_type");
         };
         Self::authorized_message_scope_violation(conn_type, msg)
+    }
+
+    #[cfg(feature = "swan_custom")]
+    fn managed_control_scope_violation(keyboard: bool, msg: &Message) -> Option<&'static str> {
+        if keyboard { return None; }
+        let Some(message::Union::Misc(misc)) = msg.union.as_ref() else { return None; };
+        match misc.union.as_ref() {
+            Some(misc::Union::ToggleVirtualDisplay(_))
+            | Some(misc::Union::ElevationRequest(_))
+            | Some(misc::Union::ChangeResolution(_))
+            | Some(misc::Union::ChangeDisplayResolution(_))
+            | Some(misc::Union::SelectedSid(_)) => Some("Company grant denies system control"),
+            _ => None,
+        }
     }
 
     async fn update_scoped_login_options(&mut self) {
@@ -6845,6 +6865,40 @@ mod test {
             set(&mut option);
             misc.set_option(option);
         })
+    }
+
+    #[cfg(feature = "swan_custom")]
+    #[test]
+    fn managed_view_only_packets_cannot_change_system_control() {
+        use hbb_common::protobuf::Message as ProtobufMessage;
+
+        let mut virtual_display_on = ToggleVirtualDisplay::new();
+        virtual_display_on.on = true;
+        let controls = [
+            misc_msg(|m| m.set_toggle_virtual_display(virtual_display_on)),
+            misc_msg(|m| m.set_toggle_virtual_display(ToggleVirtualDisplay::new())),
+            misc_msg(|m| m.set_elevation_request(ElevationRequest::new())),
+            misc_msg(|m| m.set_change_resolution(Resolution::new())),
+            misc_msg(|m| m.set_change_display_resolution(DisplayResolution::new())),
+            misc_msg(|m| m.set_selected_sid(2)),
+        ];
+        for packet in controls {
+            // Exercise the same parsed wire message used by the receiving guard.
+            let wire = packet.write_to_bytes().unwrap();
+            let received = Message::parse_from_bytes(&wire).unwrap();
+            assert_eq!(Connection::managed_control_scope_violation(false, &received),
+                Some("Company grant denies system control"));
+            assert_eq!(Connection::managed_control_scope_violation(true, &received), None);
+        }
+        // View-only support must still select and capture existing monitors.
+        for packet in [
+            misc_msg(|m| m.set_switch_display(SwitchDisplay::new())),
+            misc_msg(|m| m.set_capture_displays(CaptureDisplays::new())),
+            misc_msg(|m| m.set_refresh_video(true)),
+            misc_msg(|m| m.set_chat_message(ChatMessage::new())),
+        ] {
+            assert_eq!(Connection::managed_control_scope_violation(false, &packet), None);
+        }
     }
 
     fn set_supported_decoding(option: &mut OptionMessage) {

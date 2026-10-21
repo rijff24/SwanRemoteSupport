@@ -3476,3 +3476,21 @@ login attempts, identified only by local connection number. Credentials and
 underlying error details are deliberately excluded. Compilation and runtime log
 verification of this new change remain pending; the stock-client observation
 above predates it and does not prove the new warning is emitted.
+
+### Receiver system-control permission correction, 22 October
+
+Source inspection found that the virtual-monitor handler could reach the
+monitor driver without checking keyboard/control permission. Elevation and
+resolution changes already had handler checks. Managed receiving connections
+now filter virtual-monitor on/off, elevation, resolution and Windows desktop
+session-switch requests before dispatch whenever either the company grant or
+customer's current keyboard/control permission denies control. Existing monitor
+selection, capture and refresh remain available to view-only sessions.
+
+A native regression test serializes and parses the control packets, checking
+rejection with control disabled and acceptance with control enabled, and checks
+that ordinary viewing packets remain allowed. The Windows build workflow runs
+this test explicitly and requires one executed passing test. Compilation,
+test results and real driver/session behavior remain pending. This is a source
+correction, not a claim of completed packet-injection acceptance or an updated
+installed customer app.
