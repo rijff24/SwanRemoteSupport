@@ -3446,3 +3446,27 @@ and was closed along with its temporary loopback static-file process. No existin
 company deployment was changed. These checks establish the new form/API behavior,
 not a completed fresh Windows service installation, generated company bundles,
 production signing or the remaining full-product acceptance gates.
+
+### Stock client legacy-password rejection, 22 October
+
+A separate, Authenticode-valid PURSLANE RustDesk 1.5.0+68 control
+(`7f6d1e09e5a9924f567962aa57a6b126b409bed4775d98074c727420438768dc`)
+ran as the existing non-administrator lab technician on Server 2016
+14393.693. Its independently probed ID was 880000042, absent from company
+enrollment. With only public transport configuration and a deliberately invalid
+legacy password, it connected to approved customer 1193046 and displayed
+“Company session authorization denied.” No desktop or customer consent prompt
+appeared; management audit history contained zero session requests since the
+attempt began. This is an observed native protocol denial, not a simulated UI.
+
+The receiving customer was the older `bd13500` build
+(`60d15651c583537bcaaf25df2b838ca594f5855b2d2b0f416b690645ef107cfc`).
+This same-VM lab result does not validate the newer receiver, direct-IP paths,
+all permissions, relay selection, or public Internet access. Port 21118 belonged
+to hbbs rather than the customer; it was not used as a customer-listener proof.
+No separate receiver-log denial was established. The control exited normally
+with code 0, its scheduled task returned Ready/result 0, and the process was
+absent. Customer and company services remained running and HTTPS returned 200.
+Local raw evidence is retained under the private lab `legacy-control-1.5.0-build68`
+directory; credentials and generated client private keys are excluded from this
+repository. Host RustDesk services were not stopped or reconfigured.
