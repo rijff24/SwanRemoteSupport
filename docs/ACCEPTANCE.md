@@ -8,8 +8,9 @@ The latest native lab run established a customer-approved desktop session on
 Server 2016 through the separately built transport candidate. Both editions
 were on the same guest: this does not verify separate-machine input, relay
 fallback or Internet connectivity. The attempted relay test still selected a
-local direct connection, and that guest later became unresponsive. Recovery
-and diagnosis are pending. Two runtime configuration fixes are in native build
+local direct connection, and that guest later became unresponsive. The guest
+recovered with identity and consent preserved; the cause remains unproven.
+Two runtime configuration fixes are in native build
 `39600988305`; its build and artifact/source checks passed, but its runtime tests
 have not passed. See the final dated sections for exact scope and failures.
 Earlier entries below retain their original source-specific observations;
@@ -398,6 +399,48 @@ the main archive. This is unsigned payload lifecycle under the CI account,
 not company enrollment, standard-user GUI, signed upgrades, native sessions
 or a complete Server 2022 acceptance pass. The configuration fixes' native
 runtime recovery tests remain pending.
+
+### Clean Server 2025 MSI lifecycle and Server 2016 recovery (2026-10-21)
+
+A fresh official Windows Server 2025 Standard Evaluation Desktop Experience
+guest completed installation as x64 build 26100.32230. Its independent guest
+identity check passed. Provisioning disabled automatic sign-in and removed its
+stored automatic sign-in password. A lab SSH-key ACL error was diagnosed and
+corrected before product testing; Windows-provided SSH then passed the pinned
+host-key check. Setup used 4 GiB RAM; the controlled runtime boot used 3 GiB,
+retaining the host's 1.5 GiB reserve. Setup media was detached for that boot.
+A clean pre-product disk checkpoint passed an offline qcow2 integrity check.
+
+The independently verified `bd13500` customer and technician MSIs were staged
+with exact-source test helpers and verified again inside the guest. All six
+actual Windows Installer phases passed: install, repair and uninstall for each
+edition, each returning 0 without requesting a reboot. Installed package and
+agent hashes, MSI registration and technician shortcuts were checked. Customer
+checks additionally verified its complete installed-files manifest and running
+LocalSystem service. Customer repair replaced a deliberately damaged packaged
+license file with its expected bytes. Uninstall checks verified removal of the
+packaged files, relevant registration and customer service.
+
+The six results and raw MSI logs were exported over pinned SSH to protected
+host storage. Independent verification matched source revision, package and
+agent hashes, the exact test-runner hash and OS build; every log contained the
+zero-return completion marker without `Return value 3`. This establishes bare
+unsigned MSI lifecycle as Administrator on this particular Server 2025 build.
+Standard-user installation, company enrollment/branding, publisher acceptance,
+upgrades and native sessions on Server 2025 remain unverified. It is not a
+complete compatibility-matrix pass or production release approval.
+
+The previously hung Server 2016 guest was powered off after its normal shutdown
+request did not complete. This QEMU backend rejected memory snapshots. A full
+stopped-disk copy was therefore retained privately and verified against the
+original SHA-256; the original disk then passed its qcow2 integrity check.
+After boot, device identity/token, consent and release sequence matched the
+pre-reboot state, profile revision 16 remained accepted, and the customer,
+management and worker services were Running. Management HTTPS and configured
+status passed. The manually started candidate transport remained stopped as
+designed. The event log recorded an unclean shutdown; it did not establish
+the cause of the earlier unresponsiveness. This is crash-recovery evidence,
+not a complete encrypted deployment-restore or migration rehearsal.
 
 | Requirement | Current evidence and remaining work |
 | --- | --- |
