@@ -2581,3 +2581,44 @@ Existing distribution pins and lab services have not been replaced. These
 unsigned candidate checks establish startup and basic registration on Server
 2016; they do not establish a native authorized session, relay operation,
 external NAT traversal, complete Windows compatibility, or release readiness.
+
+### Native attended session through parallel patched transport (2026-10-21)
+
+The candidate ran alongside the original lab company services on rendezvous
+32116 and relay 32117, using a separate database and a protected copy of the
+lab transport keys. A normal authenticated profile change published revision
+16 with those addresses and paused lab updates. Both endpoint state files
+accepted the signed revision; customer identity, release sequence and unattended
+consent (`false`) were preserved. Original component pins and services stayed
+intact. No host DNS, firewall, trust store or Tailscale setting changed.
+
+This exposed two runtime configuration defects. The running technician accepted
+the new profile but continued selecting port 21116. Commit `74c3449` applies
+transport defaults after synchronization and before a new outgoing request.
+The customer, booted after its cached profile expired, kept resolving the
+fail-closed `unconfigured.invalid` address: DNS failed before either transport's
+refresh timer could run. Commit `bd13500` also reloads signed settings before
+each outer rendezvous retry. Native build `39600988305` is verifying both fixes;
+neither fix's runtime acceptance is claimed yet. The initial suspicion of a
+transport-ID mismatch was disproved: native and enrolled IDs matched.
+
+Restarting the existing signed lab technician and customer service consumed
+revision 16 without changing identity or consent. The customer registered its
+public key with the parallel server. The technician's actual branded GUI login
+with the restricted account and fresh TOTP obtained a grant, punched a secure
+local TCP connection, and reached the customer's Accept/Cancel prompt. Explicit
+customer acceptance at 14:43:23 lab time opened a VP8 desktop stream and the
+clipboard loop. The desktop was visibly rendered; the recursive image is
+expected because both editions ran in the same VM. The management service
+recorded the grant as claimed and renewed its lease.
+
+Device-authenticated closure of that specific grant stopped clipboard, video
+and audio at 14:45:21. The client requested a fresh grant but returned to the
+customer approval prompt. Closing that pending reconnect also closed its grant;
+no continuing desktop access was observed. Viewer relative-pointer offset made
+consent input difficult; measured pointer correction eventually selected Accept.
+The existing signed endpoint payloads were used, not the pending native build.
+This establishes an attended local session and enforced grant closure with the
+candidate transport. It does not establish natural lease-expiry behavior, data
+transfer or clipboard-content correctness, unattended access, separate-machine
+input, external NAT traversal, relay fallback, or the full Windows test matrix.
