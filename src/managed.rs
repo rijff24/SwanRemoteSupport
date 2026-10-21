@@ -70,6 +70,9 @@ async fn technician_request_inner(request:&str)->ResultType<serde_json::Value> {
     }
     if action=="sync" {
         let mut state=state;state.sync().await?;state.save(&directory)?;
+        // Technician editions do not run the incoming rendezvous mediator,
+        // whose timer normally applies changes to the running transport.
+        refresh_defaults();
         return Ok(json!({"revision":state.accepted_revision}));
     }
     if action=="status" {
@@ -134,6 +137,9 @@ async fn technician_request_inner(request:&str)->ResultType<serde_json::Value> {
         return Ok(json!({"version":release.version,"sequence":release.sequence,"channel":release.channel}));
     }
     if action=="connect" {
+        // Also consume profiles synchronized by the background agent before
+        // creating an outgoing window or selecting its server and trust key.
+        refresh_defaults();
         let device=input["device_id"].as_str().ok_or_else(||anyhow!("Missing device"))?;
         let key=protocol::signing_key_from_hex(&protocol::random_token())?;
         let (envelope,grant)=state.technician_ticket(&token,device,input["unattended"].as_bool().unwrap_or(false),&key).await?;
