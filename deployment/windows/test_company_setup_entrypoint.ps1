@@ -70,7 +70,11 @@ try {
     $process.StandardInput.WriteLine('company.test');$process.StandardInput.Close()
     if(-not $process.WaitForExit(60000)){throw 'Setup fixture did not exit; inspect the owned test process'}
     $output=$stdout.GetAwaiter().GetResult()+$stderr.GetAwaiter().GetResult()
-    if($process.ExitCode -ne 1 -or $output -notmatch 'Configuration agent is not trusted.' -or $output -notmatch 'Setup did not complete.'){throw 'Real entry point lost its path, trust rejection or failure exit code'}
+    if($process.ExitCode -ne 1 -or $output -notmatch 'Configuration agent is not trusted.' -or $output -notmatch 'Setup did not complete.'){
+        # This subprocess has only inert fixture inputs, no credentials or company state.
+        Write-Output (@{fixture_exit_code=$process.ExitCode;fixture_output=$output.Substring(0,[Math]::Min($output.Length,4096))}|ConvertTo-Json -Compress)
+        throw 'Real entry point lost its path, trust rejection or failure exit code'
+    }
     $process.Dispose()
     $process=$null
     if(Test-Path $env:LOCALAPPDATA){throw 'Rejected CMD setup wrote installation state'}
