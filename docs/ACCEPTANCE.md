@@ -1,8 +1,20 @@
 # Configurable product acceptance report
 
-Development status, 3 October 2026. **The product is not complete or approved for
+Evidence through 21 October 2026. **The product is not complete or approved for
 production publication.** A passing component test is not evidence of a working
 native support session or a clean-machine installation.
+
+The latest native lab run established a customer-approved desktop session on
+Server 2016 through the separately built transport candidate. Both editions
+were on the same guest: this does not verify separate-machine input, relay
+fallback or Internet connectivity. The attempted relay test still selected a
+local direct connection, and that guest later became unresponsive. Recovery
+and diagnosis are pending. Two runtime configuration fixes are in native build
+`39600988305`; compilation reached installer packaging, but its runtime tests
+have not passed. See the final two dated sections for exact scope and failures.
+Earlier entries below retain their original source-specific observations;
+later evidence does not retroactively validate older packages or every Windows
+version. The full release gates remain open.
 
 ## Evidence obtained
 
