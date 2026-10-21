@@ -2485,3 +2485,29 @@ all invocation records identify fixture `391541e` and MSI SHA-256
 Comparison of that recorded package/payload identity with the main downloaded
 archive remains pending; the archive's original process is still running.
 This evidence remains limited to unsigned Server 2022 CI payload lifecycle.
+
+### Expiry-fix artifact and native backup checks (2026-10-21)
+
+The interrupted `391541e` download was found stopped with 111,149,056 bytes
+retained and no live downloader. Resume requested only the remaining byte range
+of the authenticated artifact; the complete 24-file archive passed SHA-256
+`b627e5369fff25f0555159577b14956e06f983facd963e3c059a1cc3fe14eb37`,
+ZIP CRC and published payload checksums. Independent verification matched the
+11 server setup resources, six source inputs, pinned components, 1,103 public
+Git files and six generated bridge files. The MSI, technician executable and
+agent matched the hashes recorded by the CI lifecycle test. This resolves the
+pending artifact comparison above; dirty-checkout and binary reproducibility
+limits remain unchanged.
+
+Native management SHA-256
+`c2b3cc3c20ab5199777d1bacddedf2d31deff0bef4a6ea311ac77975afd9b0c1`
+passed the same synthetic Windows read-only WAL export/restore, unchanged-source,
+staging cleanup, invalid-transport failure and tampered-restore checks. This
+verifies backup CLI behavior in the current packaged runtime; it does not verify
+native session expiry, company disaster recovery or deployment lifecycle.
+
+The existing disposable Server 2016 VM was restarted through its verified
+launcher without changing its memory guard or network settings. An encrypted
+management probe confirmed `SWAN-LAB-16V2`, Server 2016 Standard Evaluation,
+64-bit build 14393. Boot and guest identity are readiness evidence only; no new
+GUI login or remote-session acceptance is claimed.
