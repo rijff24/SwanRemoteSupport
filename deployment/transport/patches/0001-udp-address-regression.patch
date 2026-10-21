@@ -1,0 +1,62 @@
+--- a/src/udp.rs
++++ b/src/udp.rs
+@@ -169,3 +169,59 @@
+         None
+     }
+ }
++
++
++#[cfg(test)]
++mod swan_udp_tests {
++    use super::*;
++    use crate::rendezvous_proto::TestNatRequest;
++    use std::time::Duration;
++
++    fn framed_sender(address: SocketAddr, dual_stack: bool) -> ResultType<FramedSocket> {
++        let domain = if address.is_ipv6() { Domain::ipv6() } else { Domain::ipv4() };
++        let socket = Socket::new(domain, Type::dgram(), None)?;
++        if address.is_ipv6() { socket.set_only_v6(!dual_stack)?; }
++        socket.set_nonblocking(true)?;
++        socket.bind(&address.into())?;
++        Ok(FramedSocket::Direct(UdpFramed::new(
++            UdpSocket::from_std(socket.into_udp_socket())?, BytesCodec::new(),
++        )))
++    }
++
++    #[tokio::test]
++    async fn dual_stack_sends_ipv4_message_and_raw_datagrams() -> ResultType<()> {
++        let receiver = UdpSocket::bind("127.0.0.1:0").await?;
++        let mut sender = framed_sender("[::]:0".parse()?, true)?;
++        let request = TestNatRequest { port: 21116, ..Default::default() };
++        sender.send(&request, receiver.local_addr()?).await?;
++        let mut buffer = [0u8; 256];
++        let count = tokio::time::timeout(Duration::from_secs(2), receiver.recv(&mut buffer)).await??;
++        assert_eq!(TestNatRequest::parse_from_bytes(&buffer[..count])?.port, 21116);
++        sender.send_raw(b"Swan raw UDP", receiver.local_addr()?).await?;
++        let count = tokio::time::timeout(Duration::from_secs(2), receiver.recv(&mut buffer)).await??;
++        assert_eq!(&buffer[..count], b"Swan raw UDP");
++        Ok(())
++    }
++
++    #[tokio::test]
++    async fn ipv4_sender_keeps_ipv4_destination() -> ResultType<()> {
++        let receiver = UdpSocket::bind("127.0.0.1:0").await?;
++        let mut sender = framed_sender("127.0.0.1:0".parse()?, false)?;
++        sender.send_raw(b"IPv4 control", receiver.local_addr()?).await?;
++        let mut buffer = [0u8; 64];
++        let count = tokio::time::timeout(Duration::from_secs(2), receiver.recv(&mut buffer)).await??;
++        assert_eq!(&buffer[..count], b"IPv4 control");
++        Ok(())
++    }
++
++    #[tokio::test]
++    async fn ipv6_sender_keeps_native_ipv6_destination() -> ResultType<()> {
++        let receiver = UdpSocket::bind("[::1]:0").await?;
++        let mut sender = framed_sender("[::1]:0".parse()?, false)?;
++        sender.send_raw(b"IPv6 control", receiver.local_addr()?).await?;
++        let mut buffer = [0u8; 64];
++        let count = tokio::time::timeout(Duration::from_secs(2), receiver.recv(&mut buffer)).await??;
++        assert_eq!(&buffer[..count], b"IPv6 control");
++        Ok(())
++    }
++}
