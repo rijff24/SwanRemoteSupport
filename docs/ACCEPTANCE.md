@@ -3414,3 +3414,35 @@ protocol and Windows-matrix tests. This isolated portable fixture used copied
 public technician configuration and a lab publisher. Complete company bundle
 installation, accepted remote control, cross-machine/Internet/relay operation,
 secure-desktop behavior, key rotation and approved automatic updates remain open.
+
+### First-run branding and policy collection, 22 October
+
+The shared web setup page now collects customer/technician names, colors, SVG
+logos, support contacts, website shortcuts and consent wording, plus unattended
+support eligibility, update pause/channel/cohort and UTC maintenance settings.
+Previously these controls were available only after company creation, so initial
+setup silently used product defaults. Initial setup and subsequent profile edits
+now use the same field renderer and collector. This shared page is used after
+both Windows installation and Linux first-run deployment. Initial device approval
+remains mandatory; allowing unattended support does not grant customer consent.
+
+For PR head `066c6d91b0f35f304f1a546c6f3ebeceb79cfc05`, component workflow
+`39686752599` passed Windows, Linux and both Linux deployment rehearsals.
+The tested merge checkout was `272f9da7287f9428d5db86366f6f74c44c0c808a`.
+Windows job `119522655784` and Linux job `119522655449` explicitly passed
+`first_run_preserves_company_branding_and_update_policy_atomically` and the new
+front-end form contracts. The real router/SQLite test verifies that invalid
+initial policy creates no company, account or setup audit entry; a valid request
+persists every supplied branding/policy field and returns a verifiable signed
+profile with a server-assigned company identity. The form contract also checks
+subsequent editing and rejection of incomplete shortcuts before submission. A
+negative control using the preceding public source correctly detects the missing
+first-run branding fields.
+
+A static browser preview verified the new controls and exposed a collapsed color
+swatch caused by generic input padding. The swatch layout was corrected and
+visually rechecked. This preview used public sample data, could not submit setup,
+and was closed along with its temporary loopback static-file process. No existing
+company deployment was changed. These checks establish the new form/API behavior,
+not a completed fresh Windows service installation, generated company bundles,
+production signing or the remaining full-product acceptance gates.

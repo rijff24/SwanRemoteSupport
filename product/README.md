@@ -32,6 +32,12 @@ installation bundles. The installer worker still requires Windows.
 - Company release import and approval, stable/test selection, staged cohorts, pause and UTC maintenance windows. Endpoint updater checks signatures, hashes, publisher and installed executable identity, and excludes sessions during installation.
 - Encrypted management backup and empty-directory restore.
 
+The shared first-run web setup collects branding for both endpoint editions and
+the initial unattended-support and update policy alongside network and
+administrator MFA settings. The same fields remain editable under Branding &
+policies after setup. New devices still require company approval, and unattended
+support requires separate customer consent.
+
 Installers contain public bootstrap information only. The worker pins both profile and project release verification keys locally. Release metadata must include package, installed executable and agent SHA-256 identities, exact source URL, publisher, signing-certificate SHA-256 and supported Windows families. No profile value becomes a shell command.
 
 Install management and installer workers from matching project releases. Before
