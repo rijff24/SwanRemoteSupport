@@ -2934,13 +2934,13 @@ That failure was reproduced locally with a BOM-emitting console input encoding.
 The fixture now selects a BOM-free encoding during process creation and restores
 the previous encoding immediately; both the reproduced environment and normal
 Windows PowerShell run pass. Production hostname confirmation was not relaxed.
-Hosted CI verification of this correction is pending.
+Hosted Windows CI subsequently passed in push run `39642194595` and PR run `39642203316` for source `43e5b37dc09fa0ed04bb5e602ca07dc19d705592`. Both runs also passed Linux component and Linux deployment verification.
 
 The component workflow now preserves corresponding component/deployment source
 before compilation and exports unsigned test binaries with source/compiler
 metadata and hashes after successful checks. The source archiver's component
 mode omits unrelated client bridges/submodules and private untracked files while
 preserving actual file bytes; all five source archive tests pass locally.
-These new artifacts and their provenance still require CI validation. Production
+The successful push run exported Windows and Linux component artifacts, each with corresponding source and hashes. Independent downloaded artifact/source verification and runtime acceptance remain pending. Production
 signing, matching company server/worker runtime, public connectivity, complete
 Windows coverage and the remaining session/update/restore gates remain open.
