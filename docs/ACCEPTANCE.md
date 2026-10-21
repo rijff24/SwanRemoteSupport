@@ -2760,3 +2760,38 @@ private draft and an explicit approval request remain pending. The initial peer
 HTTPS request timed out; this is not a passing negative certificate test.
 Cross-machine native sessions and the runtime configuration fixes remain
 unverified. Host RustDesk and its transport servers were not stopped.
+
+### Matched worker and interactive MSI follow-up, 21 October
+
+The Server 2025 console recovered to its normal logon screen. The same signed
+technician MSI was then tested as the non-administrator account in interactive
+session 1. Publisher verification passed, but installation returned 1625. The
+raw MSI log says `DisableMsi` is 1 and rejects non-assigned applications for
+non-admin users; repair and uninstall were not attempted. This independently
+reproduces the Server 2016 policy limitation documented in INSTALLER_REPAIR.md.
+No Windows Installer policy was changed. Both failed attempts remain evidence;
+neither is a passing standard-user MSI lifecycle test.
+
+The `bd1350012227f226db168be51bc823d3f086e493` worker was privately signed and
+installed over the isolated lab worker with a rollback binary/receipt retained.
+The service runs with its existing protected configuration. After administrator
+MFA login, both sequence-8 releases were imported and approved with rollout
+still paused. Unapproved build requests did not change the queue, but returned
+500. The source now returns 404 for unknown releases and 409 for unapproved
+releases, with regression assertions covering anonymous/technician denial and
+an unchanged build count. CI verification of this correction is pending.
+
+The new worker verified the signed packages and generated both ZIP bundles,
+but upload to the older installed management service returned 400. The worker's
+embedded launcher differs from the older server's expected launcher. Neither
+job reached completed state; generated files alone do not demonstrate server
+publication. The matching management binary was signed and timestamp-verified
+(private lab hash `cf7b5077a633f8ff9ad830d2e2a9847d16b35494bbeaf061645abbe8c37c07d4`),
+but has not been installed.
+
+Automatic approval review rejected the proposed management-backup preparation
+with only "blocked by policy" before any command ran. No release withdrawal,
+backup, restore or management-service change occurred. A separate reviewable
+private draft and approval request remain pending. This is distinct from the
+previously rejected private-NIC HTTPS listener change. Host services were not
+changed; latest native runtime, cross-machine and update acceptance remain open.

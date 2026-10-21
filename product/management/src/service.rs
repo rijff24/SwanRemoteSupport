@@ -555,7 +555,9 @@ async fn create_build(State(s):State<Shared>,headers:HeaderMap,Json(input):Json<
     let actor=s.user(&headers,true)?;let mut profile=s.profile()?;
     profile.issued_at=now();profile.expires_at=now()+7*86400;
     let db=s.db.lock().unwrap();
-    let envelope:String=db.query_row("SELECT envelope FROM releases WHERE id=?1 AND approved=1",[&input.release_id],|r|r.get(0))?;
+    let release:Option<(String,bool)>=db.query_row("SELECT envelope,approved FROM releases WHERE id=?1",[&input.release_id],|r|Ok((r.get(0)?,r.get(1)?))).optional()?;
+    let (envelope,approved)=release.ok_or(ApiError(StatusCode::NOT_FOUND,"Unknown release"))?;
+    if !approved{return Err(ApiError(StatusCode::CONFLICT,"Release must be approved before generating installers"));}
     let id=Uuid::new_v4().to_string();let body=json!({"release":serde_json::from_str::<Value>(&envelope)?,"profile":SignedEnvelope::sign(&profile,&s.key)?,"profile_public_key":STANDARD.encode(s.key.verifying_key().as_bytes()),"release_public_key":std::env::var("SWAN_RELEASE_PUBLIC_KEY").map_err(|_|bad("Release key not configured"))?});
     db.execute("INSERT INTO builds(id,body,state) VALUES(?1,?2,'queued')",params![id,body.to_string()])?;drop(db);s.audit(&actor,"build.queued",&id)?;Ok(Json(json!({"id":id})))
 }
@@ -802,6 +804,16 @@ mod worker_completion_tests {
         }
         persist_verified_artifact(&store,&in_flight,&worker,b"previously validated bundle").ok().unwrap();
         let headers=|credential:&str| {let mut h=HeaderMap::new();h.insert(header::AUTHORIZATION,format!("Bearer {credential}").parse().unwrap());h};
+        let build_count=||store.db.lock().unwrap().query_row("SELECT COUNT(*) FROM builds",[],|r|r.get::<_,u64>(0)).unwrap();
+        let before=build_count();
+        let request=||Json(BuildRequest{release_id:"release".into()});
+        assert_eq!(create_build(State(store.clone()),HeaderMap::new(),request()).await.err().unwrap().0,StatusCode::UNAUTHORIZED);
+        assert_eq!(create_build(State(store.clone()),headers(&technician_token),request()).await.err().unwrap().0,StatusCode::FORBIDDEN);
+        assert_eq!(create_build(State(store.clone()),headers(&admin_token),Json(BuildRequest{release_id:"missing".into()})).await.err().unwrap().0,StatusCode::NOT_FOUND);
+        store.db.lock().unwrap().execute("UPDATE releases SET approved=0 WHERE id='release'",[]).unwrap();
+        assert_eq!(create_build(State(store.clone()),headers(&admin_token),request()).await.err().unwrap().0,StatusCode::CONFLICT);
+        assert_eq!(build_count(),before);
+        store.db.lock().unwrap().execute("UPDATE releases SET approved=1 WHERE id='release'",[]).unwrap();
         assert!(!select_update(&store,"technician",Edition::Technician,None).ok().unwrap().0.is_null());
         assert!(select_update(&store,"device",Edition::Customer,None).ok().unwrap().0.is_null());
         let mut portable=release.clone();portable.sequence=2;portable.format="exe".into();portable.sha256=portable.installed_sha256.clone();
