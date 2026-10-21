@@ -1,6 +1,7 @@
 [CmdletBinding()]
-param([switch]$UnattendedConsent,[switch]$Repair,[switch]$ReplaceFailedSetup,[string]$BootstrapPath,[string]$ConfirmedCompanyDomain)
+param([switch]$UnattendedConsent,[switch]$Repair,[switch]$ReplaceFailedSetup,[string]$BootstrapPath,[string]$ConfirmedCompanyDomain,[switch]$RequestElevation)
 $ErrorActionPreference = 'Stop'
+if (-not [Environment]::Is64BitProcess) { throw 'Use the 64-bit company setup entry point.' }
 $root = $PSScriptRoot
 if (-not $BootstrapPath) { $BootstrapPath = Join-Path $root 'bootstrap.json' }
 $BootstrapPath = [IO.Path]::GetFullPath($BootstrapPath)
@@ -8,6 +9,24 @@ $bootstrap = Get-Content -LiteralPath $BootstrapPath -Raw | ConvertFrom-Json
 if ($bootstrap.edition -notin @('customer','technician')) { throw 'Unknown package edition.' }
 $domain = [uri]$bootstrap.management_url
 if ($domain.Scheme -ne 'https' -or $domain.UserInfo -or -not $domain.Host) { throw 'A company HTTPS endpoint is required.' }
+if ($RequestElevation -and $bootstrap.edition -eq 'customer') {
+    $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
+    if (-not ([Security.Principal.WindowsPrincipal]::new($identity)).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+        $arguments = @('-NoLogo','-NoProfile','-ExecutionPolicy','Bypass','-File',('"' + $PSCommandPath + '"'),'-BootstrapPath',('"' + $BootstrapPath + '"'))
+        if ($Repair) { $arguments += '-Repair' }
+        if ($ReplaceFailedSetup) { $arguments += '-ReplaceFailedSetup' }
+        if ($UnattendedConsent) { $arguments += '-UnattendedConsent' }
+        if ($ConfirmedCompanyDomain) {
+            if ($ConfirmedCompanyDomain -cne $domain.Host) { throw 'Company verification cancelled.' }
+            $arguments += @('-ConfirmedCompanyDomain',('"' + $domain.Host + '"'))
+        }
+        try {
+            $process = Start-Process -FilePath (Join-Path ([Environment]::GetFolderPath('System')) 'WindowsPowerShell/v1.0/powershell.exe') -ArgumentList $arguments -Verb RunAs -PassThru -Wait
+        } catch { throw 'Customer setup requires administrator approval. Setup was not started.' }
+        if ($process.ExitCode -ne 0) { throw "Customer setup did not complete ($($process.ExitCode)). Contact your support company before retrying." }
+        return
+    }
+}
 Write-Host "Company server: $($domain.AbsoluteUri)"
 Write-Host 'Confirm this is the support company you intended to install. The company must approve your device before remote access.'
 if (-not $ConfirmedCompanyDomain) { $ConfirmedCompanyDomain = Read-Host 'Type the company server hostname to confirm' }

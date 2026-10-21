@@ -184,6 +184,8 @@ jobs:
         run: |
           python3 -m unittest discover -s deployment/windows -p test_payload_manifest.py
           python3 -m unittest discover -s deployment/windows -p test_customer_msi.py
+          & "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe" -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File deployment/windows/test_company_setup_entrypoint.ps1
+          if ($LASTEXITCODE -ne 0) { throw 'Company setup entry-point checks failed.' }
           & "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe" -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File deployment/windows/test_msi_service_guard.ps1
           if ($LASTEXITCODE -ne 0) { throw 'Customer MSI recovery service guard checks failed.' }
           & "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe" -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File deployment/windows/test_update_recovery_task.ps1

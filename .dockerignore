@@ -56,6 +56,7 @@ deployment/**
 !deployment/windows/
 deployment/windows/**
 !deployment/windows/Install-Company.ps1
+!deployment/windows/Install-SwanRemoteSupport.cmd
 !deployment/windows/Open-Technician.ps1
 !deployment/windows/Uninstall-Technician.ps1
 !deployment/windows/Verify-MsiRegistration.ps1

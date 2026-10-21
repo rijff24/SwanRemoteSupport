@@ -2874,3 +2874,32 @@ its native build and exact regression gate are still running. Do not substitute
 the older `bd13500` installed candidate for runtime verification of that guard.
 The lab management-backup and private-NIC HTTPS operations remain unapplied
 pending the explicit approvals requested after automatic review rejected them.
+
+### Company bundle entry point implementation, 21 October
+
+The company bundle recipe now includes `Install-SwanRemoteSupport.cmd` as an
+exact server-validated file. It starts 64-bit Windows PowerShell from the
+extracted bundle, including from a 32-bit calling environment. Customer setup
+can request elevation before enrollment or installation state is created;
+technician setup retains the current user's context. Explicit repair, failed
+setup replacement and consent flags survive a customer elevation handoff, while
+the elevated child still performs the existing company and package checks.
+A cancelled or failed handoff returns failure. The default entry point does not
+opt into unattended access.
+
+Local Windows PowerShell 5.1 checks passed: malformed/HTTP bootstrap rejection,
+no technician elevation or state writes on signature rejection, argument/error
+routing fixtures for a non-admin customer caller, and a real CMD-to-PowerShell
+run with LF bundle text and spaces, ampersand, apostrophe and exclamation mark in
+the folder name. That real entry-point run rejected an unsigned inert agent and
+returned failure without installation or enrollment. The elevation broker was
+replaced only in the routing fixture; these checks do not demonstrate a real
+successful UAC handoff or a complete installed company bundle.
+
+Windows CI now runs the entry-point checks, and bundle validation tests reject
+missing or changed entry-point bytes. Both Docker context allowlists include
+only this new required public script. CI builds and actual company-generated
+bundle acceptance for this recipe remain pending. Server and worker must use
+the matching updated recipe. The customer installation guide now describes the
+configurable company flow and links the Tailscale instructions to the preserved
+baseline rather than presenting them as current setup.

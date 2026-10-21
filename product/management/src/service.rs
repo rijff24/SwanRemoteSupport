@@ -697,6 +697,9 @@ mod worker_completion_tests {
             assert_eq!(entries.len(),recipe_count);
             let verify=|bytes:&[u8]|validate_worker_bundle(bytes,&job,&release,&company.verifying_key(),&trust).is_ok();
             let valid=archive(&entries);assert!(verify(&valid),"Complete {edition:?}/{format} bundle was rejected");
+            let entrypoint=entries.iter().position(|(name,_)|name=="Install-SwanRemoteSupport.cmd").unwrap();
+            let mut altered=entries.clone();altered[entrypoint].1=b"altered setup entry point".to_vec();assert!(!verify(&archive(&altered)));
+            let mut missing=entries.clone();missing.remove(entrypoint);assert!(!verify(&archive(&missing)));
             let helper=entries.iter().position(|(name,_)|name=="Get-MsiInstallMode.ps1").unwrap();
             let mut altered=entries.clone();altered[helper].1=b"altered script".to_vec();assert!(!verify(&archive(&altered)));
             let uninstall=entries.iter().position(|(name,_)|name=="Uninstall-Technician.ps1").unwrap();
