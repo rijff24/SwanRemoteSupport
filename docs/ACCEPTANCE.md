@@ -1,18 +1,22 @@
 # Configurable product acceptance report
 
-Evidence through 21 October 2026. **The product is not complete or approved for
+Evidence through 22 October 2026. **The product is not complete or approved for
 production publication.** A passing component test is not evidence of a working
 native support session or a clean-machine installation.
 
-The latest native lab run established a customer-approved desktop session on
+The latest accepted-desktop lab run established a customer-approved session on
 Server 2016 through the separately built transport candidate. Both editions
 were on the same guest: this does not verify separate-machine input, relay
 fallback or Internet connectivity. The attempted relay test still selected a
 local direct connection, and that guest later became unresponsive. The guest
 recovered with identity and consent preserved; the cause remains unproven.
-Two runtime configuration fixes are in native build
-`39600988305`; its build and artifact/source checks passed, but its runtime tests
-have not passed. See the final dated sections for exact scope and failures.
+Two runtime configuration fixes are in native build `39600988305`; its build
+and artifact/source checks passed, but complete corrected-customer runtime
+acceptance remains open. Subsequently, technician source `c0bf4b4` passed
+standard-user graphical MFA, inventory/history, customer refusal, live name sync
+and offline cached-branding checks against the existing lab service. That does
+not establish an accepted desktop session with both corrected editions. See
+the final dated sections for exact scope and failures.
 Earlier entries below retain their original source-specific observations;
 later evidence does not retroactively validate older packages or every Windows
 version. The full release gates remain open.
@@ -3357,3 +3361,56 @@ operation, enrollment, native sessions, installed-application reboot behavior,
 upgrades or automatic updates. The VM's clock was independently checked against
 the host before the installer run; the future RTC boot-setting correction still
 requires its own reboot verification. Production signing remains unqualified.
+
+### Native standard-user technician GUI and live branding, 22 October
+
+The private lab-signed technician portable from native source
+`c0bf4b40ff8257c9fb69e4c5f6aceb2394f1adc0` ran as the existing non-administrator
+lab user on Server 2016 Standard Evaluation Desktop Experience `14393.693`.
+Its outer executable matched SHA-256
+`6aa3c048827e2ad8e4414cc0c09476be9dff9bc8ad02fc46bcfc207d843eda40`.
+All 95 extracted native/Flutter payload files matched the pinned CI manifest,
+including the actual running executable, libraries and `app.so`. The portable
+uses the user's shared extraction cache; its managed state was isolated from
+the installed technician state, which remained byte-for-byte unchanged.
+
+Live console observations confirmed company name, signed SVG logo, support link
+and product/license attribution, then successful graphical password/TOTP login,
+the authorized approved-device inventory and session history. Requesting attended
+support reached the existing customer's approval prompt. The technician waited
+without a desktop view. Cancelling on the customer side produced "Closed manually
+by the peer" and an ended history entry. Independent server history confirmed
+the corresponding target-bound grant was claimed, attended and closed. This
+checks refusal, not an accepted desktop or separate-machine session. The existing
+customer remained the older `bd13500` installation.
+
+An administrator published only a temporary technician display-name change at
+profile revision 17. The open app displayed it through its normal periodic
+refresh, without a manual refresh click, process restart or reinstall. Restoring
+the original name published revision 18, which appeared automatically in the
+same process. Independent Ed25519 verification checked revisions 16, 17 and 18
+under the original pinned public key; other policy, transport and trust fields
+matched the baseline. Software sequence and local consent fields were preserved.
+Graphical logout cleared inventory/history, and its server audit event matched
+the technician account. Password and TOTP secret were absent from managed state.
+
+The app then closed cleanly and restarted with an unreachable proxy confined to
+that test process's environment. An agent probe first synchronized successfully
+online, then returned a proxy-tunnel connection refusal with that environment.
+After restart the native GUI retained cached company branding, but a fresh
+credential/TOTP login attempt failed and cleared the password/code fields. The
+company HTTPS service remained reachable outside the isolated process, and its
+audit contained no successful technician login during the offline run. All 95
+running payload files were checked again. Both app runs closed cleanly; the
+company and customer services remained running. No firewall, listener, service
+installation or transport process was changed.
+
+Private evidence, raw audit/history, signed state snapshots, proxy diagnostics
+and independent verification are retained in
+`technician-c0bf-gui-20261021/verified-gui-acceptance.json` and its `evidence/`
+directory. UI observations were made through the live VM console and are
+corroborated by those runtime records; they are not a substitute for the remaining
+protocol and Windows-matrix tests. This isolated portable fixture used copied
+public technician configuration and a lab publisher. Complete company bundle
+installation, accepted remote control, cross-machine/Internet/relay operation,
+secure-desktop behavior, key rotation and approved automatic updates remain open.
