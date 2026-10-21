@@ -2580,6 +2580,10 @@ impl Connection {
                         ] {self.send_permission(permission,enabled).await;}
                     },
                     Err(_) => {
+                        // Invalid wire credentials can fail before management is
+                        // contacted. Keep local evidence without logging the
+                        // supplied password, grant, or underlying error text.
+                        log::warn!("Connection {}: company session authorization denied", self.inner.id());
                         self.send_login_error("Company session authorization denied").await;
                         return false;
                     }

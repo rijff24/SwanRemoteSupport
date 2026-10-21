@@ -3470,3 +3470,9 @@ absent. Customer and company services remained running and HTTPS returned 200.
 Local raw evidence is retained under the private lab `legacy-control-1.5.0-build68`
 directory; credentials and generated client private keys are excluded from this
 repository. Host RustDesk services were not stopped or reconfigured.
+
+The subsequent receiver change adds a fixed local warning for rejected managed
+login attempts, identified only by local connection number. Credentials and
+underlying error details are deliberately excluded. Compilation and runtime log
+verification of this new change remain pending; the stock-client observation
+above predates it and does not prove the new warning is emitted.
