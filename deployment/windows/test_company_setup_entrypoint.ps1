@@ -67,7 +67,10 @@ try {
     $start.RedirectStandardInput=$true;$start.RedirectStandardOutput=$true;$start.RedirectStandardError=$true
     $process=[Diagnostics.Process]::Start($start)
     $stdout=$process.StandardOutput.ReadToEndAsync();$stderr=$process.StandardError.ReadToEndAsync()
-    $process.StandardInput.WriteLine('company.test');$process.StandardInput.Close()
+    # Windows PowerShell may select a BOM-emitting encoding for redirected
+    # input on hosted runners. Supply the same plain hostname a user types.
+    $inputWriter=[IO.StreamWriter]::new($process.StandardInput.BaseStream,[Text.UTF8Encoding]::new($false))
+    try { $inputWriter.WriteLine('company.test') } finally { $inputWriter.Dispose() }
     if(-not $process.WaitForExit(60000)){throw 'Setup fixture did not exit; inspect the owned test process'}
     $output=$stdout.GetAwaiter().GetResult()+$stderr.GetAwaiter().GetResult()
     if($process.ExitCode -ne 1 -or $output -notmatch 'Configuration agent is not trusted.' -or $output -notmatch 'Setup did not complete.'){
