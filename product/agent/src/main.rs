@@ -21,6 +21,13 @@ async fn main()->Result<()> {
     match command {
         "rollback-protocol"=>println!("1"),
         #[cfg(windows)]
+        "commit-customer-uninstall"=>{
+            // The signed MSI embeds a separate agent copy: its installed copy
+            // has already been removed when the commit script executes.
+            let directory=PathBuf::from(args.get(2).context("Missing customer uninstall state directory")?);
+            swan_agent::update::commit_customer_uninstall(&directory)?;
+        }
+        #[cfg(windows)]
         "cancel-update-recovery"|"restore-update-recovery"=>{
             let executable=std::env::current_exe()?;
             ensure!(executable.file_name().is_some_and(|name|name.to_string_lossy().eq_ignore_ascii_case("swan-agent.exe")),"Uninstall cancellation requires the installed agent");

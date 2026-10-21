@@ -92,10 +92,15 @@ def author(source, agent, version):
             ExeCommand="remove-configuration-task", Execute="deferred", Impersonate="no", Return="check")
     element(package, "CustomAction", Id="RestoreCompanyConfigurationTask", FileRef="ConfigurationAgentExe",
             ExeCommand="restore-configuration-task", Execute="rollback", Impersonate="no", Return="check")
+    element(package, "Binary", Id="UninstallCommitAgent", SourceFile=str(agent))
+    element(package, "CustomAction", Id="CommitCompanyUninstall", BinaryRef="UninstallCommitAgent",
+            ExeCommand='commit-customer-uninstall "[STATEFOLDER]."', Execute="commit", Impersonate="no", Return="check")
     sequence = element(package, "InstallExecuteSequence")
     element(sequence, "Custom", Action="RestoreCompanyConfigurationTask", Before="RemoveCompanyConfigurationTask",
             Condition='REMOVE = "ALL" AND NOT UPGRADINGPRODUCTCODE AND NOT SWAN_RECOVERY')
     element(sequence, "Custom", Action="RemoveCompanyConfigurationTask", Before="RemoveFiles",
+            Condition='REMOVE = "ALL" AND NOT UPGRADINGPRODUCTCODE AND NOT SWAN_RECOVERY')
+    element(sequence, "Custom", Action="CommitCompanyUninstall", After="RemoveCompanyConfigurationTask",
             Condition='REMOVE = "ALL" AND NOT UPGRADINGPRODUCTCODE AND NOT SWAN_RECOVERY')
     return ET.ElementTree(root), files
 

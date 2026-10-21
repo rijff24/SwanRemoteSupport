@@ -36,6 +36,7 @@ jobs:
         shell: bash
         run: |
           python -m unittest discover -s deployment/windows -p test_build_source.py
+          python -m unittest discover -s deployment/windows -p test_customer_msi.py
           mkdir -p component-artifacts
           python deployment/windows/archive-build-source.py . component-artifacts/CompanyComponents-source.zip --components-only
       - name: Test security and management
@@ -55,6 +56,12 @@ jobs:
         run: |
           powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File ./deployment/windows/test_technician_launcher.ps1
           if ($LASTEXITCODE -ne 0) { throw 'Windows PowerShell technician launcher checks failed.' }
+      - name: Verify customer uninstall commit and rollback preservation
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File ./deployment/windows/test_customer_uninstall_commit.ps1
+          if ($LASTEXITCODE -ne 0) { throw 'Customer uninstall commit checks failed.' }
       - name: Verify company setup entry point and trust rejection
         if: runner.os == 'Windows'
         shell: pwsh

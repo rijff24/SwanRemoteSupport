@@ -285,6 +285,13 @@ fn verify_publisher(path:&Path,release:&Release)->Result<()> {
 }
 
 #[cfg(windows)]
+pub fn commit_customer_uninstall(directory:&Path)->Result<()> {
+    let status=embedded_powershell_command(include_str!("../../../deployment/windows/Commit-CustomerUninstall.ps1"),
+        &[("Directory",directory.to_str().context("Uninstall state path is not valid Unicode")?)])?.status()?;
+    ensure!(status.success(),"Customer uninstall commit cleanup failed");Ok(())
+}
+
+#[cfg(windows)]
 fn embedded_powershell_command(script:&str,arguments:&[(&str,&str)])->Result<std::process::Command> {
     let literal=|value:&str|format!("'{}'",value.replace('\'',"''"));
     let mut script=format!("$ProgressPreference='SilentlyContinue'; & {{\n{script}\n}}");

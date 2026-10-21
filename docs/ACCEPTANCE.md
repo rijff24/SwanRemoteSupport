@@ -3014,3 +3014,26 @@ and separately signed/verified using that same private lab publisher. No private
 key was exported, host trust imported, installed service replaced or production
 publication performed. These packages still require installation, enrollment,
 upgrade and native-session verification.
+
+### New candidate uninstall regression, 21 October
+
+The signed composite `1.5.8` candidate was exercised on the same Server 2019
+guest after the prior `1.5.7` lifecycle. Customer installation and deliberate
+license-damage repair passed. Customer uninstall failed with MSI 1603 / custom
+action 1722 at `RemoveCompanyConfigurationTask`; technician cases were not
+reached. The full failing report and raw log were preserved. This is a failed
+acceptance gate, not a six-case success. Windows Installer rollback retained
+the installed customer executable/agent and running service.
+
+The existing cancellation helper rejects a retained uninstall rollback record.
+Successful prior bare MSI uninstall left that record until explicit verified
+company setup, making a later bare reinstall/removal encounter stale state.
+The fix adds a commit-only cleanup action using an embedded copy of the release
+agent, since its installed copy has already been deleted at commit. Cleanup is
+restricted to the canonical customer directory, validates both rollback records
+before removal, rejects reparse points and an agent still present, and preserves
+the uninstall cancellation marker, identity and consent. Rollback data remains
+available until transaction commit. Local Windows PowerShell 5 regression checks
+and all three MSI-authoring tests pass; CI, rebuilt signed packages and actual
+repeated uninstall/rollback verification remain pending. The failed candidate
+has not been published or approved for production.

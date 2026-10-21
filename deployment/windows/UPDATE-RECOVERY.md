@@ -38,7 +38,15 @@ watcher before retiring an earlier restart marker.
 
 Explicit MSI uninstall writes `pending-uninstall` before file removal, blocking
 new sessions and automatic recovery. Paired uninstall rollback restores the
-previous cancellation state, including an earlier cancellation. Software
+previous cancellation state, including an earlier cancellation. Uninstall commit
+clears only the now-obsolete cancellation/task rollback records
+after MSI has removed the installed agent. A separate agent copy embedded in the
+signed MSI runs this commit action, so it does not depend on the deleted installed
+executable. It retains `pending-uninstall`, identity and consent. Failed removal
+retains rollback information until Windows Installer invokes rollback. This avoids
+a successful uninstall leaving a record that blocks the next removal after a bare
+MSI reinstall. Real repeated install/uninstall verification of this fix is pending.
+Software
 rollback narrowly uninstalls its verified failed MSI with `SWAN_RECOVERY=1`,
 excluding user-uninstall cancellation actions. Only explicit verified setup or
 repair clears the cancellation marker. Explicit setup now verifies its incoming
