@@ -10,8 +10,8 @@ were on the same guest: this does not verify separate-machine input, relay
 fallback or Internet connectivity. The attempted relay test still selected a
 local direct connection, and that guest later became unresponsive. Recovery
 and diagnosis are pending. Two runtime configuration fixes are in native build
-`39600988305`; compilation reached installer packaging, but its runtime tests
-have not passed. See the final two dated sections for exact scope and failures.
+`39600988305`; its build and artifact/source checks passed, but its runtime tests
+have not passed. See the final dated sections for exact scope and failures.
 Earlier entries below retain their original source-specific observations;
 later evidence does not retroactively validate older packages or every Windows
 version. The full release gates remain open.
@@ -372,6 +372,32 @@ server retained its older choice until the real agent watcher synchronized it,
 then denied unattended grant requests. Executable hashes, exact harness source
 dirty-state and the recovery result are recorded privately. Native sessions
 remain unverified.
+
+### Configuration-recovery native build verified (2026-10-21)
+
+Native Windows run `39600988305` completed successfully for exact public source
+`bd1350012227f226db168be51bc823d3f086e493`, containing both configuration-refresh
+fixes. Artifact `12349480599` was downloaded once and verified against its
+authenticated archive digest: 141,973,242 bytes, SHA-256
+`31bf6a8905de084dfe837afa5efaafc87f1e14a196b3d7acbace2e6fd5cc6c0b`.
+Its 24 entries passed bounded extraction, path and published checksum checks.
+The corresponding-source archive matched 1,111 public Git files and all six
+generated bridge files. The bridge input was independently fetched as artifact
+`12344994676`, SHA-256
+`d979023c7c01202fb93470a899cc2fdf7bf1d7825fd7151cb505a1ac6143930f`.
+Six server-setup source inputs and the existing component pins also matched.
+The build receipt still marks the checkout dirty; these source comparisons do
+not establish a clean build or binary reproducibility.
+
+Retained MSI lifecycle artifact `12349770219`, SHA-256
+`b1313134dafac51a8758a1958861b374dc5113c11dd59534a93fb78acce21246`,
+passed authenticated digest and ZIP checks. Its result records successful
+installation, repair and uninstall on Server 2022 Datacenter build 20348.
+The actual tested technician MSI, portable payload and agent hashes matched
+the main archive. This is unsigned payload lifecycle under the CI account,
+not company enrollment, standard-user GUI, signed upgrades, native sessions
+or a complete Server 2022 acceptance pass. The configuration fixes' native
+runtime recovery tests remain pending.
 
 | Requirement | Current evidence and remaining work |
 | --- | --- |
