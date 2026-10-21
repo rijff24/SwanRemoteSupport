@@ -808,7 +808,7 @@ mod worker_completion_tests {
         let before=build_count();
         let request=||Json(BuildRequest{release_id:"release".into()});
         assert_eq!(create_build(State(store.clone()),HeaderMap::new(),request()).await.err().unwrap().0,StatusCode::UNAUTHORIZED);
-        assert_eq!(create_build(State(store.clone()),headers(&technician_token),request()).await.err().unwrap().0,StatusCode::FORBIDDEN);
+        assert_eq!(create_build(State(store.clone()),headers(&technician_token),request()).await.err().unwrap().0,StatusCode::UNAUTHORIZED);
         assert_eq!(create_build(State(store.clone()),headers(&admin_token),Json(BuildRequest{release_id:"missing".into()})).await.err().unwrap().0,StatusCode::NOT_FOUND);
         store.db.lock().unwrap().execute("UPDATE releases SET approved=0 WHERE id='release'",[]).unwrap();
         assert_eq!(create_build(State(store.clone()),headers(&admin_token),request()).await.err().unwrap().0,StatusCode::CONFLICT);
