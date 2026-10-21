@@ -2981,3 +2981,36 @@ recipe normalization/content regression, management claim-compatibility regressi
 and real loopback HTTP worker preflight regression executed and passed. Linux
 deployment checks also passed. Independently downloaded executable and installed
 worker verification of this change remain pending.
+
+### Verified compatibility runtime and next signed lab candidate, 21 October
+
+Windows component artifact `12366189203` from workflow `39644529161` passed
+independent archive verification against SHA-256
+`155e077843dedf212be655d122c57d00bbea034d100af4c4b064f6418f1b2100`, all five
+payload entries and all 114 corresponding source files at revision `481439d`.
+Its actual management executable passed 80 isolated loopback HTTP assertions,
+including a recipe digest independently recomputed from its verified source and
+rejection of missing/wrong claim digests. A second fresh-company run passed 85
+assertions, adding naturally elapsed grant expiry and authorization-lease expiry:
+an unclaimed ticket was rejected after its 60-second lifetime, and an existing
+lease could not be renewed after more than 300 seconds. No host clock changes,
+mock timers or database expiry edits were used. Both test processes stopped.
+These remain management API results; active native desktop disconnection on
+lease expiry still requires separate evidence.
+
+Native artifact `12365255815` finished downloading and matched its GitHub digest.
+Independent validation compared 1,111 tracked source files and six generated
+bridge inputs with pinned public Git/CI inputs. All 95 extracted customer payload
+files matched the published installed-file manifest. The technician MSI and both
+payload hashes also matched the separately verified successful Server 2022 CI
+install/repair/uninstall evidence. This does not prove enrolled native sessions.
+
+A private lab candidate combines native source `c0bf4b4` with component source
+`481439d`; the separate origins are retained in its input/signing records. The
+native applications and three component executables received verified timestamped
+signatures from the existing nonexportable disposable-VM publisher. New customer
+and technician MSI version `1.5.8` packages were built with the pinned WiX recipe
+and separately signed/verified using that same private lab publisher. No private
+key was exported, host trust imported, installed service replaced or production
+publication performed. These packages still require installation, enrollment,
+upgrade and native-session verification.
