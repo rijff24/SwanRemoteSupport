@@ -2511,3 +2511,31 @@ launcher without changing its memory guard or network settings. An encrypted
 management probe confirmed `SWAN-LAB-16V2`, Server 2016 Standard Evaluation,
 64-bit build 14393. Boot and guest identity are readiness evidence only; no new
 GUI login or remote-session acceptance is claimed.
+
+### Native technician login and failed rendezvous attempt (2026-10-21)
+
+The existing signed lab technician installation launched as unelevated
+`SwanLabTech` in session 1 after configuration sync and two successful package
+signature checks. File preparation was slow but showed changing read/CPU
+counters; the original process was retained until its frontend opened. The
+native company-branded form accepted the restricted `lab-technician` account
+and a fresh TOTP, then displayed the approved lab device in its authorized
+inventory. Credentials and the authenticator secret were kept private. This
+uses the existing older signed lab payload, not the newly downloaded release.
+
+Requesting attended support opened the native connection window for the
+enrolled device, then failed with `Failed to connect via rendezvous server`.
+No customer-consent prompt or desktop session was demonstrated. Client logs
+recorded three TCP punch attempts; the lab hbbs log recorded Windows UDP error
+10014 and UDP-loop restarts at the same three times. Both endpoint state files
+had accepted profile revision 15, whose transport addresses resolve to the
+loopback-only lab server. This is failed transport acceptance, with diagnosis
+pending; it is not evidence of working NAT traversal or relay fallback.
+
+After the long lab downtime, the TLS front end initially served an expired
+internal leaf certificate. A normal restart of the verified guest company
+service restored validated HTTPS; customer and worker services stayed running.
+No invalid certificate was accepted. The viewer's relative mouse mapping also
+misplaced clicks; full-screen keyboard capture allowed verified keyboard-only
+form navigation. Adding a USB controller live was rejected by the VM's PCI bus,
+so no live USB hardware change succeeded.
