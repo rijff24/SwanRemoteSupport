@@ -2944,3 +2944,34 @@ preserving actual file bytes; all five source archive tests pass locally.
 The successful push run exported Windows and Linux component artifacts, each with corresponding source and hashes. Independent downloaded artifact/source verification and runtime acceptance remain pending. Production
 signing, matching company server/worker runtime, public connectivity, complete
 Windows coverage and the remaining session/update/restore gates remain open.
+
+### Downloaded component provenance and fresh management runtime, 21 October
+
+Windows component artifact `12366376059` from successful workflow `39642194595`
+was downloaded and checked against GitHub's SHA-256
+`6cb1a4f73f8fd601b26b2530b7cb393ead02ac7b17f79955895ea0ce21a60963`.
+All five entries passed CRC and declared hash verification. An independent check
+compared all 114 component source files, modes and manifest hashes with public
+Git revision `43e5b37dc09fa0ed04bb5e602ca07dc19d705592`, accounting for checkout
+line endings. These checks prove corresponding build inputs, not bit-for-bit
+binary reproducibility or production signing.
+
+That exact management executable ran against a fresh, protected company directory
+and an ephemeral host loopback HTTP listener. Seventy-four assertions passed:
+one-time setup, setup/MFA replay rejection, signed branded profile revision,
+technician role and group restrictions, pending enrollment denial, target-bound
+signed grants, tampered and repeated claim rejection, permission reduction,
+unattended opt-in/revocation and stale consent rejection, build rejection without
+queue mutation, worker authentication/revocation, audit history, user disable and
+logout. A process restart preserved company key, branding revision, device
+enrollment, closed grant history and revoked access. The isolated test process
+was stopped afterward; existing company and transport services were untouched.
+This is executable/SQLite/HTTP API evidence, not HTTPS deployment, native desktop
+authorization, installer generation, migration, backup/restore or update evidence.
+
+The earlier worker/server bundle upload rejection motivates a compatibility
+handshake before claiming jobs: the worker checks an authenticated recipe endpoint
+and the server checks the matching versioned digest on every claim before queue
+mutation. Old or different recipes are rejected explicitly. Source regression
+checks cover preserved queued/expired claims on mismatch and preflight responses
+from old/incompatible servers; CI and installed worker verification are pending.

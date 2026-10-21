@@ -299,6 +299,22 @@ pub fn bundle_text(bytes:&[u8])->Result<Vec<u8>> {
     // Windows and Linux source checkouts must produce identical bundled scripts.
     Ok(std::str::from_utf8(bytes)?.replace("\r\n","\n").into_bytes())
 }
+pub const COMPANY_BUNDLE_RECIPE_HEADER:&str="x-swan-bundle-recipe";
+pub fn company_bundle_recipe()->Result<String> {
+    bundle_recipe(&COMPANY_BUNDLE_TEXT_FILES)
+}
+fn bundle_recipe(files:&[(&str,&[u8])])->Result<String> {
+    // Version the fixed ZIP layout, then frame names and normalized contents.
+    // This is a compatibility check, never a replacement for upload validation.
+    let mut hash=Sha256::new();hash.update(b"swan-company-bundle-v1\0");
+    hash.update((files.len() as u64).to_be_bytes());
+    for (name,bytes) in files {
+        let bytes=bundle_text(bytes)?;
+        hash.update((name.len() as u64).to_be_bytes());hash.update(name.as_bytes());
+        hash.update((bytes.len() as u64).to_be_bytes());hash.update(bytes);
+    }
+    Ok(hex::encode(hash.finalize()))
+}
 pub fn now() -> u64 { std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_secs()).unwrap_or(0) }
 pub fn maintenance_open(start: u8, end: u8, now: u64) -> bool {
     let hour = ((now / 3600) % 24) as u8;
@@ -308,6 +324,16 @@ pub fn maintenance_open(start: u8, end: u8, now: u64) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn bundle_recipe_tracks_exact_names_and_normalized_contents() {
+        let original=bundle_recipe(&[("setup.ps1",b"one\r\ntwo\r\n")]).unwrap();
+        assert_eq!(original,bundle_recipe(&[("setup.ps1",b"one\ntwo\n")]).unwrap());
+        assert_ne!(original,bundle_recipe(&[("other.ps1",b"one\ntwo\n")]).unwrap());
+        assert_ne!(original,bundle_recipe(&[("setup.ps1",b"changed\n")]).unwrap());
+        assert_ne!(bundle_recipe(&[("ab",b"c")]).unwrap(),bundle_recipe(&[("a",b"bc")]).unwrap());
+        assert_ne!(company_bundle_recipe().unwrap(),bundle_recipe(&COMPANY_BUNDLE_TEXT_FILES[1..]).unwrap());
+        assert!(bundle_recipe(&[("invalid",&[0xff])]).is_err());
+    }
     #[test]
     fn company_contact_shortcuts_validate_and_old_profiles_keep_defaults() {
         let value=serde_json::to_value(Branding::default()).unwrap();

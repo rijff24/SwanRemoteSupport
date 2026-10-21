@@ -196,6 +196,7 @@ pub fn router(store:Shared)->Router {
         .route("/api/v1/workers/{id}",axum::routing::delete(revoke_worker))
         .route("/api/v1/builds",get(builds).post(create_build))
         .route("/api/v1/worker/claim",post(claim_build))
+        .route("/api/v1/worker/recipe",get(worker_recipe))
         .route("/api/v1/worker/builds/{id}",put(finish_build))
         .route("/api/v1/worker/builds/{id}/artifact",put(upload_artifact).layer(DefaultBodyLimit::max(512*1024*1024)))
         .route("/api/v1/downloads/{id}",get(download_artifact))
@@ -565,8 +566,16 @@ async fn builds(State(s):State<Shared>,headers:HeaderMap)->ApiResult {
     s.user(&headers,true)?;let db=s.db.lock().unwrap();let mut stmt=db.prepare("SELECT id,state,result FROM builds ORDER BY rowid DESC LIMIT 100")?;
     let rows=stmt.query_map([],|r|Ok(json!({"id":r.get::<_,String>(0)?,"state":r.get::<_,String>(1)?,"result":r.get::<_,String>(2)?})))?.collect::<Result<Vec<_>,_>>()?;Ok(Json(json!(rows)))
 }
+async fn worker_recipe(State(s):State<Shared>,headers:HeaderMap)->ApiResult {
+    s.worker(&headers)?;
+    Ok(Json(json!({"schema":1,"bundle_recipe":company_bundle_recipe()?})))
+}
 async fn claim_build(State(s):State<Shared>,headers:HeaderMap)->ApiResult {
     s.worker(&headers)?;let worker=digest(token(&headers)?);
+    let recipe=company_bundle_recipe()?;
+    if headers.get(COMPANY_BUNDLE_RECIPE_HEADER).and_then(|value|value.to_str().ok())!=Some(recipe.as_str()) {
+        return Err(ApiError(StatusCode::CONFLICT,"Company bundle recipe mismatch; install matching server and worker releases. No job claimed"));
+    }
     let mut db=s.db.lock().unwrap();let tx=db.transaction()?;
     // Recheck under the claim transaction: revocation may follow the initial
     // authentication check before this request acquires the database lock.
@@ -583,6 +592,53 @@ struct BuildResult { success:bool, artifact_url:String,sha256:String,log:String 
 #[cfg(test)]
 mod worker_completion_tests {
     use super::*;
+    #[tokio::test]
+    async fn incompatible_worker_cannot_claim_or_requeue_jobs() {
+        use tower::ServiceExt;
+        let directory=std::env::temp_dir().join(format!("swan-worker-recipe-{}",random_token()));
+        let store=Arc::new(Store::open(&directory).unwrap());let credential=random_token();
+        {
+            let db=store.db.lock().unwrap();
+            db.execute("INSERT INTO workers(id,token_hash) VALUES('worker',?1)",[digest(&credential)]).unwrap();
+            db.execute("INSERT INTO builds(id,body,state,worker,claimed_at) VALUES('queued','{}','queued','',0),('expired','{}','running','other-worker',0)",[]).unwrap();
+        }
+        let app=router(store.clone());let recipe=company_bundle_recipe().unwrap();
+        let request=axum::http::Request::builder().uri("/api/v1/worker/recipe").body(axum::body::Body::empty()).unwrap();
+        assert_eq!(app.clone().oneshot(request).await.unwrap().status(),StatusCode::UNAUTHORIZED);
+        let request=axum::http::Request::builder().uri("/api/v1/worker/recipe")
+            .header(header::AUTHORIZATION,format!("Bearer {credential}")).body(axum::body::Body::empty()).unwrap();
+        let response=app.clone().oneshot(request).await.unwrap();assert_eq!(response.status(),StatusCode::OK);
+        let bytes=axum::body::to_bytes(response.into_body(),4096).await.unwrap();
+        assert_eq!(serde_json::from_slice::<Value>(&bytes).unwrap(),json!({"schema":1,"bundle_recipe":recipe}));
+        for (token,header,expected) in [
+            ("invalid",None,StatusCode::UNAUTHORIZED),
+            ("invalid",Some(recipe.as_str()),StatusCode::UNAUTHORIZED),
+            (credential.as_str(),None,StatusCode::CONFLICT),
+            (credential.as_str(),Some("old-recipe"),StatusCode::CONFLICT),
+            (credential.as_str(),Some(""),StatusCode::CONFLICT),
+        ] {
+            let mut request=axum::http::Request::builder().method("POST").uri("/api/v1/worker/claim").header(header::AUTHORIZATION,format!("Bearer {token}"));
+            if let Some(value)=header {request=request.header(COMPANY_BUNDLE_RECIPE_HEADER,value);}
+            let response=app.clone().oneshot(request.body(axum::body::Body::empty()).unwrap()).await.unwrap();
+            assert_eq!(response.status(),expected);
+            let db=store.db.lock().unwrap();
+            let queued:(String,String,i64)=db.query_row("SELECT state,worker,claimed_at FROM builds WHERE id='queued'",[],|r|Ok((r.get(0)?,r.get(1)?,r.get(2)?))).unwrap();
+            let expired:(String,String,i64)=db.query_row("SELECT state,worker,claimed_at FROM builds WHERE id='expired'",[],|r|Ok((r.get(0)?,r.get(1)?,r.get(2)?))).unwrap();
+            assert_eq!(queued,("queued".into(),"".into(),0));
+            assert_eq!(expired,("running".into(),"other-worker".into(),0));
+        }
+        let request=axum::http::Request::builder().method("POST").uri("/api/v1/worker/claim")
+            .header(header::AUTHORIZATION,format!("Bearer {credential}")).header(COMPANY_BUNDLE_RECIPE_HEADER,recipe)
+            .body(axum::body::Body::empty()).unwrap();
+        let response=app.clone().oneshot(request).await.unwrap();assert_eq!(response.status(),StatusCode::OK);
+        {
+            let db=store.db.lock().unwrap();
+            let claimed:i64=db.query_row("SELECT COUNT(*) FROM builds WHERE state='running' AND worker=?1",[digest(&credential)],|r|r.get(0)).unwrap();
+            let recovered:i64=db.query_row("SELECT COUNT(*) FROM builds WHERE state='queued'",[],|r|r.get(0)).unwrap();
+            assert_eq!(claimed,1);assert_eq!(recovered,1);
+        }
+        drop(app);drop(store);std::fs::remove_dir_all(directory).unwrap();
+    }
     #[tokio::test]
     async fn administrator_revocation_cancels_claims_and_hides_credentials() {
         let directory=std::env::temp_dir().join(format!("swan-worker-revocation-{}",random_token()));
@@ -857,7 +913,8 @@ mod worker_completion_tests {
         // Restoring release approval cannot revive a cancelled worker claim.
         store.db.lock().unwrap().execute("UPDATE releases SET approved=1 WHERE id='release'",[]).unwrap();
         assert!(persist_verified_artifact(&store,&in_flight,&worker,b"late replacement").is_err());
-        assert!(claim_build(State(store.clone()),headers(&worker_token)).await.ok().unwrap().0.is_null());
+        let mut matching=headers(&worker_token);matching.insert(COMPANY_BUNDLE_RECIPE_HEADER,company_bundle_recipe().unwrap().parse().unwrap());
+        assert!(claim_build(State(store.clone()),matching).await.ok().unwrap().0.is_null());
         drop(store);std::fs::remove_dir_all(directory).unwrap();
     }
     #[test]

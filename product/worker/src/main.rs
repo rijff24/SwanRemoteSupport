@@ -32,19 +32,35 @@ async fn run_worker()->Result<()> {
     let output=PathBuf::from(std::env::var("SWAN_ARTIFACT_DIR").context("Set worker artifact output directory")?);
     tokio::fs::create_dir_all(&output).await?;
     let client=swan_agent::http_client(600,false)?;
+    let recipe=company_bundle_recipe()?;
     loop {
-        let response=client.post(format!("{}/api/v1/worker/claim",server.trim_end_matches('/'))).bearer_auth(&token).send().await;
+        // Older servers do not understand the claim header. Check their recipe
+        // endpoint first so upgrading only the worker cannot strand their jobs.
+        if let Err(error)=check_server_recipe(&client,&server,&token,&recipe).await {
+            eprintln!("Worker compatibility check failed: {error:#}. Install matching server and worker releases; no build was requested.");
+            tokio::time::sleep(std::time::Duration::from_secs(15)).await;
+            continue;
+        }
+        let response=client.post(format!("{}/api/v1/worker/claim",server.trim_end_matches('/'))).bearer_auth(&token).header(COMPANY_BUNDLE_RECIPE_HEADER,&recipe).send().await;
         match response {
             Ok(response) if response.status().is_success()=>{
                 if let Err(error)=process_claim(response,&client,&server,&token,&output,&release_key,&company_key).await {
                     eprintln!("Worker job processing failed: {error:#}. Continuing polling; the server retains the job for recovery.");
                 }
             }
+            Ok(response) if response.status()==reqwest::StatusCode::CONFLICT=>eprintln!("Company bundle recipe mismatch; install matching server and worker releases. No build was claimed."),
             Ok(response)=>eprintln!("Worker polling failed: {}",response.status()),
             Err(_)=>eprintln!("Worker management endpoint unavailable; retrying"),
         }
         tokio::time::sleep(std::time::Duration::from_secs(15)).await;
     }
+}
+
+async fn check_server_recipe(client:&reqwest::Client,server:&str,token:&str,recipe:&str)->Result<()> {
+    let response=client.get(format!("{}/api/v1/worker/recipe",server.trim_end_matches('/'))).bearer_auth(token).send().await?.error_for_status()?;
+    let value:Value=response.json().await?;
+    ensure!(value["schema"].as_u64()==Some(1) && value["bundle_recipe"].as_str()==Some(recipe),"Company bundle recipe mismatch");
+    Ok(())
 }
 
 async fn process_claim(response:reqwest::Response,client:&reqwest::Client,server:&str,token:&str,output:&Path,release_key:&str,company_key:&str)->Result<()> {
@@ -156,6 +172,36 @@ fn verify_windows(_path:&Path,_release:&Release,_directory:&Path,_check_msi:bool
 #[cfg(test)]
 mod verification_tests {
     use super::*;
+
+    #[tokio::test]
+    async fn server_recipe_preflight_rejects_old_or_incompatible_servers() {
+        use tokio::io::{AsyncReadExt,AsyncWriteExt};
+        let recipe=company_bundle_recipe().unwrap();
+        let client=reqwest::Client::builder().no_proxy().timeout(std::time::Duration::from_secs(3)).build().unwrap();
+        for (status,body,accepted) in [
+            ("200 OK",json!({"schema":1,"bundle_recipe":recipe}).to_string(),true),
+            ("200 OK",json!({"schema":1,"bundle_recipe":"old"}).to_string(),false),
+            ("200 OK",json!({"schema":2,"bundle_recipe":recipe}).to_string(),false),
+            ("200 OK","null".into(),false),
+            ("404 Not Found","{}".into(),false),
+            ("401 Unauthorized","{}".into(),false),
+        ] {
+            let listener=tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();let address=listener.local_addr().unwrap();
+            let server=tokio::spawn(async move {
+                let (mut stream,_)=listener.accept().await.unwrap();let mut request=Vec::new();
+                while !request.ends_with(b"\r\n\r\n") {
+                    let byte=stream.read_u8().await.unwrap();request.push(byte);assert!(request.len()<4096);
+                }
+                let request=String::from_utf8(request).unwrap();
+                assert!(request.starts_with("GET /api/v1/worker/recipe HTTP/1.1\r\n"));
+                assert!(request.to_ascii_lowercase().contains("authorization: bearer fixture-worker\r\n"));
+                let response=format!("HTTP/1.1 {status}\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",body.len());
+                stream.write_all(response.as_bytes()).await.unwrap();
+            });
+            assert_eq!(check_server_recipe(&client,&format!("http://{address}"),"fixture-worker",&recipe).await.is_ok(),accepted);
+            tokio::time::timeout(std::time::Duration::from_secs(5),server).await.unwrap().unwrap();
+        }
+    }
 
     #[test]
     fn both_artifacts_require_trust_but_only_msi_installer_requires_msi_identity() {

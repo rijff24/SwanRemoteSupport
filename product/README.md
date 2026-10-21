@@ -34,6 +34,16 @@ installation bundles. The installer worker still requires Windows.
 
 Installers contain public bootstrap information only. The worker pins both profile and project release verification keys locally. Release metadata must include package, installed executable and agent SHA-256 identities, exact source URL, publisher, signing-certificate SHA-256 and supported Windows families. No profile value becomes a shell command.
 
+Install management and installer workers from matching project releases. Before
+requesting work, a worker authenticates to the server's recipe endpoint and checks
+the versioned digest of the fixed ZIP layout and normalized bundled script/license
+bytes. The claim request repeats this digest; a mismatch returns HTTP 409 before
+claiming or recovering jobs. Older workers without the digest cannot claim on a
+new server, and a new worker declines an older server without the recipe endpoint.
+This compatibility check leaves jobs queued for a matching worker and reports the
+mismatch in its protected log. Upload signature, hash and exact-content validation
+remain mandatory; the recipe digest does not authorize different scripts.
+
 The native Flutter technician home now includes company branding, MFA login, authorized inventory, attended/unattended connection requests and session history. Its Rust broker retains tokens and proof keys in memory and consumes the selected peer's ticket during the transport challenge. The graphical flow requires native build and end-to-end validation before it is considered delivered. The launcher opens this interface; automatic technician update handoff while closing the running executable remains incomplete.
 
 The updater writes `pending-update.json` before installation and advances the sequence only after verifying the complete signed installed payload and agent. A staged, publisher-verified replacement agent performs installation and replaces the configuration agent while retaining session exclusion. Pending receipts support delayed retries; an already registered MSI uses forced repair. `swan-agent recover-update` completes recovery only when the signed installed identity matches. These paths compile and have component trust tests; actual signed self-replacement, interrupted installation and scheduled-task restart remain unverified. Full rollback and automatic technician GUI shutdown/handoff remain incomplete.
