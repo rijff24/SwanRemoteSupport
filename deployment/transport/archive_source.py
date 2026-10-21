@@ -12,6 +12,21 @@ project = Path(__file__).resolve().parent
 receipt = json.loads((source / "SWAN-SOURCE.json").read_text())
 if receipt["stage"] != "fix":
     raise SystemExit("Refusing to archive an unpatched transport candidate")
+pins = json.loads((project / "source.json").read_text())
+shared = source / "libs/hbb_common"
+if (receipt["upstream"] != pins
+        or subprocess.check_output(["git", "-C", str(source), "rev-parse", "HEAD"], text=True).strip() != pins["commit"]
+        or subprocess.check_output(["git", "-C", str(shared), "rev-parse", "HEAD"], text=True).strip() != pins["hbb_common_commit"]):
+    raise SystemExit("Transport archive does not use the pinned public revisions")
+# Compilation can mutate the tracked SQLite schema database. A correctly
+# ordered build must archive first; do not silently call a changed working tree
+# the exact public inputs. Only the hash-verified UDP patch is allowed to differ.
+for directory, excluded in [(source, "libs/hbb_common"), (shared, "src/udp.rs")]:
+    subprocess.run(["git", "-C", str(directory), "diff", "--cached", "--quiet", "HEAD"], check=True)
+    subprocess.run(["git", "-C", str(directory), "diff", "--quiet", "HEAD", "--", ".", ":!" + excluded], check=True)
+udp = (shared / "src/udp.rs").read_bytes().replace(b"\r\n", b"\n")
+if hashlib.sha256(udp).hexdigest() != pins["patches"][-1]["after_sha256"]:
+    raise SystemExit("Transport archive UDP source does not match the reviewed patch")
 tracked = subprocess.check_output(["git", "-C", str(source), "ls-files", "--recurse-submodules", "-z"])
 files = {}
 for raw in filter(None, tracked.split(b"\0")):
