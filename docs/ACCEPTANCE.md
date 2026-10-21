@@ -3280,3 +3280,49 @@ rendezvous/relay build. A regenerated artifact must pass the independent
 whole-archive Git comparison before its source-provenance gate can close. The
 existing integration results remain limited to their recorded runtime scope;
 they do not override this failed source check or qualify production publication.
+
+### Corrected transport source verification and Linux reproduction, 21 October
+
+Source `adf437ee181bd3f1455df14e07d06b4a2b8b50a1`, workflow `39668437572`,
+passed the component/deployment checks with source captured before compilation.
+Artifact `12378089575` (6,338,856 bytes) was downloaded and verified against
+GitHub's SHA-256
+`516bdc2236271ebdcc440a9e2da5e5c14b162097070c80a4631519b8122bbcf2`.
+Independent whole-archive comparison now passes all 140 files against immutable
+upstream/shared/project Git objects, except the UDP file whose complete content
+matches the explicitly reviewed patch hash. The previously mismatched SQLite
+file now matches its public Git blob. This closes the recorded source-input
+discrepancy for this artifact; it does not validate the earlier archive.
+
+Actual unsigned Linux executables from the separate `39665690071` and
+`39668437572` builds also match byte-for-byte:
+
+- `hbbs`: `6bacfa973533248aa24c2917469149d3e08246140f5423160a6da521c3dd018a`.
+- `hbbr`: `132ab0c989a110a3335220d1afbbdf022afa559cf9bec23b8419f473d04388a3`.
+
+This is reproduction evidence for those two executables under the common
+recorded transport recipe and base-image/toolchain pins. It does not establish
+bit-identical OCI images, Windows payloads or the entire product. Independent
+receipts remain in `maintained-transport-adf437e/published-source-verification.json`
+and `verified-binary-reproduction.json` in the private lab evidence.
+
+Source `f955874c4b777e58fa708401cc71abf52f868f28`, run `39670081266`, subsequently
+passed Windows/Linux components and the maintained deployment rehearsal with
+additional input guards. Source capture rejects unexpected tracked changes and
+accepts only the hash-verified UDP modification. A fresh local clone test
+archived all 140 expected files successfully, then deliberately changed a byte
+in the public schema fixture and confirmed rejection before any negative archive
+was written. No company database was used in this guard test.
+
+### Actual insecure-existing-state MSI rejection, 21 October
+
+The private lab-signed `1.5.11` customer MSI (native `c0bf4b4`, agent `6503614`)
+was run on Server 2019 `17763.3650` against the original post-uninstall state
+folder with inherited Users-write permissions. No replacement folder or new
+standard account was created. Installation correctly returned 1603. Independent
+raw-log inspection confirmed `PrepareCustomerState` failed before any payload
+copy; the existing cancellation marker, old helper bytes and all ACLs remained
+unchanged. No product registration, application, agent or service remained.
+Evidence is retained in `windows-server2019-unsafe-state-6503614/verified-rejection.json`
+with the original metadata and MSI log. This proves refusal to adopt insecure
+existing state, not the separately blocked standard-user read/write/create test.
