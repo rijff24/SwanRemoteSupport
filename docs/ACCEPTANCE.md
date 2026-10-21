@@ -21,6 +21,25 @@ Earlier entries below retain their original source-specific observations;
 later evidence does not retroactively validate older packages or every Windows
 version. The full release gates remain open.
 
+## Current release gates, 22 October
+
+The dated evidence below is source-specific. Earlier passing packages do not
+qualify the current candidate. Native source `becf3cd` is building in workflow
+`39690742314`; only its generated bridge artifact has been downloaded and
+verified so far. Its authorization-log, control-permission and managed-install
+corrections still need compilation and runtime verification.
+
+| Area | Latest established evidence | Still required for release |
+| --- | --- | --- |
+| Company setup | First-run branding/policy form contract and real Axum/SQLite setup tests pass on Windows/Linux; Linux deployment rehearsals pass. | Matching fresh Windows service/worker setup and equivalent full deployment acceptance. |
+| Native technician | Standard-user `c0bf4b4` MFA, authorized inventory/history, logout, live branding and offline refusal/cache pass against the older lab company. | Accepted support session with both corrected editions and a separate receiving machine. |
+| Receiving authorization | Older `bd13500` customer rejected a real stock client's legacy-password request. Native `c0bf4b4` refused a tampered cached profile. | Corrected receiver runtime, unauthorized direct connections, packet permissions, lease expiry and revocation. |
+| Customer session features | Earlier same-guest customer-approved desktop session; later graphical refusal. | Separate-machine input, transfer, clipboard, UAC, logon screen, multiple monitors, unattended consent/revocation and relay fallback. |
+| Installers | Source-specific administrator MSI lifecycle evidence is listed in the Windows matrix below. | Current-source company-generated EXE/MSI flow, standard-user technician installation and the complete upgrade/recovery matrix. |
+| Updates and recovery | Earlier signed lab update evidence, component rejection tests and real MSI rollback fixtures. | Current-source approved automatic rollout, session coordination, interrupted-update recovery and identity/consent preservation. MSI rollback alone does not prove these. |
+| Public transport | Maintained transport candidates built; two Linux transport builds reproduced identical binaries with verified public source. | External direct/relay/negative-access tests without Tailscale and accepted production transport pins. |
+| Publication | Corresponding-source and artifact verification are implemented; private lab signing is available. | Full product reproducibility, production signing approval/signatures and every release gate above. |
+
 ## Evidence obtained
 
 ### Corrected native Windows build inputs, 3 October
@@ -446,7 +465,10 @@ designed. The event log recorded an unclean shutdown; it did not establish
 the cause of the earlier unresponsiveness. This is crash-recovery evidence,
 not a complete encrypted deployment-restore or migration rehearsal.
 
-| Requirement | Current evidence and remaining work |
+The following table preserves an earlier checkpoint. Use the current release
+gates above and the later dated evidence for current status.
+
+| Requirement | Historical checkpoint evidence and remaining work |
 | --- | --- |
 | Reproducible server, customer, technician and worker builds | Product components pass pinned builds. Native Windows build/package run 36998413349 passed at exact source `2eec008`. Later native source, including consent/reconnect/version and rollback changes, still needs CI and VM verification. Baseline rebuild and clean-machine installation are not newly proved. |
 | Fresh-company Windows/Linux setup | HTTPS/API setup works. The pinned Linux management image passes actual non-root/read-only fresh company setup, MFA, approval/policy rejection and restart persistence. Administrator network settings and server-vantage DNS/TCP/HTTPS company-signature diagnostics are implemented with access tests. Equivalent full setup wizards, transport provisioning, certificate management and external reachability checks remain incomplete; see NETWORK_DIAGNOSTICS.md. |
@@ -464,17 +486,19 @@ not a complete encrypted deployment-restore or migration rehearsal.
 
 ## Clean Windows matrix
 
-All rows are intended targets, not verified compatibility claims. Record exact
-edition/build, media hash, product commit, package signature/hash and results.
+All rows remain intended release targets, not full compatibility claims. Passes
+below cover only the stated source, package, privileges and OS build. Later
+dated sections record package/media hashes and original failures; latest-source
+full acceptance remains open on every row.
 
 | Operating system | Clean installation | Repair/upgrade/recovery | Native session behavior |
 | --- | --- | --- | --- |
-| Windows 10 x64 | Unverified | Unverified | Unverified |
+| Windows 10 x64 | Both lab-signed MSI 1.5.11 editions: administrator install on LTSC Evaluation 19044.1288; native `c0bf4b4`, agent `6503614`. Other editions/builds unverified. | Repair/uninstall pass (six lifecycle operations total); upgrade, reboot and automatic recovery unverified. | Unverified. |
 | Windows 11 x64 | Unverified | Unverified | Unverified |
-| Server 2016 Desktop Experience | Unverified | Unverified | Unverified |
-| Server 2019 Desktop Experience | Unverified | Unverified | Unverified |
-| Server 2022 Desktop Experience | Unverified | Unverified | Unverified |
-| Server 2025 Desktop Experience | Unverified | Unverified | Unverified |
+| Server 2016 Desktop Experience | Existing 14393.693 lab deployment; current-source fresh company setup unverified. | Historical signed lab upgrades/reboot evidence; current-source full lifecycle/recovery unverified. | Older same-guest accepted session; `c0bf4b4` technician GUI checks and `bd13500` receiver legacy-password denial. Separate-machine/full-feature acceptance open. |
+| Server 2019 Desktop Experience | Administrator lab-signed MSI 1.5.9 lifecycle, native `c0bf4b4`, agent `053a52e`, build 17763.3650. | Twelve verified operations include customer 1.5.8-to-1.5.9 upgrade, repair/uninstall/reinstall and technician lifecycle. Latest `6503614` existing-unsafe-state rejection also passes; full current-source recovery unverified. | Unverified. |
+| Server 2022 Desktop Experience | Both lab-signed MSI 1.5.11 editions on clean 20348.587; native `c0bf4b4`, agent `6503614`. | Six lifecycle operations pass. Separate MSI 1.5.12 uninstall-failure fixtures restore payload/registration/watcher; automatic update interruption unverified. | Unverified. |
+| Server 2025 Desktop Experience | Both unsigned `bd13500` MSI editions install as Administrator on 26100.32230. | Six install/repair/uninstall operations pass; signed/current-source upgrades and recovery unverified. Standard-user technician MSI precondition was blocked by OS policy, not passed. | Unverified. |
 
 See [VM testing](../deployment/windows/VM-TESTING.md) and
 [local HTTPS testing](../deployment/windows/LOCAL-TESTING.md). Test credentials,
