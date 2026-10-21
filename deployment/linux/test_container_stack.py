@@ -5,6 +5,7 @@ No system trust store is changed. TCP startup is not native remote-session,
 UDP traversal, public reachability or production certificate-renewal evidence.
 """
 import base64
+import argparse
 import json
 import ipaddress
 import pathlib
@@ -13,7 +14,6 @@ import secrets
 import socket
 import ssl
 import subprocess
-import sys
 import tempfile
 import time
 import urllib.error
@@ -172,6 +172,23 @@ def pinned_images():
     return proxies[0], transport
 
 
+def maintained_transport_image():
+    # Resolve once, then run the immutable image ID throughout the rehearsal.
+    # A mutable tag must not select different transport builds during restore.
+    image = docker("image", "inspect", "--format", "{{.Id}}", "swan-transport:maintained-test")
+    if re.fullmatch(r"sha256:[0-9a-f]{64}", image) is None:
+        raise RuntimeError("Maintained transport image identity missing")
+    receipt = json.loads(docker("run", "--rm", "--network", "none", "--read-only",
+        "--entrypoint", "cat", image, "/usr/share/doc/swan-transport/SWAN-SOURCE.json"))
+    expected = json.loads((ROOT / "deployment/transport/source.json").read_text(encoding="utf-8"))
+    if (receipt.get("upstream") != expected or receipt.get("stage") != "fix"
+            or receipt.get("project_revision") != "650361413543baf7ef150f5960544154ec77ddeb"
+            or receipt.get("patched_udp_sha256") != expected["patches"][-1]["after_sha256"]
+            or receipt.get("unsigned_test") is not True):
+        raise RuntimeError("Maintained transport recipe or source provenance differs")
+    return image
+
+
 def port(name, service):
     mapping = docker("port", name, service)
     if re.fullmatch(r"127\.0\.0\.1:[0-9]+", mapping) is None:
@@ -327,8 +344,14 @@ def verify_profile(envelope, public_key, directory):
 
 
 def main():
-    image = sys.argv[1] if len(sys.argv) == 2 else "swan-management:test"
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("image", nargs="?", default="swan-management:test")
+    parser.add_argument("--maintained-transport", action="store_true")
+    arguments = parser.parse_args()
+    image = arguments.image
     proxy_image, transport_image = pinned_images()
+    if arguments.maintained_transport:
+        transport_image = maintained_transport_image()
     prefix = "swan-stack-test-" + uuid.uuid4().hex
     names = {role: prefix + "-" + role for role in ["management", "https", "hbbs", "hbbr"]}
     volumes = []

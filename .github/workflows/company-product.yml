@@ -118,6 +118,10 @@ jobs:
         run: python3 deployment/linux/test_container_startup.py swan-management:test
       - name: Rehearse pinned HTTPS and transport components with an isolated test CA
         run: python3 deployment/linux/test_container_stack.py swan-management:test
+      - name: Build maintained transport from pinned public source with corresponding source
+        run: docker build --file deployment/transport/Dockerfile --tag swan-transport:maintained-test .
+      - name: Rehearse maintained transport with HTTPS, enrollment and complete backup recovery
+        run: python3 deployment/linux/test_container_stack.py swan-management:test --maintained-transport
   technician-msi-lifecycle:
     if: github.event_name == 'workflow_dispatch' && inputs.technician_msi_only
     runs-on: ${{ inputs.technician_msi_os || 'windows-2022' }}

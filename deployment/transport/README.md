@@ -25,3 +25,29 @@ traversal or relay fallback. Validate those on the isolated lab before changing
 distribution pins. Production publication still requires release approval,
 valid signatures and corresponding public source; this workflow publishes no
 production release and makes no claim of binary reproducibility.
+
+## Linux candidate deployment and integration gate
+
+`Dockerfile` builds the patched rendezvous/relay from the same immutable public
+server and shared-submodule pins. The public recipe is pinned independently to
+project revision `650361413543baf7ef150f5960544154ec77ddeb`; changing the current
+checkout cannot silently change those transport inputs. Rust and both base
+images are pinned, Cargo uses its verified lockfile, and the image contains
+`/usr/share/doc/swan-transport/transport-build-source.zip`, the exact patched
+source, recipe, receipt and AGPL notice. This establishes input provenance;
+apt repositories and compiler output are not claimed bit-for-bit reproducible.
+
+For a **fresh isolated test deployment**, explicitly select the override:
+
+```sh
+docker compose -f deployment/linux/compose.yaml -f deployment/linux/compose.maintained-transport.yaml up --build -d
+```
+
+Do not apply it to existing company volumes before backup/migration verification.
+The normal deployment remains on its previously recorded component pins pending
+candidate acceptance. No project registry image or production release is
+published by this build. The company-component CI now also builds this candidate
+and runs the existing real HTTPS, enrollment and encrypted complete backup/restore
+rehearsal against its immutable local image ID. It validates the embedded public
+recipe receipt before creating the rehearsal stack. These integration checks
+still do not prove native direct/relay sessions or public reachability.
