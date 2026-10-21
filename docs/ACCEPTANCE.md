@@ -2795,3 +2795,44 @@ backup, restore or management-service change occurred. A separate reviewable
 private draft and approval request remain pending. This is distinct from the
 previously rejected private-NIC HTTPS listener change. Host services were not
 changed; latest native runtime, cross-machine and update acceptance remain open.
+
+### Latest component checks and local customer upgrade, 21 October
+
+Component workflow `39629396018` passed for exact source
+`8c321705e0b3450f440e3c1a7ade6a328aad47ec`: locked Rust tests and release builds
+on Linux and Windows, Windows setup/launcher/removal checks, and the Linux
+HTTPS/transport deployment rehearsal. The new release-request assertions passed
+on both operating systems. The first attempt failed because the test expected
+403 instead of the existing administrator-only authentication response 401;
+the test was corrected without changing authentication policy.
+
+Both `bd13500` worker ZIP files passed independent path/count/CRC, exact source
+script/license, signed profile/release and package/agent hash checks. Bootstrap
+company identity, endpoint and both public trust keys matched the independently
+installed customer state. These checks do not turn the rejected server uploads
+into completed publication jobs.
+
+Using that verified local customer bundle, an explicit Server 2016 upgrade from
+1.5.6 sequence 7 to 1.5.7 sequence 8 passed. Device identity/token, unattended
+consent and its revision were preserved, expected native/agent hashes matched,
+recovery markers cleared, and the support service and configuration watcher
+ran afterward. This was local explicit setup, not automatic rollout or a public
+download test. The separate transport candidate was restarted after preserving
+its previous logs; the upgraded native receiver contacted the configured
+32116 endpoint and received a public-key registration request and NAT response.
+This is not a separate-machine or relay desktop-session test.
+
+Runtime logs also showed legacy RustDesk Pro HTTP heartbeat/sysinfo attempts.
+The source now disables that endpoint and ignores unsigned legacy strategy
+options for `swan_custom` editions. The native Windows workflow includes an exact
+regression-test gate requiring one executed passing test. Native compilation
+and runtime verification of this guard remain pending; no unauthorized desktop
+session through legacy strategy was demonstrated. The installed `bd13500`
+candidate predates this guard and is not approved for production.
+
+A new isolated Server 2019 evaluation VM was created from the verified official
+ISO, with a unique NIC address and private credentials/seed outside Git. The idle
+Server 2025 guest shut down normally before launch. Server 2019 installation is
+in progress, not yet a passing product compatibility test. Host RustDesk and
+its server remain running. The rejected management backup and HTTPS listener
+operations remain unchanged pending explicit approvals.

@@ -140,6 +140,13 @@ jobs:
           python3 .\build.py --portable --flutter --skip-portable-pack --hwcodec --vram
           Move-Item .\flutter\build\windows\x64\runner\Release .\swan-client
 
+      - name: Reject unsigned legacy management policy in managed editions
+        shell: pwsh
+        run: |
+          cargo test --release --lib --features "flutter,swan_custom,hwcodec,vram" hbbs_http::sync::managed_sync_tests::managed_sync_rejects_legacy_endpoint_and_unsigned_options -- --exact 2>&1 | Tee-Object -FilePath artifacts/native-managed-sync-tests.log
+          if ($LASTEXITCODE -ne 0) { throw 'Managed legacy-sync regression failed.' }
+          if ((Get-Content artifacts/native-managed-sync-tests.log -Raw) -notmatch 'test result: ok\. 1 passed; 0 failed;') { throw 'Expected managed legacy-sync test did not run.' }
+
       - name: Add signed topmost-window helper
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
