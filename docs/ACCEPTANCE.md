@@ -2836,3 +2836,41 @@ Server 2025 guest shut down normally before launch. Server 2019 installation is
 in progress, not yet a passing product compatibility test. Host RustDesk and
 its server remain running. The rejected management backup and HTTPS listener
 operations remain unchanged pending explicit approvals.
+
+### Clean signed Server 2019 MSI lifecycle, 21 October
+
+The new VM installed Windows Server 2019 Standard Evaluation Desktop Experience
+x64, exact build `17763.3650`, from the verified Microsoft evaluation ISO. Its
+unattended lab bootstrap did not run; authenticated remote administration verified
+the guest before the hash-pinned private seed bootstrap was run manually. SSH
+provisioning completed, automatic logon was disabled and readiness was recorded.
+This was lab OS preparation, not a product installer failure.
+
+After verifying staged source/package hashes, the unique NIC address and absence
+of Swan product services, Windows shut down normally. The stopped QCOW2 disk
+passed its integrity check and received clean checkpoint
+`swan-clean-server2019-bd13500`. It then booted with installation media detached.
+
+Both privately signed 1.5.7 MSI packages from exact native source
+`bd1350012227f226db168be51bc823d3f086e493` passed install, repair and uninstall
+as `SWAN-LAB-19\Administrator` (administrator true, session 0). Each package
+passed its pinned publisher/certificate/hash verifier before its lifecycle phases.
+The public lifecycle runner verified Windows Installer registration, installed
+payload identities, customer service ownership/state, technician shortcut and
+registry entries, damaged customer license repair, and uninstall cleanup.
+All six MSI exit codes were 0, with no reboot required. Exported reports matched
+the pinned runner and package inputs; independent raw-log checks found successful
+engine returns and no `Return value 3`. The machine's trust changes were limited
+to the public private-lab publisher certificate in the disposable guest.
+
+Private receipt `windows-server2019-results-bd13500/verified-lifecycle.json`
+retains hashes for all six reports and raw logs. This is signed administrator MSI
+lifecycle evidence, not standard-user installation, company enrollment, native
+sessions, approved automatic rollout or complete Server 2019 acceptance.
+
+The native Windows build for the legacy-sync guard is workflow `39631663952`,
+exact source `c0bf4b40ff8257c9fb69e4c5f6aceb2394f1adc0`. Bridge/helper jobs passed;
+its native build and exact regression gate are still running. Do not substitute
+the older `bd13500` installed candidate for runtime verification of that guard.
+The lab management-backup and private-NIC HTTPS operations remain unapplied
+pending the explicit approvals requested after automatic review rejected them.
