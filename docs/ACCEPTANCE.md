@@ -3326,3 +3326,34 @@ unchanged. No product registration, application, agent or service remained.
 Evidence is retained in `windows-server2019-unsafe-state-6503614/verified-rejection.json`
 with the original metadata and MSI log. This proves refusal to adopt insecure
 existing state, not the separately blocked standard-user read/write/create test.
+
+### Clean Windows 10 LTSC installer lifecycle, 21 October
+
+Microsoft's Windows 10 Enterprise LTSC 2021 Evaluation x64 media was verified
+against its published SHA-256 before installation. The installed guest is
+`19044.1288`, edition `EnterpriseSEval`. A guarded preflight confirmed no Swan
+product registrations, services or customer state and disabled provisioning
+autologon. After normal shutdown, an offline internal clean OS checkpoint passed
+disk-integrity checks before both editions were tested.
+
+The same private lab-signed `1.5.11` packages used on Server 2022 (native
+`c0bf4b4`, agent `6503614`) passed customer and technician install, repair and
+uninstall: six operations, all returning 0 without a requested reboot. Independent
+verification checked each raw MSI log, package and installed payload hashes,
+product registration, the customer's SYSTEM service and removal assertions.
+Evidence is retained in `windows10-results-c0bf-6503614/verified-lifecycle.json`
+alongside the original reports and logs.
+
+The initial test-driver launch was refused by Windows 10's default PowerShell
+execution policy before any product installation. The reviewed, hash-pinned
+driver then ran in a separate process with an explicit process-only policy.
+MachinePolicy and UserPolicy were undefined; all five parent policy scopes were
+identical before and after the successful run. The initial failure is preserved
+in the private lab diagnostics. No persistent execution-policy setting changed.
+
+This proves the administrator MSI lifecycle on this Windows 10 LTSC build only.
+It does not establish other Windows 10 editions/builds, standard-user technician
+operation, enrollment, native sessions, installed-application reboot behavior,
+upgrades or automatic updates. The VM's clock was independently checked against
+the host before the installer run; the future RTC boot-setting correction still
+requires its own reboot verification. Production signing remains unqualified.
