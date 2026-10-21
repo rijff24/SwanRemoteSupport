@@ -3048,4 +3048,52 @@ ProgramData for customer, impersonated user/canonical LocalApplicationData for
 technician. Both use an embedded agent so removal does not delete the executable
 needed for commit. Local fixture checks reject arbitrary paths for either edition;
 MSI-authoring tests also assert the technician action retains user context.
-New binaries, signed packages, repeated removal and rollback still need validation.
+Subsequent verified package results are recorded below; interrupted-transaction
+rollback still needs separate verification.
+
+### Verified two-edition uninstall fix on Server 2019, 21 October
+
+Push workflow `39649347086` and PR workflow `39649354472` passed for source
+`053a52e3ac29cb0f7e9686da9c626f94bf153005`, including Windows PowerShell 5
+commit/rollback-state fixtures and all four MSI-authoring checks. Windows artifact
+`12368667260` matched GitHub SHA-256
+`b3bdf363098173d49efb4665ef6204f47d5e4ed0ac20512f1932ee5ef3fc4193`.
+All five archive entries and 116 corresponding source files passed independent
+hash/CRC/public-Git verification. These are build-input checks, not bit-for-bit
+binary reproducibility.
+
+The fixed component agent was privately signed and combined with the previously
+verified native `c0bf4b4` payload. Both rebuilt MSI `1.5.9` packages received
+verified timestamped signatures from the existing nonexportable disposable-VM
+publisher; no host trust or production signing was added. The signed customer
+MSI SHA-256 is `8a64ca8a90573af75cfcc8e247e6c4d5999b7d488c1a5a9b2202f988b595f678`;
+technician is `8caf16d8fcfa5e47e2ed153cc2d094154c3de8d098109863572c68d70a2bbbcc`.
+
+All 12 operations passed as Administrator on Server 2019 Standard Evaluation
+Desktop Experience `17763.3650`:
+
+| Edition | Verified operations |
+| --- | --- |
+| Customer | Upgrade failed `1.5.8` candidate to `1.5.9`, repair, uninstall, reinstall, repair, uninstall |
+| Technician | Install, repair, uninstall, reinstall, repair, uninstall |
+
+Every raw MSI log independently showed exit 0 with no `Return value 3`. The
+guarded repair checks verified the installed agent, full customer payload and
+license repair, or technician executable/shortcut/registration before and after
+repair. Reinstalls retained their existing cancellation marker. Both editions'
+uninstall commit actions executed, clearing obsolete rollback records after
+removal. The earlier technician directory contained exactly its three known
+legacy cancellation files and no registered product; those files were preserved
+under the protected lab test directory before the first new technician install.
+They were not discarded to make the repeated-install cases pass: subsequent
+reinstalls used the new retained state in place.
+
+A separate read-only guest check confirmed no customer or technician product
+registration, no installed configuration agents, no customer service or watcher,
+both uninstall cancellation markers retained, both cancellation rollback records
+absent, and unchanged hashes for all preserved legacy files. The native and
+component source origins remain separate in the evidence. These tests used the
+existing guest after prior package tests, not a new clean snapshot. Company
+enrollment/identity preservation, standard-user technician installation, automatic
+updates, interrupted-removal rollback and native desktop sessions remain separate
+acceptance gates.
