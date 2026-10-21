@@ -3229,3 +3229,25 @@ Compose override supports fresh isolated deployments; normal distribution pins
 remain unchanged pending those acceptance checks. A subsequent change exports
 candidate binaries and corresponding source as a retained CI artifact; that
 new export step still requires its own successful CI execution.
+
+### Windows server state creation hardening, 21 October
+
+Inspection found that fresh Windows server setup created its ProgramData folder
+before restricting access. A source change replaces that interval with atomic
+private creation through the signed, reverified management copy in Program Files.
+The shared embedded directory helper now has a canonical server scope and an
+explicit reject-existing mode, including a directory that appears after the
+initial precheck. Existing state is not adopted by rewriting permissions. Server
+preparation has a 30-second deadline; a matching management build is required.
+Current management also rejects unknown commands before opening data or starting
+a listener. No exploit or unauthorized session was demonstrated by this review.
+
+Four MSI-authoring checks, five source-archive checks and PowerShell parsing
+passed locally. Actual administrator filesystem tests on the Server 2022 lab
+passed private creation, trusted reuse, reject-existing without changing its
+ACL, rejection of foreign-owned content and writable existing directories.
+The first run exposed a PowerShell case-insensitive variable-name collision in
+the new helper parameter; that was corrected before the successful rerun. These
+tests used temporary private fixture paths, not the live company server state.
+The new compiled management entry point and full setup lifecycle remain pending
+CI/clean-VM verification. Existing company services were not upgraded or changed.

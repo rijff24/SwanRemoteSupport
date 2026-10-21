@@ -87,6 +87,16 @@ current user's private temporary directory. Known payload files are cleaned up
 on normal exit without recursive deletion. Elevated extraction, interrupted
 cleanup and privileged installation remain clean-VM acceptance requirements.
 The installed management copy is signature-checked again before service creation.
+It must be the matching management build supporting `prepare-server-directory`.
+After verifying the protected Program Files copy, installation invokes that
+build's embedded private-directory helper before writing any company state.
+The helper creates the canonical server data root with SYSTEM/Administrators
+permissions atomically and rejects existing state, including a directory that
+appeared after the fresh-install precheck. Existing state is never adopted by
+changing its owner or permissions. Preparation has a bounded 30-second deadline;
+incompatible older executables are not a supported installation input. Unknown
+commands in current management builds fail before opening company data or
+starting a listener. Failure retains newly staged files for investigation.
 
 For a fresh company deployment, run with administrator rights and a trusted
 signed management build containing component supervision:

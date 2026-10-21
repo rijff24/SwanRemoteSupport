@@ -14,6 +14,14 @@ mod components;
 
 fn main() -> Result<()> {
     #[cfg(windows)]
+    if std::env::args().nth(1).as_deref()==Some("prepare-server-directory") {
+        let args:Vec<String>=std::env::args().collect();
+        anyhow::ensure!(args.len()==3,"Usage: swan-management prepare-server-directory PATH");
+        swan_agent::update::prepare_server_directory(std::path::Path::new(&args[2]))?;
+        println!("Fresh private company state directory created; no server started.");
+        return Ok(());
+    }
+    #[cfg(windows)]
     if std::env::args().nth(1).as_deref()==Some("check-components") {
         components::installed_specs()?;
         println!("Pinned company executables and hostname validated; HTTPS configuration found; no services started.");
@@ -21,6 +29,8 @@ fn main() -> Result<()> {
     }
     #[cfg(windows)]
     if std::env::args().any(|a|a=="--service") {return windows::dispatch();}
+    anyhow::ensure!(matches!(std::env::args().nth(1).as_deref(),None|Some("backup"|"restore"|"prepare-profile-key"|"activate-profile-key")),
+        "Unknown management command; no server started");
     // This is the executable entrypoint, not a helper within an existing runtime.
     let runtime=tokio::runtime::Runtime::new()?;
     runtime.block_on(async {

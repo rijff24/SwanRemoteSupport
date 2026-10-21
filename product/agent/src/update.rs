@@ -300,6 +300,14 @@ pub fn prepare_customer_directory(directory:&Path,canonical:bool)->Result<()> {
 }
 
 #[cfg(windows)]
+pub fn prepare_server_directory(directory:&Path)->Result<()> {
+    let status=embedded_powershell_command(include_str!("../../../deployment/windows/Prepare-CustomerDirectory.ps1"),
+        &[("Directory",directory.to_str().context("Server state path is not valid Unicode")?),
+          ("Scope","server"),("Existing","reject")])?.status()?;
+    ensure!(status.success(),"Fresh server state directory could not be created privately; preserve existing state");Ok(())
+}
+
+#[cfg(windows)]
 fn validate_uninstall_directory(directory:&Path,customer:bool)->Result<()> {
     let guard=r#"param([string]$Directory,[string]$Edition)
 $ErrorActionPreference='Stop'

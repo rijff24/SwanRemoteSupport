@@ -1,5 +1,6 @@
 [CmdletBinding()]
-param([Parameter(Mandatory=$true)][string]$Directory,[ValidateSet('canonical','custom')][string]$Scope='canonical')
+param([Parameter(Mandatory=$true)][string]$Directory,[ValidateSet('canonical','custom','server')][string]$Scope='canonical',
+      [ValidateSet('allow','reject')][string]$Existing='allow')
 $ErrorActionPreference='Stop'
 function Assert-CustomerAcl {
     param([Parameter(Mandatory=$true)]$Acl)
@@ -17,8 +18,8 @@ $identity=[Security.Principal.WindowsIdentity]::GetCurrent()
 if (-not ([Security.Principal.WindowsPrincipal]::new($identity)).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) { throw 'Customer state preparation requires administrator rights.' }
 $Directory=[IO.Path]::GetFullPath($Directory).TrimEnd('\')
 if ($Directory -eq [IO.Path]::GetPathRoot($Directory).TrimEnd('\')) { throw 'A volume root is not a customer state directory.' }
-$expected=Join-Path ([Environment]::GetFolderPath('CommonApplicationData')) 'SwanRemoteSupport'
-if ($Scope -eq 'canonical' -and $Directory -ine [IO.Path]::GetFullPath($expected)) { throw 'The customer MSI requires the canonical state directory.' }
+$expected=Join-Path ([Environment]::GetFolderPath('CommonApplicationData')) $(if($Scope -eq 'server'){'SwanCompanyServer'}else{'SwanRemoteSupport'})
+if ($Scope -ne 'custom' -and $Directory -ine [IO.Path]::GetFullPath($expected)) { throw 'Setup requires the canonical state directory.' }
 $descriptor=[Security.AccessControl.DirectorySecurity]::new()
 $descriptor.SetOwner([Security.Principal.SecurityIdentifier]::new('S-1-5-32-544'))
 $descriptor.SetAccessRuleProtection($true,$false)
@@ -26,8 +27,9 @@ foreach($sid in @('S-1-5-18','S-1-5-32-544')) {
     $descriptor.AddAccessRule([Security.AccessControl.FileSystemAccessRule]::new([Security.Principal.SecurityIdentifier]::new($sid),'FullControl','ContainerInherit,ObjectInherit','None','Allow'))
 }
 if(Test-Path -LiteralPath $Directory){
-    $existing=Get-Item -LiteralPath $Directory -Force
-    if(-not $existing.PSIsContainer -or ($existing.Attributes -band [IO.FileAttributes]::ReparsePoint)){throw 'Customer state directory is unsafe.'}
+    if($Existing -eq 'reject'){throw 'State directory already exists; preserve it and use the recovery procedure.'}
+    $existingItem=Get-Item -LiteralPath $Directory -Force
+    if(-not $existingItem.PSIsContainer -or ($existingItem.Attributes -band [IO.FileAttributes]::ReparsePoint)){throw 'Customer state directory is unsafe.'}
     Assert-CustomerAcl (Get-Acl -LiteralPath $Directory)
 }
 Add-Type -TypeDefinition @'
@@ -54,6 +56,7 @@ public static class SwanCustomerDirectoryLock {
 # CreateDirectoryW applies security atomically only to a new directory. An
 # existing object is inspected, never adopted by changing its owner or ACL.
 $created=[SwanCustomerDirectoryLock]::Create($Directory,$descriptor.GetSecurityDescriptorBinaryForm())
+if($created -eq 183 -and $Existing -eq 'reject'){throw 'State directory appeared during setup; preserve it and investigate before retrying.'}
 if($created -notin @(0,183)){throw ([ComponentModel.Win32Exception]::new($created))}
 # Sharing only read access rejects a pre-existing writable directory handle;
 # do not race a user who opened the directory before permissions were secured.

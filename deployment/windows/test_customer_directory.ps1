@@ -25,11 +25,11 @@ $rejected=$false;try{Assert-CustomerAcl (New-FixtureAcl 'S-1-5-32-545')}catch{$r
 if(-not $rejected){throw 'Untrusted owner accepted.'}
 $root=Join-Path ([IO.Path]::GetTempPath()) ('swan-directory-security-'+[Guid]::NewGuid().ToString('N'))
 $native=Join-Path ([Environment]::GetFolderPath('System')) 'WindowsPowerShell/v1.0/powershell.exe'
-function Invoke-DirectoryHelper([string]$Directory) {
+function Invoke-DirectoryHelper([string]$Directory,[ValidateSet('allow','reject')][string]$Existing='allow') {
     # Windows PowerShell converts redirected native stderr into terminating
     # errors under Stop. Observe the child exit code for intentional rejection.
     $start=[Diagnostics.ProcessStartInfo]::new();$start.FileName=$native
-    $start.Arguments='-NoProfile -NonInteractive -ExecutionPolicy Bypass -File "'+$script+'" -Directory "'+$Directory+'" -Scope custom'
+    $start.Arguments='-NoProfile -NonInteractive -ExecutionPolicy Bypass -File "'+$script+'" -Directory "'+$Directory+'" -Scope custom -Existing '+$Existing
     $start.UseShellExecute=$false;$start.CreateNoWindow=$true
     $start.RedirectStandardOutput=$true;$start.RedirectStandardError=$true
     $process=[Diagnostics.Process]::Start($start)
@@ -48,6 +48,8 @@ if($admin){
         if((Invoke-DirectoryHelper $root) -ne 0){throw 'Private directory creation failed.'}
         Assert-CustomerAcl (Get-Acl -LiteralPath $root)
         if((Invoke-DirectoryHelper $root) -ne 0){throw 'Trusted existing directory rejected.'}
+        $before=(Get-Acl -LiteralPath $root).Sddl
+        if((Invoke-DirectoryHelper $root 'reject') -eq 0 -or (Get-Acl -LiteralPath $root).Sddl -cne $before){throw 'Fresh-state mode adopted or changed an existing directory.'}
         $child=Join-Path $root 'untrusted.txt';[IO.File]::WriteAllText($child,'untrusted fixture: preserve')
         $fileAcl=[Security.AccessControl.FileSecurity]::new();$fileAcl.SetOwner($identity.User);$fileAcl.SetAccessRuleProtection($true,$false)
         $fileAcl.AddAccessRule([Security.AccessControl.FileSystemAccessRule]::new($identity.User,'FullControl','Allow'))

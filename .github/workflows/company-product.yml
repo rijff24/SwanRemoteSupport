@@ -43,6 +43,12 @@ jobs:
         run: cargo +1.90.0 test --manifest-path product/Cargo.toml --workspace --locked
       - name: Build components
         run: cargo +1.90.0 build --manifest-path product/Cargo.toml --workspace --release --locked
+      - name: Verify compiled management creates fresh private server state
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File ./deployment/windows/test_server_directory.ps1 -ManagementExe ./product/target/release/swan-management.exe
+          if ($LASTEXITCODE -ne 0) { throw 'Compiled server directory checks failed.' }
       - name: Verify company server removal ownership and data preservation
         if: runner.os == 'Windows'
         shell: pwsh

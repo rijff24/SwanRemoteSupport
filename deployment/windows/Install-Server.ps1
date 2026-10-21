@@ -41,16 +41,25 @@ if ($fullStack) {
     if (@(Get-NetFirewallRule -ErrorAction Stop | Where-Object Name -in @('SwanCompanyServer-TCP','SwanCompanyServer-UDP')).Count) { throw 'Company firewall rule already exists.' }
 }
 $installDirectory = Join-Path $env:ProgramFiles 'Swan Company Server'
-$dataDirectory = Join-Path $env:ProgramData 'SwanCompanyServer'
+$dataDirectory = Join-Path ([Environment]::GetFolderPath('CommonApplicationData')) 'SwanCompanyServer'
 if (@(Get-Service -ErrorAction Stop | Where-Object Name -eq 'SwanCompanyServer').Count) { throw 'Company server already exists. Use the documented backed-up maintenance upgrade procedure.' }
 if ((Test-Path -LiteralPath $installDirectory) -or (Test-Path -LiteralPath $dataDirectory)) { throw 'Company install/data directory already exists. Preserve it and use the recovery or maintenance procedure.' }
-New-Item -ItemType Directory -Path $installDirectory,$dataDirectory | Out-Null
-& icacls.exe $dataDirectory '/inheritance:r' '/grant:r' '*S-1-5-18:(OI)(CI)F' '*S-1-5-32-544:(OI)(CI)F' | Out-Null
-if ($LASTEXITCODE -ne 0) { throw 'Cannot protect server data.' }
+New-Item -ItemType Directory -Path $installDirectory | Out-Null
 $destination = Join-Path $installDirectory 'swan-management.exe'
 Copy-Item -LiteralPath $source -Destination $destination
 $copiedSignature = Get-AuthenticodeSignature -LiteralPath $destination
 if ($copiedSignature.Status -ne 'Valid' -or $copiedSignature.SignerCertificate.Thumbprint -ne $PublisherThumbprint) { throw 'Copied management executable does not match the trusted publisher.' }
+# Run only the verified copy in Program Files. Its embedded helper creates the
+# state root with its private descriptor atomically and refuses existing state,
+# including an object created after the earlier fresh-install precheck.
+$preparation=Start-Process -FilePath $destination -ArgumentList @('prepare-server-directory',('"'+$dataDirectory+'"')) -WorkingDirectory $installDirectory -WindowStyle Hidden -PassThru
+try {
+    if(-not $preparation.WaitForExit(30000)){
+        $preparation.Kill();$preparation.WaitForExit()
+        throw 'Management directory preparation timed out. Select the matching server build and preserve existing files.'
+    }
+    if ($preparation.ExitCode -ne 0) { throw 'Cannot create fresh private server data. Preserve existing files before retrying.' }
+} finally {$preparation.Dispose()}
 $serviceEnvironment = @("SWAN_DATA_DIR=$dataDirectory","SWAN_LISTEN=127.0.0.1:$Port","SWAN_RELEASE_PUBLIC_KEY=$ReleasePublicKey")
 if ($fullStack) {
     $packaged = Join-Path $installDirectory 'components'
