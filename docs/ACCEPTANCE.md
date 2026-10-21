@@ -3228,7 +3228,8 @@ Internet direct/relay access or production readiness. The explicit candidate
 Compose override supports fresh isolated deployments; normal distribution pins
 remain unchanged pending those acceptance checks. A subsequent change exports
 candidate binaries and corresponding source as a retained CI artifact; that
-new export step still requires its own successful CI execution.
+new export step subsequently passed CI, but independent source inspection found
+the archive discrepancy described below.
 
 ### Windows server state creation hardening, 21 October
 
@@ -3249,5 +3250,33 @@ ACL, rejection of foreign-owned content and writable existing directories.
 The first run exposed a PowerShell case-insensitive variable-name collision in
 the new helper parameter; that was corrected before the successful rerun. These
 tests used temporary private fixture paths, not the live company server state.
-The new compiled management entry point and full setup lifecycle remain pending
-CI/clean-VM verification. Existing company services were not upgraded or changed.
+Source `8f4c4ef51710c0749dd7b86d02e89b4738fe7734`, Windows CI job `119454688771`,
+subsequently passed the compiled management command test: canonical private
+creation succeeded, a noncanonical path was rejected, and a second invocation
+refused existing state without changing its ACL or starting a server. The helper
+administrator filesystem cases also passed there. Full clean-VM server setup
+remains unverified. Existing company services were not upgraded or changed.
+
+### Independent maintained transport source discrepancy, 21 October
+
+Source `2e704f2` passed component/deployment CI, including artifact export and
+the maintained stack rehearsal. Artifact `12378445188` (6,338,877 bytes) was
+downloaded and its GitHub SHA-256
+`823e68c9189266a03b8e3ddc8fdfbcf2a0c8c1baad8556ce085be51a56164d5b`
+verified. All six files matched the export manifest, and both executables had
+Linux x86-64 ELF headers. This did not prove every source file matched Git.
+
+Independent comparison against immutable upstream/project Git objects rejected
+the tracked `db_v2.sqlite3`: its archive SHA-256 was
+`a269b1bcb604d32ef120ce8d8e4fd3ec2b58ddb1c9fa24445f256826a1dc7dbd`,
+whereas the public Git blob was
+`071be773254bb18a6ec9b60bac0d000d78a75f2b2c783d13aeff9e81462f37f0`.
+Both were 24,576-byte SQLite files. Source capture had run after compilation,
+which uses compile-time SQLx queries against the schema database. The artifact
+is therefore not accepted as an exact copy of the pinned source inputs.
+
+The Docker and standalone transport workflows now capture source before the
+rendezvous/relay build. A regenerated artifact must pass the independent
+whole-archive Git comparison before its source-provenance gate can close. The
+existing integration results remain limited to their recorded runtime scope;
+they do not override this failed source check or qualify production publication.

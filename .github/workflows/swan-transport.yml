@@ -44,11 +44,11 @@ jobs:
         run: python deployment/transport/prepare_source.py transport-source fix
       - name: Verify actual shared UDP message and raw send paths
         run: python deployment/transport/check_baseline.py transport-source fixed
+      - name: Preserve exact public build inputs
+        run: python deployment/transport/archive_source.py transport-source transport-artifacts/transport-build-source.zip
       - name: Build candidate rendezvous and relay executables
         working-directory: transport-source
         run: cargo +1.90.0 build --release --locked --bin hbbs --bin hbbr
-      - name: Preserve exact public build inputs
-        run: python deployment/transport/archive_source.py transport-source transport-artifacts/transport-build-source.zip
       - name: Retain regression evidence
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
