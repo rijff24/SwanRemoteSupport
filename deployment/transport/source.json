@@ -8,15 +8,15 @@
   "patches": [
     {
       "path": "patches/0001-udp-address-regression.patch",
-      "sha256": "6b46c0d1fbeb72ba5e619eec7403894bd55c3b15e512a74bdc1005e267484138",
+      "sha256": "e2ecf9da94c84e5447e81e8667a75dc73d4ab9179efec4f465414599c1f9ec15",
       "before_sha256": "c7da75a4db64fea07f6dce1ad5a791fb4d791b15dcc41672129b0f6438ad8b2f",
-      "after_sha256": "89479aeb6acfdfaa9fa8ff1e43572b3e41c9803be01f7e830dbbfabe20a07496"
+      "after_sha256": "024397429d5ec03888bff1b856f968764c4bb4e6b09ffa1b9c780ef93a6efac3"
     },
     {
       "path": "patches/0002-udp-address-normalization.patch",
       "sha256": "c862020cf0fddf6a50e401674006d41775dd955c3eb2a2e7c149260ad888adc2",
-      "before_sha256": "89479aeb6acfdfaa9fa8ff1e43572b3e41c9803be01f7e830dbbfabe20a07496",
-      "after_sha256": "fd5ec0c2dc8e8cb3e75a8135d4748a187feef4eedf499a9254dbb6b6c53e1b6b"
+      "before_sha256": "024397429d5ec03888bff1b856f968764c4bb4e6b09ffa1b9c780ef93a6efac3",
+      "after_sha256": "c881d983b3b1cb77be30cf557be84e65064c72f69b414792cd62230fa99811f4"
     }
   ],
   "scope": "Candidate transport patch; not approved for production or substituted into current installers"

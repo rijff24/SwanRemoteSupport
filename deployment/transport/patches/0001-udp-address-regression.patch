@@ -27,11 +27,11 @@
 +    async fn dual_stack_sends_ipv4_message_and_raw_datagrams() -> ResultType<()> {
 +        let receiver = UdpSocket::bind("127.0.0.1:0").await?;
 +        let mut sender = framed_sender("[::]:0".parse()?, true)?;
-+        let request = TestNatRequest { port: 21116, ..Default::default() };
++        let request = TestNatRequest { serial: 21116, ..Default::default() };
 +        sender.send(&request, receiver.local_addr()?).await?;
 +        let mut buffer = [0u8; 256];
 +        let count = tokio::time::timeout(Duration::from_secs(2), receiver.recv(&mut buffer)).await??;
-+        assert_eq!(TestNatRequest::parse_from_bytes(&buffer[..count])?.port, 21116);
++        assert_eq!(TestNatRequest::parse_from_bytes(&buffer[..count])?.serial, 21116);
 +        sender.send_raw(b"Swan raw UDP", receiver.local_addr()?).await?;
 +        let count = tokio::time::timeout(Duration::from_secs(2), receiver.recv(&mut buffer)).await??;
 +        assert_eq!(&buffer[..count], b"Swan raw UDP");
