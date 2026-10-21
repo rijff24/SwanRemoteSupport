@@ -3140,5 +3140,45 @@ file owner and rejection of a writable existing directory without changing it.
 The first harness run correctly rejected unsafe state but Windows PowerShell
 treated its redirected stderr as a terminating native error; the harness now
 observes bounded child exit codes directly. Compilation/CI and new signed MSI
-positive and standard-user negative tests remain pending. Existing company
-services and their enrollment were not modified by these changes.
+positive and standard-user negative tests were pending at that checkpoint.
+Existing company services and their enrollment were not modified by these changes.
+
+### Hardened MSI clean Server 2022 lifecycle, 21 October
+
+Component source `650361413543baf7ef150f5960544154ec77ddeb` passed Windows/Linux
+component CI and Linux deployment CI. The downloaded Windows artifact's SHA-256
+was `33e13a86ad51ae5a1d094ad31e0256f7d1a3644df97c2efb9298a2c14fdf340a`;
+independent inspection matched all 118 component source files against public Git.
+This verifies source provenance, not bit-for-bit binary reproducibility.
+
+Private test version `1.5.11` combined that agent with the previously verified
+native `c0bf4b40ff8257c9fb69e4c5f6aceb2394f1adc0` inputs. Both MSIs were signed
+and timestamp-verified with the disposable lab publisher. Signed package hashes:
+
+- Customer: `ef55865a3c6db2a8411aa686e77b863588f7cb7419f4494282a8d7cfbfb0362c`.
+- Technician: `eab4e4e6f872d0bc986e0feb0a28e6bb3fe98b78b669403dc726cdbbdba9d3ae`.
+- Agent: `2fd0bcc199741a6ce2ffad4c5249ed47705a521ced32ddc157f22378f4db06e1`.
+
+A fresh Windows Server 2022 Standard Evaluation Desktop Experience guest,
+`20348.587`, was provisioned from Microsoft evaluation media and saved as an
+offline clean OS checkpoint before product installation. The lab publisher was
+trusted only inside that guest. Root-store import succeeded; the additional
+Trusted Publisher import returned access denied. Both Authenticode signatures
+were independently observed as valid without that additional store entry; the
+unchanged package verifier still required valid signatures and the exact
+publisher, certificate and package hashes. No Windows trust policy was relaxed.
+
+Customer and technician installation, repair and uninstall all passed as the
+guest administrator: six operations returned 0 without requiring reboot. The
+pinned harness verified installed payload hashes, registration, customer service
+identity/running state and removal. Independent inspection of all six raw MSI
+logs found successful completion and no `Return value 3`. Private evidence is
+retained in `windows-server2022-results-c0bf-6503614/verified-lifecycle.json`
+alongside the phase reports and raw logs; machine credentials remain outside Git.
+
+The proposed standard-account read/write/create denial test was blocked by
+automatic approval review before execution, with reason `blocked by policy`;
+specific user approval is pending. Actual compiled-MSI negative tests, repeated
+uninstall rollback with this hardened agent, enrollment, approved automatic
+updates and native remote sessions remain unverified. These six lifecycle passes
+do not complete the Server 2022 acceptance matrix or qualify a production release.
