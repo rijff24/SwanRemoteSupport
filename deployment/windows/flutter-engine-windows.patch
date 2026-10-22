@@ -1,21 +1,34 @@
+diff --git a/build/archives/BUILD.gn b/build/archives/BUILD.gn
+index 0e327b4..1178f34 100644
+--- a/build/archives/BUILD.gn
++++ b/build/archives/BUILD.gn
+@@ -253,8 +253,4 @@ if (host_os == "win") {
+         destination = "flutter_windows.dll"
+       },
+-      {
+-        source = "$root_out_dir/flutter_windows.dll.exp"
+-        destination = "flutter_windows.dll.exp"
+-      },
+       {
+         source = "$root_out_dir/flutter_windows.dll.lib"
+diff --git a/fml/hex_codec.h b/fml/hex_codec.h
+index 4de83fb..60be379 100644
+--- a/fml/hex_codec.h
++++ b/fml/hex_codec.h
+@@ -6,4 +6,5 @@
+ #define FLUTTER_FML_HEX_CODEC_H_
+
++#include <string>
+ #include <string_view>
+
+diff --git a/shell/platform/windows/flutter_windows_engine.cc b/shell/platform/windows/flutter_windows_engine.cc
+index 6962136..cb1799f 100644
 --- a/shell/platform/windows/flutter_windows_engine.cc
 +++ b/shell/platform/windows/flutter_windows_engine.cc
-@@ -66,7 +66,7 @@
-     if (!host->egl_manager()) {
+@@ -67,5 +67,5 @@ FlutterRendererConfig GetOpenGLRendererConfig() {
        return false;
      }
 -    return host->egl_manager()->render_context()->ClearCurrent();
 +    return host->egl_manager()->render_context()->MakeCurrent();
    };
    config.open_gl.present = [](void* user_data) -> bool { FML_UNREACHABLE(); };
-   config.open_gl.fbo_reset_after_present = true;
---- a/fml/hex_codec.h
-+++ b/fml/hex_codec.h
-@@ -5,6 +5,7 @@
- #ifndef FLUTTER_FML_HEX_CODEC_H_
- #define FLUTTER_FML_HEX_CODEC_H_
- 
-+#include <string>
- #include <string_view>
- 
- namespace fml {

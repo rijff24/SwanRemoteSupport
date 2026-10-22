@@ -12,7 +12,7 @@
   },
   "patch": {
     "file": "flutter-engine-windows.patch",
-    "sha256": "7dfea63fdb2d1f7198d4ba145e8bb2bc60d2ef46f06e2df8b6cf218cb79011d6",
+    "sha256": "4e966e98d96e768145671e9efb6ff9af3407fdc9f609f35eaa41b9f5cb27528f",
     "files": {
       "shell/platform/windows/flutter_windows_engine.cc": {
         "original_sha256": "28ca726b790daf49e7dbeddb212e54eb7932f6a795704e2058b4b53d42ea479c",
@@ -21,6 +21,10 @@
       "fml/hex_codec.h": {
         "original_sha256": "ccf41a4cf1a24e7b6a88af244542507d549b8aba02c4303fe8a47a36c5c922a8",
         "patched_sha256": "cba92d82927832b3c7fb9c6727ba99e7d9d9b1777e80cd2d5b0b8557b69f26e8"
+      },
+      "build/archives/BUILD.gn": {
+        "original_sha256": "9fea9055c58fed94b91b3d5c1c5c6a7b1f3a46b46337d50fbf2f8d56e3ef48ca",
+        "patched_sha256": "0007c4ba5ecbd426904b18254808ceaaae01b6237f3f94f64a25a7a1a5078196"
       }
     }
   },

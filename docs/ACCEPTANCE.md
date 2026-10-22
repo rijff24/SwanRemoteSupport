@@ -4369,3 +4369,11 @@ the clang toolchain no longer consumed the unconditionally declared `expname`.
 The patch now constructs that Microsoft-only output name inside its conditional
 branch. Patch reconstruction and four local guard tests pass after correction;
 actual GN generation, linking, reproducibility and runtime tests remain required.
+
+The corrected-variable build (`39750471521`, source `b72c61f`) advanced to GN's
+generated-input validation and failed because Flutter's Windows archive target
+still listed `flutter_windows.dll.exp`. The engine patch now removes that
+obsolete intermediate from the archive list as well as from the LLD outputs.
+The three-file engine patch is hash-pinned and its reconstruction and local
+guard tests pass. Compilation and independent output/runtime verification
+remain pending; neither failed attempt produced a qualified engine.

@@ -31,7 +31,7 @@ def load_recipe():
         if not re.fullmatch(r"[0-9a-f]{40}", lock[component]["revision"]):
             raise ValueError("Source must use a full immutable revision")
     if lock["patch"]["file"] != "flutter-engine-windows.patch" or set(lock["patch"]["files"]) != {
-        "shell/platform/windows/flutter_windows_engine.cc", "fml/hex_codec.h"
+        "shell/platform/windows/flutter_windows_engine.cc", "fml/hex_codec.h", "build/archives/BUILD.gn"
     }:
         raise ValueError("Unexpected patch scope")
     patch = RECIPE / lock["patch"]["file"]

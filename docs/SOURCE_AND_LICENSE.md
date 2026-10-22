@@ -89,7 +89,7 @@ artifacts are verified and published with the project release.
 Run **Rebuild patched Windows Flutter engine from pinned source** in Actions to
 build a separate candidate. The reviewed recipe is
 `deployment/windows/flutter-engine.lock.json`: it pins the engine and depot-tools
-commits, the dependency file hash, the two-file patch and original/patched file
+commits, the dependency file hash, the three-file engine patch and original/patched file
 hashes. The build rejects a different revision, changed dependency/source bytes
 or additional tracked modifications before patching. It uses the engine's pinned
 Ninja and Clang inputs, records actual dependency revisions and the available
@@ -128,6 +128,8 @@ Its public buildroot patch records all three changed source files, and receipts
 record the linker's version and hash. Generated-command checks reject a different
 linker, and final-response checks reject absent or conflicting thread controls.
 Ninja does not require a Microsoft-specific intermediate `.exp` output for LLD.
+The engine's Windows archive definition also omits that intermediate file;
+both generated outputs and archive inputs must agree for GN generation.
 This is an investigation of debug-symbol reproducibility, not a demonstrated
 fix. New independent output comparisons and matching-bundle runtime tests are
 required; the application workflow still defaults to its previous engine.
