@@ -42,7 +42,7 @@ This does not prove binary reproducibility.
 | Native technician | Standard-user `c0bf4b4` MFA, authorized inventory/history, logout, live branding and offline refusal/cache pass against the older lab company. | Accepted support session with both corrected editions and a separate receiving machine. |
 | Receiving authorization | Older `bd13500` customer rejected a real stock client's legacy-password request. Native `c0bf4b4` and current `becf3cd` GUIs refused a tampered cached profile; the current UI also hides legacy upgrade cards. | Corrected receiver runtime, unauthorized direct connections, packet permissions, lease expiry and revocation. |
 | Customer session features | Earlier same-guest customer-approved desktop session; later graphical refusal. | Separate-machine input, transfer, clipboard, UAC, logon screen, multiple monitors, unattended consent/revocation and relay fallback. |
-| Installers | Source-specific administrator MSI lifecycle evidence is listed in the Windows matrix below. | Current-source company-generated EXE/MSI flow, standard-user technician installation and the complete upgrade/recovery matrix. |
+| Installers | Source-specific administrator MSI lifecycle evidence is listed in the Windows matrix below. Current `becf3cd` technician MSI also passed standard-user install, missing-file repair and uninstall as a functional diagnostic on an expired Windows 10 evaluation. | Current-source company-generated EXE/MSI flow, standard-user qualification on valid Windows installations and the complete upgrade/recovery matrix. |
 | Updates and recovery | Earlier signed lab update evidence, component rejection tests and real MSI rollback fixtures. | Current-source approved automatic rollout, session coordination, interrupted-update recovery and identity/consent preservation. MSI rollback alone does not prove these. |
 | Public transport | Maintained transport candidates built; two Linux transport builds reproduced identical binaries with verified public source. | External direct/relay/negative-access tests without Tailscale and accepted production transport pins. |
 | Publication | Corresponding-source and artifact verification are implemented; private lab signing is available. | Full product reproducibility, production signing approval/signatures and every release gate above. |
@@ -500,7 +500,7 @@ full acceptance remains open on every row.
 
 | Operating system | Clean installation | Repair/upgrade/recovery | Native session behavior |
 | --- | --- | --- | --- |
-| Windows 10 x64 | Both lab-signed MSI 1.5.11 editions: administrator install on LTSC Evaluation 19044.1288; native `c0bf4b4`, agent `6503614`. Other editions/builds unverified. | Repair/uninstall pass (six lifecycle operations total); upgrade, reboot and automatic recovery unverified. | Unverified. |
+| Windows 10 x64 | Both lab-signed MSI 1.5.11 editions: administrator install on LTSC Evaluation 19044.1288; native `c0bf4b4`, agent `6503614`. Current `becf3cd` technician MSI 1.5.0 standard-user lifecycle passed as a functional diagnostic; this later run recorded expired evaluation status 5 with zero grace. Earlier licensing status was not recorded. | Repair/uninstall pass; current technician repair restored a deliberately missing executable. Full qualification requires a valid Windows environment. Upgrade, reboot and automatic recovery unverified. | Unverified. |
 | Windows 11 x64 | Unverified | Unverified | Unverified |
 | Server 2016 Desktop Experience | Existing 14393.693 lab deployment; current-source fresh company setup unverified. | Historical signed lab upgrades/reboot evidence; current-source full lifecycle/recovery unverified. | Older same-guest accepted session; `c0bf4b4` technician GUI checks and `bd13500` receiver legacy-password denial. Separate-machine/full-feature acceptance open. |
 | Server 2019 Desktop Experience | Administrator lab-signed MSI 1.5.9 lifecycle, native `c0bf4b4`, agent `053a52e`, build 17763.3650. | Twelve verified operations include customer 1.5.8-to-1.5.9 upgrade, repair/uninstall/reinstall and technician lifecycle. Latest `6503614` existing-unsafe-state rejection also passes; full current-source recovery unverified. | Unverified. |
@@ -3655,3 +3655,48 @@ This is runtime evidence that the legacy native command refuses the managed
 update path, including its observed zero exit code. It does not verify approved
 automatic updates, GUI installation callbacks, publisher checks, interruption
 recovery, or the full release criteria.
+
+### Current technician MSI standard-user diagnostic, 22 October
+
+The exact public `becf3cd861275e5100e2b86c3c26ad53be18cd00` packaging
+recipe was extracted from its verified source archive and used with WiX 5.0.2.
+Its unchanged project binaries were signed with the existing disposable company
+lab publisher. The resulting technician MSI version 1.5.0 hash was
+`61be6e524adbfbe164a47281cad04fe033debcf3e033d334c2e657946cc191f6`.
+This was a manually prepared private test package, not a live company worker job
+or a production-signed release. Host certificate trust was not changed.
+
+On Windows 10 Enterprise LTSC Evaluation 19044.1288, a newly created standard
+user logged on to the desktop. A limited interactive task installed the MSI,
+moved only its newly installed and hash-checked native executable into the
+owned evidence directory, repaired the missing executable, and uninstalled.
+All three Windows Installer operations returned 0. Independent checks verified
+the original verbose log hashes, the repair log's missing-file entry, restored
+payload signatures/hashes, and removal of payload files and per-user
+registration. No administrator token, UAC approval or persistent execution-policy
+change was used. The reviewed runner used process-scoped Bypass only; all other
+execution-policy scopes remained Undefined.
+
+The OS displayed an expired evaluation watermark. Its licensing provider
+reported status 5 and zero grace. One normal Microsoft activation attempt failed
+with a general activation error and left that state unchanged. No product key,
+KMS configuration, evaluation rearm or clock change was used to bypass expiry.
+The results therefore establish a functional installer diagnostic only, not a
+qualified Windows 10 release. A valid Windows 10 test environment remains required.
+This run does not establish company enrollment, technician GUI authentication,
+native sessions, upgrades or automatic updates.
+
+The guest's final check completed normally over SSH at 00:57:09 UTC: task
+Ready/result 0, payload and user registration removed, OS restart pending.
+Its stdout was preserved as an explicitly labeled observation; the separate
+original JSON transfer remained pending when the VM stopped answering management
+connections and showed a black screen after an OS update restart had been
+scheduled. The guest has not been forcibly stopped or its updates interrupted.
+A completed shutdown or successful Windows update/reboot is not established.
+
+Private evidence is in
+`windows10-standard-becf3cd-results/verified-diagnostic.json`, including the
+three original MSI logs and their receipts, runner/task identity, licensing
+result, activation failure, and labeled final-check stdout observation.
+The report explicitly records `full_windows_qualification: false` and whether
+the original final-check file download is still pending.
