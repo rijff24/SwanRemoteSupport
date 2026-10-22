@@ -27,8 +27,8 @@ and signed inputs are rejected. Originals remain intact. Both MSI builders enabl
 this step with `-SourceDateEpoch <release-commit-epoch>`, retaining the raw WiX
 output and recording the metadata receipt. The Windows build workflow passes
 its pinned source-commit epoch and runs the staging and metadata guard tests;
-execution of that updated workflow remains unverified. The company worker does
-not invoke this build step by default.
+its execution and independent native comparisons are recorded below. The company
+worker does not invoke this build step by default.
 
 Two actual WiX 5.0.2 technician builds using the same `e6b87b9` payload produced
 identical prepared MSI bytes at epoch `1792648409`: SHA-256
@@ -67,6 +67,23 @@ permitted. Company setup reports this policy rejection and directs the user to
 their administrator for an approved deployment; it does not change the policy
 or silently retry with elevated privileges. See Microsoft's
 [DisableMSI documentation](https://learn.microsoft.com/en-us/windows/win32/msi/disablemsi).
+
+The original unsigned 1.5.0 MSI at `e9d89ca` also returned 1625 on Server 2016
+`14393.693` under an actual standard user in active console session 1. Its log
+reported effective `DisableMsi=1`, with no explicit machine registry value. The
+technician directory remained absent. This stopped the proposed 1.5.1 upgrade
+test at initial installation; no standard-user upgrade/repair/uninstall pass is
+claimed. The same exact MSI inputs passed an administrator-profile major upgrade
+on that VM. No installer policy was changed. See the dated
+[acceptance records](../../docs/ACCEPTANCE.md) for the distinct scopes.
+
+Complete independent native builds at `e9d89ca` (1.5.0) and `699c9e0` (1.5.1)
+now have [original comparison reports](../../docs/SOURCE_AND_LICENSE.md) proving
+all eight unsigned shipping files byte-identical within each source revision.
+On Server 2016 `14393.693`, the actual 1.5.0 to 1.5.1 administrator-profile MSI
+upgrade, subsequent missing-executable repair and uninstall passed. These
+results do not qualify standard-user installation on a server that rejects
+unmanaged MSI packages, company bootstrap, automatic updates or recovery.
 
 Build with pinned WiX 5.0.2:
 

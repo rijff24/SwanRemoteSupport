@@ -4872,3 +4872,39 @@ not standard-user/interactive acceptance, an enrolled technician identity test,
 an approved automatic update, interruption recovery, publisher validation,
 remote-session acceptance or complete Server 2016 qualification. The retained
 VM is not represented as a fresh clean-machine test.
+
+### Server 2016 standard-user MSI policy rejection, 22 October
+
+The same original unsigned technician 1.5.0 MSI at `e9d89ca` was tested under a
+separate owned standard account on Server 2016 Desktop Experience **14393.693**.
+A normal graphical login loaded that account's profile in active console
+session 1. An Interactive/Limited task ran the verified driver with the exact
+account SID; the public harness required `RequireStandardUser` and recorded
+`administrator=false` and `standard_user_required=true`.
+
+Initial installation returned **1625**, with the original MSI log explicitly
+reporting effective machine policy `DisableMsi=1` and installation forbidden by
+system policy. Read-only inspection found no explicit machine `DisableMSI`
+registry value; absence did not mean installation was allowed. The technician
+installation directory remained absent. The attempt stopped at installation:
+upgrade, repair and uninstall were not run, and no pass is claimed for them.
+Seven original wrapper, driver, phase and MSI records were transferred and
+hash-verified. This does not invalidate the separate administrator-profile
+upgrade result or establish that every Server 2016 deployment has this policy.
+Microsoft documents [DisableMSI's managed-application restriction](https://learn.microsoft.com/en-us/windows/win32/msi/disablemsi).
+
+The initial Password/Limited task never executed: original Security 4625 events
+reported status `0xc000015b`, logon type 4 (batch logon denied), and its task
+retained never-run result 267011 with no wrapper/MSI output. That setup failure
+was retained separately. No batch-logon right or Windows Installer policy was
+changed; the later independent Interactive/Limited task produced the actual MSI
+rejection above. Only the independent lab safety marker received a read grant
+and the account's own fixture directory received Modify access. Marker bytes
+and owner were preserved; customer product-state permissions were untouched,
+and the standard-user driver did not access customer private ProgramData.
+
+Standard-user Server 2016 MSI/upgrade acceptance remains unproven. An approved
+administrator/IT deployment is required where Windows policy rejects unmanaged
+per-user MSI packages; the software must report that rejection and cannot
+silently elevate or weaken policy. Other Windows standard-user, interactive
+application and automatic-update requirements retain their separate gates.
