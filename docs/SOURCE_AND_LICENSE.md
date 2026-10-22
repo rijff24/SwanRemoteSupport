@@ -72,7 +72,8 @@ upstream repository and retains the exact original DEPS commit
 both the checked-out commit and repository URL; the original engine DEPS file
 remains unchanged. The effective gclient configuration is included as evidence.
 
-The reconstruction selects MSVC tools `14.38.33130` and Windows SDK
+The reconstruction selects MSVC tools `14.38.33130`, their matching x64 ATL
+component (including `atls.lib`), and Windows SDK
 `10.0.22621.0`. A hash-checked patch to the engine's pinned Flutter buildroot
 `e265c359126b24351f534080fb22edaa159f2215` passes `-vcvars_ver=14.38` to
 Microsoft's environment setup. Before compilation and again before packaging,
@@ -82,7 +83,8 @@ source, applied patch and actual compile/link commands accompany the result.
 The disposable GitHub runner installs the selected side-by-side Microsoft C++
 component when needed; this provisioning script refuses execution outside the
 GitHub Windows runner. Local builds require that component to be installed
-beforehand. Compiler/library hashes and toolchain diagnostics are recorded before
+beforehand. The ATL library is required at preflight and its hash is recorded
+alongside the compiler/standard-library hashes. Toolchain diagnostics are recorded before
 compilation so a failed build still exposes its actual inputs.
 
 For an equivalent local build, run this in a new PowerShell process on a Windows

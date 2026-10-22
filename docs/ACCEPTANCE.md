@@ -3812,10 +3812,18 @@ buildroot commit accepted the reviewed patch and rejected changed source,
 a wrong revision and repeated patching. These are provenance/guard checks;
 successful engine compilation and runtime qualification are still required.
 
-Source `5a5e4f2` is running in workflow `39711188710`. Its three provenance guard
-tests and side-by-side Microsoft toolset provisioning passed on the Windows
-runner. The source reconstruction step remains active; there is not yet a
-successful engine artifact or independent rebuild comparison.
+Source `5a5e4f2` ran in workflow `39711188710`. Its three provenance guard
+tests, side-by-side Microsoft toolset provisioning and generated-command checks
+passed on the Windows runner. All 4,900 compile/build steps reached the final
+DLL link, which failed with LNK1104 because `atls.lib` was missing. The compiler
+compatibility failure is resolved, but this is not a successful engine build.
+Diagnostic artifact `12398238710` retains the actual toolchain, dependency
+revisions and generated commands (archive SHA-256
+`230ced36cdfddb7be630dc84d45709c50c63affd301fbb59e4b09e98b500a637`).
+The next recipe adds the matching MSVC 14.38 ATL component, checks its headers
+and library before building, and records its library hash. Engine linking,
+artifact verification, independent rebuild comparison and runtime acceptance
+remain pending.
 
 Engine results remain separate candidates with explicit unverified binary
 rebuild/runtime/production flags. The application workflow still uses its

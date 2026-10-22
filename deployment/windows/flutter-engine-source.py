@@ -53,6 +53,7 @@ def load_recipe():
         raise ValueError("Unexpected buildroot toolset-selection patch")
     if lock["windows_toolchain"] != {
         "msvc_component": "Microsoft.VisualStudio.Component.VC.14.38.17.8.x86.x64",
+        "msvc_atl_component": "Microsoft.VisualStudio.Component.VC.14.38.17.8.ATL",
         "msvc_tools_version": "14.38.33130", "vcvars_selector": "14.38",
         "windows_sdk_version": "10.0.22621.0",
     }:
