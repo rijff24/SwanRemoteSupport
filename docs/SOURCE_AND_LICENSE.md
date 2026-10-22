@@ -288,6 +288,24 @@ portable resource-order correction. It does not qualify other source revisions,
 the default upstream engine, Windows behavior, updates or production signatures.
 The separate 1.5.1 build and runtime/release gates require their own evidence.
 
+### Unpublished 1.5.1 comparison (22 October 2026)
+
+[Comparison run 39844492046](https://github.com/rijff24/SwanRemoteSupport/actions/runs/39844492046)
+also passed for independent native runs `39820151128` and `39832811268`, both at
+`699c9e022ad71e4a409be52b56c9fe9697074bdf`, version **1.5.1**, with the explicitly
+selected `05d5369` engine. Its
+[original report](../deployment/windows/native-699c9e0-rebuild-comparison.json)
+verifies 1,155 tracked public source files and six generated bridges per build;
+all eight original shipping EXE/MSI files are byte-identical, without shipping
+normalization or execution. Comparison artifact `12454272614` is 17,424 bytes,
+SHA-256 `cfbd960c10bbc7c9ec097e0d9dcf7babfc6fe13b27f48eda8edc57da67677bea`.
+
+The retained first archive and all 95 extracted application files passed local
+integrity/manifest checks. The application EXE and Rust DLL differ from the
+preceding 1.5.0 payload; these are actual changed-version upgrade inputs. This
+result establishes build reproducibility for those exact unsigned inputs,
+not installation, authorization, automatic update or release acceptance.
+
 ### Server launcher compiler
 
 The server setup recipe uses MIT-licensed Microsoft Roslyn

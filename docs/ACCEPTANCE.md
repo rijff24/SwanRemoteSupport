@@ -4808,8 +4808,25 @@ name). The 12 native desktop metadata hashes and pinned engine DLL hash match.
 These are build-integrity checks, not runtime tests. Earlier failing original
 comparisons remain retained as historical evidence.
 
-The real 1.5.1 native build `39820151128` at `699c9e0` has now succeeded;
-its original archive collection/source verification is in progress. No 1.5.1
-independent comparison, installation or applied automatic upgrade is claimed.
+The real 1.5.1 native build `39820151128` at `699c9e0` has now succeeded.
+Its subsequent independent comparison and local integrity checks are recorded
+below. Installation and applied automatic-upgrade evidence remain separate.
 Production signing and the full installation/session/update/Windows acceptance
 requirements remain open.
+
+### Unpublished 1.5.1 independent comparison, 22 October
+
+Successful native runs `39820151128` and `39832811268`, both at exact source
+`699c9e022ad71e4a409be52b56c9fe9697074bdf` with the selected `05d5369` engine,
+passed [comparison 39844492046](https://github.com/rijff24/SwanRemoteSupport/actions/runs/39844492046).
+The [original report](../deployment/windows/native-699c9e0-rebuild-comparison.json)
+records eight byte-identical unsigned shipping outputs, both original archive
+digests and verified public source/generated bridges. Shipping files were not
+normalized or executed.
+
+Local collection also verified the first original archive, complete public
+source, six bridges, selected engine and all 95 decoded payload-file hashes.
+The application EXE and Rust DLL have different bytes from the preceding 1.5.0
+inputs. Actual major upgrade, approved automatic rollout, interruption recovery,
+identity/consent preservation and the remaining runtime/release gates still
+require explicit test results; build reproducibility does not prove them.
