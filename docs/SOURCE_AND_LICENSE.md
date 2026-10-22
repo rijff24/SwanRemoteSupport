@@ -122,8 +122,12 @@ Two independent Ubuntu 24.04 CI jobs for the component inputs reviewed at
 `9f97ef0` produced identical management, agent and worker binaries. Their full
 component input archives were checked against the public source, and all 130
 included source files matched between each platform's pair of builds. The
-Windows pair differed in linker timestamps and debug identifiers; the x64 Rust
-configuration now requests `/Brepro`, with corrected comparison still pending.
+Windows pair differed in linker timestamps and debug identifiers. After adding
+`/Brepro` to the x64 Rust configuration, both Windows and Linux component pairs
+at reviewed source `a413ab5` produced identical unsigned executable bytes.
+That result covers the recorded CI platforms and input/toolchain versions;
+broader toolchain qualification and native application, engine and installer
+comparisons remain open.
 See the dated [acceptance evidence](ACCEPTANCE.md#independent-company-component-binary-comparisons-22-october)
 for exact jobs, artifact hashes and limits. Neither normalized diagnostic hashes
 nor unsigned component comparisons qualify complete signed installer releases.

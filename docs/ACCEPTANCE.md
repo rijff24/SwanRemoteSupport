@@ -52,7 +52,7 @@ source/patch reconstruction candidate and evidence limits are recorded in
 | Installers | Source-specific administrator MSI lifecycle evidence is listed in the Windows matrix below. Current `becf3cd` technician MSI also passed standard-user install, missing-file repair and uninstall as a functional diagnostic on an expired Windows 10 evaluation. | Current-source company-generated EXE/MSI flow, standard-user qualification on valid Windows installations and the complete upgrade/recovery matrix. |
 | Updates and recovery | Earlier signed lab update evidence, component rejection tests and real MSI rollback fixtures. | Current-source approved automatic rollout, session coordination, interrupted-update recovery and identity/consent preservation. MSI rollback alone does not prove these. |
 | Public transport | Maintained transport candidates built; two Linux transport builds reproduced identical binaries with verified public source. | External direct/relay/negative-access tests without Tailscale and accepted production transport pins. |
-| Publication | Corresponding-source/artifact verification and private lab signing are available. Three Linux company component binaries matched across two independent CI builds; Windows equivalents differed in linker metadata. | Corrected Windows comparison, native app/engine and installer reproducibility, production signing approval/signatures and every release gate above. |
+| Publication | Corresponding-source/artifact verification and private lab signing are available. Management, agent and worker binaries matched across two independent jobs on each of Windows Server 2022 CI and Ubuntu 24.04 after the Windows linker correction. | Native app/engine and installer reproducibility, broader toolchain qualification, production signing approval/signatures and every release gate above. |
 
 ## Evidence obtained
 
@@ -3955,3 +3955,47 @@ Local original archives and detailed evidence are retained under
 `verified-provenance.json`, and `windows-pe-differences.json`. No downloaded
 component executable was run during this comparison, and no installed lab
 service was replaced.
+
+### Corrected Windows and Linux component comparisons, 22 October
+
+The `/Brepro` correction at reviewed branch source `a413ab5` passed a new
+independent comparison. Workflows `39719130453` and `39719134640` completed their
+Windows/Linux verification and Linux deployment jobs successfully. The second
+run used public PR merge commit `aab258b3db45ec5cfe19b5e7f4bb61b218612ae2`.
+Its public parentage includes `a413ab5`, and its component workflow bytes match
+the reviewed branch workflow (SHA-256
+`3ff0b0c6c36d0855a09d157193d083715434c93653f889e8e6060367b45e1983`).
+All 130 source files in each artifact matched the reviewed public source and
+were byte-identical within each platform's pair. Both jobs on each platform
+recorded identical Rust compiler identities.
+
+Windows jobs `119628269995` and `119628283105` produced exactly matching original
+unsigned EXE bytes, without masking or rewriting any timestamp/debug field:
+
+| Component | SHA-256 from both independent Windows jobs |
+| --- | --- |
+| Management | `7a982a93819b164ca4e7d5fb7887a97726b4d0facb39475e00d4de1d243db905` |
+| Agent | `a1bc8f814cd28d0cbcaaf0cab28ff7d0f0dc157badf3d77fc04f44ec1a86758f` |
+| Worker | `775b3dcaa3ab79cef39a6f70199189d49423736f8d55f627e577089ac32cddd0` |
+
+Their verified artifacts are `12400462478` (archive SHA-256
+`b4582a927bbe53c5187857b586dcee0330bde5019a29edbf640a110dfd1c73f1`)
+and `12400666985` (archive SHA-256
+`ac69874f6b456e930040ee22a663b2e915a970e563e1dc09814249ffd5735749`).
+
+Linux jobs `119628269626` and `119628283243` again matched all three component
+binaries, with the same binary hashes as the earlier Linux comparison above.
+Their verified artifacts are `12400402279` (archive SHA-256
+`6e9ed5381a37fe7331a11cb09edd2cbdf34482553b87ce6dd4b2c42bd7aa81a7`)
+and `12400068589` (archive SHA-256
+`4187cc747b2afac5056db579fad2bd8644ca4c1c8afca683b3d31474a66f94e7`).
+
+The original archives, per-build provenance receipts and merge-recipe correlation
+are retained locally under `component-rebuild-comparison-a413ab5`. Its complete
+`comparison.json` has SHA-256
+`8a5789ecf664c462495c5042ea2f625340cebf5ec533707d1a0584f422480c0e`.
+These are successful component comparisons on the recorded hosted CI platforms,
+not universal host/toolchain reproducibility or complete product qualification.
+The native graphical customer/technician apps, Flutter engine and installers
+still need their own comparisons and runtime checks. No downloaded executable
+was run by the artifact verifier and no installed lab service was upgraded.
