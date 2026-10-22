@@ -45,10 +45,20 @@ source-tree and generated-command verification. Its isolated test with the
 older app bundle failed before GUI startup because the snapshot formats differed.
 Experimental build `39730064190` recompiles that bundle with a matching compiler;
 build `39730660383` additionally checks the new recorded UTC build-date input.
+Both workflows completed successfully, including native policy/control
+regressions, package creation and the CI-account technician MSI lifecycle.
+The latter also passed the deterministic build-metadata regressions. Its
+original artifact `12406886407` is still downloading for independent source
+verification and VM testing; these CI results do not qualify runtime behavior.
+An independent application build, `39741804606`, uses the exact same
+`e6b87b91cbdb413a64a306add7df733aa31a9795` commit and experimental engine
+selection through the pinned `codex/rebuild-native-e6b87b9` branch. Original
+application/installer output comparison remains pending.
 The timestamp-controlled engine build at `b1d62b2` completed CI and passed
 artifact/source/command/link-response and PE metadata verification. Its
 independent same-recipe build is
-`39730890327`. Independent binary comparison and runtime qualification remain
+`39730890327`, which completed successfully; its original artifact `12407033745`
+is still downloading. Independent binary comparison and runtime qualification remain
 open. The public upstream
 source/patch reconstruction candidate and evidence limits are recorded in
 [Source availability and licensing](SOURCE_AND_LICENSE.md#patched-windows-flutter-engine-provenance).
@@ -4237,9 +4247,10 @@ upstream builds retain their existing path. No submodule revision was changed.
 The five source-capsule tests passed locally, including repeatable archives,
 private-file exclusion and the recorded epoch's equality to its source commit.
 Three native Rust regressions cover fixed UTC output, invalid date rejection
-and Rust string-literal escaping. Their compilation/execution and an actual
-independent native binary comparison remain pending in a subsequent native
-build; the earlier running `5777ee1` engine experiment predates this correction.
+and Rust string-literal escaping. They passed in workflow `39730660383` at
+`e6b87b9`; actual independent native binary comparison remains pending in
+workflow `39741804606`. The earlier `5777ee1` engine experiment predates this
+correction.
 
 ### Timestamp-controlled engine artifact verified, 22 October
 
