@@ -4908,3 +4908,57 @@ administrator/IT deployment is required where Windows policy rejects unmanaged
 per-user MSI packages; the software must report that rejection and cannot
 silently elevate or weaken policy. Other Windows standard-user, interactive
 application and automatic-update requirements retain their separate gates.
+
+### Native 1.5.1 technician GUI and existing-company authorization, 22 October
+
+The verified 95-file application payload and agent from exact source
+`699c9e022ad71e4a409be52b56c9fe9697074bdf` ran under the owned standard user's
+active console session 1 on Server 2016 **14393.693 x64**. This was an explicitly
+unsigned runtime fixture with separate company state, not a company installer
+or a workaround recorded as a passing MSI test. The agent validated the existing
+lab company's HTTPS endpoint and signed profile; native UI rendered the updated
+technician display name, logo, support contact and product/license attribution
+from revision 18. The retained cached profile signature was independently
+verified after collection.
+
+A new company account with role `technician` completed actual GUI password/TOTP
+login. With no group access, its UI showed no authorized devices. A separate
+normal authenticated API session also returned an empty inventory and HTTP 403
+for a valid-proof, customer-approved grant request targeting the company's one
+approved device. A temporary group assignment made that device and its support
+button visible after refresh. An API request then returned a signed 60-second
+grant; its signature, company, technician, device, ephemeral proof-key binding
+and permissions were verified against the pinned company key and actual group
+policy. The request was never claimed and no remote session was started.
+
+Removing that temporary group access closed the unclaimed grant, cleared its
+lease, removed the device from UI/API inventory after refresh, and made another
+valid-proof request return HTTP 403. This proves server-side authorization
+alongside UI behavior; it does not test receiving-device enforcement or an
+active session's lease. The GUI signed out, cleared inventory/history, and
+closed with actual process exit 0. Its task also completed with result 0.
+Twelve original wrapper, setup, state and runtime records were transferred and
+hash-verified. The collected records contain neither the test password nor its
+TOTP secret. The temporary company account was disabled, its grants were closed,
+and the existing customer's identity, consent and three services were preserved.
+
+The old deployed application displayed an update-deferred warning in this
+fixture; no installed release was recorded and automatic updates are not
+qualified by it. The history row also incorrectly displayed `Requested` for the
+closed unclaimed grant. Current UI source now prioritizes `closed` and displays
+`Closed`; that correction requires its own rebuilt runtime verification.
+
+This evidence covers **native profile/GUI/MFA/inventory and existing-company API
+authorization** for those exact inputs. It does not establish fresh company
+deployment, standard-user MSI installation, production signatures, an approved
+software update, external/direct/relay connectivity, customer approval or
+receiving-device session behavior. Those acceptance gates remain open.
+
+The later technician-update diagnostic change at exact source
+`54931939887a0d2a376f1535082bd606254d6e9e` passed company-component push
+[39848503726](https://github.com/rijff24/SwanRemoteSupport/actions/runs/39848503726)
+and PR [39848513299](https://github.com/rijff24/SwanRemoteSupport/actions/runs/39848513299):
+Windows 2022 and Ubuntu component/security tests and builds, plus the Linux
+deployment job, succeeded. The optional technician MSI CI job was skipped;
+these results do not replace the separate native installer and runtime evidence.
+They do not include a rebuilt runtime test of the subsequent history-label fix.

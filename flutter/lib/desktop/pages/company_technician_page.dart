@@ -231,7 +231,8 @@ class _CompanyTechnicianPageState extends State<CompanyTechnicianPage> {
                 (session['lease_until'] as int) * 1000 > DateTime.now().millisecondsSinceEpoch;
             return ListTile(title: Text(session['device_name'] as String),
               subtitle: Text('$time · ${session['unattended'] == true ? 'Unattended' : 'Customer approval'}'),
-              trailing: Text(active ? 'Active' : session['claimed'] == true ? 'Ended' : 'Requested'));
+              trailing: Text(session['closed'] == true ? 'Closed' :
+                  active ? 'Active' : session['claimed'] == true ? 'Ended' : 'Requested'));
           }),
         ],
         const SizedBox(height: 24),
