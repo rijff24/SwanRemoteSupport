@@ -3689,17 +3689,22 @@ native sessions, upgrades or automatic updates.
 The guest's final check completed normally over SSH at 00:57:09 UTC: task
 Ready/result 0, payload and user registration removed, OS restart pending.
 Its stdout was preserved as an explicitly labeled observation; the separate
-original JSON transfer remained pending when the VM stopped answering management
-connections and showed a black screen after an OS update restart had been
-scheduled. The guest has not been forcibly stopped or its updates interrupted.
-A completed shutdown or successful Windows update/reboot is not established.
+original JSON transfer subsequently failed with a closed connection. The VM
+stopped answering management connections and showed a black screen after an OS
+update restart had been scheduled. A single normal ACPI shutdown request was
+sent at 01:21:19 UTC; completed shutdown is not established. Passive QEMU disk
+counters at 01:24:04 and 01:25:01 UTC recorded 610,982,912 additional written bytes
+and 10,217 additional write operations. This establishes ongoing disk activity,
+not successful Windows update/reboot or the cause of the black screen. The guest
+has not been forcibly powered off.
 
 Private evidence is in
 `windows10-standard-becf3cd-results/verified-diagnostic.json`, including the
 three original MSI logs and their receipts, runner/task identity, licensing
 result, activation failure, and labeled final-check stdout observation.
-The report explicitly records `full_windows_qualification: false` and whether
-the original final-check file download is still pending.
+The report explicitly records `full_windows_qualification: false` and the
+original final-check download failure; it does not substitute the labeled
+stdout observation for an original downloaded guest file.
 
 ### View-only Windows session acknowledgement correction, 22 October
 
@@ -3717,5 +3722,10 @@ keyboard permission. An unavailable OS session ID fails closed. Other system
 control packets retain their existing permission checks. The wire-message
 regression test now covers same-session acknowledgement, another-session denial
 and failed OS lookup, alongside elevation, resolution and virtual-display checks.
+Native workflow `39704802586` is building exact correction source
+`ebef5a610cd2b020a02363aa218a401f771fdad7`. Both bridge-generation jobs passed;
+the downloaded six-file bridge artifact `12394472703` passed provenance,
+size, CRC and SHA-256 checks (archive
+`c3629a2fcf5984eb414fddd6806211affc6da1341313e9fe42ca61f364df799b`).
 Compilation/regression results and receiving-device runtime acceptance remain
 pending for this new source; the earlier native build does not cover it.
