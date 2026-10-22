@@ -4,9 +4,9 @@ Evidence through 22 October 2026. **The product is not complete or approved for
 production publication.** A passing component test is not evidence of a working
 native support session or a clean-machine installation.
 
-The latest accepted-desktop lab run used technician source `ebef5a6` against the
+The latest accepted-desktop lab run used technician source `e6b87b9` against the
 preserved older `bd13500` customer on Server 2016 with the parallel transport
-candidate. Standard-user MFA, inventory/history, customer approval, desktop
+candidate and experimental `9f97ef0` source-built engine. Standard-user MFA, inventory/history, customer approval, desktop
 capture, claimed/closed server history and logout passed. Both editions were on
 the same guest: this does not verify a corrected receiver, separate-machine
 input, relay fallback or Internet connectivity. An earlier relay attempt selected
@@ -48,8 +48,12 @@ build `39730660383` additionally checks the new recorded UTC build-date input.
 Both workflows completed successfully, including native policy/control
 regressions, package creation and the CI-account technician MSI lifecycle.
 The latter also passed the deterministic build-metadata regressions. Its
-original artifact `12406886407` is still downloading for independent source
-verification and VM testing; these CI results do not qualify runtime behavior.
+original artifact `12406886407` passed independent archive, 1,138 tracked source,
+six generated bridge and pinned engine-evidence verification. All 95 extracted
+payload files matched the installed-file manifest. Its source-specific GUI
+smoke test passed MFA, inventory/history, customer approval, desktop capture,
+session close and logout against the preserved older receiver on the same VM;
+this does not qualify a corrected receiver or the complete runtime matrix.
 An independent application build, `39741804606`, uses the exact same
 `e6b87b91cbdb413a64a306add7df733aa31a9795` commit and experimental engine
 selection through the pinned `codex/rebuild-native-e6b87b9` branch. Original
@@ -57,16 +61,19 @@ application/installer output comparison remains pending.
 The timestamp-controlled engine build at `b1d62b2` completed CI and passed
 artifact/source/command/link-response and PE metadata verification. Its
 independent same-recipe build is
-`39730890327`, which completed successfully; its original artifact `12407033745`
-is still downloading. Independent binary comparison and runtime qualification remain
-open. The public upstream
+`39730890327`, whose original artifact `12407033745` passed source/evidence
+verification. The original DLL and import library are byte-identical across
+the two builds. Their original PDBs differ, so complete engine-output
+reproducibility remains open. The successful GUI test used the earlier
+`9f97ef0` engine, not this timestamp-controlled DLL. Broader runtime
+qualification remains open. The public upstream
 source/patch reconstruction candidate and evidence limits are recorded in
 [Source availability and licensing](SOURCE_AND_LICENSE.md#patched-windows-flutter-engine-provenance).
 
 | Area | Latest established evidence | Still required for release |
 | --- | --- | --- |
 | Company setup | First-run branding/policy form contract and real Axum/SQLite setup tests pass on Windows/Linux; Linux deployment rehearsals pass. | Matching fresh Windows service/worker setup and equivalent full deployment acceptance. |
-| Native technician | Current `ebef5a6` standard-user MFA, authorized inventory/history, customer-approved desktop capture and logout pass against the older customer on the same VM. Earlier `c0bf4b4` also passed live branding and offline refusal/cache. | Accepted support session with both corrected editions and a separate receiving machine. |
+| Native technician | `e6b87b9` with the experimental source-built engine passed standard-user MFA, authorized inventory/history, customer-approved desktop capture, session close and logout against the older customer on the same VM. Earlier `c0bf4b4` also passed live branding and offline refusal/cache. | Accepted support session with both corrected editions and a separate receiving machine. |
 | Receiving authorization | Older `bd13500` customer rejected a real stock client's legacy-password request. Native `c0bf4b4` and current `becf3cd` GUIs refused a tampered cached profile; the current UI also hides legacy upgrade cards. | Corrected receiver runtime, unauthorized direct connections, packet permissions, lease expiry and revocation. |
 | Customer session features | Current technician/older customer same-VM approved desktop session; earlier graphical refusal. | Corrected receiver, separate-machine input, transfer, clipboard, UAC, logon screen, multiple monitors, unattended consent/revocation and relay fallback. |
 | Installers | Source-specific administrator MSI lifecycle evidence is listed in the Windows matrix below. Current `becf3cd` technician MSI also passed standard-user install, missing-file repair and uninstall as a functional diagnostic on an expired Windows 10 evaluation. | Current-source company-generated EXE/MSI flow, standard-user qualification on valid Windows installations and the complete upgrade/recovery matrix. |
@@ -4304,3 +4311,44 @@ then requires the MSI to restore it. This distinguishes missing-file recovery
 from repair of an intact installation and preserves the original test bytes.
 Windows PowerShell parsing passed; execution against the pending current
 package and independent result/log verification remain required.
+
+### Current matching-engine runtime and installer policy, 22 October
+
+The original `e6b87b9` native archive is 256,143,913 bytes, SHA-256
+`7fc4840057d82c94fa49d3dfb2a97542247e1f398b6d26016cf2aa21bef5fb7e`.
+After complete source and payload verification, three copied executables were
+signed and timestamp-verified with the disposable lab publisher. No signing
+key was exported. The isolated standard-user native process matched all 95
+original payload files and the experimental source-built engine. Its branded
+login, MFA, authorized inventory/history, customer approval and actual desktop
+capture were observed. After session close, history showed Ended; sign-out
+cleared inventory, password and authenticator fields. Server audit/history
+confirmed one claimed, closed, customer-approved session and login/logout.
+The native process exited, both preserved services stayed running, and original
+customer/technician profile hashes stayed unchanged. This was the same Server
+2016 VM and the older `bd13500` receiver: separate-machine control, relay,
+Internet connectivity and corrected-receiver acceptance remain unproven.
+
+The current lab-signed technician MSI has SHA-256
+`cf886b50bbe91344e05bfa863a78cee49163a13c8ad37773b4f52603363238e1`.
+An actual limited interactive user on licensed Server 2022 evaluation build
+`20348.587` ran the public MSI harness from `eecf985`. Signature/publisher checks
+passed, but installation returned 1625. The original MSI log records effective
+`DisableMsi=1` and blocks unmanaged per-user installation, despite the absent
+explicit registry value. No installed payload, shortcut or per-user registration
+remained. Repair and uninstall did not run. Policy was not weakened. This is
+a failed standard-user test, not a full Windows compatibility pass. Company
+setup now explains error 1625 and directs users to an administrator; parsing
+passed, but this new message has not been exercised through a company bundle.
+
+Independent timestamp-controlled engine build `39730890327` retained and
+verified all 19 evidence files, 5,604 original engine files and 145 buildroot
+files. Its DLL SHA-256 equals the first build's
+`ef120f74ffc05de1397bcbbf01c601af3a5452aa6a9d6939e410c41a774199ba`,
+and the import libraries also match. The PDBs differ: the second has SHA-256
+`ebd4d4341d313cc2e353beaad9fc5ef72d21439ffbc96aa3256a7d677d7a621e`.
+Read-only MSF parsing found differences in 4,108 of 4,124 streams, so this is
+not established as a timestamp-only difference. Three exported text recipes
+differ only by independently checked CRLF/LF checkout conversions; original
+PDB and binary bytes were never normalized. Complete engine-output and native
+application/installer reproducibility remain open.

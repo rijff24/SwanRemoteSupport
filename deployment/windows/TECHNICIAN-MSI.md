@@ -7,6 +7,17 @@ license under `%LOCALAPPDATA%/SwanRemoteSupport-Technician`, with a Start menu
 shortcut. Upgrade removal is scheduled inside the MSI transaction. Company
 state is not an MSI-owned file and is preserved through major upgrades.
 
+Windows Installer policy can prohibit unmanaged per-user installations. A
+standard-user test of the signed `e6b87b9` package on Server 2022 build
+`20348.587` returned error 1625: the MSI log reported effective `DisableMsi=1`,
+although no explicit registry policy value was present. No payload or per-user
+registration remained. Repair and uninstall were not run after that failure.
+An absent registry value therefore does not establish that installation is
+permitted. Company setup reports this policy rejection and directs the user to
+their administrator for an approved deployment; it does not change the policy
+or silently retry with elevated privileges. See Microsoft's
+[DisableMSI documentation](https://learn.microsoft.com/en-us/windows/win32/msi/disablemsi).
+
 Build with pinned WiX 5.0.2:
 
 ```powershell

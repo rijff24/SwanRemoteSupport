@@ -120,6 +120,7 @@ if ($bootstrap.edition -eq 'customer') {
     $portable = Join-Path $editionDirectory 'SwanRemoteSupport-Technician.exe'
     if ($release.format -eq 'msi') {
         $process = Start-Process -FilePath $msiExecutable -ArgumentList @($msiOperation,('"' + $installers[0].FullName + '"'),'/passive','/norestart',('INSTALLFOLDER="' + $editionDirectory + '"')) -PassThru -Wait -WindowStyle Hidden
+        if ($process.ExitCode -eq 1625) { throw 'Windows Installer policy prevents this per-user technician installation (1625). Contact your company administrator for an approved deployment.' }
         if ($process.ExitCode -notin @(0,3010)) { throw "Technician MSI installation failed ($($process.ExitCode))." }
         if (-not (Test-Path -LiteralPath $portable)) { throw 'Technician MSI did not install the expected executable.' }
     } elseif ($release.format -eq 'exe' -and $release.sha256 -ceq $release.installed_sha256) {
