@@ -24,14 +24,14 @@ version. The full release gates remain open.
 ## Current release gates, 22 October
 
 The dated evidence below is source-specific. Earlier passing packages do not
-qualify the current candidate. Native source `becf3cd` passed workflow
-`39690742314`, including the managed-policy and view-only control regression
+qualify the current candidate. Native source `ebef5a6` passed workflow
+`39704802586`, including the managed-policy and view-only control regression
 tests and the unsigned technician MSI lifecycle under the CI account. Its
 downloaded archive, 1,122 tracked source files, six generated bridge files and
 95 native payload files passed independent provenance/hash checks. Its
 authorization-log and control-permission corrections still need receiving-device
-runtime verification. The latest standard-user tampered-cache GUI check also
-confirms the legacy upgrade card is absent. A separate standard-user native
+runtime verification. The earlier `becf3cd` standard-user tampered-cache GUI check
+confirms the legacy upgrade card is absent. Its separate standard-user native
 `--update` run logged the managed-update refusal and preserved the installed
 customer/profile; GUI installation callbacks remain to verify at runtime.
 This does not prove binary reproducibility.
@@ -3707,9 +3707,9 @@ Private evidence is in
 `windows10-standard-becf3cd-results/verified-diagnostic.json`, including the
 three original MSI logs and their receipts, runner/task identity, licensing
 result, activation failure, and labeled final-check stdout observation.
-The report explicitly records `full_windows_qualification: false` and the
-original final-check download failure; it does not substitute the labeled
-stdout observation for an original downloaded guest file.
+The report explicitly records `full_windows_qualification: false`. Separate
+receipts retain the first final-check transfer failure and subsequent recovery;
+the labeled stdout observation is not presented as an original downloaded file.
 
 After Windows update processing, the guest returned to its sign-in screen and
 SSH recovered. The original final-check file was then downloaded successfully:
@@ -3744,8 +3744,32 @@ Native workflow `39704802586` is building exact correction source
 the downloaded six-file bridge artifact `12394472703` passed provenance,
 size, CRC and SHA-256 checks (archive
 `c3629a2fcf5984eb414fddd6806211affc6da1341313e9fe42ca61f364df799b`).
-Compilation/regression results and receiving-device runtime acceptance remain
-pending for this new source; the earlier native build does not cover it.
+The completed native build passed compilation, both exact managed regression
+tests and the unsigned technician MSI lifecycle under the CI account. Raw job
+`119583130305` logs show each exact regression test ran once and passed with
+zero failures. In particular, the control test covers acknowledging the current
+Windows session without keyboard permission while denying another session or
+an unknown current session. Receiving-device runtime acceptance remains pending.
+
+The downloaded native artifact `12396855453` was 146,667,282 bytes and matched
+SHA-256 `479ee43e8bfa6ccbb78b212f567b009776e8427f5e3a8083ff13d585d11b1bc8`.
+All 24 entries passed path/CRC/published-checksum verification. The published
+source archive matched 1,122 tracked public Git files and all six separately
+verified generated bridge files. All 95 extracted native payload files matched
+the CI installed-file manifest; the inner unsigned native EXE hash was
+`33925b581e6b118a87c095dc89778767d0dd1e5dc9738abc4aa87ab64c109ec7`.
+No executable was launched during these static checks.
+
+MSI evidence artifact `12396935044` matched archive SHA-256
+`bcdf87b1ef308a7c6495ab228f1f5cd018db6f184b7a2ca85c2287c41a72244c`.
+Its three original Windows Installer logs report success and no Return value 3.
+The tested package SHA-256
+`7c31ea534bec14519be7c30ffb31eb86b1b0878d23e1353f1432de7da1559595`
+matches the downloaded technician MSI. This is unsigned lifecycle evidence under
+the Windows Server 2022 CI account, not standard-user enrollment, clean-machine
+qualification, signature verification or a new native receiving session.
+Private verification receipts are in `native-ebef5a6`,
+`customer-payload-ebef5a6.verified.json` and `technician-msi-ci-ebef5a6`.
 
 ### Independent patched engine source build, 22 October
 
@@ -3768,6 +3792,13 @@ repository exposes the exact commit. Source `670e2ac` adds a single explicit
 repository override retaining that original DEPS revision, leaves DEPS bytes
 unchanged, and requires both the actual dependency revision and repository URL
 to match before packaging. Workflow `39708643178` is testing that source.
+
+That run subsequently passed dependency checkout and the reviewed source patch,
+generated its GN build, and reached C++ compilation. It failed because the
+runner's Microsoft C++ 14.44.35207 library requires Clang 19 or newer while the
+engine dependency recipe pins an older Clang. A compatible pinned Microsoft
+toolset still needs to be selected and tested; the compiler compatibility check
+was not disabled. There is no successful source-built engine artifact yet.
 
 Engine results remain separate candidates with explicit unverified binary
 rebuild/runtime/production flags. The application workflow still uses its
