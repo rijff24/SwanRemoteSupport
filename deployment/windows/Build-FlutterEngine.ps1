@@ -30,6 +30,11 @@ Invoke-Checked git @('-C',$depot,'fetch','--depth=1','origin',$recipe.depot_tool
 Invoke-Checked git @('-C',$depot,'checkout','--detach','FETCH_HEAD')
 $actualDepot=(& git -C $depot rev-parse HEAD).Trim()
 if($LASTEXITCODE -ne 0 -or $actualDepot -cne $recipe.depot_tools.revision){throw 'Depot-tools checkout mismatch'}
+# Disabling automatic source updates also skips the usual Windows bootstrap.
+# Initialize the tools from this revision's own pinned CIPD manifest so gclient
+# can find its generated git.bat without changing the reviewed depot-tools pin.
+Invoke-Checked (Join-Path $depot 'bootstrap\win_tools.bat') @()
+if(-not(Test-Path -LiteralPath (Join-Path $depot 'git.bat'))){throw 'Pinned Windows Git bootstrap did not produce git.bat'}
 $env:PATH=$depot+';'+$env:PATH
 $checkout=Join-Path $root 'checkout'
 New-Item -ItemType Directory -Path $checkout | Out-Null
