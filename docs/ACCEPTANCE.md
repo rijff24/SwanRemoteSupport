@@ -4528,3 +4528,33 @@ process handle directly; its full repeated-compilation, package-rejection and
 preview checks also passed under Windows PowerShell 5.1 on the host, with records
 under `server-preview-process-ps5-validation-20261022`. This addresses test-result
 capture only and does not qualify deployment, upgrades or the full Windows matrix.
+
+### LLVM-linked engine artifact and startup smoke, 22 October
+
+The corrected engine recipe at `05d5369` completed in run `39753153773`.
+Artifact `12416969754` (107,382,139 bytes) was preserved and verified against
+SHA-256 `5629a63868421d17ac00a6cdd4215cda852c59b8bcf9efb802482d6248751d53`.
+All 19 evidence files, 5,604 original public engine files, 145 original public
+buildroot files, pinned recipe inputs and generated compile/link commands
+verified. The DLL SHA-256 was
+`c87ba5a71afa7b7100c1c9ccc1289009dab812f9de2acc38f9d5103e48c1f204`.
+An independent same-source rebuild was dispatched separately; its comparison
+is still pending.
+
+An isolated Server 2016 `14393.693` standard-user experiment combined this engine
+with the matching `e6b87b9` application payload and its existing lab-signed native
+main executable. Live process-module inspection confirmed the candidate engine
+and expected Rust DLL were loaded from that isolated payload. Computer-use
+inspection showed the company-branded technician login, username/password/MFA
+fields and product/license attribution. No credentials were entered. The window
+was closed through its title bar and the process exited zero. All 95 payload
+files verified afterward with the two declared engine/signed-main substitutions;
+the original bootstrap and installed receiver hash stayed unchanged, and all
+three existing Swan services remained running. Six original run/log/input
+records were transferred and hash-verified under the private lab's
+`engine-05d5369-gui-20261022/evidence` directory.
+
+This is engine startup/rendering/clean-exit evidence only. It does not prove
+authentication, remote-session behavior, public connectivity, independent PDB
+reproducibility, installer/updater compatibility, production signing or the full
+Windows matrix. The default application engine remains unchanged.

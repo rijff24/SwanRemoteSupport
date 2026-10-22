@@ -133,6 +133,15 @@ both generated outputs and archive inputs must agree for GN generation.
 This is an investigation of debug-symbol reproducibility, not a demonstrated
 fix. New independent output comparisons and matching-bundle runtime tests are
 required; the application workflow still defaults to its previous engine.
+The corrected recipe at `05d5369` subsequently completed in
+[run 39753153773](https://github.com/rijff24/SwanRemoteSupport/actions/runs/39753153773).
+Its archive, all 19 evidence files, original public engine/buildroot trees and
+generated linker commands were verified. An isolated standard-user experiment
+with the matching `e6b87b9` application loaded that engine, rendered the branded
+technician login and exited cleanly on Server 2016. Authentication and sessions
+were not exercised in that experiment. An independent rebuild is still needed
+to compare DLL, import library and PDB bytes; no default-engine promotion follows
+from the compile or startup results.
 The disposable GitHub runner installs the selected side-by-side Microsoft C++
 component when needed; this provisioning script refuses execution outside the
 GitHub Windows runner. Local builds require that component to be installed
