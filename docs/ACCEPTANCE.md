@@ -535,7 +535,7 @@ full acceptance remains open on every row.
 | Operating system | Clean installation | Repair/upgrade/recovery | Native session behavior |
 | --- | --- | --- | --- |
 | Windows 10 x64 | Fresh standard Pro 19045.3803: administrator and standard-user technician MSI 1.5.0 lifecycles passed using application `e6b87b9` and installer recipe `67786dd`; unactivated, license status 5, zero grace. Earlier LTSC Evaluation 19044.1288 tests covered both administrator editions and a later standard-user technician functional diagnostic on the expired evaluation. | Both Pro accounts: install, missing-executable repair and uninstall returned 0; original logs verified. Full current-source qualification, customer MSI, upgrade, reboot and automatic recovery remain unverified. | Unverified. |
-| Windows 11 x64 | Fresh activated Enterprise Evaluation 26300.9457: both unsigned MSI 1.5.0 editions from `9e4ea6d` install as Administrator; Secure Boot and TPM 2.0 verified. | Six install/repair/uninstall operations return 0; customer license repair and technician missing-executable repair pass. Standard-user, upgrade and interruption tests remain open. | Unverified. |
+| Windows 11 x64 | Fresh activated Enterprise Evaluation 26300.9457: both unsigned MSI 1.5.0 editions from `9e4ea6d` install as Administrator; Secure Boot and TPM 2.0 verified. | Nine install/repair/uninstall operations return 0 across administrator customer/technician and standard-user technician tests; customer license repair and technician missing-executable repair pass. Upgrade and interruption tests remain open. | Unverified. |
 | Server 2016 Desktop Experience | Existing 14393.693 lab deployment; current-source fresh company setup unverified. | Historical signed lab upgrades/reboot evidence; current-source full lifecycle/recovery unverified. | Older same-guest accepted session; `c0bf4b4` technician GUI checks and `bd13500` receiver legacy-password denial. Separate-machine/full-feature acceptance open. |
 | Server 2019 Desktop Experience | Administrator lab-signed MSI 1.5.9 lifecycle, native `c0bf4b4`, agent `053a52e`, build 17763.3650. | Twelve verified operations include customer 1.5.8-to-1.5.9 upgrade, repair/uninstall/reinstall and technician lifecycle. Latest `6503614` existing-unsafe-state rejection also passes; full current-source recovery unverified. | Unverified. |
 | Server 2022 Desktop Experience | Both lab-signed MSI 1.5.11 editions on clean 20348.587; native `c0bf4b4`, agent `6503614`. | Six lifecycle operations pass. Separate MSI 1.5.12 uninstall-failure fixtures restore payload/registration/watcher; automatic update interruption unverified. | Unverified. |
@@ -4745,3 +4745,34 @@ This is **administrator bare-MSI evidence for those exact inputs**, not
 standard-user installation, company-generated bundles, enrollment, remote
 sessions, approved updates, interruption recovery, trusted production signing
 or complete Windows 11 qualification. Those release gates remain open.
+
+### Activated Windows 11 standard-user technician MSI, 22 October
+
+The same original unsigned technician MSI from source `9e4ea6d`, SHA-256
+`297265c102b0c94b5361c76b9873bc2b09fe3e76b2f98975a06b840452babeba`,
+passed actual install, missing-executable repair and uninstall under an owned
+local standard user on the activated Windows 11 Enterprise evaluation
+**26300.9457 x64** above. All three MSI exit codes were 0, with no required
+reboot. The account belongs to Users and not Administrators. A normal graphical
+login created its active console session 3; the manually started test task used
+that account's Interactive/Limited principal. The driver rejected a different
+SID, an administrator token or a non-interactive session, and each public
+harness phase required `RequireStandardUser`. Original phase records report
+`administrator=false` and `standard_user_required=true`.
+
+The fixture grants that account read access only to the independent lab safety
+marker and access to its own test directory. Marker bytes/owner were preserved;
+no customer product-state permissions or Windows Installer policies were
+changed. The verified driver used process-scoped PowerShell Bypass and preserved
+its original machine/user execution policies. The corrected public harness
+records the actual Windows 11 caption. Ten original task, marker, lifecycle and
+MSI records were transferred and hash-verified; the copied executable, agent,
+shortcut, component registration, missing-file restoration and uninstall
+removal checks passed. The first administrative technician records retain
+their original legacy registry caption as described above.
+
+These three standard-user operations plus the six administrative operations
+are **nine passing source-specific bare-MSI operations**, not complete Windows
+11 compatibility. Company bootstrap/enrollment, accepted remote sessions,
+approved updates, upgrade/interruption recovery, production signatures and the
+remaining feature/Windows matrix still require their own evidence.
