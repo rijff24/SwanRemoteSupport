@@ -44,6 +44,17 @@ endforeach()
 # Use Unicode for all projects.
 add_definitions(-DUNICODE -D_UNICODE)
 
+# Apply before creating the runner and plugin targets: their PE link timestamps
+# otherwise change on every build even when all compiled payload bytes match.
+# Keep incremental linking available for interactive Debug builds.
+if(MSVC)
+  add_link_options(
+    "$<$<NOT:$<CONFIG:Debug>>:/Brepro>"
+    "$<$<NOT:$<CONFIG:Debug>>:/INCREMENTAL:NO>"
+    "$<$<NOT:$<CONFIG:Debug>>:/PDBALTPATH:%_PDB%>"
+  )
+endif()
+
 # Compilation settings that should be applied to most targets.
 #
 # Be cautious about adding new options here, as plugins use this function by

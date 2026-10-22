@@ -4436,3 +4436,31 @@ was unchanged. Both MSI versions contained the **same** verified `e6b87b9`
 application payload: this proves that installer-version transition only, not
 an application update, signed automatic rollout, interrupted-upgrade recovery,
 or preservation of real device identity, consent or company configuration.
+
+### Independent native rebuild comparison, 22 October
+
+The second exact-source `e6b87b9` native build, run `39741804606`, was downloaded
+once and verified against artifact digest
+`274f2ce79b5210ea6cb401cb1b6c9a0113653b8036d5c933cae2bfe0802b1fb8`.
+Its 1,138 public Git/submodule source files, six generated bridge files, retained
+engine evidence and source epoch `1792648409` verified before comparison with
+run `39730660383`. Both original archives and decoded payloads remain outside
+Git; no comparison rewrote a binary.
+
+The original unsigned `swan-agent.exe`, `swan-management.exe` and
+`swan-worker.exe` matched byte-for-byte. Of 95 decoded customer payload files,
+83 matched, including `librustdesk.dll` and the AOT application data. The desktop
+launcher and 11 Flutter plugin DLLs differed by two or four bytes each. PE
+inspection confirmed every differing byte lies in the COFF or debug-directory
+timestamp fields. All 12 lacked `IMAGE_DEBUG_TYPE_REPRO`. Consequently the
+portable packages, both old-recipe MSIs and server setup package also failed
+the complete-byte comparison. Full native reproducibility is **not achieved**.
+
+The Windows CMake configuration now requests `/Brepro`, non-incremental linking
+and PDB basenames for non-Debug runner/plugin targets before their creation.
+The Windows build workflow checks those actual outputs using the existing PE
+metadata verifier and retains its receipt. All 12 actual failing old binaries
+were rejected by that verifier; its two parser tests pass, and the original
+Rust native DLL passes its metadata check. Corrected C++ compilation, independent
+raw-byte comparison, runtime qualification and server-setup reproducibility
+remain unverified. A REPRO marker by itself will not satisfy those gates.

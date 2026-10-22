@@ -182,6 +182,21 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Managed legacy-sync regression failed.' }
           if ((Get-Content artifacts/native-managed-sync-tests.log -Raw) -notmatch 'test result: ok\. 1 passed; 0 failed;') { throw 'Expected managed legacy-sync test did not run.' }
 
+      - name: Verify desktop launcher and plugin reproducibility metadata
+        shell: pwsh
+        run: |
+          python3 -m unittest discover -s deployment/windows -p test_reproducible_pe.py
+          if ($LASTEXITCODE -ne 0) { throw 'PE metadata verifier tests failed.' }
+          $targets = @((Get-Item swan-client/rustdesk.exe)) + @(Get-ChildItem swan-client -Filter '*_plugin.dll' -File)
+          if ($targets.Count -lt 2) { throw 'Expected the desktop launcher and native Flutter plugins.' }
+          $records = @()
+          foreach ($target in $targets) {
+            $record = python3 deployment/windows/verify-reproducible-pe.py $target.FullName
+            if ($LASTEXITCODE -ne 0) { throw ('Native desktop link metadata is not reproducible: '+$target.Name) }
+            $records += @{name=$target.Name;metadata=($record | ConvertFrom-Json)}
+          }
+          $records | ConvertTo-Json -Depth 5 | Set-Content artifacts/native-desktop-pe-metadata.json
+
       - name: Verify deterministic managed application build metadata
         shell: pwsh
         run: |
@@ -323,6 +338,7 @@ jobs:
             artifacts/topmost-source/**
             artifacts/engine-source/**
             artifacts/engine-selection.json
+            artifacts/native-desktop-pe-metadata.json
             artifacts/Install-Company.ps1
             artifacts/Install-Worker.ps1
             artifacts/Uninstall-Worker.ps1
@@ -366,6 +382,7 @@ jobs:
             artifacts/topmost-source/**
             artifacts/engine-source/**
             artifacts/engine-selection.json
+            artifacts/native-desktop-pe-metadata.json
             artifacts/*.msi.build.json
             artifacts/*.msi.installed-files.json
             artifacts/SHA256SUMS.txt
