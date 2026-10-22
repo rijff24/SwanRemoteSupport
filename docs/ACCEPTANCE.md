@@ -45,8 +45,9 @@ source-tree and generated-command verification. Its isolated test with the
 older app bundle failed before GUI startup because the snapshot formats differed.
 Experimental build `39730064190` recompiles that bundle with a matching compiler;
 build `39730660383` additionally checks the new recorded UTC build-date input.
-The timestamp-controlled engine build at `b1d62b2` completed CI; its existing
-artifact transfer is live, and the independent same-recipe build is
+The timestamp-controlled engine build at `b1d62b2` completed CI and passed
+artifact/source/command/link-response and PE metadata verification. Its
+independent same-recipe build is
 `39730890327`. Independent binary comparison and runtime qualification remain
 open. The public upstream
 source/patch reconstruction candidate and evidence limits are recorded in
@@ -4239,3 +4240,31 @@ Three native Rust regressions cover fixed UTC output, invalid date rejection
 and Rust string-literal escaping. Their compilation/execution and an actual
 independent native binary comparison remain pending in a subsequent native
 build; the earlier running `5777ee1` engine experiment predates this correction.
+
+### Timestamp-controlled engine artifact verified, 22 October
+
+The original artifact from engine workflow `39718232889` completed its existing
+transfer and passed verification without a restart. Artifact `12403616067` is
+109,003,646 bytes with SHA-256
+`73a49daf109caff8180c21b31cedd83b438c4c368ae7ee095c54fdcac976ca9c`.
+The original ZIP was saved before checking its contents. All 19 evidence files,
+public recipe bytes, all 5,604 engine and 145 buildroot source mappings,
+generated compiler commands and final linker response passed their checks.
+The already investigated text checkout conversions remain explicitly declared.
+
+The source-built DLL SHA-256 is
+`ef120f74ffc05de1397bcbbf01c601af3a5452aa6a9d6939e410c41a774199ba`.
+Read-only inspection confirms Windows x64 DLL format, the REPRO debug marker,
+the basename `flutter_windows.dll.pdb` rather than an absolute build path, and
+the expected Dart snapshot-version marker. No DLL was executed by these checks.
+The original inner binary ZIP has SHA-256
+`6da1e7d46774fbb1164351e85e9fa439ee84a380b5a45c80d4720d1c97d6e67e`.
+Original artifacts and verification receipts remain in the private lab folder
+`engine-source-b1d62b2`.
+
+Independent workflow `39730890327` uses reviewed source `e6b87b9`. All eight
+public engine recipe/workflow/test files are byte-identical in Git to `b1d62b2`;
+this correlation is recorded locally. Its actual exported inputs and binaries
+still require verification and comparison after completion. Different source
+commits elsewhere in the app do not establish or disprove engine reproducibility.
+Neither runtime qualification nor production approval is claimed.
