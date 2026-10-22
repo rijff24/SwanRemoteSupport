@@ -4362,3 +4362,10 @@ validation, four provenance/flag regression tests and PowerShell parsing pass
 locally. Its compilation, independent PDB comparison and native runtime behavior
 remain unverified. The previous successful GUI smoke test does not qualify this
 new linker experiment.
+
+The first LLVM-linker experiment (`39747929292`, source `57e7f0a`) passed the
+recipe guards and toolchain setup, then failed GN generation before compilation:
+the clang toolchain no longer consumed the unconditionally declared `expname`.
+The patch now constructs that Microsoft-only output name inside its conditional
+branch. Patch reconstruction and four local guard tests pass after correction;
+actual GN generation, linking, reproducibility and runtime tests remain required.

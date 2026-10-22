@@ -44,7 +44,7 @@
     "repository": "https://github.com/flutter/buildroot.git",
     "revision": "e265c359126b24351f534080fb22edaa159f2215",
     "patch_file": "flutter-engine-buildroot.patch",
-    "patch_sha256": "25d3a7d84390dff0868ef79e0e500b90d05029882b571789caeab72383dc5f0c",
+    "patch_sha256": "eb8cac7686ac7cb3e2595f3c6e4fc2d72fd6961d662f357f416caf0545535aaa",
     "files": {
       "build/toolchain/win/setup_toolchain.py": {
         "original_sha256": "ee45bc284922f01b107aea6b31b7b5b5f81d33480acd4cbf0c516ff09f47a03c",
@@ -56,7 +56,7 @@
       },
       "build/toolchain/win/BUILD.gn": {
         "original_sha256": "26a00b317541f63d548bf605f5554a2b08580318fe79f052c5fcb67e0d1449db",
-        "patched_sha256": "45b90f488725ec3501a05127d5dcafc29d7f071d9d0bf2667aed8dfefcba0cf2"
+        "patched_sha256": "ce1b14c0ba313771744ae28110503f03f19dc8971aa66adeabe55a1cab2e6c16"
       }
     }
   },
