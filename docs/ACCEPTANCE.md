@@ -4421,3 +4421,18 @@ company-worker bundle, exercise an interactive desktop, establish upgrades or
 automatic updates, or qualify the full Windows matrix. Independent builds,
 cross-time-zone repeatability, signed publication and the remaining end-to-end
 acceptance gates are still required.
+
+The same isolated administrative profile subsequently passed reinstall after
+that uninstall, an MSI major upgrade from 1.5.0 to 1.5.1, and uninstall of 1.5.1.
+All three operations returned zero. The old ProductCode became unregistered;
+new ProductCode `{D32FA420-4F84-50A6-BAB2-CBFDA73F87C9}` became installed, the
+shortcut remained available, and an explicitly unowned fixture file survived
+the upgrade unchanged. The new unsigned MSI SHA-256 was
+`8d80925e0c05717d062d4e868b31258cfa58a55449c664c8d10c6a9bed68ca8b`.
+Seven original records, including reinstall/upgrade/uninstall logs, were
+transferred and hash-verified under the private lab's
+`technician-stable-upgrade-20261022/upgrade-evidence` directory. Execution policy
+was unchanged. Both MSI versions contained the **same** verified `e6b87b9`
+application payload: this proves that installer-version transition only, not
+an application update, signed automatic rollout, interrupted-upgrade recovery,
+or preservation of real device identity, consent or company configuration.

@@ -156,8 +156,15 @@ MSI was unsigned (SHA-256
 All phases returned zero, and execution policy stayed unchanged. This does not
 supersede the standard-user policy failure described above.
 
-The full clean-machine matrix, company setup, versioned major upgrades,
-signed automatic MSI updates and interruption rollback remain unverified.
+That isolated administrative profile also passed reinstall after uninstall,
+the MSI 1.5.0-to-1.5.1 major upgrade, and uninstall of 1.5.1. All operations
+returned zero; old/new product registration, payload hashes, shortcut and an
+unowned fixture file were checked. Both packages contained the same application
+payload. This does not demonstrate an application update or preservation of
+real enrollment/consent state.
+
+The full clean-machine matrix, company setup, upgrades between different native
+application builds, signed automatic MSI updates and interruption rollback remain unverified.
 Customer MSI authoring is available separately; end-to-end company
 publication remains unverified. The bare MSI launch conditions do not replace the signed agent's
 Windows compatibility preflight. Advertised Windows compatibility requires the
