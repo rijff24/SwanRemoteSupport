@@ -196,6 +196,12 @@ The package declares corresponding source at
 [`dotnet/roslyn` commit dfa7fc6](https://github.com/dotnet/roslyn/commit/dfa7fc6bdea31a858a402168384192b633c811fa).
 The compiler runs only during building and is not embedded in the server setup
 executable. Its Microsoft Authenticode signature is checked before execution.
-The build records hashes of its explicit .NET Framework/PowerShell reference
-assemblies. Those still come from the build host; matching local builds do not
-establish reproducibility across images with different reference assemblies.
+The build uses explicit .NET Framework/PowerShell reference assemblies from
+hash-pinned Microsoft SDK packages, rather than the host's runtime assemblies.
+`deployment/windows/server-references.json` records the packages, exact versions,
+archive hashes and five selected assembly hashes. The suppliers publish
+[`Microsoft.NETFramework.ReferenceAssemblies.net462` 1.0.3](https://www.nuget.org/packages/Microsoft.NETFramework.ReferenceAssemblies.net462/1.0.3)
+and [`Microsoft.PowerShell.5.ReferenceAssemblies` 1.1.0](https://www.nuget.org/packages/Microsoft.PowerShell.5.ReferenceAssemblies/1.1.0).
+These are build-only references; package install scripts never run, and the
+reference DLLs are not embedded in the application. Matching local builds still
+do not establish independent cross-image reproducibility or runtime compatibility.

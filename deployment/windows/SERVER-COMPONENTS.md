@@ -64,7 +64,9 @@ present in the targeted desktop Windows releases. Building requires .NET Framewo
 `server-compiler.json`. The compiler is a build dependency and is not embedded
 in the installer. Download it separately using `Get-PinnedArchive.ps1`; the
 builder verifies the whole package, extracts into a fresh folder and checks the
-compiler executable hash and Microsoft signature before executing it.
+compiler executable hash and Microsoft signature before executing it. Download
+both build-only SDK reference packages pinned in `server-references.json` too;
+the builder does not compile against reference assemblies from the host.
 Build only for isolated tests:
 
 ```powershell
@@ -72,6 +74,8 @@ Build only for isolated tests:
   -ManagementExecutable ./swan-management.exe `
   -ComponentsDirectory ./prepared-server-components `
   -CompilerPackage ./microsoft.net.compilers.toolset.framework.4.12.0.nupkg `
+  -FrameworkReferencesPackage ./microsoft.netframework.referenceassemblies.net462.1.0.3.nupkg `
+  -PowerShellReferencesPackage ./microsoft.powershell.5.referenceassemblies.1.1.0.nupkg `
   -OutputDirectory ./server-setup-test
 ```
 
@@ -87,13 +91,18 @@ Resource input paths containing commas are currently unsupported by this builder
 
 The recipe uses deterministic compilation, explicit .NET Framework references,
 mapped source paths and ordered compact source metadata. `SOURCE.json` records
-compiler/source pins and reference-assembly hashes; every embedded resource,
-including that manifest, is verified after compilation. Reference assemblies
-still come from the build host: cross-image reproducibility is not established
-until their bytes are pinned or independently matched. Run
+compiler/source/package pins and reference-assembly hashes; every embedded
+resource, including that manifest, is verified after compilation. The reference
+packages are `Microsoft.NETFramework.ReferenceAssemblies.net462` 1.0.3 and
+`Microsoft.PowerShell.5.ReferenceAssemblies` 1.1.0. Only five fixed, individually
+hash-checked DLL basenames are extracted; SDK install scripts never run and
+reference assemblies are not embedded in the server installer. Run
 `test_server_setup_reproducibility.ps1` with the same build inputs and a fresh
 `-WorkDirectory` to compare two actual unsigned outputs and test rejection of a
-wrong compiler package. This does not install or qualify the company server.
+wrong compiler or reference package. It also executes the packaged launcher's
+preview-only mode and retains its PNG to check runtime binding to Windows
+PowerShell. Independent cross-image comparisons remain required. This does not
+install or qualify the company server.
 
 Use `--render-preview OUTPUT.png` to inspect the packaged layout without opening
 the window or installing services. The launcher executes the installer from its

@@ -100,17 +100,23 @@ jobs:
         run: |
           $pins = Get-Content deployment/windows/server-components.json -Raw | ConvertFrom-Json
           $compiler = Get-Content deployment/windows/server-compiler.json -Raw | ConvertFrom-Json
+          $references = Get-Content deployment/windows/server-references.json -Raw | ConvertFrom-Json
           $transport = Join-Path $env:RUNNER_TEMP 'server-repro-transport.zip'
           $https = Join-Path $env:RUNNER_TEMP 'server-repro-https.zip'
           $toolset = Join-Path $env:RUNNER_TEMP 'server-repro-roslyn.nupkg'
+          $framework = Join-Path $env:RUNNER_TEMP 'server-repro-framework.nupkg'
+          $powershell = Join-Path $env:RUNNER_TEMP 'server-repro-powershell.nupkg'
           ./deployment/windows/Get-PinnedArchive.ps1 -Uri $pins.transport.url -Sha256 $pins.transport.sha256 -Output $transport | Out-Null
           ./deployment/windows/Get-PinnedArchive.ps1 -Uri $pins.https.url -Sha256 $pins.https.sha256 -Output $https | Out-Null
           ./deployment/windows/Get-PinnedArchive.ps1 -Uri $compiler.url -Sha256 $compiler.sha256 -Output $toolset | Out-Null
+          ./deployment/windows/Get-PinnedArchive.ps1 -Uri $references.framework.url -Sha256 $references.framework.sha256 -Output $framework | Out-Null
+          ./deployment/windows/Get-PinnedArchive.ps1 -Uri $references.powershell.url -Sha256 $references.powershell.sha256 -Output $powershell | Out-Null
           $components = Join-Path $env:RUNNER_TEMP 'server-repro-components'
           ./deployment/windows/Prepare-ServerComponents.ps1 -TransportPackage $transport -HttpsPackage $https -OutputDirectory $components
           $evidence = Join-Path $env:RUNNER_TEMP 'server-repro-evidence'
-          ./deployment/windows/test_server_setup_reproducibility.ps1 -ManagementExecutable product/target/release/swan-management.exe -ComponentsDirectory $components -CompilerPackage $toolset -WorkDirectory $evidence
+          ./deployment/windows/test_server_setup_reproducibility.ps1 -ManagementExecutable product/target/release/swan-management.exe -ComponentsDirectory $components -CompilerPackage $toolset -FrameworkReferencesPackage $framework -PowerShellReferencesPackage $powershell -WorkDirectory $evidence
           Copy-Item -LiteralPath (Join-Path $evidence 'result.json') -Destination component-artifacts/server-setup-repro.json
+          Copy-Item -LiteralPath (Join-Path $evidence 'packaged-preview.png') -Destination component-artifacts/server-setup-packaged-preview.png
 
       - name: Record unsigned component hashes and build provenance
         shell: bash

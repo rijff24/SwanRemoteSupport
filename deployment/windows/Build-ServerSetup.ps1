@@ -1,6 +1,8 @@
 [CmdletBinding()]
 param([Parameter(Mandatory)][string]$ManagementExecutable,[Parameter(Mandatory)][string]$ComponentsDirectory,
       [Parameter(Mandatory)][string]$CompilerPackage,
+      [Parameter(Mandatory)][string]$FrameworkReferencesPackage,
+      [Parameter(Mandatory)][string]$PowerShellReferencesPackage,
       [Parameter(Mandatory)][string]$OutputDirectory,[switch]$UnsignedTest)
 $ErrorActionPreference = 'Stop'
 if (-not $UnsignedTest) { throw 'Only explicitly unsigned test server packages are supported until production signing and release verification are approved.' }
@@ -18,8 +20,6 @@ try {
 $components = (Resolve-Path -LiteralPath $ComponentsDirectory).Path
 $output = [IO.Path]::GetFullPath($OutputDirectory)
 if (Test-Path -LiteralPath $output) { throw 'Server package output directory already exists.' }
-$automation = & (Join-Path $env:WINDIR 'System32/WindowsPowerShell/v1.0/powershell.exe') -NoProfile -NonInteractive -Command '[System.Management.Automation.PSObject].Assembly.Location'
-if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $automation -PathType Leaf)) { throw 'Windows PowerShell 5 assembly is required.' }
 $resources = [ordered]@{
     'Setup-Server.ps1'=(Join-Path $PSScriptRoot 'Setup-Server.ps1')
     'Install-Server.ps1'=(Join-Path $PSScriptRoot 'Install-Server.ps1')
@@ -43,15 +43,16 @@ $dirty = -not [string]::IsNullOrEmpty((& git -C (Join-Path $PSScriptRoot '../..'
 New-Item -ItemType Directory -Path $output | Out-Null
 $compiler=& (Join-Path $PSScriptRoot 'Expand-ServerCompiler.ps1') -Package $CompilerPackage -OutputDirectory (Join-Path $output 'compiler')
 $compilerPin=Get-Content -LiteralPath (Join-Path $PSScriptRoot 'server-compiler.json') -Raw|ConvertFrom-Json
-$referenceDirectory=Join-Path $env:WINDIR 'Microsoft.NET/Framework64/v4.0.30319'
-$references=[ordered]@{'System.Management.Automation.dll'=$automation}
-foreach($name in @('mscorlib.dll','System.dll','System.Core.dll','System.Security.dll')){$references[$name]=Join-Path $referenceDirectory $name}
+$references=& (Join-Path $PSScriptRoot 'Expand-ServerReferences.ps1') -FrameworkPackage $FrameworkReferencesPackage -PowerShellPackage $PowerShellReferencesPackage -OutputDirectory (Join-Path $output 'references')
+$referencePins=Get-Content -LiteralPath (Join-Path $PSScriptRoot 'server-references.json') -Raw|ConvertFrom-Json
+$referencePackages=[ordered]@{}
+foreach($kind in @('framework','powershell')){$pin=$referencePins.$kind;$referencePackages[$kind]=[ordered]@{id=$pin.id;version=$pin.version;sha256=$pin.sha256}}
 $referenceHashes=[ordered]@{}
 foreach($name in $references.Keys){$referenceHashes[$name]=(Get-FileHash -LiteralPath $references[$name]).Hash.ToLowerInvariant()}
 $sourcePath = Join-Path $output 'SOURCE.json'
 $sourceFiles=[ordered]@{}
-foreach ($name in @('ServerSetupLauncher.cs','Build-ServerSetup.ps1','Expand-ServerCompiler.ps1','server-compiler.json')) { $sourceFiles[$name]=(Get-FileHash -LiteralPath (Join-Path $PSScriptRoot $name) -Algorithm SHA256).Hash.ToLowerInvariant() }
-$source = [ordered]@{schema=1;unsigned_test=$true;repository='https://github.com/rijff24/SwanRemoteSupport';setup_source_revision=$revision;working_tree_dirty=$dirty;resources=$hashes;build_sources=$sourceFiles;compiler=[ordered]@{id=$compilerPin.id;version=$compilerPin.version;package_sha256=$compilerPin.sha256;compiler_sha256=$compilerPin.compiler_sha256;source=$compilerPin.source;deterministic=$true};reference_sha256=$referenceHashes}
+foreach ($name in @('ServerSetupLauncher.cs','Build-ServerSetup.ps1','Expand-ServerCompiler.ps1','server-compiler.json','Expand-ServerReferences.ps1','server-references.json')) { $sourceFiles[$name]=(Get-FileHash -LiteralPath (Join-Path $PSScriptRoot $name) -Algorithm SHA256).Hash.ToLowerInvariant() }
+$source = [ordered]@{schema=1;unsigned_test=$true;repository='https://github.com/rijff24/SwanRemoteSupport';setup_source_revision=$revision;working_tree_dirty=$dirty;resources=$hashes;build_sources=$sourceFiles;compiler=[ordered]@{id=$compilerPin.id;version=$compilerPin.version;package_sha256=$compilerPin.sha256;compiler_sha256=$compilerPin.compiler_sha256;source=$compilerPin.source;deterministic=$true};reference_packages=$referencePackages;reference_sha256=$referenceHashes}
 [IO.File]::WriteAllText($sourcePath,($source | ConvertTo-Json -Depth 5 -Compress),[Text.UTF8Encoding]::new($false))
 $resources['SOURCE.json']=$sourcePath
 $executable = Join-Path $output 'SwanServerSetup-UNSIGNED-TEST.exe'

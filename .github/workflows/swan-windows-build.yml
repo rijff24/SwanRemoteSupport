@@ -361,12 +361,18 @@ jobs:
           $components = Join-Path $env:RUNNER_TEMP 'swan-server-components'
           ./deployment/windows/Prepare-ServerComponents.ps1 -TransportPackage $transport -HttpsPackage $https -OutputDirectory $components
           $compilerPin = Get-Content deployment/windows/server-compiler.json -Raw | ConvertFrom-Json
+          $references = Get-Content deployment/windows/server-references.json -Raw | ConvertFrom-Json
           $compilerPackage = Join-Path $env:RUNNER_TEMP 'swan-server-roslyn-4.12.0.nupkg'
+          $frameworkPackage = Join-Path $env:RUNNER_TEMP 'swan-server-framework-references.nupkg'
+          $powershellPackage = Join-Path $env:RUNNER_TEMP 'swan-server-powershell-references.nupkg'
           ./deployment/windows/Get-PinnedArchive.ps1 -Uri $compilerPin.url -Sha256 $compilerPin.sha256 -Output $compilerPackage | Out-Null
-          $setup = ./deployment/windows/Build-ServerSetup.ps1 -ManagementExecutable artifacts/swan-management.exe -ComponentsDirectory $components -CompilerPackage $compilerPackage -OutputDirectory artifacts/server-setup -UnsignedTest
+          ./deployment/windows/Get-PinnedArchive.ps1 -Uri $references.framework.url -Sha256 $references.framework.sha256 -Output $frameworkPackage | Out-Null
+          ./deployment/windows/Get-PinnedArchive.ps1 -Uri $references.powershell.url -Sha256 $references.powershell.sha256 -Output $powershellPackage | Out-Null
+          $setup = ./deployment/windows/Build-ServerSetup.ps1 -ManagementExecutable artifacts/swan-management.exe -ComponentsDirectory $components -CompilerPackage $compilerPackage -FrameworkReferencesPackage $frameworkPackage -PowerShellReferencesPackage $powershellPackage -OutputDirectory artifacts/server-setup -UnsignedTest
           $reproEvidence = Join-Path $env:RUNNER_TEMP 'swan-server-setup-repro'
-          ./deployment/windows/test_server_setup_reproducibility.ps1 -ManagementExecutable artifacts/swan-management.exe -ComponentsDirectory $components -CompilerPackage $compilerPackage -WorkDirectory $reproEvidence
+          ./deployment/windows/test_server_setup_reproducibility.ps1 -ManagementExecutable artifacts/swan-management.exe -ComponentsDirectory $components -CompilerPackage $compilerPackage -FrameworkReferencesPackage $frameworkPackage -PowerShellReferencesPackage $powershellPackage -WorkDirectory $reproEvidence
           Copy-Item -LiteralPath (Join-Path $reproEvidence 'result.json') -Destination artifacts/server-setup-repro.json
+          Copy-Item -LiteralPath (Join-Path $reproEvidence 'packaged-preview.png') -Destination artifacts/server-setup-packaged-preview.png
           $hash = (Get-FileHash -LiteralPath $setup -Algorithm SHA256).Hash.ToLowerInvariant()
           Copy-Item -LiteralPath $setup -Destination artifacts/SwanServerSetup-UNSIGNED-TEST.exe
           Copy-Item -LiteralPath artifacts/server-setup/SOURCE.json -Destination artifacts/SwanServerSetup-SOURCE.json
@@ -385,6 +391,7 @@ jobs:
             artifacts/SwanServerSetup-UNSIGNED-TEST.exe
             artifacts/SwanServerSetup-SOURCE.json
             artifacts/server-setup-repro.json
+            artifacts/server-setup-packaged-preview.png
             artifacts/SwanRemoteSupport-build-source.zip
             artifacts/topmost-source/**
             artifacts/engine-source/**

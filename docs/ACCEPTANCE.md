@@ -4486,3 +4486,25 @@ resources; it is not an independent CI build of the complete current server.
 No setup executable was installed or run as an application during these checks.
 The updated CI tests, reference-assembly pinning across images, production signing,
 actual server deployment and the remaining acceptance gates are still unverified.
+
+The next server recipe revision also pins all five .NET/PowerShell reference
+assemblies through two hash-verified Microsoft SDK packages and checks each
+selected DLL hash before compiling. It no longer reads the host's runtime/GAC
+assemblies as compiler references. Two actual local builds of that revision,
+again using PowerShell 5.1 and 7, produced identical unsigned server setup
+SHA-256 `0489bfd78caae185edab646f72a74f84c063056e82d23c2e523cb929774774ab`.
+Both wrong-reference-package cases were rejected before extraction; the receipt
+verified every compiler reference against the published pins. Original outputs
+and the receipt remain under the private lab's
+`server-pinned-references-validation-20261022` directory. This was a dirty-tree
+experiment over `e3721a7`, using the retained `e6b87b9` management executable.
+Independent CI, cross-image comparison, native runtime/deployment and signing
+qualification remain pending; the local result does not satisfy those gates.
+
+The pinned-reference executable also returned zero from its packaged
+`--render-preview` path on Windows 11 Home build `26200`, and the rendered form
+was visually inspected. This exercises launcher loading, resource extraction,
+Windows PowerShell runtime binding and preview rendering. Installation and
+browser actions were disabled; no company services were installed. The CI
+repeat-build test now exercises this preview mode and retains the PNG. This is
+preview-only runtime evidence, not actual server setup or deployment acceptance.
