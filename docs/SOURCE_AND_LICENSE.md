@@ -265,8 +265,28 @@ contiguous generated version/value directives before passing its RC source to
 the resource compiler, using `winres`'s existing-resource API. Resource blocks,
 values, icons, manifests and unsigned shipping inputs are preserved. Standalone
 ordering regressions run on Linux and Windows CI and in the native packaging
-step. A new independent full-build comparison is still required to establish
-that this change fixes every remaining shipping difference.
+step. The independent full-build comparison below verifies the correction for
+the exact source and selected engine recorded there.
+
+### Complete unsigned native comparison (22 October 2026)
+
+[Comparison run 39829786141](https://github.com/rijff24/SwanRemoteSupport/actions/runs/39829786141)
+passed for independent successful native runs `39807079997` and `39819129959`,
+both at `e9d89ca97319590905a39663b76718ee53bcdd78` with the explicitly selected
+source-built `05d5369` engine. The
+[original report](../deployment/windows/native-e9d89ca-rebuild-comparison.json)
+records **all eight shipping outputs byte-identical**: customer MSI, technician
+EXE, technician MSI, installer-name EXE copy, server setup EXE, agent, management
+service and worker. No shipping bytes were normalized or executed. Each archive's
+1,155 tracked public source files and six generated bridge files were verified.
+Archive compression differs; the original shipping outputs match exactly.
+
+The retained comparison artifact is `12448516219`, 17,424 bytes, SHA-256
+`611f3d46f88b9ce202d9679a6018662ca8d3496875d12b281895fbefaf9eefaa`.
+This establishes unsigned native reproducibility for those inputs, including the
+portable resource-order correction. It does not qualify other source revisions,
+the default upstream engine, Windows behavior, updates or production signatures.
+The separate 1.5.1 build and runtime/release gates require their own evidence.
 
 ### Server launcher compiler
 

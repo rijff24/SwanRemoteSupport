@@ -4788,3 +4788,28 @@ installer edition namespaces and publisher trust are unchanged. This is not a
 production release, an applied update, or evidence that any upgrade passed.
 Native build/source verification, signing policy, admin approval and actual
 interruption/session/identity-preservation tests remain required.
+
+### Complete unsigned native reproducibility, 22 October
+
+The original outputs from successful independent native builds `39807079997`
+and `39819129959` at source `e9d89ca97319590905a39663b76718ee53bcdd78` passed
+[comparison 39829786141](https://github.com/rijff24/SwanRemoteSupport/actions/runs/39829786141).
+The [unchanged original report](../deployment/windows/native-e9d89ca-rebuild-comparison.json)
+verifies both original archive digests, public source and generated bridges,
+and all eight expected executable/MSI outputs are byte-identical. No shipping
+file was normalized or executed. This uses the explicitly selected independently
+reproduced `05d5369` engine; it does not establish the default engine's source
+reproducibility or extend this result to a different application revision.
+
+The first archive was also retained locally and passed source/artifact checks;
+all 95 extracted application files match the installed-file manifest (accounting
+for the documented portable `rustdesk.exe` to installed `Swan Remote Support.exe`
+name). The 12 native desktop metadata hashes and pinned engine DLL hash match.
+These are build-integrity checks, not runtime tests. Earlier failing original
+comparisons remain retained as historical evidence.
+
+The real 1.5.1 native build `39820151128` at `699c9e0` has now succeeded;
+its original archive collection/source verification is in progress. No 1.5.1
+independent comparison, installation or applied automatic upgrade is claimed.
+Production signing and the full installation/session/update/Windows acceptance
+requirements remain open.
