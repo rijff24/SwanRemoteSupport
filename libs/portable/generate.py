@@ -3,9 +3,8 @@
 import os
 import optparse
 import subprocess
-from hashlib import md5
+from hashlib import md5, sha256
 import brotli
-import datetime
 
 # 4GB maximum
 length_count = 4
@@ -17,22 +16,24 @@ encoding = 'utf-8'
 
 def generate_md5_table(folder: str, level) -> dict:
     res: dict = dict()
-    curdir = os.curdir
-    os.chdir(folder)
-    for root, _, files in os.walk('.'):
-        # remove ./
-        for f in files:
-            md5_generator = md5()
-            full_path = os.path.join(root, f)
-            print(f"Processing {full_path}...")
-            f = open(full_path, "rb")
-            content = f.read()
-            content_compressed = brotli.compress(
-                content, quality=level)
-            md5_generator.update(content)
-            md5_code = md5_generator.hexdigest().encode(encoding=encoding)
-            res[full_path] = (content_compressed, md5_code)
-    os.chdir(curdir)
+    curdir = os.getcwd()
+    try:
+        os.chdir(folder)
+        for root, directories, files in os.walk('.'):
+            directories.sort()
+            for name in sorted(files):
+                md5_generator = md5()
+                full_path = os.path.join(root, name)
+                print(f"Processing {full_path}...")
+                with open(full_path, "rb") as source:
+                    content = source.read()
+                content_compressed = brotli.compress(
+                    content, quality=level)
+                md5_generator.update(content)
+                md5_code = md5_generator.hexdigest().encode(encoding=encoding)
+                res[full_path] = (content_compressed, md5_code)
+    finally:
+        os.chdir(curdir)
     return res
 
 
@@ -40,7 +41,7 @@ def write_package_metadata(md5_table: dict, output_folder: str, exe: str):
     output_path = os.path.join(output_folder, "data.bin")
     with open(output_path, "wb") as f:
         f.write("rustdesk".encode(encoding=encoding))
-        for path in md5_table.keys():
+        for path in sorted(md5_table):
             (compressed_data, md5_code) = md5_table[path]
             data_length = len(compressed_data)
             path = path.encode(encoding=encoding)
@@ -60,9 +61,17 @@ def write_package_metadata(md5_table: dict, output_folder: str, exe: str):
     print(f"Metadata has been written to {output_path}")
 
 def write_app_metadata(output_folder: str):
+    # The existing runtime reads this field as an extraction-cache identity,
+    # not a wall clock. Keep its wire format and refresh the cache whenever the
+    # packaged payload changes, including between builds with the same version.
+    digest = sha256()
+    with open(os.path.join(output_folder, "data.bin"), "rb") as payload:
+        for chunk in iter(lambda: payload.read(1024 * 1024), b""):
+            digest.update(chunk)
+    cache_identity = (int.from_bytes(digest.digest()[:8], "big") & ((1 << 63) - 1)) or 1
     output_path = os.path.join(output_folder, "app_metadata.toml")
-    with open(output_path, "w") as f:
-        f.write(f"timestamp = {int(datetime.datetime.now().timestamp() * 1000)}\n")
+    with open(output_path, "w", encoding="utf-8", newline="\n") as f:
+        f.write(f"timestamp = {cache_identity}\n")
     print(f"App metadata has been written to {output_path}")
 
 def build_portable(output_folder: str, target: str):

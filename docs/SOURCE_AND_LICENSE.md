@@ -25,6 +25,14 @@ Publish this archive alongside the exact source tag, build instructions and
 third-party component source references. Its presence does not prove binary
 reproducibility or replace release acceptance and signing checks.
 
+The portable packer sorts payload entries and pins its Brotli encoder version.
+Its existing `timestamp` metadata field now carries a nonzero content-derived
+extraction-cache identity within the TOML signed-integer range. Identical packed
+bytes retain the same cache identity; changed payload bytes or startup executable
+selection refresh it even when the software version is unchanged. The metadata
+format stays compatible with the current launcher. This cache marker is not an
+authorization credential or a replacement for package signatures and hashes.
+
 ## Patched Windows Flutter engine provenance
 
 The managed Windows workflow currently downloads the RustDesk engine release

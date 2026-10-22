@@ -3999,3 +3999,30 @@ not universal host/toolchain reproducibility or complete product qualification.
 The native graphical customer/technician apps, Flutter engine and installers
 still need their own comparisons and runtime checks. No downloaded executable
 was run by the artifact verifier and no installed lab service was upgraded.
+
+### Portable package cache identity correction, 22 October
+
+Inspection during the independent native builds found that the portable packer
+embedded the current wall clock into `app_metadata.toml`, making otherwise
+identical package builds differ. Its existing runtime uses this integer to
+refresh the extraction cache. The generator now derives a nonzero, TOML-safe
+cache identity from the complete `data.bin` payload, preserving the metadata
+format and changing the identity whenever the packaged payload or startup
+executable changes. Directory/file entries are sorted and the existing Python
+Brotli dependency is pinned to the locally tested `1.1.0` version.
+
+Four local tests pass for identical/changed content, dictionary insertion order,
+real compression and executable selection, and directory restoration on failure.
+The first real-compression test exposed an existing generator bug: it retained
+`os.curdir` rather than the caller's absolute current directory and left input
+files open, causing Windows temporary-directory cleanup to fail. The generator
+now closes inputs and restores the caller's directory in a `finally` block. The
+corrected test run also passed with resource warnings treated as errors. The
+Windows packaging workflow runs these tests before creating the portable EXE.
+
+These changes are not present in the already-running native builds
+`39720429487` and `39720432071`, both pinned to earlier source `50c08fd`. Those
+builds are intentionally retained for comparison of the original artifacts and
+inner payloads. A subsequent native build, full binary comparison and actual
+extraction-cache/restart/upgrade checks remain required for the corrected packer.
+This marker does not authorize sessions or replace signed package verification.

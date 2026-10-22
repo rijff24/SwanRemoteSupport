@@ -172,6 +172,7 @@ jobs:
           sed -i '/dpiAware/d' res/manifest.xml
           pushd ./libs/portable
           pip3 install -r requirements.txt
+          python3 -m unittest discover -s . -p test_generate.py
           python3 ./generate.py -f ../../swan-client/ -o . -e ../../swan-client/rustdesk.exe
           popd
           mkdir -p ./artifacts
