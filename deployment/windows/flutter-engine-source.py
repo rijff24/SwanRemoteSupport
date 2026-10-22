@@ -37,6 +37,13 @@ def load_recipe():
         raise ValueError("Engine patch hash differs from reviewed recipe")
     if lock["gn_arguments"] != ["--runtime-mode=release"] or lock["ninja_target"] != "flutter_windows.dll":
         raise ValueError("Unexpected engine build arguments")
+    overrides = lock.get("dependency_overrides", {})
+    if set(overrides) != {"src/flutter/third_party/tinygltf"}:
+        raise ValueError("Unexpected engine dependency override")
+    tinygltf = overrides["src/flutter/third_party/tinygltf"]
+    if (tinygltf["repository"] != "https://github.com/syoyo/tinygltf.git"
+            or tinygltf["revision"] != "9bb5806df4055ac973b970ba5b3e27ce27d98148"):
+        raise ValueError("Dependency mirror override must preserve the original DEPS commit")
     return lock, patch
 
 
@@ -75,6 +82,11 @@ def package(build, output):
     verify_checkout(engine, lock, True)
     if git(build / "depot_tools", "rev-parse", "HEAD").decode().strip() != lock["depot_tools"]["revision"]:
         raise ValueError("Depot-tools revision changed")
+    for name, expected in lock["dependency_overrides"].items():
+        dependency = build / "checkout" / name
+        if (git(dependency, "rev-parse", "HEAD").decode().strip() != expected["revision"]
+                or git(dependency, "config", "--get", "remote.origin.url").decode().strip() != expected["repository"]):
+            raise ValueError("Dependency source override changed: " + name)
     if output.exists():
         raise FileExistsError("Do not overwrite an existing engine result")
     release = build / "checkout/src/out/host_release"
@@ -110,6 +122,7 @@ def package(build, output):
         (output / path.name).write_bytes(path.read_bytes())
     (output / "applied-source.patch").write_bytes(git(engine, "diff", "--binary", "--no-ext-diff"))
     (output / "args.gn").write_bytes((release / "args.gn").read_bytes())
+    (output / "gclient-config.txt").write_bytes((build / "checkout/.gclient").read_bytes())
     workflow = RECIPE.parents[1] / ".github/workflows/swan-flutter-engine.yml"
     (output / workflow.name).write_bytes(workflow.read_bytes())
     result = {

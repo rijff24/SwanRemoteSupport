@@ -4,6 +4,8 @@ $ProgressPreference='SilentlyContinue'
 $recipe=Get-Content -LiteralPath (Join-Path $PSScriptRoot 'flutter-engine.lock.json') -Raw | ConvertFrom-Json
 if($recipe.schema -ne 1 -or $recipe.engine.repository -cne 'https://github.com/flutter-team-archive/engine.git' -or $recipe.depot_tools.repository -cne 'https://chromium.googlesource.com/chromium/tools/depot_tools.git'){throw 'Unexpected engine source recipe'}
 foreach($component in @($recipe.engine,$recipe.depot_tools)){if($component.revision -cnotmatch '^[0-9a-f]{40}$'){throw 'An immutable source revision is required'}}
+$overrideProperties=@($recipe.dependency_overrides.PSObject.Properties)
+if($overrideProperties.Count -ne 1 -or $overrideProperties[0].Name -cne 'src/flutter/third_party/tinygltf' -or $overrideProperties[0].Value.repository -cne 'https://github.com/syoyo/tinygltf.git' -or $overrideProperties[0].Value.revision -cne '9bb5806df4055ac973b970ba5b3e27ce27d98148'){throw 'Dependency override must preserve the reviewed original DEPS commit'}
 $root=[IO.Path]::GetFullPath($BuildRoot)
 if(Test-Path -LiteralPath $root){throw 'Build root must be a new dedicated directory'}
 $parent=Get-Item -LiteralPath ([IO.Path]::GetDirectoryName($root))
@@ -38,7 +40,10 @@ if(-not(Test-Path -LiteralPath (Join-Path $depot 'git.bat'))){throw 'Pinned Wind
 $env:PATH=$depot+';'+$env:PATH
 $checkout=Join-Path $root 'checkout'
 New-Item -ItemType Directory -Path $checkout | Out-Null
-$solution='solutions = [{"name": "src/flutter", "url": "'+$recipe.engine.repository+'@'+$recipe.engine.revision+'", "deps_file": "DEPS", "managed": False, "custom_deps": {}}]'
+$customDeps=@{}
+foreach($entry in $overrideProperties){$customDeps[$entry.Name]=$entry.Value.repository+'@'+$entry.Value.revision}
+$customDepsJson=$customDeps | ConvertTo-Json -Compress
+$solution='solutions = [{"name": "src/flutter", "url": "'+$recipe.engine.repository+'@'+$recipe.engine.revision+'", "deps_file": "DEPS", "managed": False, "custom_deps": '+$customDepsJson+'}]'
 [IO.File]::WriteAllText((Join-Path $checkout '.gclient'),$solution+"`ntarget_os = ['win']`n",[Text.UTF8Encoding]::new($false))
 Push-Location $checkout
 try {

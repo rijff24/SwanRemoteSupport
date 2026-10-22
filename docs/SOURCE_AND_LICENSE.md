@@ -65,6 +65,12 @@ Ninja and Clang inputs, records actual dependency revisions and the available
 Windows toolchain versions, and packages the DLL/import library/PDB with the
 original public engine source, applied patch, generated GN arguments and build
 recipe. It does not import certificates or change the application engine pin.
+The old Flutter tinygltf mirror returned 404 for its pinned source commit during
+reconstruction. The lock routes only that dependency to its declared canonical
+upstream repository and retains the exact original DEPS commit
+`9bb5806df4055ac973b970ba5b3e27ce27d98148`. The final package check verifies
+both the checked-out commit and repository URL; the original engine DEPS file
+remains unchanged. The effective gclient configuration is included as evidence.
 
 For an equivalent local build, run this in a new PowerShell process on a Windows
 machine with Visual Studio 2022 Enterprise, its C++ tools/Windows SDK, Git, Python,

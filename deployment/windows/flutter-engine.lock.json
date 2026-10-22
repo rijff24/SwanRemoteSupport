@@ -32,5 +32,12 @@
     "sha256": "ec8cabf36ee4ff24c8d98de25b00e70781eb03876265aee84d0fe554a110036e",
     "source_to_binary_match_verified": false
   },
-  "status": "Source reconstruction candidate; independent builds and runtime qualification required before replacing the pinned upstream engine"
+  "status": "Source reconstruction candidate; independent builds and runtime qualification required before replacing the pinned upstream engine",
+  "dependency_overrides": {
+    "src/flutter/third_party/tinygltf": {
+      "repository": "https://github.com/syoyo/tinygltf.git",
+      "revision": "9bb5806df4055ac973b970ba5b3e27ce27d98148",
+      "reason": "The Flutter mirror no longer exposes this exact DEPS commit; use the canonical upstream repository without changing the source revision."
+    }
+  }
 }
