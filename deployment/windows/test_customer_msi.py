@@ -1,7 +1,10 @@
 import importlib.util
 from pathlib import Path
+import shutil
+import subprocess
 import tempfile
 import unittest
+import uuid
 
 spec = importlib.util.spec_from_file_location("customer_msi", Path(__file__).with_name("generate-customer-msi.py"))
 msi = importlib.util.module_from_spec(spec)
@@ -9,6 +12,22 @@ spec.loader.exec_module(msi)
 
 
 class CustomerMsiTests(unittest.TestCase):
+    def test_product_codes_follow_standard_uuid5_across_both_builders(self):
+        shell = shutil.which("pwsh") or shutil.which("powershell")
+        if not shell:
+            self.skipTest("PowerShell required for cross-builder identity validation")
+        script = Path(__file__).with_name("Get-MsiProductCode.ps1")
+        namespaces = {"customer": msi.UPGRADE, "technician": uuid.UUID("a4374699-436f-4917-9a4e-223f62a9e634")}
+        observed = set()
+        for edition, namespace in namespaces.items():
+            for version in ("1.5.0", "1.5.1"):
+                actual = subprocess.check_output([shell, "-NoProfile", "-NonInteractive", "-File", str(script),
+                                                  "-Edition", edition, "-Version", version], text=True).strip()
+                expected = str(uuid.uuid5(namespace, "windows-x64|" + version)).upper()
+                self.assertEqual(actual, expected)
+                observed.add(actual)
+        self.assertEqual(len(observed), 4)
+
     def fixture(self, root):
         source = root / "payload"
         source.mkdir()
@@ -28,6 +47,8 @@ class CustomerMsiTests(unittest.TestCase):
             paths = {file["path"] for file in files}
             self.assertEqual(paths, {"Swan Remote Support.exe", "librustdesk.dll", "flutter_windows.dll", "data/flutter_assets/test.txt", "LICENSE.txt"})
             ns = {"w": msi.NAMESPACE}
+            self.assertEqual(tree.find("w:Package", ns).attrib["ProductCode"],
+                             str(uuid.uuid5(msi.UPGRADE, "windows-x64|1.5.0")).upper())
             service = tree.find(".//w:ServiceInstall", ns)
             self.assertEqual(service.attrib["Name"], "Swan Remote Support")
             self.assertEqual(service.attrib["Arguments"], "--service")

@@ -35,6 +35,7 @@ def author(source, agent, version):
     files = payload.manifest("customer", source)
     root = ET.Element("{" + NAMESPACE + "}Wix")
     package = element(root, "Package", Name="Swan Remote Support", Manufacturer="Swan Remote Support", Version=version,
+                      ProductCode=str(uuid.uuid5(UPGRADE, "windows-x64|" + version)).upper(),
                       UpgradeCode=str(UPGRADE).upper(), Scope="perMachine", InstallerVersion="500", Language="1033")
     element(package, "MajorUpgrade", DowngradeErrorMessage="A newer Swan Remote Support version is already installed.", Schedule="afterInstallInitialize")
     element(package, "MediaTemplate", EmbedCab="yes")

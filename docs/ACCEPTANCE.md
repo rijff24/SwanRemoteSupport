@@ -4377,3 +4377,15 @@ obsolete intermediate from the archive list as well as from the LLD outputs.
 The three-file engine patch is hash-pinned and its reconstruction and local
 guard tests pass. Compilation and independent output/runtime verification
 remain pending; neither failed attempt produced a qualified engine.
+
+### Rebuilt MSI product identity, 22 October
+
+Two local technician builds using the same verified `e6b87b9` executable/agent
+and original WiX 5.0.2 recipe generated different ProductCodes and MSI hashes.
+Both builders now derive ProductCode from their existing edition UpgradeCode
+namespace and `windows-x64|<version>` using UUIDv5. Five local tests pass,
+including cross-checking PowerShell against Python's standard UUIDv5 for both
+editions and two versions. Two actual technician builds then retained identical
+ProductCode `{A6857EBE-9FD4-52DE-B899-454C2F066E52}` for version 1.5.0.
+Their package codes/timestamps and raw MSI hashes still differ; complete MSI
+reproducibility and actual stable-identity upgrade/recovery tests remain open.

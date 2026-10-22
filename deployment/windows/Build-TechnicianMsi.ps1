@@ -26,8 +26,9 @@ if (-not $UnsignedTest) {
 $launcher = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot 'Open-Technician.ps1'))
 $license = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../../LICENCE'))
 $source = Join-Path $PSScriptRoot 'msi/Technician.wxs'
+$productCode = & (Join-Path $PSScriptRoot 'Get-MsiProductCode.ps1') -Edition technician -Version $Version
 New-Item -ItemType Directory -Force ([IO.Path]::GetDirectoryName($Output)) | Out-Null
-& $WixExe build $source -arch x64 -d ('Version='+$Version) -d ('TechnicianExe='+$TechnicianExe) -d ('AgentExe='+$AgentExe) -d ('Launcher='+$launcher) -d ('License='+$license) -o $Output
+& $WixExe build $source -arch x64 -d ('Version='+$Version) -d ('ProductCode='+$productCode) -d ('TechnicianExe='+$TechnicianExe) -d ('AgentExe='+$AgentExe) -d ('Launcher='+$launcher) -d ('License='+$license) -o $Output
 if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $Output)) { throw 'Technician MSI build failed.' }
 [pscustomobject]@{version=$Version;wix=$toolVersion;unsigned_test=[bool]$UnsignedTest;sha256=(Get-FileHash -LiteralPath $Output -Algorithm SHA256).Hash.ToLowerInvariant();technician_sha256=(Get-FileHash -LiteralPath $TechnicianExe -Algorithm SHA256).Hash.ToLowerInvariant();agent_sha256=(Get-FileHash -LiteralPath $AgentExe -Algorithm SHA256).Hash.ToLowerInvariant()} | ConvertTo-Json | Set-Content -LiteralPath ($Output+'.build.json')
 Write-Host 'Built unsigned technician MSI. Production distribution requires signing, signed release metadata and clean-machine verification.'

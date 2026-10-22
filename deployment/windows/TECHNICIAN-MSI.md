@@ -6,6 +6,13 @@ installs the packed technician executable, agent, graphical-launcher script and
 license under `%LOCALAPPDATA%/SwanRemoteSupport-Technician`, with a Start menu
 shortcut. Upgrade removal is scheduled inside the MSI transaction. Company
 state is not an MSI-owned file and is preserved through major upgrades.
+ProductCode is a UUIDv5 derived from the stable edition UpgradeCode namespace
+and `windows-x64|<software-version>`. Identical-version rebuilds therefore keep
+the same product identity; a new software version gets a new identity. Company
+names and branding are not identity inputs. The customer builder uses the same
+rule with its own existing UpgradeCode. Package codes and build timestamps
+remain separate reproducibility work; stable ProductCode alone does not make
+MSI bytes reproducible or qualify upgrade/recovery behavior.
 
 Windows Installer policy can prohibit unmanaged per-user installations. A
 standard-user test of the signed `e6b87b9` package on Server 2022 build

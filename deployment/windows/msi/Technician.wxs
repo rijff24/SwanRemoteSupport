@@ -1,5 +1,5 @@
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
-  <Package Name="Swan Remote Support Technician" Manufacturer="Swan Remote Support" Version="$(var.Version)" UpgradeCode="A4374699-436F-4917-9A4E-223F62A9E634" Scope="perUser" InstallerVersion="500" Language="1033">
+  <Package Name="Swan Remote Support Technician" Manufacturer="Swan Remote Support" Version="$(var.Version)" ProductCode="$(var.ProductCode)" UpgradeCode="A4374699-436F-4917-9A4E-223F62A9E634" Scope="perUser" InstallerVersion="500" Language="1033">
     <MajorUpgrade DowngradeErrorMessage="A newer Swan Remote Support Technician version is already installed." Schedule="afterInstallInitialize" />
     <MediaTemplate EmbedCab="yes" />
     <Binary Id="UninstallCommitAgent" SourceFile="$(var.AgentExe)" />
