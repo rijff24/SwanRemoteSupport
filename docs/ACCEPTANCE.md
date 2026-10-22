@@ -4830,3 +4830,45 @@ The application EXE and Rust DLL have different bytes from the preceding 1.5.0
 inputs. Actual major upgrade, approved automatic rollout, interruption recovery,
 identity/consent preservation and the remaining runtime/release gates still
 require explicit test results; build reproducibility does not prove them.
+
+### Actual technician 1.5.0 to 1.5.1 MSI upgrade, 22 October
+
+On the retained Windows Server 2016 Standard evaluation Desktop Experience
+**14393.693 x64**, an isolated new local administrator profile passed four real
+MSI operations: install 1.5.0, major-upgrade to 1.5.1, repair after retaining and
+removing the installed technician executable, and uninstall 1.5.1. All exit
+codes were 0; no reboot was required. These are original unsigned inputs from
+the independently reproduced builds above:
+
+| Input | Application/recipe source | Original MSI SHA-256 |
+| --- | --- | --- |
+| Technician 1.5.0 | `e9d89ca97319590905a39663b76718ee53bcdd78` | `f9bf6db54580945e4f588a84e95fffc77632f2a43d7c80881485dc8342d3ac33` |
+| Technician 1.5.1 | `699c9e022ad71e4a409be52b56c9fe9697074bdf` | `f09b59d42287b595548e6a894f6fb498f46106218d66fc6742e5f17eae8b8b4d` |
+
+The upgrade removed old ProductCode
+`{A6857EBE-9FD4-52DE-B899-454C2F066E52}` (ProductState -1) and installed
+`{D32FA420-4F84-50A6-BAB2-CBFDA73F87C9}` (ProductState 5), retaining technician
+UpgradeCode `{A4374699-436F-4917-9A4E-223F62A9E634}`. The public lifecycle
+harness then verified the new executable/agent hashes, shortcut and component
+registration before inducing and repairing a missing executable. Uninstall
+verified removal of the new payload, shortcut and registration.
+
+The existing administrator profile contained technician software; its preflight
+stopped without modification. A separate owned administrator account was used
+instead. A manually started Password/Highest scheduled task ran under that
+account's actual SID; no SSH access rule or Windows Installer policy was changed.
+Task-principal name normalization and null-trigger preflight issues were
+corrected before its first execution; the task was confirmed never previously
+run. The final task, wrapper and original phase reports all record success.
+Fourteen original driver, phase, invocation and MSI records were transferred
+and hash-verified in the private lab. Machine/user execution policies were
+preserved; the verified test process alone used PowerShell Bypass.
+
+The existing customer's device ID, device-token hash, unattended consent,
+consent revision and accepted release sequence were unchanged, and its customer,
+management and worker services remained running. No technician app was launched.
+This proves an **administrative bare-MSI major upgrade in that profile**; it is
+not standard-user/interactive acceptance, an enrolled technician identity test,
+an approved automatic update, interruption recovery, publisher validation,
+remote-session acceptance or complete Server 2016 qualification. The retained
+VM is not represented as a fresh clean-machine test.
