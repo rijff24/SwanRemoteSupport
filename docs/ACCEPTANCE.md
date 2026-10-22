@@ -5094,3 +5094,35 @@ user. It does not qualify company bootstrap/enrollment, signed distribution,
 automatic updates, interruption/reboot recovery or remote sessions. The guest
 remains unactivated with zero grace minutes; licensed compatibility qualification
 and the remaining Windows matrix are still open.
+
+### Windows 10 customer MSI repair with a real reboot, 23 October
+
+The retained Windows 10 Pro `19045.3803` guest passed bare customer MSI
+installation at exact native source `3bad169`; package SHA-256
+`73d58b30997618347d19c560541909fbf0af24f00f9e72499e8382ac95d65b49`.
+All 96 MSI-packaged files and the agent matched their pinned hashes, and the
+customer service ran as LocalSystem from the expected executable path.
+
+Repair restored a deliberately damaged packaged license, passed its payload
+checks and returned **3010**, requiring a reboot. The original no-reboot driver
+therefore stopped and retained its failed overall result. Its original MSI log
+records deferred cached-installer file deletion and a requested restart. The
+test did not reinterpret that attempt as a zero-reboot pass or repeat the MSI.
+After retaining and hash-verifying its evidence and confirming no active MSI
+client, the disposable guest performed a normal requested restart. A changed
+operating-system boot timestamp proved the reboot. All 96 files and the agent
+still matched; the customer service automatically returned to Running with the
+expected LocalSystem account, automatic startup and exact executable path.
+
+A separate guarded continuation then uninstalled the same original package with
+exit 0 and no further reboot. The public harness verified removal of packaged
+files, agent, product registration and service; an independent final observation
+also found the service absent. Twenty-one original pre/post-reboot fixture,
+invocation, result and MSI-log records were retained with byte counts and
+SHA-256 verification. Persistent script policies were unchanged.
+
+This proves **bare customer MSI install, repair requiring reboot, post-reboot
+payload/service recovery and uninstall** in the specified lab. It does not prove
+company enrollment, consent/identity preservation, graphical support sessions,
+signed distribution or automatic update recovery. The unactivated Windows
+limitation and the other release gates remain open.
