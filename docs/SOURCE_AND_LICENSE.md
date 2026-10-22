@@ -52,3 +52,32 @@ Do not infer immutable build provenance from the mutable release tag or matching
 archive hash alone. Full product source/reproducibility acceptance remains open
 until the engine's build inputs, patches, toolchain/dependencies and rebuilt
 artifacts are verified and published with the project release.
+
+### Independent engine reconstruction
+
+Run **Rebuild patched Windows Flutter engine from pinned source** in Actions to
+build a separate candidate. The reviewed recipe is
+`deployment/windows/flutter-engine.lock.json`: it pins the engine and depot-tools
+commits, the dependency file hash, the two-file patch and original/patched file
+hashes. The build rejects a different revision, changed dependency/source bytes
+or additional tracked modifications before patching. It uses the engine's pinned
+Ninja and Clang inputs, records actual dependency revisions and the available
+Windows toolchain versions, and packages the DLL/import library/PDB with the
+original public engine source, applied patch, generated GN arguments and build
+recipe. It does not import certificates or change the application engine pin.
+
+For an equivalent local build, run this in a new PowerShell process on a Windows
+machine with Visual Studio 2022 Enterprise, its C++ tools/Windows SDK, Git, Python,
+and at least 40 GiB free on the chosen build drive:
+
+```powershell
+pwsh -NoProfile -File deployment/windows/Build-FlutterEngine.ps1 -BuildRoot C:\SwanEngineSourceBuild
+```
+
+The build directory must not already exist. Downloads and compilation take place
+inside it. The recipe never removes existing toolchains to obtain disk space.
+The output is a source reconstruction candidate, not an automatically accepted
+replacement or production release. Two independent build comparisons, a complete
+toolchain/input review and native Windows runtime qualification are still required
+before selecting a new engine hash for the application workflow. Build receipts
+retain explicit false values for those unproven release gates.

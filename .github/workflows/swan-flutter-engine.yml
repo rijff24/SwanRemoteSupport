@@ -1,0 +1,28 @@
+name: Rebuild patched Windows Flutter engine from pinned source
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: swan-engine-source-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  source-engine:
+    runs-on: windows-2022
+    timeout-minutes: 180
+    steps:
+      - name: Keep reviewed engine recipe bytes unchanged
+        shell: pwsh
+        run: git config --global core.autocrlf false
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+      - name: Build source reconstruction candidate
+        shell: pwsh
+        run: ./deployment/windows/Build-FlutterEngine.ps1 -BuildRoot C:\SwanEngineSourceBuild
+      - name: Publish candidate and exact source evidence
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: swan-flutter-engine-source-built-${{ github.sha }}
+          path: C:\SwanEngineSourceBuild\artifacts\*
+          if-no-files-found: error
