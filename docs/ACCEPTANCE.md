@@ -535,7 +535,7 @@ full acceptance remains open on every row.
 | Operating system | Clean installation | Repair/upgrade/recovery | Native session behavior |
 | --- | --- | --- | --- |
 | Windows 10 x64 | Fresh standard Pro 19045.3803: administrator and standard-user technician MSI 1.5.0 lifecycles passed using application `e6b87b9` and installer recipe `67786dd`; unactivated, license status 5, zero grace. Earlier LTSC Evaluation 19044.1288 tests covered both administrator editions and a later standard-user technician functional diagnostic on the expired evaluation. | Both Pro accounts: install, missing-executable repair and uninstall returned 0; original logs verified. Full current-source qualification, customer MSI, upgrade, reboot and automatic recovery remain unverified. | Unverified. |
-| Windows 11 x64 | Unverified | Unverified | Unverified |
+| Windows 11 x64 | Fresh activated Enterprise Evaluation 26300.9457: both unsigned MSI 1.5.0 editions from `9e4ea6d` install as Administrator; Secure Boot and TPM 2.0 verified. | Six install/repair/uninstall operations return 0; customer license repair and technician missing-executable repair pass. Standard-user, upgrade and interruption tests remain open. | Unverified. |
 | Server 2016 Desktop Experience | Existing 14393.693 lab deployment; current-source fresh company setup unverified. | Historical signed lab upgrades/reboot evidence; current-source full lifecycle/recovery unverified. | Older same-guest accepted session; `c0bf4b4` technician GUI checks and `bd13500` receiver legacy-password denial. Separate-machine/full-feature acceptance open. |
 | Server 2019 Desktop Experience | Administrator lab-signed MSI 1.5.9 lifecycle, native `c0bf4b4`, agent `053a52e`, build 17763.3650. | Twelve verified operations include customer 1.5.8-to-1.5.9 upgrade, repair/uninstall/reinstall and technician lifecycle. Latest `6503614` existing-unsafe-state rejection also passes; full current-source recovery unverified. | Unverified. |
 | Server 2022 Desktop Experience | Both lab-signed MSI 1.5.11 editions on clean 20348.587; native `c0bf4b4`, agent `6503614`. | Six lifecycle operations pass. Separate MSI 1.5.12 uninstall-failure fixtures restore payload/registration/watcher; automatic update interruption unverified. | Unverified. |
@@ -4686,3 +4686,62 @@ differences that must not be hidden by source line-ending handling. The new
 source/hash verifier also accepted the actual preserved `49ced68` archive;
 that single-archive check was not an independent-build comparison. No completed
 pair-workflow result is claimed here. Runtime and production approval stay false.
+
+### Fresh activated Windows 11 administrator MSI lifecycles, 22 October
+
+Official Microsoft Windows 11 Enterprise 26H2 evaluation media completed and
+matched its published SHA-256
+`bc3f24086ebadc94489066b5ad78089e2cf5c3491e90e790bb81a2b199c10e38`
+(8,225,329,152 bytes). A new 64 GiB GPT guest with 4 GiB RAM and two virtual
+CPUs installed build **26300.9457 x64**. The isolated Alpine 3.24.2 WSL2 lab uses
+QEMU 11.0.3/KVM, secure-capable EDK2 firmware with Microsoft Windows boot
+certificates, and a swtpm 0.10.2 TPM 2.0 backend. The installed Windows OS
+reported Secure Boot enabled and TPM 2.0 present and ready. No Windows hardware
+requirement checks were bypassed. Its first logon completed, and the temporary
+automatic-logon password was removed. Normal Microsoft online activation then
+reported LicenseStatus 1 and 129,600 evaluation minutes remaining; no key
+replacement, rearm or clock change was used.
+
+Native run `39777271372`, exact source
+`9e4ea6dfce7dc1e66eccf6e1068780a23ae8fd59`, supplied the unsigned MSI inputs
+with the explicitly selected source-built `05d5369` engine. Original archive,
+1,149 tracked public files, six generated bridges and retained engine evidence
+verified. The 95 portable application files matched their manifest, and the
+main executable plus 11 plugins matched their PE metadata receipts. These
+checks do not establish complete native output reproducibility; see the
+[original build comparisons](SOURCE_AND_LICENSE.md#source-built-engine-application-comparison-22-october-2026).
+
+Under the guest Administrator, both editions passed actual install, repair and
+uninstall with exit code 0 in all six operations, without a required reboot:
+
+| Edition | Original unsigned MSI SHA-256 | Repair evidence |
+| --- | --- | --- |
+| Technician | `297265c102b0c94b5361c76b9873bc2b09fe3e76b2f98975a06b840452babeba` | A previously verified main executable was retained outside the install path; MSI repair restored the missing executable with its expected hash. |
+| Customer | `9ebb1d8e56248b9b6005ed1a884ff29ec5edd8421b60b00253ec743e875cac48` | The packaged license was deliberately damaged; repair restored it and all 96 manifested files. The service's executable path, LocalSystem identity and running state were checked. |
+
+MSI registration, installed executable/agent hashes, technician shortcut and
+component registrations, complete customer payload and uninstall removal were
+checked. Each edition's nine original phase/driver/MSI records were transferred
+and hash-verified in the private lab. Original machine/user execution policies
+were preserved; only the verified test driver used process-scoped Bypass.
+
+The initial customer driver used the portable manifest (95 files) instead of
+the MSI-specific manifest (96 files including `LICENSE.txt`). The harness
+rejected this fixture before invoking MSI; its five original failure records
+were preserved and hash-verified. A separate corrected fixture used the actual
+MSI build receipt's manifest hash
+`3453afe7fd075f1739bbbfa04980f21f5bcf6ba7dceda1d47333a94af7be485c`
+and produced the passing customer results. No MSI failure or pass is claimed
+for that first preflight-only attempt.
+
+The technician's original harness recorded the legacy registry ProductName
+“Windows 10 Enterprise Evaluation”; its build/platform checks and independent
+Win32_OperatingSystem observation identify Windows 11. Original records remain
+unchanged. The public harness now obtains caption, version, architecture and
+build from Win32_OperatingSystem while retaining the exact registry UBR; the
+customer run verified the corrected Windows 11 caption.
+
+This is **administrator bare-MSI evidence for those exact inputs**, not
+standard-user installation, company-generated bundles, enrollment, remote
+sessions, approved updates, interruption recovery, trusted production signing
+or complete Windows 11 qualification. Those release gates remain open.

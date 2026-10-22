@@ -97,7 +97,11 @@ if($Phase -eq 'repair' -and $Edition -eq 'technician'){
 $operation=if($Phase -eq 'install'){'/i'}elseif($Phase -eq 'repair'){'/fvamus'}else{'/x'}
 $log=Join-Path $resultRoot 'msi.log'
 $windows=Get-ItemProperty -LiteralPath 'HKLM:/SOFTWARE/Microsoft/Windows NT/CurrentVersion'
-$os=[ordered]@{Caption=$windows.ProductName;Version=('{0}.{1}.{2}' -f $windows.CurrentMajorVersionNumber,$windows.CurrentMinorVersionNumber,$windows.CurrentBuildNumber);BuildNumber=$windows.CurrentBuildNumber;OSArchitecture='64-bit';revision=$windows.UBR}
+# Windows 11 retains a Windows 10 ProductName for compatibility in this key.
+# Use the operating-system provider for its actual identity; retain UBR for the
+# exact installed revision. Earlier evidence must retain its original caption.
+$operatingSystem=Get-CimInstance Win32_OperatingSystem
+$os=[ordered]@{Caption=$operatingSystem.Caption;Version=$operatingSystem.Version;BuildNumber=$operatingSystem.BuildNumber;OSArchitecture=$operatingSystem.OSArchitecture;revision=$windows.UBR}
 $report=[ordered]@{edition=$Edition;phase=$Phase;source=$SourceRevision;administrator=$administrator;standard_user_required=[bool]$RequireStandardUser;runner_sha256=(Get-FileHash -LiteralPath $PSCommandPath -Algorithm SHA256).Hash.ToLowerInvariant();package_sha256=$PackageSha256.ToLowerInvariant();agent_sha256=$AgentSha256.ToLowerInvariant();msi=$msi;platform=$compatibility;os=$os;exit_code=$null;reboot_required=$false;passed=$false;scope='Bare MSI lifecycle only; no company enrollment, publisher, update or session acceptance'}
 $report['missing_technician_file_repair']=($Phase -eq 'repair' -and $Edition -eq 'technician')
 try{
