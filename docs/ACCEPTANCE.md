@@ -3711,6 +3711,18 @@ The report explicitly records `full_windows_qualification: false` and the
 original final-check download failure; it does not substitute the labeled
 stdout observation for an original downloaded guest file.
 
+After Windows update processing, the guest returned to its sign-in screen and
+SSH recovered. The original final-check file was then downloaded successfully:
+SHA-256 `ddec9a7cfa33749ca3df61f1904390147b8c9a2a264d615c0fcb8d4f12728390`
+matched the guest's hash and the previously preserved stdout contents. The
+independent diagnostic verifier now uses that original file. A separate
+post-update check recorded build `19044.7725`, no OS restart pending, task
+Ready/result 0, and the technician payload still removed. Windows licensing
+remained status 5/zero grace. These later observations do not establish MSI
+qualification on the updated OS; the three installer operations ran on
+`19044.1288`. The guest acknowledged a normal shutdown request, QEMU exited 0,
+and only its disconnected viewer was closed. No forced power-off was used.
+
 ### View-only Windows session acknowledgement correction, 22 October
 
 Source inspection after the `becf3cd` diagnostic found that the managed control
@@ -3734,3 +3746,30 @@ size, CRC and SHA-256 checks (archive
 `c3629a2fcf5984eb414fddd6806211affc6da1341313e9fe42ca61f364df799b`).
 Compilation/regression results and receiving-device runtime acceptance remain
 pending for this new source; the earlier native build does not cover it.
+
+### Independent patched engine source build, 22 October
+
+The engine reconstruction recipe added in `b79d57f` pins engine source
+`db49896cf25ceabc44096d5f088d86414e05a7aa`, depot tools
+`580b4ff3f5cd0dcaa2eacda28cefe0f45320e8f7`, the original DEPS hash and
+original/patched hashes for exactly two source files. A real sparse checkout of
+that public engine commit passed the patch check. Changed DEPS, either changed
+source file, a wrong revision and attempting to patch the already modified
+checkout were all rejected. These checks establish source/patch validation,
+not engine compilation, binary equivalence or runtime acceptance.
+
+Workflow `39707585793` failed before checkout because the pinned depot tools'
+normal Windows bootstrap had been skipped when automatic updates were disabled.
+The explicit pinned bootstrap fixed that failure. Workflow `39707908369` then
+reached dependency checkout but failed fetching tinygltf commit
+`9bb5806df4055ac973b970ba5b3e27ce27d98148` from the old Flutter mirror.
+That mirror's commit endpoint returned 404; the declared canonical upstream
+repository exposes the exact commit. Source `670e2ac` adds a single explicit
+repository override retaining that original DEPS revision, leaves DEPS bytes
+unchanged, and requires both the actual dependency revision and repository URL
+to match before packaging. Workflow `39708643178` is testing that source.
+
+Engine results remain separate candidates with explicit unverified binary
+rebuild/runtime/production flags. The application workflow still uses its
+previously reviewed engine archive hash. No source-built engine has been
+promoted or counted as a reproducibility pass.
