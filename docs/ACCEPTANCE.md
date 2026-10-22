@@ -52,7 +52,7 @@ source/patch reconstruction candidate and evidence limits are recorded in
 | Installers | Source-specific administrator MSI lifecycle evidence is listed in the Windows matrix below. Current `becf3cd` technician MSI also passed standard-user install, missing-file repair and uninstall as a functional diagnostic on an expired Windows 10 evaluation. | Current-source company-generated EXE/MSI flow, standard-user qualification on valid Windows installations and the complete upgrade/recovery matrix. |
 | Updates and recovery | Earlier signed lab update evidence, component rejection tests and real MSI rollback fixtures. | Current-source approved automatic rollout, session coordination, interrupted-update recovery and identity/consent preservation. MSI rollback alone does not prove these. |
 | Public transport | Maintained transport candidates built; two Linux transport builds reproduced identical binaries with verified public source. | External direct/relay/negative-access tests without Tailscale and accepted production transport pins. |
-| Publication | Corresponding-source and artifact verification are implemented; private lab signing is available. | Full product reproducibility, production signing approval/signatures and every release gate above. |
+| Publication | Corresponding-source/artifact verification and private lab signing are available. Three Linux company component binaries matched across two independent CI builds; Windows equivalents differed in linker metadata. | Corrected Windows comparison, native app/engine and installer reproducibility, production signing approval/signatures and every release gate above. |
 
 ## Evidence obtained
 
@@ -3906,3 +3906,52 @@ engine, the older `bd13500` receiver and the same VM for both peers. It does not
 qualify the source-built engine, new receiving guards, separate-machine input,
 clipboard/transfer, public direct/relay, automatic updates, fresh company setup
 or the complete Windows installation matrix.
+
+### Independent company component binary comparisons, 22 October
+
+Component build jobs in workflows `39716739878` and `39716743778` were compared
+using the downloaded binary bytes, not just their declared hash lists. All four
+platform-specific jobs completed successfully; the second workflow's separate
+Linux transport job was cancelled, so the entire second workflow is not counted
+as successful. The reviewed branch revision is `9f97ef0`; the pull-request job
+recorded merge revision `01a344a99bb488d131714767b372f3ce65cdeab1`. Each artifact's
+130 corresponding source files matched that reviewed public source, allowing
+checkout line endings, and were byte-identical between the two builds on each
+platform. Both builds recorded Rust `1.90.0 (1159e78c4 2025-09-14)`.
+
+The Ubuntu 24.04 jobs `119620529061` and `119620541102` produced identical
+unsigned component binaries:
+
+| Component | SHA-256 from both independent jobs |
+| --- | --- |
+| Management | `d6dc94f8558b9bfd962bca8a98d84ce9e2cb1785cebc22f57305863eb7eaa393` |
+| Agent | `1391e389a7e6cf3329fa42bd866be2b263df66fd05a6594c02ceac45fafe6f22` |
+| Worker | `476c451519f240dec68eb5edbc105289df8d3f7af7772d5837676d91f8346c7c` |
+
+Their GitHub artifacts `12399761385` and `12399437062` passed archive size,
+SHA-256, CRC, declared payload hashes and complete corresponding-source checks.
+The archive digests are respectively
+`b6f4e4fce0bb32d031587b816ee9c63213fa136bf79c84748ef4abc290ce3ebf`
+and `fe47e9f103a9d49693077c5ab2c3242ba447382e42311ca7d9c0e36c49f48261`.
+This establishes these three component binaries on this CI platform only. It
+neither qualifies Linux endpoint GUIs nor proves arbitrary-host, native Windows
+app, installer, signing, container-image or complete-product reproducibility.
+
+The Windows jobs `119620529016` and `119620540922` produced different bytes for
+all three components. Their artifacts `12399696985` and `12399173780` passed the
+same integrity/source checks, with archive digests
+`963935d51ee58d10f680d8f22fdac2fda3d3cfc6422b50238c8dc183ab7ffac8`
+and `a779c0e1b6f075a4a67e1d7a26eb2d6dc3eb9e8614ca1fdfef461873b6aa8a1e`.
+Read-only PE inspection found different COFF/debug timestamps and CodeView
+identifiers. Masking those fields in memory for diagnosis made each pair match;
+the original artifacts were not modified, and this is not a reproducibility
+pass. The Windows x64 Rust linker configuration now adds `/Brepro` while keeping
+the static C runtime. The workflow also watches this configuration so a change
+triggers verification. Corrected builds and an actual binary comparison remain
+required; parsing the updated configuration is not a build result.
+
+Local original archives and detailed evidence are retained under
+`component-rebuild-comparison-9f97ef0`, including `comparison.json`, each
+`verified-provenance.json`, and `windows-pe-differences.json`. No downloaded
+component executable was run during this comparison, and no installed lab
+service was replaced.

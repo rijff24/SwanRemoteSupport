@@ -115,3 +115,15 @@ replacement or production release. Two independent build comparisons, a complete
 toolchain/input review and native Windows runtime qualification are still required
 before selecting a new engine hash for the application workflow. Build receipts
 retain explicit false values for those unproven release gates.
+
+### Company component comparisons
+
+Two independent Ubuntu 24.04 CI jobs for the component inputs reviewed at
+`9f97ef0` produced identical management, agent and worker binaries. Their full
+component input archives were checked against the public source, and all 130
+included source files matched between each platform's pair of builds. The
+Windows pair differed in linker timestamps and debug identifiers; the x64 Rust
+configuration now requests `/Brepro`, with corrected comparison still pending.
+See the dated [acceptance evidence](ACCEPTANCE.md#independent-company-component-binary-comparisons-22-october)
+for exact jobs, artifact hashes and limits. Neither normalized diagnostic hashes
+nor unsigned component comparisons qualify complete signed installer releases.

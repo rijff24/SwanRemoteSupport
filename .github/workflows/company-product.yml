@@ -12,9 +12,9 @@ on:
         options: [windows-2022, windows-2025]
         default: windows-2022
   push:
-    paths: ['product/**', 'deployment/**', '.dockerignore', '.github/workflows/company-product.yml']
+    paths: ['product/**', 'deployment/**', '.cargo/config.toml', '.dockerignore', '.github/workflows/company-product.yml']
   pull_request:
-    paths: ['product/**', 'deployment/**', '.dockerignore', '.github/workflows/company-product.yml']
+    paths: ['product/**', 'deployment/**', '.cargo/config.toml', '.dockerignore', '.github/workflows/company-product.yml']
 permissions:
   contents: read
   actions: read
