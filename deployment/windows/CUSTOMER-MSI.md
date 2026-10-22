@@ -14,8 +14,15 @@ See [metadata preparation](TECHNICIAN-MSI.md). Two local builds using the full
 unsigned MSI SHA-256
 `fc4a992108904aa6ecc2f2cc43fc54ff7c1ab55648cf39d72b5f45cdb061cf84`.
 This verifies repeat builds with the same local inputs, not independent CI
-reproducibility, signed publication or installer lifecycle behavior. Different
-input file timestamps and complete clean-machine qualification remain untested.
+reproducibility, signed publication or installer lifecycle behavior.
+
+The builder now also stages byte-verified payload and agent copies with consistent
+cabinet timestamps. Two complete payload copies dated in 2020 and 2025 produced
+identical MSI SHA-256
+`839b41f2d17645bfc69eb6f44901f5ce97d6433c59cc8addf49598b8ea3e51c3`
+at the same release epoch. Original payload timestamps and contents remain
+unchanged. Independent CI, cross-time-zone and clean-machine qualification remain
+unverified.
 
 The package includes all payload libraries/assets and a local AGPL license
 notice. Its signed-release manifest covers those installed files. Windows

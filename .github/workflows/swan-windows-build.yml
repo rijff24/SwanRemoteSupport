@@ -271,15 +271,22 @@ jobs:
           $toolDirectory = Join-Path $env:RUNNER_TEMP 'swan-wix-5.0.2'
           $wix = ./deployment/windows/Expand-WixBuildTools.ps1 -Package $toolPackage -OutputDirectory $toolDirectory -SevenZip 'C:/Program Files/7-Zip/7z.exe'
           $output = 'artifacts/SwanRemoteSupport-${{ env.VERSION }}-technician-x64-unsigned.msi'
-          ./deployment/windows/Build-TechnicianMsi.ps1 -WixExe $wix -TechnicianExe 'artifacts/SwanRemoteSupport-${{ env.VERSION }}-technician-x64-unsigned.exe' -AgentExe artifacts/swan-agent.exe -Version '${{ env.VERSION }}' -Output $output -UnsignedTest
+          ./deployment/windows/Build-TechnicianMsi.ps1 -WixExe $wix -TechnicianExe 'artifacts/SwanRemoteSupport-${{ env.VERSION }}-technician-x64-unsigned.exe' -AgentExe artifacts/swan-agent.exe -Version '${{ env.VERSION }}' -Output $output -UnsignedTest -SourceDateEpoch $env:SOURCE_DATE_EPOCH
           $hash = (Get-FileHash -LiteralPath $output -Algorithm SHA256).Hash.ToLowerInvariant()
           Add-Content artifacts/SHA256SUMS.txt ($hash+'  '+[IO.Path]::GetFileName($output))
           $customerOutput = 'artifacts/SwanRemoteSupport-${{ env.VERSION }}-customer-x64-unsigned.msi'
-          ./deployment/windows/Build-CustomerMsi.ps1 -WixExe $wix -SourceDirectory swan-client -AgentExe artifacts/swan-agent.exe -Version '${{ env.VERSION }}' -Output $customerOutput -UnsignedTest
+          ./deployment/windows/Build-CustomerMsi.ps1 -WixExe $wix -SourceDirectory swan-client -AgentExe artifacts/swan-agent.exe -Version '${{ env.VERSION }}' -Output $customerOutput -UnsignedTest -SourceDateEpoch $env:SOURCE_DATE_EPOCH
           $customerHash = (Get-FileHash -LiteralPath $customerOutput -Algorithm SHA256).Hash.ToLowerInvariant()
           Add-Content artifacts/SHA256SUMS.txt ($customerHash+'  '+[IO.Path]::GetFileName($customerOutput))
           $sourceHash = (Get-FileHash -LiteralPath artifacts/SwanRemoteSupport-build-source.zip -Algorithm SHA256).Hash.ToLowerInvariant()
           Add-Content artifacts/SHA256SUMS.txt ($sourceHash+'  SwanRemoteSupport-build-source.zip')
+
+      - name: Verify MSI input staging and deterministic metadata guards
+        shell: powershell
+        run: |
+          ./deployment/windows/test_msi_staging.ps1 -WorkDirectory (Join-Path $env:RUNNER_TEMP 'swan-msi-staging-check')
+          $raw = 'artifacts/SwanRemoteSupport-${{ env.VERSION }}-technician-x64-unsigned.msi.raw-unsigned.msi'
+          ./deployment/windows/test_msi_metadata.ps1 -FirstMsi $raw -SecondMsi $raw -WorkDirectory (Join-Path $env:RUNNER_TEMP 'swan-msi-metadata-check') -SourceDateEpoch $env:SOURCE_DATE_EPOCH
 
       - name: Verify unsigned technician MSI installation repair and uninstall
         shell: pwsh
@@ -292,7 +299,10 @@ jobs:
         with:
           name: technician-msi-lifecycle
           if-no-files-found: ignore
-          path: ${{ runner.temp }}/swan-msi-lifecycle-*/**
+          path: |
+            ${{ runner.temp }}/swan-msi-lifecycle-*/**
+            ${{ runner.temp }}/swan-msi-staging-check/result.json
+            ${{ runner.temp }}/swan-msi-metadata-check/result.json
 
       - name: Retain completed client inputs before independent server packaging
         if: always() && steps.package-clients.conclusion == 'success'
@@ -302,7 +312,8 @@ jobs:
           if-no-files-found: error
           path: |
             artifacts/SwanRemoteSupport-*.exe
-            artifacts/SwanRemoteSupport-*.msi
+            artifacts/SwanRemoteSupport-${{ env.VERSION }}-technician-x64-unsigned.msi
+            artifacts/SwanRemoteSupport-${{ env.VERSION }}-customer-x64-unsigned.msi
             artifacts/SwanRemoteSupport-build-source.zip
             artifacts/*.msi.build.json
             artifacts/*.msi.installed-files.json

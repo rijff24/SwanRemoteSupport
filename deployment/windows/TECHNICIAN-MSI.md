@@ -25,8 +25,10 @@ time and derives a UUIDv5 PackageCode from the resulting canonical package hash.
 Changes to package content or the epoch change the PackageCode. Existing outputs
 and signed inputs are rejected. Originals remain intact. Both MSI builders enable
 this step with `-SourceDateEpoch <release-commit-epoch>`, retaining the raw WiX
-output and recording the metadata receipt. It is not yet enabled in CI or the
-company worker by default.
+output and recording the metadata receipt. The Windows build workflow passes
+its pinned source-commit epoch and runs the staging and metadata guard tests;
+execution of that updated workflow remains unverified. The company worker does
+not invoke this build step by default.
 
 Two actual WiX 5.0.2 technician builds using the same `e6b87b9` payload produced
 identical prepared MSI bytes at epoch `1792648409`: SHA-256
@@ -37,9 +39,19 @@ identical final unsigned bytes, SHA-256
 The native metadata test passes under Windows PowerShell 5.1 and checks
 idempotence, changed-epoch and changed-table package identities, overwrite
 rejection, signed-input rejection and preservation of original files. This does
-not establish reproducibility across different input file timestamps, independent
-CI builds, signing operations or clean-machine installer lifecycles. Those remain
-release gates.
+not establish independent CI reproducibility, signing reproducibility or
+clean-machine installer lifecycles. Those remain release gates.
+
+Metadata preparation alone did not remove input timestamps from cabinets: two
+copies of identical executable/agent bytes dated in 2020 and 2025 initially
+produced different MSI hashes. With `-SourceDateEpoch`, the builders now stage
+byte-verified copies of every payload, launcher and license input with consistent
+cabinet timestamps, without changing originals. Reparse points and destinations
+inside the source tree are rejected. Repeating those different-timestamp
+technician builds produced identical SHA-256
+`96d33dd08f5f30a49d9d318017e7ff343f4e20f87f837ad0499b5ae4c4c709e5`.
+The staging checks passed on Windows PowerShell 5.1. Cross-time-zone builders
+and independently downloaded binary inputs remain unverified.
 
 Metadata format references: Microsoft's [package codes](https://learn.microsoft.com/en-us/windows/win32/msi/package-codes),
 [summary revision](https://learn.microsoft.com/en-us/windows/win32/msi/revision-number-summary)

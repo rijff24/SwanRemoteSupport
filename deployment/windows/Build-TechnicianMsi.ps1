@@ -34,6 +34,14 @@ if ($SourceDateEpoch -ne 0) {
     if ($SourceDateEpoch -lt 315532800) { throw 'SourceDateEpoch must be a release timestamp from 1980 onward.' }
     $buildOutput=$Output+'.raw-unsigned.msi'
     if (Test-Path -LiteralPath $buildOutput) { throw 'Refusing to overwrite an intermediate installer.' }
+    $stage=$Output+'.inputs'
+    if (Test-Path -LiteralPath $stage) { throw 'Staged inputs already exist; inspect the earlier build.' }
+    [void][IO.Directory]::CreateDirectory($stage)
+    $copy=Join-Path $PSScriptRoot 'Copy-ReproducibleMsiInput.ps1'
+    $TechnicianExe=& $copy -InputPath $TechnicianExe -Destination (Join-Path $stage 'technician.exe') -SourceDateEpoch $SourceDateEpoch
+    $AgentExe=& $copy -InputPath $AgentExe -Destination (Join-Path $stage 'swan-agent.exe') -SourceDateEpoch $SourceDateEpoch
+    $launcher=& $copy -InputPath $launcher -Destination (Join-Path $stage 'Open-Technician.ps1') -SourceDateEpoch $SourceDateEpoch
+    $license=& $copy -InputPath $license -Destination (Join-Path $stage 'LICENSE.txt') -SourceDateEpoch $SourceDateEpoch
 }
 & $WixExe build $source -arch x64 -d ('Version='+$Version) -d ('ProductCode='+$productCode) -d ('TechnicianExe='+$TechnicianExe) -d ('AgentExe='+$AgentExe) -d ('Launcher='+$launcher) -d ('License='+$license) -o $buildOutput
 if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $buildOutput)) { throw 'Technician MSI build failed.' }

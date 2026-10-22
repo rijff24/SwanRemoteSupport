@@ -29,14 +29,23 @@ if (-not $UnsignedTest) {
 New-Item -ItemType Directory -Force ([IO.Path]::GetDirectoryName($Output)) | Out-Null
 $authoring = $Output + '.wxs'
 $manifest = $Output + '.installed-files.json'
-& $PythonExe (Join-Path $PSScriptRoot 'generate-customer-msi.py') --source $SourceDirectory --agent $AgentExe --version $Version --output $authoring --manifest-output $manifest
-if ($LASTEXITCODE -ne 0) { throw 'Customer payload authoring failed.' }
 $buildOutput=$Output
 if ($SourceDateEpoch -ne 0) {
     if ($SourceDateEpoch -lt 315532800) { throw 'SourceDateEpoch must be a release timestamp from 1980 onward.' }
     $buildOutput=$Output+'.raw-unsigned.msi'
     if (Test-Path -LiteralPath $buildOutput) { throw 'Refusing to overwrite an intermediate installer.' }
+    $stage=$Output+'.inputs'
+    if (Test-Path -LiteralPath $stage) { throw 'Staged inputs already exist; inspect the earlier build.' }
+    [void][IO.Directory]::CreateDirectory($stage)
+    $copy=Join-Path $PSScriptRoot 'Copy-ReproducibleMsiInput.ps1'
+    $SourceDirectory=& $copy -InputPath $SourceDirectory -Destination (Join-Path $stage 'payload') -SourceDateEpoch $SourceDateEpoch
+    $AgentExe=& $copy -InputPath $AgentExe -Destination (Join-Path $stage 'swan-agent.exe') -SourceDateEpoch $SourceDateEpoch
+    if (-not (Test-Path -LiteralPath (Join-Path $SourceDirectory 'LICENSE.txt'))) {
+        & $copy -InputPath (Join-Path $PSScriptRoot '../../LICENCE') -Destination (Join-Path $SourceDirectory 'LICENSE.txt') -SourceDateEpoch $SourceDateEpoch | Out-Null
+    }
 }
+& $PythonExe (Join-Path $PSScriptRoot 'generate-customer-msi.py') --source $SourceDirectory --agent $AgentExe --version $Version --output $authoring --manifest-output $manifest
+if ($LASTEXITCODE -ne 0) { throw 'Customer payload authoring failed.' }
 & $WixExe build $authoring -arch x64 -o $buildOutput
 if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $buildOutput)) { throw 'Customer MSI build failed.' }
 $metadata=$null
