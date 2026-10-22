@@ -16,7 +16,22 @@ SNAPSHOT_VERSION = b"80a49c7111088100a233b2ae788e1f48"
 SDK_ENGINE = "a18df97ca57a249df5d8d68cd0820600223ce262"
 
 
-def select(candidate, sdk, receipt):
+def select(candidate, sdk, receipt, source_candidate="source-candidate-9f97ef0"):
+    if source_candidate == "source-candidate-9f97ef0":
+        archive_sha256, binaries = ARCHIVE_SHA256, BINARIES
+        source_commit, workflow_run, artifact = "9f97ef0053d822bcf5cf3f5f03bf5dc571247d16", 39716739857, 12401286693
+        independent_runs = []
+    elif source_candidate == "source-candidate-05d5369":
+        archive_sha256 = "2c84aedf35e0a93a86013b0c4903450dc740e4c8d049d971ed31b214e3b60500"
+        binaries = {
+            "flutter_windows.dll": "c87ba5a71afa7b7100c1c9ccc1289009dab812f9de2acc38f9d5103e48c1f204",
+            "flutter_windows.dll.lib": "f7183633a4053b822ad6e353484c76528ffe98242cbe5bef04923ca40373eafc",
+            "flutter_windows.dll.pdb": "64317fb6c9248d35fd3b2ed4c72147d44676b27c3d17bee0e74b986942abe521",
+        }
+        source_commit, workflow_run, artifact = "05d5369c04804b9a9b2dc06df0cb85b0efe6f274", 39753153773, 12416969754
+        independent_runs = [39753153773, 39761977920]
+    else:
+        raise ValueError("Unknown source engine candidate")
     if receipt.exists():
         raise FileExistsError("Do not overwrite candidate selection evidence")
     if (sdk / "bin/internal/engine.version").read_text().strip() != SDK_ENGINE:
@@ -27,14 +42,14 @@ def select(candidate, sdk, receipt):
     if SNAPSHOT_VERSION not in compiler_bytes:
         raise ValueError("SDK snapshot compiler is incompatible with the candidate engine")
     data = (candidate / "windows-x64-release-source-built.zip").read_bytes()
-    if hashlib.sha256(data).hexdigest() != ARCHIVE_SHA256:
+    if hashlib.sha256(data).hexdigest() != archive_sha256:
         raise ValueError("Candidate archive differs from the reviewed build")
     with zipfile.ZipFile(io.BytesIO(data)) as archive:
-        if len(archive.infolist()) != 3 or set(archive.namelist()) != set(BINARIES):
+        if len(archive.infolist()) != 3 or set(archive.namelist()) != set(binaries):
             raise ValueError("Unexpected candidate engine files")
-        files = {name: archive.read(name) for name in BINARIES}
+        files = {name: archive.read(name) for name in binaries}
     for name, content in files.items():
-        if hashlib.sha256(content).hexdigest() != BINARIES[name]:
+        if hashlib.sha256(content).hexdigest() != binaries[name]:
             raise ValueError("Candidate engine hash mismatch: " + name)
         if (target / name).is_symlink():
             raise ValueError("Engine destination cannot be a symlink")
@@ -47,9 +62,11 @@ def select(candidate, sdk, receipt):
     if compiler.read_bytes() != compiler_bytes:
         raise ValueError("SDK compiler changed during engine selection")
     result = {
-        "source_commit": "9f97ef0053d822bcf5cf3f5f03bf5dc571247d16",
-        "workflow_run": 39716739857, "artifact": 12401286693,
-        "archive_sha256": ARCHIVE_SHA256, "binary_files": BINARIES,
+        "source_commit": source_commit,
+        "workflow_run": workflow_run, "artifact": artifact,
+        "archive_sha256": archive_sha256, "binary_files": binaries,
+        "independent_rebuild_verified": bool(independent_runs),
+        "independent_rebuild_runs": independent_runs,
         "sdk_engine_revision": SDK_ENGINE,
         "snapshot_compiler_sha256": hashlib.sha256(compiler_bytes).hexdigest(),
         "snapshot_version": SNAPSHOT_VERSION.decode(),
@@ -66,5 +83,6 @@ if __name__ == "__main__":
     parser.add_argument("--candidate", required=True, type=Path)
     parser.add_argument("--sdk", required=True, type=Path)
     parser.add_argument("--receipt", required=True, type=Path)
+    parser.add_argument("--source-candidate", choices=("source-candidate-9f97ef0", "source-candidate-05d5369"), default="source-candidate-9f97ef0")
     args = parser.parse_args()
-    print(json.dumps(select(args.candidate, args.sdk, args.receipt), indent=2))
+    print(json.dumps(select(args.candidate, args.sdk, args.receipt, args.source_candidate), indent=2))

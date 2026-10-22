@@ -65,6 +65,26 @@ class EngineCandidateTests(unittest.TestCase):
             self.assertEqual((target / "flutter_windows.dll").read_bytes(), b"original")
             self.assertFalse((root / "receipt.json").exists())
 
+    def test_unknown_candidate_rejected_before_modification(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            sdk, target, source, _, _ = self.fixture(root)
+            with self.assertRaisesRegex(ValueError, "Unknown source engine"):
+                candidate.select(source, sdk, root / "receipt.json", "unreviewed")
+            self.assertEqual((target / "flutter_windows.dll").read_bytes(), b"original")
+            self.assertFalse((root / "receipt.json").exists())
+
+    def test_previous_generation_cannot_satisfy_new_candidate(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            sdk, target, source, files, raw = self.fixture(root)
+            hashes = {name: hashlib.sha256(data).hexdigest() for name, data in files.items()}
+            with patch.object(candidate, "ARCHIVE_SHA256", hashlib.sha256(raw).hexdigest()), patch.object(candidate, "BINARIES", hashes):
+                with self.assertRaisesRegex(ValueError, "archive differs"):
+                    candidate.select(source, sdk, root / "receipt.json", "source-candidate-05d5369")
+            self.assertEqual((target / "flutter_windows.dll").read_bytes(), b"original")
+            self.assertFalse((root / "receipt.json").exists())
+
 
 if __name__ == "__main__":
     unittest.main()

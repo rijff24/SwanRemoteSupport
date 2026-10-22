@@ -167,7 +167,7 @@ inside it. The recipe never removes existing toolchains to obtain disk space.
 The output is a source reconstruction candidate, not an automatically accepted
 replacement or production release. Two independent build comparisons, a complete
 toolchain/input review and native Windows runtime qualification are still required
-before selecting a new engine hash for the application workflow. Build receipts
+before promoting a new engine hash to the default production selection. Build receipts
 retain explicit false values for those unproven release gates.
 
 The native Windows workflow's optional `source-candidate-9f97ef0` selection
@@ -179,6 +179,18 @@ An older app bundle failed before GUI startup when only its engine DLL was
 replaced: its compiled Dart snapshot format differed from the source runtime.
 Rebuild the app bundle with the matching compiler; a successful engine build
 alone does not establish compatibility or authorize production publication.
+
+The additional explicit lab choice `source-candidate-05d5369` uses the LLVM-linked
+engine from run `39753153773`. Its DLL, import library and PDB matched original
+bytes from independent run `39761977920`; the public
+[comparison record](../deployment/windows/engine-05d5369-reproducibility.json)
+contains both artifact digests, output hashes and source-verification counts.
+The selector pins the complete first output archive and every binary, rejects
+unknown selections, and preserves the SDK snapshot compiler. Its receipt reports
+the independent rebuild separately from runtime and production approval, which
+remain false. The upstream workflow choice remains the default. A full matching
+application build and remote-session/installer/update qualification are still
+required for this candidate.
 
 ### Company component comparisons
 

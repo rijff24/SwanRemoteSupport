@@ -4538,8 +4538,8 @@ All 19 evidence files, 5,604 original public engine files, 145 original public
 buildroot files, pinned recipe inputs and generated compile/link commands
 verified. The DLL SHA-256 was
 `c87ba5a71afa7b7100c1c9ccc1289009dab812f9de2acc38f9d5103e48c1f204`.
-An independent same-source rebuild was dispatched separately; its comparison
-is still pending.
+An independent same-source rebuild later completed; its original-byte comparison
+is recorded in the independent LLVM engine result below.
 
 An isolated Server 2016 `14393.693` standard-user experiment combined this engine
 with the matching `e6b87b9` application payload and its existing lab-signed native
@@ -4602,3 +4602,35 @@ checks. The optional technician MSI lifecycle job was skipped; this run supplies
 no evidence for that job. These CI checks do not replace the outstanding real
 Windows server deployment, public-network, interactive session, signing and full
 compatibility acceptance requirements.
+
+### Independent LLVM engine original-byte comparison, 22 October
+
+The same public engine recipe `05d5369c04804b9a9b2dc06df0cb85b0efe6f274`
+completed independently in runs
+[39753153773](https://github.com/rijff24/SwanRemoteSupport/actions/runs/39753153773)
+and [39761977920](https://github.com/rijff24/SwanRemoteSupport/actions/runs/39761977920).
+The second artifact `12420939008` (107,382,134 bytes) verified against SHA-256
+`f1e6df169a68c3cc470d68522d7ea997ade549f2c07b621566f76bc07192b258`.
+Both retained archives independently passed the 19-file evidence verification,
+5,604 public engine source mappings, 145 public buildroot source mappings,
+pinned recipe checks, generated commands and final link-response checks.
+
+All three uncompressed outputs matched original bytes: `flutter_windows.dll`
+(18,156,544 bytes), `flutter_windows.dll.lib` (30,436 bytes), and
+`flutter_windows.dll.pdb` (239,464,448 bytes). No timestamps, debug records or PDB
+streams were normalized. This establishes independent reproducibility for these
+exact engine outputs and recorded inputs. It does not establish equality to the
+historical upstream binary, complete application reproducibility or runtime
+acceptance. Both original artifacts remain preserved privately; the public
+[comparison record](../deployment/windows/engine-05d5369-reproducibility.json)
+contains both artifact identities and all output SHA-256 hashes.
+
+The native workflow now offers this explicitly pinned engine as the additional
+`source-candidate-05d5369` lab choice. Five selector regression tests passed,
+including unknown-choice and wrong-generation rejection. A separate local
+selection check accepted the actual first archive and all three binary pins
+while preserving a non-executed snapshot-compiler fixture; that fixture check is
+not a real SDK/application runtime test. Runtime and production approval remain
+false, and the default engine selection remains unchanged. The previously
+recorded standard-user login-screen startup smoke remains the only runtime scope
+qualified for this engine so far; full remote-session checks remain outstanding.
