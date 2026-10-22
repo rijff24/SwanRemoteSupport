@@ -31,8 +31,10 @@ downloaded archive, 1,122 tracked source files, six generated bridge files and
 95 native payload files passed independent provenance/hash checks. Its
 authorization-log and control-permission corrections still need receiving-device
 runtime verification. The latest standard-user tampered-cache GUI check also
-confirms the legacy upgrade card is absent; other legacy installation entry
-points remain to verify at runtime. This does not prove binary reproducibility.
+confirms the legacy upgrade card is absent. A separate standard-user native
+`--update` run logged the managed-update refusal and preserved the installed
+customer/profile; GUI installation callbacks remain to verify at runtime.
+This does not prove binary reproducibility.
 
 | Area | Latest established evidence | Still required for release |
 | --- | --- | --- |
@@ -3626,3 +3628,30 @@ corrupted-cache/UI regression only. Ordinary technician login, legacy command
 refusal, hostile-HTTPS profile sync, corrected receiving-device permissions,
 automatic updates, clean-machine installers and the full release gates remain
 open.
+
+### Live legacy update command refusal, 22 October
+
+The actual `becf3cd` native EXE ran with `--update` as the existing standard-user
+SwanLabTech in Server 2016 desktop session 1. A separate fixture contained the
+unaltered signed public technician profile. All 95 native/Flutter files were
+verified against the CI manifest before launch, and the reviewed launcher hash
+was checked before its limited interactive task was registered.
+
+The command exited normally with code 0. A newly changed original native log
+contained the exact warning “Managed updates require the approved company update
+agent.” The collected raw log hash matched its receipt. The installed customer
+EXE hash remained
+`60d15651c583537bcaaf25df2b838ca594f5855b2d2b0f416b690645ef107cfc`, and
+the public test profile hash remained
+`1fc8663de5b64b350de940b15067d6c5bc2ae9ab8b3f07d52111462e5c19776e`.
+A post-test check found the recorded native process absent, task Ready/result 0,
+original source profile unchanged and customer/company services Running. No
+forced cleanup, UAC acceptance, service stop or package installation was used.
+
+The exact refusal marker, raw log, source/payload identity and before/after hashes
+are independently checked in the private
+`technician-becf-legacy-update-evidence-20261022/verified-command.json` evidence.
+This is runtime evidence that the legacy native command refuses the managed
+update path, including its observed zero exit code. It does not verify approved
+automatic updates, GUI installation callbacks, publisher checks, interruption
+recovery, or the full release criteria.
