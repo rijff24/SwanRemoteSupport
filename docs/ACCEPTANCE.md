@@ -4026,3 +4026,30 @@ builds are intentionally retained for comparison of the original artifacts and
 inner payloads. A subsequent native build, full binary comparison and actual
 extraction-cache/restart/upgrade checks remain required for the corrected packer.
 This marker does not authorize sessions or replace signed package verification.
+
+### Native bridge and helper input comparisons, 22 October
+
+The consumed `bridge-artifact` inputs from native workflows `39720429487` and
+`39720432071` passed published archive hash/size/CRC checks. All six generated
+Rust/Dart/header files were byte-identical. Their producer jobs were
+`119632380801` and `119632388574`; artifacts were `12400298300` and
+`12401035923`. This validates those generated source inputs, not compiled apps.
+
+Their helper producer jobs `119632380451` and `119632388297` also completed
+successfully, but the original `WindowInjection.dll` bytes differed: SHA-256
+`b11015224b6d4d5964042b085447e76b835373d84b5bcccdf88355cead1292de`
+versus `628bf38d93d43f9e2ec5562b45c812a96aa2651371833921a167ee0042842f99`.
+Both 56,320-byte DLLs passed artifact integrity checks. Read-only PE diagnosis
+found different COFF/debug timestamps and CodeView identifiers; masking those
+fields in memory made the remaining bytes match. No artifact was modified or
+counted as reproducible. Local evidence is in `native-dependencies-50c08fd`.
+
+The helper x64 release workflow now requests reproducible compiler/linker
+metadata and retains exact original upstream source and build/verification
+scripts separately from installed payload files. Its PE guard requires x64/DLL
+metadata, a REPRO marker and a PDB basename. Two parser guard tests pass locally,
+including malformed/truncated metadata and build-machine path rejection; the
+verifier also accepts the already independently reproduced Windows management
+binary. This does not yet establish a corrected helper build, independent
+helper binary comparison, code injection/session behavior or runtime acceptance.
+The ongoing native builds remain pinned to the earlier helper workflow.

@@ -33,6 +33,19 @@ selection refresh it even when the software version is unchanged. The metadata
 format stays compatible with the current launcher. This cache marker is not an
 authorization credential or a replacement for package signatures and hashes.
 
+The topmost-window helper is built from public upstream commit
+`ecd8d6a139eee76845ea66423fb739af450fda90`. Its x64 release workflow requests
+`/Brepro` for compilation and linking, disables incremental linking and records
+a PDB basename. These linker environment settings are documented by
+[Microsoft](https://learn.microsoft.com/en-us/cpp/build/reference/linking?view=msvc-170).
+The PE verifier requires the documented
+[REPRO debug marker](https://learn.microsoft.com/en-us/windows/win32/debug/pe-format)
+and rejects an embedded absolute PDB path. These checks establish build metadata
+properties; an independent binary comparison is still required. Its original
+source, public workflow and verification scripts are retained in a separate
+source artifact and carried alongside native build outputs, outside the
+installed endpoint payload.
+
 ## Patched Windows Flutter engine provenance
 
 The managed Windows workflow currently downloads the RustDesk engine release
