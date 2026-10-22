@@ -25,8 +25,10 @@ def identifier(kind, path):
 
 
 def author(source, agent, version):
-    if not re.fullmatch(r"\d+\.\d+\.\d+", version):
-        raise ValueError("Numeric major.minor.patch version required")
+    if not re.fullmatch(r"(0|[1-9][0-9]{0,2})\.(0|[1-9][0-9]{0,2})\.(0|[1-9][0-9]{0,4})", version):
+        raise ValueError("Canonical major.minor.build version required")
+    if any(int(part) > limit for part, limit in zip(version.split("."), (255, 255, 65535))):
+        raise ValueError("MSI version exceeds 255.255.65535")
     source = source.resolve(strict=True)
     agent = agent.resolve(strict=True)
     spec = importlib.util.spec_from_file_location("payload", Path(__file__).with_name("generate-payload-manifest.py"))

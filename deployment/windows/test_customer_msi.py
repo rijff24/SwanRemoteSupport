@@ -20,13 +20,30 @@ class CustomerMsiTests(unittest.TestCase):
         namespaces = {"customer": msi.UPGRADE, "technician": uuid.UUID("a4374699-436f-4917-9a4e-223f62a9e634")}
         observed = set()
         for edition, namespace in namespaces.items():
-            for version in ("1.5.0", "1.5.1"):
+            for version in ("1.5.0", "1.5.1", "0.0.0", "255.255.65535"):
                 actual = subprocess.check_output([shell, "-NoProfile", "-NonInteractive", "-File", str(script),
                                                   "-Edition", edition, "-Version", version], text=True).strip()
                 expected = str(uuid.uuid5(namespace, "windows-x64|" + version)).upper()
                 self.assertEqual(actual, expected)
                 observed.add(actual)
-        self.assertEqual(len(observed), 4)
+        self.assertEqual(len(observed), 8)
+
+    def test_version_aliases_and_msi_overflow_are_rejected_by_both_builders(self):
+        shell = shutil.which("pwsh") or shutil.which("powershell")
+        if not shell:
+            self.skipTest("PowerShell required for cross-builder version validation")
+        script = Path(__file__).with_name("Get-MsiProductCode.ps1")
+        with tempfile.TemporaryDirectory() as folder:
+            source, agent = self.fixture(Path(folder))
+            for version in ("01.5.0", "1.05.0", "1.5.00", "256.0.0", "1.256.0", "1.0.65536",
+                            "1.5.0.1", "1.5.0\n", "١.5.0", "999999999999999999999.0.0"):
+                with self.subTest(version=repr(version)):
+                    with self.assertRaises(ValueError):
+                        msi.author(source, agent, version)
+                    for edition in ("customer", "technician"):
+                        result = subprocess.run([shell, "-NoProfile", "-NonInteractive", "-File", str(script),
+                                                 "-Edition", edition, "-Version", version], capture_output=True)
+                        self.assertNotEqual(result.returncode, 0)
 
     def fixture(self, root):
         source = root / "payload"

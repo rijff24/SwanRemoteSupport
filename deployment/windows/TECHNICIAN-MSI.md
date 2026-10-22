@@ -6,6 +6,11 @@ installs the packed technician executable, agent, graphical-launcher script and
 license under `%LOCALAPPDATA%/SwanRemoteSupport-Technician`, with a Start menu
 shortcut. Upgrade removal is scheduled inside the MSI transaction. Company
 state is not an MSI-owned file and is preserved through major upgrades.
+Versions must use canonical ASCII `major.minor.build` fields without leading
+zeroes (except `0`), within `255.255.65535`. Both builders reject aliases and
+overflow before authoring product identities. These limits follow Microsoft's
+[ProductVersion specification](https://learn.microsoft.com/windows/win32/msi/productversion).
+
 ProductCode is a UUIDv5 derived from the stable edition UpgradeCode namespace
 and `windows-x64|<software-version>`. Identical-version rebuilds therefore keep
 the same product identity; a new software version gets a new identity. Company
