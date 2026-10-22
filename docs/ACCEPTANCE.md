@@ -4776,3 +4776,15 @@ are **nine passing source-specific bare-MSI operations**, not complete Windows
 11 compatibility. Company bootstrap/enrollment, accepted remote sessions,
 approved updates, upgrade/interruption recovery, production signatures and the
 remaining feature/Windows matrix still require their own evidence.
+
+### Unpublished 1.5.1 inputs for real update tests, 22 October
+
+The application, Flutter build number, portable packer, workspace lock entries
+and native installer workflow now consistently select **1.5.1** (Flutter build
+69). This prepares a genuinely different application version for approved
+automatic-upgrade tests over retained 1.5.0 inputs. The baseline tag, existing
+1.5.0 build references, installed lab identities, company profile revisions,
+installer edition namespaces and publisher trust are unchanged. This is not a
+production release, an applied update, or evidence that any upgrade passed.
+Native build/source verification, signing policy, admin approval and actual
+interruption/session/identity-preservation tests remain required.
