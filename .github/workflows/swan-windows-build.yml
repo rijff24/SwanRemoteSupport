@@ -360,7 +360,13 @@ jobs:
           ./deployment/windows/Get-PinnedArchive.ps1 -Uri $pins.https.url -Sha256 $pins.https.sha256 -Output $https | Out-Null
           $components = Join-Path $env:RUNNER_TEMP 'swan-server-components'
           ./deployment/windows/Prepare-ServerComponents.ps1 -TransportPackage $transport -HttpsPackage $https -OutputDirectory $components
-          $setup = ./deployment/windows/Build-ServerSetup.ps1 -ManagementExecutable artifacts/swan-management.exe -ComponentsDirectory $components -OutputDirectory artifacts/server-setup -UnsignedTest
+          $compilerPin = Get-Content deployment/windows/server-compiler.json -Raw | ConvertFrom-Json
+          $compilerPackage = Join-Path $env:RUNNER_TEMP 'swan-server-roslyn-4.12.0.nupkg'
+          ./deployment/windows/Get-PinnedArchive.ps1 -Uri $compilerPin.url -Sha256 $compilerPin.sha256 -Output $compilerPackage | Out-Null
+          $setup = ./deployment/windows/Build-ServerSetup.ps1 -ManagementExecutable artifacts/swan-management.exe -ComponentsDirectory $components -CompilerPackage $compilerPackage -OutputDirectory artifacts/server-setup -UnsignedTest
+          $reproEvidence = Join-Path $env:RUNNER_TEMP 'swan-server-setup-repro'
+          ./deployment/windows/test_server_setup_reproducibility.ps1 -ManagementExecutable artifacts/swan-management.exe -ComponentsDirectory $components -CompilerPackage $compilerPackage -WorkDirectory $reproEvidence
+          Copy-Item -LiteralPath (Join-Path $reproEvidence 'result.json') -Destination artifacts/server-setup-repro.json
           $hash = (Get-FileHash -LiteralPath $setup -Algorithm SHA256).Hash.ToLowerInvariant()
           Copy-Item -LiteralPath $setup -Destination artifacts/SwanServerSetup-UNSIGNED-TEST.exe
           Copy-Item -LiteralPath artifacts/server-setup/SOURCE.json -Destination artifacts/SwanServerSetup-SOURCE.json
@@ -378,6 +384,7 @@ jobs:
             artifacts/SwanRemoteSupport-${{ env.VERSION }}-customer-x64-unsigned.msi
             artifacts/SwanServerSetup-UNSIGNED-TEST.exe
             artifacts/SwanServerSetup-SOURCE.json
+            artifacts/server-setup-repro.json
             artifacts/SwanRemoteSupport-build-source.zip
             artifacts/topmost-source/**
             artifacts/engine-source/**

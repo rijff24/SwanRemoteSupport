@@ -1,5 +1,6 @@
 [CmdletBinding()]
 param([Parameter(Mandatory)][string]$ManagementExecutable,[Parameter(Mandatory)][string]$ComponentsDirectory,
+      [Parameter(Mandatory)][string]$CompilerPackage,
       [Parameter(Mandatory)][string]$OutputDirectory,[switch]$UnsignedTest)
 $ErrorActionPreference = 'Stop'
 if (-not $UnsignedTest) { throw 'Only explicitly unsigned test server packages are supported until production signing and release verification are approved.' }
@@ -17,8 +18,6 @@ try {
 $components = (Resolve-Path -LiteralPath $ComponentsDirectory).Path
 $output = [IO.Path]::GetFullPath($OutputDirectory)
 if (Test-Path -LiteralPath $output) { throw 'Server package output directory already exists.' }
-$compiler = Join-Path $env:WINDIR 'Microsoft.NET/Framework64/v4.0.30319/csc.exe'
-if (-not (Test-Path -LiteralPath $compiler -PathType Leaf)) { throw 'The Windows x64 .NET Framework compiler is required.' }
 $automation = & (Join-Path $env:WINDIR 'System32/WindowsPowerShell/v1.0/powershell.exe') -NoProfile -NonInteractive -Command '[System.Management.Automation.PSObject].Assembly.Location'
 if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $automation -PathType Leaf)) { throw 'Windows PowerShell 5 assembly is required.' }
 $resources = [ordered]@{
@@ -42,25 +41,35 @@ $revision = & git -C (Join-Path $PSScriptRoot '../..') rev-parse HEAD
 if ($LASTEXITCODE -ne 0 -or $revision -notmatch '^[0-9a-f]{40}$') { throw 'Build from the public Git checkout.' }
 $dirty = -not [string]::IsNullOrEmpty((& git -C (Join-Path $PSScriptRoot '../..') status --porcelain | Out-String).Trim())
 New-Item -ItemType Directory -Path $output | Out-Null
+$compiler=& (Join-Path $PSScriptRoot 'Expand-ServerCompiler.ps1') -Package $CompilerPackage -OutputDirectory (Join-Path $output 'compiler')
+$compilerPin=Get-Content -LiteralPath (Join-Path $PSScriptRoot 'server-compiler.json') -Raw|ConvertFrom-Json
+$referenceDirectory=Join-Path $env:WINDIR 'Microsoft.NET/Framework64/v4.0.30319'
+$references=[ordered]@{'System.Management.Automation.dll'=$automation}
+foreach($name in @('mscorlib.dll','System.dll','System.Core.dll','System.Security.dll')){$references[$name]=Join-Path $referenceDirectory $name}
+$referenceHashes=[ordered]@{}
+foreach($name in $references.Keys){$referenceHashes[$name]=(Get-FileHash -LiteralPath $references[$name]).Hash.ToLowerInvariant()}
 $sourcePath = Join-Path $output 'SOURCE.json'
 $sourceFiles=[ordered]@{}
-foreach ($name in @('ServerSetupLauncher.cs','Build-ServerSetup.ps1')) { $sourceFiles[$name]=(Get-FileHash -LiteralPath (Join-Path $PSScriptRoot $name) -Algorithm SHA256).Hash.ToLowerInvariant() }
-$source = @{schema=1;unsigned_test=$true;repository='https://github.com/rijff24/SwanRemoteSupport';setup_source_revision=$revision;working_tree_dirty=$dirty;resources=$hashes;build_sources=$sourceFiles}
-[IO.File]::WriteAllText($sourcePath,($source | ConvertTo-Json -Depth 5),[Text.UTF8Encoding]::new($false))
+foreach ($name in @('ServerSetupLauncher.cs','Build-ServerSetup.ps1','Expand-ServerCompiler.ps1','server-compiler.json')) { $sourceFiles[$name]=(Get-FileHash -LiteralPath (Join-Path $PSScriptRoot $name) -Algorithm SHA256).Hash.ToLowerInvariant() }
+$source = [ordered]@{schema=1;unsigned_test=$true;repository='https://github.com/rijff24/SwanRemoteSupport';setup_source_revision=$revision;working_tree_dirty=$dirty;resources=$hashes;build_sources=$sourceFiles;compiler=[ordered]@{id=$compilerPin.id;version=$compilerPin.version;package_sha256=$compilerPin.sha256;compiler_sha256=$compilerPin.compiler_sha256;source=$compilerPin.source;deterministic=$true};reference_sha256=$referenceHashes}
+[IO.File]::WriteAllText($sourcePath,($source | ConvertTo-Json -Depth 5 -Compress),[Text.UTF8Encoding]::new($false))
 $resources['SOURCE.json']=$sourcePath
 $executable = Join-Path $output 'SwanServerSetup-UNSIGNED-TEST.exe'
-$arguments = @('/nologo','/target:winexe','/platform:x64','/optimize+',('/out:'+$executable),('/reference:'+$automation),('/reference:System.Security.dll'))
+$sourceRoot=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))
+$arguments = @('/nologo','/noconfig','/nostdlib+','/target:winexe','/platform:x64','/optimize+','/deterministic+',('/pathmap:'+$sourceRoot+'=/_/SwanRemoteSupport'),('/out:'+$executable))
+foreach($path in $references.Values){$arguments+='/reference:'+$path}
 foreach ($name in $resources.Keys) { $arguments += '/resource:'+$resources[$name]+',Swan.'+$name }
 $arguments += Join-Path $PSScriptRoot 'ServerSetupLauncher.cs'
 & $compiler @arguments
 if ($LASTEXITCODE -ne 0) { throw 'Server setup compilation failed; output remains for inspection.' }
 $assembly = [Reflection.Assembly]::LoadFile($executable)
-foreach ($name in $hashes.Keys) {
+foreach ($name in (@($hashes.Keys)+@('SOURCE.json'))) {
     $stream = $assembly.GetManifestResourceStream('Swan.'+$name)
     if (-not $stream) { throw 'Compiled package resource missing.' }
     $hasher = [Security.Cryptography.SHA256]::Create()
     try {$actual=[BitConverter]::ToString($hasher.ComputeHash($stream)).Replace('-','').ToLowerInvariant()} finally {$hasher.Dispose();$stream.Dispose()}
-    if ($actual -ne $hashes[$name]) { throw 'Compiled package resource differs from the pinned input.' }
+    $expected=if($name -eq 'SOURCE.json'){(Get-FileHash -LiteralPath $sourcePath).Hash.ToLowerInvariant()}else{$hashes[$name]}
+    if ($actual -ne $expected) { throw 'Compiled package resource differs from the pinned input.' }
 }
 Copy-Item -LiteralPath $resources['LICENCE'] -Destination (Join-Path $output 'LICENCE')
 Write-Output $executable

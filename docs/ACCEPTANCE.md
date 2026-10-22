@@ -4464,3 +4464,25 @@ were rejected by that verifier; its two parser tests pass, and the original
 Rust native DLL passes its metadata check. Corrected C++ compilation, independent
 raw-byte comparison, runtime qualification and server-setup reproducibility
 remain unverified. A REPRO marker by itself will not satisfy those gates.
+
+### Server launcher compiler repeatability, 22 October
+
+The two original `e6b87b9` server setup executables had matching resource/source
+manifests but different generated .NET module IDs. The legacy Framework compiler
+does not provide a deterministic-compilation option. The recipe now uses the
+hash-pinned, Microsoft-signed Roslyn 4.12.0 compiler package, ordered compact source
+metadata, deterministic compilation and explicit, hash-recorded references.
+It verifies all embedded resources, including `SOURCE.json`, after compilation.
+
+Two actual local builds with the final revised recipe produced identical unsigned
+server setup SHA-256
+`3a7d1b17c8ed4028a73c1fc03a2669fa6b8e6445e086085934a0f6c4fbaabf4d`.
+One build used Windows PowerShell 5.1 and the other PowerShell 7. A wrong compiler
+package was rejected before extraction. The receipt and original outputs remain
+under the private lab's `server-setup-roslyn-20261022/final-validation` directory.
+This was a dirty working-tree experiment over revision `49ced68`, using the
+verified `e6b87b9` management executable and retained pinned transport/HTTPS
+resources; it is not an independent CI build of the complete current server.
+No setup executable was installed or run as an application during these checks.
+The updated CI tests, reference-assembly pinning across images, production signing,
+actual server deployment and the remaining acceptance gates are still unverified.

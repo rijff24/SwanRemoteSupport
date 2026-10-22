@@ -186,3 +186,16 @@ comparisons remain open.
 See the dated [acceptance evidence](ACCEPTANCE.md#independent-company-component-binary-comparisons-22-october)
 for exact jobs, artifact hashes and limits. Neither normalized diagnostic hashes
 nor unsigned component comparisons qualify complete signed installer releases.
+
+### Server launcher compiler
+
+The server setup recipe uses MIT-licensed Microsoft Roslyn
+`Microsoft.Net.Compilers.Toolset.Framework` 4.12.0, with the NuGet archive and
+compiler executable hashes recorded in `deployment/windows/server-compiler.json`.
+The package declares corresponding source at
+[`dotnet/roslyn` commit dfa7fc6](https://github.com/dotnet/roslyn/commit/dfa7fc6bdea31a858a402168384192b633c811fa).
+The compiler runs only during building and is not embedded in the server setup
+executable. Its Microsoft Authenticode signature is checked before execution.
+The build records hashes of its explicit .NET Framework/PowerShell reference
+assemblies. Those still come from the build host; matching local builds do not
+establish reproducibility across images with different reference assemblies.

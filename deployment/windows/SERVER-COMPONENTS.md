@@ -59,12 +59,19 @@ completion/error events. Those require the clean Windows test matrix.
 ## Unsigned test executable
 
 The x64 .NET Framework launcher uses the Windows PowerShell runtime already
-present in the targeted desktop Windows releases. Build only for isolated tests:
+present in the targeted desktop Windows releases. Building requires .NET Framework
+4.7.2 or newer and the hash-pinned Microsoft Roslyn 4.12.0 package described in
+`server-compiler.json`. The compiler is a build dependency and is not embedded
+in the installer. Download it separately using `Get-PinnedArchive.ps1`; the
+builder verifies the whole package, extracts into a fresh folder and checks the
+compiler executable hash and Microsoft signature before executing it.
+Build only for isolated tests:
 
 ```powershell
 ./deployment/windows/Build-ServerSetup.ps1 -UnsignedTest `
   -ManagementExecutable ./swan-management.exe `
   -ComponentsDirectory ./prepared-server-components `
+  -CompilerPackage ./microsoft.net.compilers.toolset.framework.4.12.0.nupkg `
   -OutputDirectory ./server-setup-test
 ```
 
@@ -77,6 +84,16 @@ rejected. A supplied unsigned management executable may be packaged for layout
 tests, but installation still requires its valid trusted publisher signature.
 This does not bypass signing gates or grant production publication approval.
 Resource input paths containing commas are currently unsupported by this builder.
+
+The recipe uses deterministic compilation, explicit .NET Framework references,
+mapped source paths and ordered compact source metadata. `SOURCE.json` records
+compiler/source pins and reference-assembly hashes; every embedded resource,
+including that manifest, is verified after compilation. Reference assemblies
+still come from the build host: cross-image reproducibility is not established
+until their bytes are pinned or independently matched. Run
+`test_server_setup_reproducibility.ps1` with the same build inputs and a fresh
+`-WorkDirectory` to compare two actual unsigned outputs and test rejection of a
+wrong compiler package. This does not install or qualify the company server.
 
 Use `--render-preview OUTPUT.png` to inspect the packaged layout without opening
 the window or installing services. The launcher executes the installer from its
