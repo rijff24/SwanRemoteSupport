@@ -148,9 +148,17 @@ Packages and their hashes remain outside Git. No supplier installer or product
 installer ran on this host during these builds. Rust product tests and
 PowerShell parsing pass.
 
-Clean-machine installation, company setup, repair, versioned major upgrades,
-uninstall cleanup, signed automatic MSI updates and interruption rollback remain
-unverified. Customer MSI authoring is available separately; end-to-end company
+A separate disposable administrator on Server 2022 build `20348.587` passed
+install, missing-executable repair and uninstall for the stable-identity 1.5.0
+MSI built with recipe `67786dd` and verified `e6b87b9` lab-signed payloads. The
+MSI was unsigned (SHA-256
+`f3cb6e56229488b9d6d4dec0e07318a5520b82ee66177435ae358c98faf348e7`).
+All phases returned zero, and execution policy stayed unchanged. This does not
+supersede the standard-user policy failure described above.
+
+The full clean-machine matrix, company setup, versioned major upgrades,
+signed automatic MSI updates and interruption rollback remain unverified.
+Customer MSI authoring is available separately; end-to-end company
 publication remains unverified. The bare MSI launch conditions do not replace the signed agent's
 Windows compatibility preflight. Advertised Windows compatibility requires the
 full acceptance matrix.

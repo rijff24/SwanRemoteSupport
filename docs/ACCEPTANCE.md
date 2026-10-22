@@ -4389,3 +4389,35 @@ editions and two versions. Two actual technician builds then retained identical
 ProductCode `{A6857EBE-9FD4-52DE-B899-454C2F066E52}` for version 1.5.0.
 Their package codes/timestamps and raw MSI hashes still differ; complete MSI
 reproducibility and actual stable-identity upgrade/recovery tests remain open.
+
+### Prepared MSI metadata, timestamps and administrative lifecycle, 22 October
+
+Subsequent changes `d7375b5` and `67786dd` prepare deterministic unsigned MSI
+metadata and stage byte-verified input copies with consistent cabinet timestamps.
+Two full builds per edition produced identical MSI bytes even when identical
+input payloads had different 2020/2025 timestamps. Technician SHA-256 was
+`96d33dd08f5f30a49d9d318017e7ff343f4e20f87f837ad0499b5ae4c4c709e5`;
+customer SHA-256 was
+`839b41f2d17645bfc69eb6f44901f5ce97d6433c59cc8addf49598b8ea3e51c3`.
+The actual technician builder also produced the same bytes under PowerShell
+5.1 and 7. Six authoring tests and native staging/metadata guards pass locally.
+This is local repeatability evidence, not independent CI reproducibility.
+
+A separate disposable administrative account on Server 2022 Standard Evaluation
+build `20348.587` then ran the public lifecycle harness against a newly built
+version 1.5.0 technician MSI using installer recipe `67786dd` and verified
+`e6b87b9` lab-signed executable/agent inputs. The MSI itself was unsigned:
+SHA-256 `f3cb6e56229488b9d6d4dec0e07318a5520b82ee66177435ae358c98faf348e7`,
+ProductCode `{A6857EBE-9FD4-52DE-B899-454C2F066E52}`. Install, missing-executable
+repair and uninstall each returned zero and passed payload/registration checks.
+The task completed with result zero; execution policy was unchanged. Nine
+original records, including all three installer logs, were transferred and
+hash-verified outside Git under the private lab's
+`technician-stable-admin-20261022/lifecycle-evidence` directory.
+
+This qualifies only those administrative bare-MSI operations. It does not
+supersede the standard-user error 1625 result, demonstrate a signed MSI or a
+company-worker bundle, exercise an interactive desktop, establish upgrades or
+automatic updates, or qualify the full Windows matrix. Independent builds,
+cross-time-zone repeatability, signed publication and the remaining end-to-end
+acceptance gates are still required.
