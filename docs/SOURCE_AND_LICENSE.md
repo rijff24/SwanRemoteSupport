@@ -137,6 +137,16 @@ toolchain/input review and native Windows runtime qualification are still requir
 before selecting a new engine hash for the application workflow. Build receipts
 retain explicit false values for those unproven release gates.
 
+The native Windows workflow's optional `source-candidate-9f97ef0` selection
+is a lab experiment, with the current upstream selection still the default.
+It selects the exact reviewed source-built DLL, import library and symbols,
+preserves Flutter 3.24.5's matching snapshot compiler, and records its hash.
+The original source-engine artifact and selection receipt accompany the outputs.
+An older app bundle failed before GUI startup when only its engine DLL was
+replaced: its compiled Dart snapshot format differed from the source runtime.
+Rebuild the app bundle with the matching compiler; a successful engine build
+alone does not establish compatibility or authorize production publication.
+
 ### Company component comparisons
 
 Two independent Ubuntu 24.04 CI jobs for the component inputs reviewed at

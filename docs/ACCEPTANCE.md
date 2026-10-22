@@ -4164,3 +4164,52 @@ atomic publication passed locally under PowerShell 7 and Windows PowerShell
 5.1. These are transfer/integrity tests with simulated network failures; actual
 supplier download and early artifact retention still need a subsequent native
 build. No live download was restarted to make these changes.
+
+### Source-engine integrity and failed isolated runtime test, 22 October
+
+The preserved `9f97ef0` engine artifact passed its outer hash, ZIP integrity,
+all recorded evidence-file hashes and public recipe comparison. The original
+engine and buildroot archives mapped to all 5,604 and 145 public Git blobs.
+Fifty-five engine `third_party/txt/` files required explicitly verified Windows
+line-ending conversion; this did not modify the original artifact or binaries.
+
+An isolated fixture combined that engine with the previously verified `ebef5a6`
+native app and app bundle. All 95 payload files were checked before launch;
+the executable used the existing disposable lab signature. The actual native
+process ran as the existing non-administrator `SwanLabTech` in session 1 and
+exited with code 255 before displaying its interface. Its fatal message reports
+snapshot version `80a49c7111088100a233b2ae788e1f48` expected by the runtime,
+versus `ccfc17e3575a1ecc23c0d7bf8ff6f6cc` in the app bundle. Task completion
+code zero is only the wrapper result and does not turn this into a passed test.
+
+The public Dart `88c9758ef131d430d8ce595c6bfb4c90574d3ddd` snapshot-version
+algorithm and its 15 original VM files independently produce the runtime's
+`80a49...` value. A CRLF diagnostic produces a different value, so the observed
+mismatch has not been attributed to checkout line endings. Flutter 3.24.5's
+public engine revision is `a18df97ca57a249df5d8d68cd0820600223ce262`; its DEPS
+still specifies this same Dart revision. Merely changing the engine tag is
+therefore not established as a fix. The existing application build replaces
+the SDK's whole Windows release-engine directory with the reviewed upstream
+archive; its compiler/runtime inputs need to be treated together.
+
+The Windows build now offers a separate explicit `source-candidate-9f97ef0`
+experiment. It downloads the exact prior engine build, checks the reviewed
+inner archive and each binary hash, requires the matching SDK snapshot-version
+marker, and replaces only the DLL/import library/symbols. The SDK snapshot
+compiler remains unchanged and its hash is recorded. Three local tests cover
+compiler preservation and rejection of incompatible compilers or tampered
+archives before modifying the SDK cache. Actual candidate CI compilation and
+native runtime qualification remain pending. The default upstream selection
+has not changed.
+
+Original runtime receipts and logs are retained locally under
+`engine-9f97-gui-ebef-inputs/runtime-evidence`. Both installed company/customer
+services remained running, the installed customer executable and fixture public
+profile hashes remained unchanged, and the experimental native process exited.
+Host RustDesk and rendezvous/relay processes were left running.
+
+The timestamp-controlled engine workflow `39718232889` at `b1d62b2` also
+completed successfully. Its original artifact is being preserved by the
+existing streaming download; complete verification and an independent
+same-recipe binary comparison remain pending. It was not substituted into the
+incompatible older bundle or counted as a runtime pass.

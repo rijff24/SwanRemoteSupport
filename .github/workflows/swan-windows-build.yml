@@ -2,9 +2,18 @@ name: Build Swan Remote Support for Windows x64
 
 on:
   workflow_dispatch:
+    inputs:
+      engine:
+        description: Experimental source engine requires a new matching app bundle and lab qualification
+        type: choice
+        default: reviewed-upstream
+        options:
+          - reviewed-upstream
+          - source-candidate-9f97ef0
 
 permissions:
   contents: read
+  actions: read
 
 env:
   RUST_VERSION: "1.90.0"
@@ -76,6 +85,7 @@ jobs:
           architecture: x64
 
       - name: Replace Flutter engine with RustDesk Windows engine
+        if: inputs.engine != 'source-candidate-9f97ef0'
         shell: pwsh
         run: |
           flutter doctor -v
@@ -86,6 +96,24 @@ jobs:
           }
           Expand-Archive -Path windows-x64-release.zip -DestinationPath windows-x64-release
           Move-Item -Path windows-x64-release\* -Destination C:\hostedtoolcache\windows\flutter\stable-${{ env.FLUTTER_VERSION }}-x64\bin\cache\artifacts\engine\windows-x64-release\ -Force
+
+      - name: Download the exact experimental source-engine build
+        if: inputs.engine == 'source-candidate-9f97ef0'
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: swan-flutter-engine-source-built-9f97ef0053d822bcf5cf3f5f03bf5dc571247d16
+          run-id: 39716739857
+          github-token: ${{ github.token }}
+          path: ./artifacts/engine-source
+
+      - name: Select experimental engine with the matching SDK snapshot compiler
+        if: inputs.engine == 'source-candidate-9f97ef0'
+        shell: pwsh
+        run: |
+          flutter doctor -v
+          flutter precache --windows
+          python -m unittest discover -s deployment/windows -p test_engine_candidate.py
+          python deployment/windows/select-engine-candidate.py --candidate artifacts/engine-source --sdk C:/hostedtoolcache/windows/flutter/stable-${{ env.FLUTTER_VERSION }}-x64 --receipt artifacts/engine-selection.json
 
       - name: Patch Flutter 3.24 dropdown support
         shell: bash
@@ -268,6 +296,8 @@ jobs:
             artifacts/swan-*.exe
             artifacts/*-installed-files.unsigned.json
             artifacts/topmost-source/**
+            artifacts/engine-source/**
+            artifacts/engine-selection.json
             artifacts/Install-Company.ps1
             artifacts/Install-Worker.ps1
             artifacts/Uninstall-Worker.ps1
@@ -309,6 +339,8 @@ jobs:
             artifacts/SwanServerSetup-SOURCE.json
             artifacts/SwanRemoteSupport-build-source.zip
             artifacts/topmost-source/**
+            artifacts/engine-source/**
+            artifacts/engine-selection.json
             artifacts/*.msi.build.json
             artifacts/*.msi.installed-files.json
             artifacts/SHA256SUMS.txt
