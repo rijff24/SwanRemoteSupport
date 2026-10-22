@@ -24,3 +24,31 @@ mismatches fail the build. The artifact checksum list includes the archive hash.
 Publish this archive alongside the exact source tag, build instructions and
 third-party component source references. Its presence does not prove binary
 reproducibility or replace release acceptance and signing checks.
+
+## Patched Windows Flutter engine provenance
+
+The managed Windows workflow currently downloads the RustDesk engine release
+asset `windows-x64-release.zip` and requires SHA-256
+`ec8cabf36ee4ff24c8d98de25b00e70781eb03876265aee84d0fe554a110036e`.
+This verifies the reviewed binary input. It does not establish which source and
+toolchain produced that input or prove that rebuilding it yields identical bytes.
+
+The public [upstream build recipe](https://github.com/rustdesk/engine/blob/bc374ca81eae3f77329ebf7bc98efadfde10018e/.github/workflows/flutter-engine-windows-x64-release-build.yml)
+checks out engine tag `3.24.4`, changes `ClearCurrent` to `MakeCurrent` in
+`shell/platform/windows/flutter_windows_engine.cc`, adds `<string>` before
+`<string_view>` in `fml/hex_codec.h`, synchronizes dependencies, and builds
+`host_release`. The tag currently resolves to Flutter engine source
+[`db49896cf25ceabc44096d5f088d86414e05a7aa`](https://github.com/flutter-team-archive/engine/tree/db49896cf25ceabc44096d5f088d86414e05a7aa).
+Keep these source and patch references with the release's third-party notices.
+They identify a public reconstruction candidate; they are not an attestation
+that the pinned binary was built by this recipe.
+
+On 22 October 2026 the upstream API identified release `188171540`, tag commit
+`bc374ca81eae3f77329ebf7bc98efadfde10018e`, and asset `210168939`
+(63,301,215 bytes, last updated 1 December 2024). Its digest field was null, and
+the workflow-run query for the asset creation date returned no runs. The recipe
+uses a floating Windows runner, depot-tools setup action and release overwrite.
+Do not infer immutable build provenance from the mutable release tag or matching
+archive hash alone. Full product source/reproducibility acceptance remains open
+until the engine's build inputs, patches, toolchain/dependencies and rebuilt
+artifacts are verified and published with the project release.

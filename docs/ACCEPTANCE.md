@@ -36,6 +36,11 @@ confirms the legacy upgrade card is absent. A separate standard-user native
 customer/profile; GUI installation callbacks remain to verify at runtime.
 This does not prove binary reproducibility.
 
+The patched Windows Flutter engine is pinned by binary archive hash, but its
+source-to-binary mapping and rebuild remain unverified. The public upstream
+source/patch reconstruction candidate and evidence limits are recorded in
+[Source availability and licensing](SOURCE_AND_LICENSE.md#patched-windows-flutter-engine-provenance).
+
 | Area | Latest established evidence | Still required for release |
 | --- | --- | --- |
 | Company setup | First-run branding/policy form contract and real Axum/SQLite setup tests pass on Windows/Linux; Linux deployment rehearsals pass. | Matching fresh Windows service/worker setup and equivalent full deployment acceptance. |
