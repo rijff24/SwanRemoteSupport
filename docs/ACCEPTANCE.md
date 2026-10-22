@@ -4663,3 +4663,26 @@ configured. The OS remains unactivated with the licensing state recorded above.
 This is standard-user bare-MSI evidence for the exact old application/installer
 inputs, not current-source, company enrollment, customer installation, approved
 updates, remote-session behavior or complete Windows 10 qualification.
+
+### Corrected desktop artifact verification and comparison tooling, 22 October
+
+The complete `49ced68` native artifact from run `39760022829` was preserved:
+256,166,945 bytes, SHA-256
+`c1ed67f599910d9d94e58caa1635761521c1f91d140fe3c435ea1716646710d8`.
+Its 1,143 tracked public source files, six generated bridge files, source epoch
+and retained pinned engine evidence verified. All 95 decoded customer payload
+files matched the installed-file manifest. Independent inspection of the actual
+main executable and 11 plugins matched their retained PE guard receipts: each
+has a REPRO marker and no absolute PDB path. These markers do not establish
+independent reproducibility; that comparison and this build's runtime acceptance
+remain pending.
+
+A manual read-only native comparison workflow now verifies original archive
+digests, exact public source and all eight expected shipping executable/MSI
+outputs from two different successful runs. Eight trust-boundary regression
+tests passed, covering altered source with a self-consistent manifest, invalid
+file/download hashes, unsafe storage origin, incomplete output sets and binary
+differences that must not be hidden by source line-ending handling. The new
+source/hash verifier also accepted the actual preserved `49ced68` archive;
+that single-archive check was not an independent-build comparison. No completed
+pair-workflow result is claimed here. Runtime and production approval stay false.

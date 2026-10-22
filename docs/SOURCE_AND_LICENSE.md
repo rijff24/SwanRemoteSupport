@@ -208,6 +208,25 @@ See the dated [acceptance evidence](ACCEPTANCE.md#independent-company-component-
 for exact jobs, artifact hashes and limits. Neither normalized diagnostic hashes
 nor unsigned component comparisons qualify complete signed installer releases.
 
+### Native release comparison workflow
+
+The manual **Compare independent native build artifacts** workflow accepts two
+different successful native run IDs and their exact shared public source commit.
+It checks out that source and pinned submodules, verifies both original archive
+digests, validates every archived tracked source file against Git objects, and
+checks generated bridge equality. Source text checkout conversions are reported;
+shipping files are never normalized. Both builds must contain the complete set
+of eight expected executable/MSI outputs. A missing output, invalid digest,
+source mismatch or differing shipping binary fails the job. When binary
+comparison completes, the report is retained even when outputs differ.
+
+The verifier never installs or executes downloaded artifacts. It uses the
+workflow's read-only repository token, does not forward it to storage, and keeps
+signed download URLs out of diagnostic errors. Its output records independent
+build verification separately from runtime qualification and production
+approval, which remain false. Passing this check does not replace signing,
+installer, update, session or Windows compatibility acceptance.
+
 ### Server launcher compiler
 
 The server setup recipe uses MIT-licensed Microsoft Roslyn
