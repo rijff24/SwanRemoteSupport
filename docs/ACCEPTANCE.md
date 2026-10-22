@@ -534,7 +534,7 @@ full acceptance remains open on every row.
 
 | Operating system | Clean installation | Repair/upgrade/recovery | Native session behavior |
 | --- | --- | --- | --- |
-| Windows 10 x64 | Fresh standard Pro 19045.3803: administrator technician MSI 1.5.0 lifecycle passed using application `e6b87b9` and installer recipe `67786dd`; unactivated, license status 5, zero grace. Earlier LTSC Evaluation 19044.1288 tests covered both administrator editions and a later standard-user technician functional diagnostic on the expired evaluation. | Fresh Pro install, missing-executable repair and uninstall returned 0; original logs verified. Full current-source qualification, customer MSI, standard-user Pro, upgrade, reboot and automatic recovery remain unverified. | Unverified. |
+| Windows 10 x64 | Fresh standard Pro 19045.3803: administrator and standard-user technician MSI 1.5.0 lifecycles passed using application `e6b87b9` and installer recipe `67786dd`; unactivated, license status 5, zero grace. Earlier LTSC Evaluation 19044.1288 tests covered both administrator editions and a later standard-user technician functional diagnostic on the expired evaluation. | Both Pro accounts: install, missing-executable repair and uninstall returned 0; original logs verified. Full current-source qualification, customer MSI, upgrade, reboot and automatic recovery remain unverified. | Unverified. |
 | Windows 11 x64 | Unverified | Unverified | Unverified |
 | Server 2016 Desktop Experience | Existing 14393.693 lab deployment; current-source fresh company setup unverified. | Historical signed lab upgrades/reboot evidence; current-source full lifecycle/recovery unverified. | Older same-guest accepted session; `c0bf4b4` technician GUI checks and `bd13500` receiver legacy-password denial. Separate-machine/full-feature acceptance open. |
 | Server 2019 Desktop Experience | Administrator lab-signed MSI 1.5.9 lifecycle, native `c0bf4b4`, agent `053a52e`, build 17763.3650. | Twelve verified operations include customer 1.5.8-to-1.5.9 upgrade, repair/uninstall/reinstall and technician lifecycle. Latest `6503614` existing-unsafe-state rejection also passes; full current-source recovery unverified. | Unverified. |
@@ -4634,3 +4634,32 @@ not a real SDK/application runtime test. Runtime and production approval remain
 false, and the default engine selection remains unchanged. The previously
 recorded standard-user login-screen startup smoke remains the only runtime scope
 qualified for this engine so far; full remote-session checks remain outstanding.
+
+### Standard-user technician MSI on standard Windows 10 Pro, 22 October
+
+The same unsigned 1.5.0 technician MSI recorded in the administrator result
+above also passed installation, missing-executable repair and uninstall as
+`SwanTechMsi10` on the standard Pro `19045.3803` VM. The original phase reports
+each recorded `administrator: false`, `standard_user_required: true` and exit 0.
+The task ran with a limited interactive token in session 3 and completed with
+last result 0. Ten original task, safety-marker, result and MSI log files were
+transferred and hash-verified under the private lab's
+`technician-win10-standard-marker-20261022/lifecycle-evidence` directory.
+
+The initial password task was registered but never ran and was disabled before
+an alternate launch. A direct credentialed process launch was denied before it
+created a driver PID. After normal interactive login, the first driver attempt
+failed before MSI results because the independently provisioned safety marker
+allowed only SYSTEM and Administrators to read it. Its failed records remain
+preserved. The corrected fixture grants this owned standard account read-only
+access to that single lab marker, preserving its contents and SYSTEM ownership;
+it grants no product-state permissions. A fresh fixture and separate task then
+produced the passing result. None of the failed driver starts is counted as an
+MSI execution or pass.
+
+The verified driver used process-only PowerShell Bypass, with the original
+machine/user policies remaining undefined. No Windows Installer policy was
+configured. The OS remains unactivated with the licensing state recorded above.
+This is standard-user bare-MSI evidence for the exact old application/installer
+inputs, not current-source, company enrollment, customer installation, approved
+updates, remote-session behavior or complete Windows 10 qualification.
