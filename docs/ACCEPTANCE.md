@@ -4,12 +4,14 @@ Evidence through 22 October 2026. **The product is not complete or approved for
 production publication.** A passing component test is not evidence of a working
 native support session or a clean-machine installation.
 
-The latest accepted-desktop lab run established a customer-approved session on
-Server 2016 through the separately built transport candidate. Both editions
-were on the same guest: this does not verify separate-machine input, relay
-fallback or Internet connectivity. The attempted relay test still selected a
-local direct connection, and that guest later became unresponsive. The guest
-recovered with identity and consent preserved; the cause remains unproven.
+The latest accepted-desktop lab run used technician source `ebef5a6` against the
+preserved older `bd13500` customer on Server 2016 with the parallel transport
+candidate. Standard-user MFA, inventory/history, customer approval, desktop
+capture, claimed/closed server history and logout passed. Both editions were on
+the same guest: this does not verify a corrected receiver, separate-machine
+input, relay fallback or Internet connectivity. An earlier relay attempt selected
+a local direct connection and the guest later became unresponsive; it recovered
+with identity and consent preserved, but that earlier failure's cause is unproven.
 Two runtime configuration fixes are in native build `39600988305`; its build
 and artifact/source checks passed, but complete corrected-customer runtime
 acceptance remains open. Subsequently, technician source `c0bf4b4` passed
@@ -44,9 +46,9 @@ source/patch reconstruction candidate and evidence limits are recorded in
 | Area | Latest established evidence | Still required for release |
 | --- | --- | --- |
 | Company setup | First-run branding/policy form contract and real Axum/SQLite setup tests pass on Windows/Linux; Linux deployment rehearsals pass. | Matching fresh Windows service/worker setup and equivalent full deployment acceptance. |
-| Native technician | Standard-user `c0bf4b4` MFA, authorized inventory/history, logout, live branding and offline refusal/cache pass against the older lab company. | Accepted support session with both corrected editions and a separate receiving machine. |
+| Native technician | Current `ebef5a6` standard-user MFA, authorized inventory/history, customer-approved desktop capture and logout pass against the older customer on the same VM. Earlier `c0bf4b4` also passed live branding and offline refusal/cache. | Accepted support session with both corrected editions and a separate receiving machine. |
 | Receiving authorization | Older `bd13500` customer rejected a real stock client's legacy-password request. Native `c0bf4b4` and current `becf3cd` GUIs refused a tampered cached profile; the current UI also hides legacy upgrade cards. | Corrected receiver runtime, unauthorized direct connections, packet permissions, lease expiry and revocation. |
-| Customer session features | Earlier same-guest customer-approved desktop session; later graphical refusal. | Separate-machine input, transfer, clipboard, UAC, logon screen, multiple monitors, unattended consent/revocation and relay fallback. |
+| Customer session features | Current technician/older customer same-VM approved desktop session; earlier graphical refusal. | Corrected receiver, separate-machine input, transfer, clipboard, UAC, logon screen, multiple monitors, unattended consent/revocation and relay fallback. |
 | Installers | Source-specific administrator MSI lifecycle evidence is listed in the Windows matrix below. Current `becf3cd` technician MSI also passed standard-user install, missing-file repair and uninstall as a functional diagnostic on an expired Windows 10 evaluation. | Current-source company-generated EXE/MSI flow, standard-user qualification on valid Windows installations and the complete upgrade/recovery matrix. |
 | Updates and recovery | Earlier signed lab update evidence, component rejection tests and real MSI rollback fixtures. | Current-source approved automatic rollout, session coordination, interrupted-update recovery and identity/consent preservation. MSI rollback alone does not prove these. |
 | Public transport | Maintained transport candidates built; two Linux transport builds reproduced identical binaries with verified public source. | External direct/relay/negative-access tests without Tailscale and accepted production transport pins. |
@@ -3810,7 +3812,56 @@ buildroot commit accepted the reviewed patch and rejected changed source,
 a wrong revision and repeated patching. These are provenance/guard checks;
 successful engine compilation and runtime qualification are still required.
 
+Source `5a5e4f2` is running in workflow `39711188710`. Its three provenance guard
+tests and side-by-side Microsoft toolset provisioning passed on the Windows
+runner. The source reconstruction step remains active; there is not yet a
+successful engine artifact or independent rebuild comparison.
+
 Engine results remain separate candidates with explicit unverified binary
 rebuild/runtime/production flags. The application workflow still uses its
 previously reviewed engine archive hash. No source-built engine has been
 promoted or counted as a reproducibility pass.
+
+### Current technician GUI and approved desktop smoke test, 22 October
+
+Five verified `ebef5a6` build inputs were signed and timestamped with the existing
+non-exportable disposable lab publisher. Original inputs, installed customer
+hash and running customer/company services were preserved. Signing receipts
+identify each public build input and signed output; this is private test signing,
+not production signing or a live company worker publication.
+
+The technician portable and agent were placed in a new fixture with only the
+unchanged signed public technician profile at revision 18. A limited interactive
+task launched it as existing standard user `SWAN-LAB-16V2\SwanLabTech` in session
+1. The running native PID `1216` and all 95 extracted payload files matched the
+verified CI manifest, including native EXE SHA-256
+`33925b581e6b118a87c095dc89778767d0dd1e5dc9738abc4aa87ab64c109ec7`.
+The portable's actual extraction cache was the user's default
+`AppData\Local\rustdesk`; the managed state was in the new fixture. This does
+not establish complete isolation of every native per-user configuration/cache.
+
+The actual GUI displayed company branding and its HTTPS domain, accepted the
+lab technician's password/TOTP login, and showed the authorized approved device
+and session history. A support request produced the preserved customer's consent
+prompt. Clicking Accept displayed an actual desktop capture stream. The session
+window was then closed through its titlebar; a refreshed history showed Ended.
+Sign out removed inventory/history and left password/authenticator fields empty.
+The native process was absent after closing the signed-out app, with no forced
+termination. The launcher exited 0; an independent native exit code was not captured.
+
+Backend audit records scoped to this task confirm technician login, one session
+request and logout. The matching server history row is claimed, closed and
+customer-approved (`unattended: false`). Independent checks verified the public
+profile's signature against the earlier trusted bootstrap, correlated the audit
+target and GUI request timestamp, and matched original evidence hashes. The
+provided lab password and MFA seed were absent from the 35 examined runtime text
+files and the collected evidence. Original installed/source profiles and both
+services remained unchanged/running.
+
+Private evidence is in
+`technician-ebef-gui-20261022/verified-gui-smoke.json` and
+`candidate-ebef5a6-inputs/signing-evidence`. This test used the existing reviewed
+engine, the older `bd13500` receiver and the same VM for both peers. It does not
+qualify the source-built engine, new receiving guards, separate-machine input,
+clipboard/transfer, public direct/relay, automatic updates, fresh company setup
+or the complete Windows installation matrix.
