@@ -227,6 +227,20 @@ build verification separately from runtime qualification and production
 approval, which remain false. Passing this check does not replace signing,
 installer, update, session or Windows compatibility acceptance.
 
+### First native comparison result (22 October 2026)
+
+[Comparison run 39789394627](https://github.com/rijff24/SwanRemoteSupport/actions/runs/39789394627)
+verified the original archives and public source for native runs `39760022829`
+and `39769432105` (attempt 2), both at
+`49ced6854f3cbaab84d95807e9bf342e11588f0f`. Its
+[retained report](../deployment/windows/native-49ced68-rebuild-comparison.json)
+shows byte-identical customer MSI, agent, management service and worker outputs.
+The portable technician EXE, its identical installer-name copy, technician MSI
+and server setup EXE differ. The comparison correctly failed; complete native
+reproducibility is **not established**. No shipping bytes were normalized.
+The newer pinned Roslyn setup compiler and source-built engine are separate
+changes requiring their own exact-source comparison and runtime qualification.
+
 ### Server launcher compiler
 
 The server setup recipe uses MIT-licensed Microsoft Roslyn
