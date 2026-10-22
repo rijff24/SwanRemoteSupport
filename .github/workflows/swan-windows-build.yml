@@ -281,6 +281,7 @@ jobs:
             artifacts/SwanServerSetup-UNSIGNED-TEST.exe
             artifacts/SwanServerSetup-SOURCE.json
             artifacts/SwanRemoteSupport-build-source.zip
+            artifacts/topmost-source/**
             artifacts/*.msi.build.json
             artifacts/*.msi.installed-files.json
             artifacts/SHA256SUMS.txt

@@ -4104,3 +4104,33 @@ workflow `39718232889`. The successful first build did not contain that recipe's
 new deterministic flags, so it is not an independent reproducibility pass.
 The application's reviewed upstream engine pin remains unchanged and no
 source-built engine has been run in a native app or approved for production.
+
+### Engine verifier line-ending failure and evidence preservation, 22 October
+
+The first engine artifact transfer completed, and its declared size, archive
+hash, CRC and recorded evidence-file hashes passed before the local verifier
+stopped on a build-script byte comparison. The original archive had not yet been
+saved by that verifier, so its in-memory bytes were lost on failure. This was
+an evidence-handling defect in the local verifier, not a successful complete
+artifact/source verification.
+
+Comparison of the completed CI build log's recorded hashes against public source
+`9f97ef0` established that both PowerShell build scripts and the workflow matched
+public source after CRLF checkout conversion; the lock, patches and Python
+verifier matched exact public Git bytes. No other source change was established
+by that check. The repository now explicitly keeps these engine recipe files in
+LF form, supplementing the existing engine patch/lock/Python attributes.
+
+The replacement local collector saves and hashes the original ZIP before recipe
+checks, retains resumable partial bytes with an immutable artifact identity,
+and records byte progress without saving credentials or signed download URLs.
+Its recipe comparison explicitly permits the established script/workflow
+line-ending conversion. The replacement transfer remains active; complete engine
+source-archive and binary verification are still not counted as passed. The
+previous failed verifier and CI-log hash investigation remain available locally.
+
+The native artifact upload list also explicitly includes the separate helper
+source capsule. Merely downloading it into the build's artifacts directory did
+not include it in the workflow's previous explicit upload list. This correction
+keeps source material outside installed payloads while retaining it for release
+review. Its inclusion still needs verification in a subsequent native build.
