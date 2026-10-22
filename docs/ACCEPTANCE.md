@@ -3838,6 +3838,26 @@ successful build result. Engine linking,
 artifact verification, independent rebuild comparison and runtime acceptance
 remain pending.
 
+The earlier failed build's downloaded diagnostics passed their published archive
+hash and CRC checks. Inspection found no `/Brepro` in its generated compiler
+commands. The final link command delegates flags to a response file, so its
+command listing alone does not establish the effective linker flags. Following
+the LLVM guidance linked in the source document, the next recipe adds release
+COFF/PE timestamp controls, relative debug paths and a stable PDB basename. It
+retains the final linker response file and rejects missing timestamp/path
+controls or enabled incremental linking. Four local guard tests pass; a separate
+checkout of the exact public buildroot accepted the expanded hash-checked patch
+and rejected both a repeated patch and changed compiler source. These are source
+and guard checks only. The patched engine has not compiled or demonstrated
+reproducible bytes yet; the existing `9f97ef0` build is left running unchanged.
+
+The local source-verification fixture also matched complete public Git blob/mode
+listings against pinned Git tree objects: 5,604 engine files under tree
+`934b9064b5bc6814984734eb223acc23dfc42ef8` and 145 buildroot files under tree
+`22cdad9ffd0a6d8d91256d89d19f4ed338aa4786`. The artifact collector is prepared
+to compare its original-source archives against every one of these files after
+a successful build. Preparing this check does not count as a passing artifact.
+
 Engine results remain separate candidates with explicit unverified binary
 rebuild/runtime/production flags. The application workflow still uses its
 previously reviewed engine archive hash. No source-built engine has been

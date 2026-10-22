@@ -8,3 +8,20 @@
      variables = _LoadEnvFromBat(args)
    return _ExtractImportantEnvironment(variables)
  
+--- a/build/config/compiler/BUILD.gn
++++ b/build/config/compiler/BUILD.gn
+@@ -81,6 +81,14 @@
+       "/FS",  # Preserve previous PDB behavior.
+       "/guard:cf",  # Enable control flow guard security checks.
+     ]
++    if (!is_debug) {
++      # Content-based COFF/PE timestamps; release linking is non-incremental.
++      cflags += [ "/Brepro" ]
++      ldflags += [ "/Brepro", "/PDBALTPATH:%_PDB%" ]
++      if (is_clang) {
++        cflags += [ "-fdebug-compilation-dir=." ]
++      }
++    }
+   } else {
+     # Common GCC compiler flags setup.
+     # --------------------------------

@@ -78,7 +78,15 @@ try {
   if($LASTEXITCODE -ne 0){throw 'Could not record generated engine compile/link commands'}
   [IO.File]::WriteAllText((Join-Path $root 'ninja-commands.txt'),($commands -join "`n"),[Text.UTF8Encoding]::new($false))
   Invoke-Checked python @((Join-Path $PSScriptRoot 'flutter-engine-source.py'),'verify-commands',(Join-Path $root 'ninja-commands.txt'))
-  Invoke-Checked (Join-Path $engine 'third_party\ninja\ninja.exe') @('-C','out/host_release','-j4','flutter_windows.dll')
+  # Retain response files so the final linker flags are auditable after success.
+  try {
+   Invoke-Checked (Join-Path $engine 'third_party\ninja\ninja.exe') @('-C','out/host_release','-d','keeprsp','-j4','flutter_windows.dll')
+  } finally {
+   if(Test-Path -LiteralPath 'out/host_release/flutter_windows.dll.rsp'){
+    Copy-Item -LiteralPath 'out/host_release/flutter_windows.dll.rsp' -Destination (Join-Path $root 'link-response.txt')
+   }
+  }
+  Invoke-Checked python @((Join-Path $PSScriptRoot 'flutter-engine-source.py'),'verify-link-response',(Join-Path $root 'link-response.txt'))
  } finally {Pop-Location}
  Invoke-Checked python @((Join-Path $PSScriptRoot 'flutter-engine-source.py'),'package',$root,(Join-Path $root 'artifacts'))
 } finally {Pop-Location}

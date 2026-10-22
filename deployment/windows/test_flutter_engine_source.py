@@ -36,7 +36,7 @@ class EngineSourceTests(unittest.TestCase):
 
     def test_compile_commands_fail_closed_on_toolchain_drift(self):
         lock, _ = source.load_recipe()
-        valid = ('clang-cl -imsvc"C:\\VS\\VC\\Tools\\MSVC\\14.38.33130\\include" '
+        valid = ('clang-cl /Brepro -fdebug-compilation-dir=. -imsvc"C:\\VS\\VC\\Tools\\MSVC\\14.38.33130\\include" '
                  '-imsvc"C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\ucrt"\n'
                  'lld-link /libpath:"C:\\VS\\VC\\Tools\\MSVC\\14.38.33130\\lib\\x64" '
                  '/libpath:"C:\\Program Files (x86)\\Windows Kits\\10\\lib\\10.0.22621.0\\um\\x64"\n')
@@ -45,6 +45,8 @@ class EngineSourceTests(unittest.TestCase):
             valid.replace("10.0.22621.0", "10.0.26100.0"),
             valid + valid.replace("14.38.33130", "14.44.35207"),
             valid + " -D_ALLOW_COMPILER_AND_STL_VERSION_MISMATCH=1",
+            valid.replace("/Brepro", ""),
+            valid.replace("-fdebug-compilation-dir=.", ""),
             "clang-cl without auditable toolchain paths",
         ]
         with tempfile.TemporaryDirectory() as directory:
@@ -56,6 +58,19 @@ class EngineSourceTests(unittest.TestCase):
                     commands.write_text(text, encoding="utf-8")
                     with self.assertRaises(ValueError):
                         source.verify_commands(commands, lock)
+
+    def test_final_link_response_rejects_timestamp_and_incremental_drift(self):
+        valid = "objects.obj /Brepro /PDBALTPATH:%_PDB% /INCREMENTAL:NO /DEBUG"
+        with tempfile.TemporaryDirectory() as directory:
+            response = Path(directory) / "link-response.txt"
+            response.write_text(valid, encoding="utf-8")
+            source.verify_link_response(response)
+            for text in (valid.replace("/Brepro", ""), valid.replace("/PDBALTPATH:%_PDB%", ""),
+                         valid.replace("/INCREMENTAL:NO", "/INCREMENTAL"), valid + " /INCREMENTAL:YES"):
+                with self.subTest(response=text):
+                    response.write_text(text, encoding="utf-8")
+                    with self.assertRaises(ValueError):
+                        source.verify_link_response(response)
 
 
 if __name__ == "__main__":

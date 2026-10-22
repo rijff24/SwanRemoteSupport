@@ -80,6 +80,14 @@ Microsoft's environment setup. Before compilation and again before packaging,
 the verifier rejects generated commands that reference another Microsoft toolset
 or SDK, or disable compiler/STL compatibility checks. The original buildroot
 source, applied patch and actual compile/link commands accompany the result.
+The release compiler patch also requests content-based COFF/PE timestamps
+(`/Brepro`) and a relative debug compilation directory; the linker uses a stable
+PDB basename and explicitly disables incremental linking. The final linker
+response file is retained and checked separately, because the Ninja command
+listing alone refers to that file without exposing its flags. These controls
+follow [LLVM's deterministic-build guidance](https://blog.llvm.org/2019/11/deterministic-builds-with-clang-and-lld.html).
+They are necessary inputs to the independent comparison, not proof that all
+remaining sources of binary variation have been removed.
 The disposable GitHub runner installs the selected side-by-side Microsoft C++
 component when needed; this provisioning script refuses execution outside the
 GitHub Windows runner. Local builds require that component to be installed

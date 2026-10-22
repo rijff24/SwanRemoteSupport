@@ -51,4 +51,5 @@ jobs:
             C:\SwanEngineSourceBuild\toolchain.json
             C:\SwanEngineSourceBuild\dependency-revisions.txt
             C:\SwanEngineSourceBuild\ninja-commands.txt
+            C:\SwanEngineSourceBuild\link-response.txt
           if-no-files-found: warn

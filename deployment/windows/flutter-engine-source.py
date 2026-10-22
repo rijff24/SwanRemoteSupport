@@ -48,7 +48,7 @@ def load_recipe():
         raise ValueError("Dependency mirror override must preserve the original DEPS commit")
     buildroot = lock["buildroot"]
     if (buildroot["patch_file"] != "flutter-engine-buildroot.patch"
-            or set(buildroot["files"]) != {"build/toolchain/win/setup_toolchain.py"}
+            or set(buildroot["files"]) != {"build/toolchain/win/setup_toolchain.py", "build/config/compiler/BUILD.gn"}
             or sha(RECIPE / buildroot["patch_file"]) != buildroot["patch_sha256"]):
         raise ValueError("Unexpected buildroot toolset-selection patch")
     if lock["windows_toolchain"] != {
@@ -127,6 +127,19 @@ def verify_commands(path, lock):
         raise ValueError("Generated compile/link commands do not use only the pinned MSVC toolset")
     if sdk != {lock["windows_toolchain"]["windows_sdk_version"]}:
         raise ValueError("Generated compile/link commands do not use only the pinned Windows SDK")
+    compiles = [line for line in commands.splitlines() if re.search(r'clang-cl(?:\.exe)?\b', line)]
+    if not compiles or any("/Brepro" not in line or "-fdebug-compilation-dir=." not in line for line in compiles):
+        raise ValueError("Generated compiler commands lack deterministic timestamp/path controls")
+
+
+def verify_link_response(path):
+    response = path.read_text(encoding="utf-8-sig")
+    for flag in ("/Brepro", "/PDBALTPATH:%_PDB%", "/INCREMENTAL:NO"):
+        if flag.lower() not in response.lower().split():
+            raise ValueError("Final engine link lacks deterministic flag: " + flag)
+    switches = re.findall(r'/INCREMENTAL(?::(?:YES|NO))?(?=\s|$)', response, re.IGNORECASE)
+    if any(switch.lower() != "/incremental:no" for switch in switches):
+        raise ValueError("Incremental linking cannot be used for reproducible engine builds")
 
 
 def package(build, output):
@@ -135,6 +148,7 @@ def package(build, output):
     verify_checkout(engine, lock, True)
     verify_buildroot(build / "checkout/src", lock, True)
     verify_commands(build / "ninja-commands.txt", lock)
+    verify_link_response(build / "link-response.txt")
     if git(build / "depot_tools", "rev-parse", "HEAD").decode().strip() != lock["depot_tools"]["revision"]:
         raise ValueError("Depot-tools revision changed")
     for name, expected in lock["dependency_overrides"].items():
@@ -157,7 +171,7 @@ def package(build, output):
             or struct.unpack_from("<H", dll, pe + 4)[0] != 0x8664
             or not struct.unpack_from("<H", dll, pe + 22)[0] & 0x2000):
         raise ValueError("Engine is not Windows x64")
-    for name in ("dependency-revisions.txt", "toolchain.json", "ninja-commands.txt"):
+    for name in ("dependency-revisions.txt", "toolchain.json", "ninja-commands.txt", "link-response.txt"):
         if not (build / name).is_file():
             raise ValueError("Missing engine build evidence: " + name)
     toolchain = json.loads((build / "toolchain.json").read_text(encoding="utf-8-sig"))
@@ -181,7 +195,7 @@ def package(build, output):
     for path in [RECIPE / "flutter-engine.lock.json", patch, Path(__file__),
                  RECIPE / lock["buildroot"]["patch_file"], RECIPE / "Build-FlutterEngine.ps1",
                  RECIPE / "Install-FlutterEngineToolchain.ps1", build / "dependency-revisions.txt",
-                 build / "toolchain.json", build / "ninja-commands.txt"]:
+                 build / "toolchain.json", build / "ninja-commands.txt", build / "link-response.txt"]:
         (output / path.name).write_bytes(path.read_bytes())
     (output / "applied-source.patch").write_bytes(git(engine, "diff", "--binary", "--no-ext-diff"))
     (output / "applied-buildroot.patch").write_bytes(git(build / "checkout/src", "diff", "--binary", "--no-ext-diff"))
@@ -214,6 +228,8 @@ if __name__ == "__main__":
     root_parser.add_argument("root", type=Path)
     command_parser = sub.add_parser("verify-commands")
     command_parser.add_argument("commands", type=Path)
+    link_parser = sub.add_parser("verify-link-response")
+    link_parser.add_argument("response", type=Path)
     package_parser = sub.add_parser("package")
     package_parser.add_argument("build", type=Path)
     package_parser.add_argument("output", type=Path)
@@ -227,5 +243,8 @@ if __name__ == "__main__":
     elif args.command == "verify-commands":
         verify_commands(args.commands, load_recipe()[0])
         print("Generated commands use the pinned Microsoft toolset and Windows SDK")
+    elif args.command == "verify-link-response":
+        verify_link_response(args.response)
+        print("Final engine link uses deterministic timestamp/path controls and excludes incremental linking")
     else:
         print(json.dumps(package(args.build, args.output)))
