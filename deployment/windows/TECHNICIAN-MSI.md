@@ -101,6 +101,11 @@ then compute release hashes and publish signed release metadata. `-UnsignedTest`
 allows clearly marked local/CI test payloads and does not bypass installation,
 worker or updater trust checks. No project signing key is provided to a company.
 
+The technician update helper also identifies MSI exit 1625 as a Windows policy
+rejection and directs the user to their company administrator. Existing signed
+receipt, rollback and publisher checks remain in force; this diagnostic does
+not elevate the installer or change Windows policy.
+
 The official WiX package is pinned to SHA-256
 `097383b2773bdd3d76a6a2cd3f4de6357bae59172e1b6fa5ad87ce062074e8d0`.
 `Expand-WixBuildTools.ps1` reads its MSI tables and extracts tools without running

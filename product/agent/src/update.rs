@@ -951,6 +951,7 @@ impl AgentState {
                 if !previous.exists(){std::fs::copy(&target,&previous)?;}
                 if release.format=="msi" {
                     let status=msi_install_command(&package,&release)?.arg(format!("INSTALLFOLDER={}",directory.display())).status()?;
+                    ensure!(status.code()!=Some(1625),"Windows Installer policy prevents this technician update (1625). Contact your company administrator for an approved deployment; signed recovery remains pending");
                     ensure!(matches!(status.code(),Some(0|3010)),"Technician MSI installation failed; retain signed recovery receipt");
                 }else{replace_verified_file(&package,&target,&release.installed_sha256)?;}
             }else{
