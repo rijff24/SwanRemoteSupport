@@ -38,8 +38,10 @@ confirms the legacy upgrade card is absent. Its separate standard-user native
 customer/profile; GUI installation callbacks remain to verify at runtime.
 This does not prove binary reproducibility.
 
-The patched Windows Flutter engine is pinned by binary archive hash, but its
-source-to-binary mapping and rebuild remain unverified. The public upstream
+The application still pins the reviewed upstream Windows Flutter engine by
+archive hash, whose source-to-binary mapping remains unverified. A separate
+source-built candidate completed CI at `9f97ef0`; its artifact verification,
+independent rebuild comparison and runtime qualification remain open. The public upstream
 source/patch reconstruction candidate and evidence limits are recorded in
 [Source availability and licensing](SOURCE_AND_LICENSE.md#patched-windows-flutter-engine-provenance).
 
@@ -4084,3 +4086,21 @@ is retained under `helper-rebuild-comparison-f887ddc`.
 This establishes the helper DLL comparison on these two recorded CI jobs.
 It does not establish complete native payload/installer reproducibility or
 runtime injection, UAC or support-session behavior with the corrected helper.
+
+### First successful source-engine build, 22 October
+
+Workflow `39716739857`, source `9f97ef0`, completed successfully. Its raw job log
+records reviewed engine/buildroot patch verification, pinned generated-command
+checks and final build step `[4900/4900] LINK(DLL) flutter_windows.dll` at
+04:13:39 UTC. This confirms the matching ATL correction resolved the previous
+link failure. Source reconstruction artifact `12401286693` was published at
+109,172,797 bytes with archive SHA-256
+`e2f2e4c312fdbc47afb1de5871a117b1dffdebde40cc0fa97bfcc0db1d7dcb11`.
+
+The existing download/verification process is still running; neither downloaded
+artifact integrity nor source-archive equivalence is counted as passed yet.
+The later timestamp-controlled recipe `b1d62b2` is building separately in
+workflow `39718232889`. The successful first build did not contain that recipe's
+new deterministic flags, so it is not an independent reproducibility pass.
+The application's reviewed upstream engine pin remains unchanged and no
+source-built engine has been run in a native app or approved for production.
