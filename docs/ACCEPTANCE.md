@@ -4053,3 +4053,34 @@ verifier also accepts the already independently reproduced Windows management
 binary. This does not yet establish a corrected helper build, independent
 helper binary comparison, code injection/session behavior or runtime acceptance.
 The ongoing native builds remain pinned to the earlier helper workflow.
+
+### Corrected helper binary and source comparison, 22 October
+
+Independent helper workflows `39722213586` and `39722215742` at source
+`f887ddc` completed successfully. Producer jobs `119638032242` and
+`119638038048` produced identical original `WindowInjection.dll` bytes:
+SHA-256 `0a739c4e0bb61b979103b0b2ca864f129c7ba51f5706ea8faccf1b8ef53a57c3`.
+Both DLLs passed x64/DLL, REPRO marker and PDB-basename checks; no timestamp or
+identifier was masked for this successful comparison. The recorded hosted image
+was `win22`, version `20261012.333.1` in both jobs.
+
+Binary artifacts `12401362042` and `12401129411` both had archive SHA-256
+`d7c92fab6677938e4453551e2ad6e87c57d3b15ead79b06b3d7bd04f513dcc8c`.
+Their separate source artifacts `12400968332` and `12401164054` passed published
+hash/size/CRC checks and contained the exact public build workflow and verifier
+sources, allowing checkout line endings. All 25 original upstream source files
+mapped to public Git blobs at `ecd8d6a139eee76845ea66423fb739af450fda90`.
+The original source ZIPs were byte-identical with SHA-256
+`21a4a67590a1a2128b019794f9da4d1e2a5130bd411f63a6450361893bf2a732`.
+
+The initial independent verifier rejected seven text files because Windows Git
+exported CRLF while their public Git blobs used LF. Inspection proved these
+were line-ending conversions only; the resumed verifier revalidated the retained
+original archives against their published hashes and checked every source blob
+with this conversion explicitly allowed. No artifact was modified or live
+transfer restarted. Local evidence, including the failed check's investigation,
+is retained under `helper-rebuild-comparison-f887ddc`.
+
+This establishes the helper DLL comparison on these two recorded CI jobs.
+It does not establish complete native payload/installer reproducibility or
+runtime injection, UAC or support-session behavior with the corrected helper.
