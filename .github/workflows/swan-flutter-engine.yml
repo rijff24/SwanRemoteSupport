@@ -1,6 +1,13 @@
 name: Rebuild patched Windows Flutter engine from pinned source
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/swan-flutter-engine.yml
+      - deployment/windows/Build-FlutterEngine.ps1
+      - deployment/windows/flutter-engine-source.py
+      - deployment/windows/flutter-engine-windows.patch
+      - deployment/windows/flutter-engine.lock.json
 permissions:
   contents: read
 concurrency:
