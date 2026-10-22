@@ -24,10 +24,13 @@ version. The full release gates remain open.
 ## Current release gates, 22 October
 
 The dated evidence below is source-specific. Earlier passing packages do not
-qualify the current candidate. Native source `becf3cd` is building in workflow
-`39690742314`; only its generated bridge artifact has been downloaded and
-verified so far. Its authorization-log, control-permission and managed-install
-corrections still need compilation and runtime verification.
+qualify the current candidate. Native source `becf3cd` passed workflow
+`39690742314`, including the managed-policy and view-only control regression
+tests and the unsigned technician MSI lifecycle under the CI account. Its
+downloaded archive, 1,122 tracked source files, six generated bridge files and
+95 native payload files passed independent provenance/hash checks. Its
+authorization-log, control-permission and managed-install corrections still
+need lab runtime verification. This does not prove binary reproducibility.
 
 | Area | Latest established evidence | Still required for release |
 | --- | --- | --- |
@@ -3542,3 +3545,37 @@ and the legacy `--update` command refuse the operation; the company agent and
 explicit bundle's silent-installer path remain available. Compilation and native
 verification of this correction remain pending. The previously dispatched
 `3c4fb57` build predates this correction and cannot validate it.
+
+### Verified current native build and corresponding source, 22 October
+
+Windows workflow `39690742314` passed at source
+`becf3cd861275e5100e2b86c3c26ad53be18cd00`. Raw job logs confirm both exact
+native regressions executed with one pass and zero failures each:
+`managed_sync_rejects_legacy_endpoint_and_unsigned_options` and
+`managed_view_only_packets_cannot_change_system_control`. Their scope is the
+legacy-policy guard and parsed packet permission classification, not a live
+malicious-peer or monitor-driver test.
+
+Artifact `12390656897` is 146,651,249 bytes, SHA-256
+`cf0109e9b9ccc7366fc6995228855e66a198fc8c932d998b9d09d1d4ce05a6bd`.
+The first transfer failed with ChunkedEncodingError. After that process exited,
+127,926,272 retained bytes were resumed using an exact validated HTTP 206 range.
+The entire final archive passed the authoritative size/digest and all 24 entry
+CRC/path/payload-checksum checks. The corresponding source archive matches
+1,122 public tracked files/submodule objects and all six separately verified
+CI-generated bridge files. All 95 extracted native/Flutter payload files match
+the installed manifest; the native EXE hash is
+`5bdfcbf7d464511c51470e4a773ea583a853c2124cb4d83ab644acd0782d58e8`.
+No downloaded executable was launched during these checks.
+
+The independently checked MSI evidence artifact `12390213470` is 34,872 bytes,
+SHA-256 `84ffe55bfa20fea974c6c3f0aad662fa103076007a298ffb2ed5c18011721531`.
+All three original installer logs report successful completion without a failed
+action, and their source/package invocations agree. The downloaded technician
+MSI hash `a6ad6b59af1e953e84239fdc5eb1ad6d07fdcdc5b819adc6c85b2cb1c60479b3`
+matches the package actually installed, repaired and uninstalled under the CI
+account on Windows Server 2022 Datacenter build 20348. This is an unsigned
+CI-account lifecycle, not clean-machine, standard-user, enrollment, signature
+acceptance or remote-session verification. Private lab signing and latest-native
+GUI/receiver verification remain next; production signing, full reproducibility
+and the complete acceptance gates remain open.
