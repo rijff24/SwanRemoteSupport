@@ -4962,3 +4962,32 @@ Windows 2022 and Ubuntu component/security tests and builds, plus the Linux
 deployment job, succeeded. The optional technician MSI CI job was skipped;
 these results do not replace the separate native installer and runtime evidence.
 They do not include a rebuilt runtime test of the subsequent history-label fix.
+
+### Existing lab worker publication failure and corrected reporting, 22 October
+
+Read-only inspection of the retained Server 2016 deployment found two old build
+claims still running in the management database. The worker process had no
+active child build process; its protected log repeatedly recorded HTTP 400 after
+package signature verification. Its original signed-input ZIPs were preserved.
+An exact-hash upload reproduction received the server's JSON rejection
+`Unexpected ZIP footer`. The retained archive has a valid 11-entry ZIP32 footer.
+Installed-binary inspection found the technician-uninstall bundle helper in the
+worker but absent from the management executable. Neither old executable
+contains the newer recipe-discovery endpoint, which returned HTTP 404.
+
+This is evidence of an old mixed component deployment, not a passing installer
+publication test or a reason to relax ZIP validation. Current server/worker
+source already checks matching bundle recipes before claims. Coordinated lab
+maintenance remains pending: automatic approval review rejected preparation of
+the refreshed release-withdrawal/encrypted management-backup draft as
+`blocked by policy`; fresh human approval has been requested. That rejected
+preparation created no draft file and changed no services or releases.
+
+Current worker source now turns permanent upload-validation rejection into a
+failed completion report, preserving the original local output and publishing
+no download link. Auth/state conflicts and temporary network/server/rate-limit
+failures retain recovery. Diagnostics accept only fixed public error labels
+from a bounded response with a reading deadline. Wire regressions cover failed
+completion reporting, identical-byte transient retries, auth/conflict recovery
+and exclusion of arbitrary remote text/secrets. These new tests require CI;
+matched Windows runtime publication and download authorization remain open.

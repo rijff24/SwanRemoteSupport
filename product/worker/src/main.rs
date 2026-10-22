@@ -73,8 +73,7 @@ async fn process_claim(response:reqwest::Response,client:&reqwest::Client,server
                     let result=match outcome {
                         Ok((name,hash))=>{
                             let bytes=tokio::fs::read(output.join(name)).await?;
-                            send_idempotent(client.put(format!("{}/api/v1/worker/builds/{id}/artifact",server.trim_end_matches('/'))).bearer_auth(&token).header("Content-Type","application/zip").body(bytes)).await?;
-                            json!({"success":true,"artifact_url":format!("{}/api/v1/downloads/{id}",server.trim_end_matches('/')),"sha256":hash,"log":"Verified signed inputs and uploaded company bundle."})
+                            upload_build(client,server,token,id,bytes,&hash).await?
                         },
                         Err(error)=>{eprintln!("Build {id} failed: {error}");json!({"success":false,"artifact_url":"","sha256":"","log":"Build failed; see the protected worker log. No package was published."})}
                     };
@@ -87,14 +86,78 @@ async fn report_completion(client:&reqwest::Client,server:&str,token:&str,id:&st
     send_idempotent(client.put(format!("{}/api/v1/worker/builds/{id}",server.trim_end_matches('/'))).bearer_auth(token).json(result)).await
 }
 
+#[derive(Debug)]
+struct ControlRejection { status:reqwest::StatusCode,reason:&'static str }
+impl std::fmt::Display for ControlRejection {
+    fn fmt(&self,formatter:&mut std::fmt::Formatter<'_>)->std::fmt::Result {
+        write!(formatter,"{}: {}",self.status,self.reason)
+    }
+}
+impl std::error::Error for ControlRejection {}
+impl ControlRejection {
+    fn invalid_bundle(&self)->bool {
+        matches!(self.status,reqwest::StatusCode::BAD_REQUEST|reqwest::StatusCode::PAYLOAD_TOO_LARGE|
+            reqwest::StatusCode::UNSUPPORTED_MEDIA_TYPE|reqwest::StatusCode::UNPROCESSABLE_ENTITY)
+    }
+}
+
+fn public_rejection_reason(body:&[u8])->&'static str {
+    // Never copy arbitrary server text, credentials, URLs or headers into logs.
+    const REASONS:&[&str]=&[
+        "Unexpected ZIP footer","Unsupported ZIP entry layout","Ambiguous ZIP entry headers",
+        "Unexpected bundle contents","Missing bundle file","Bundle script or license mismatch",
+        "Bundle binary hash mismatch","Wrong company profile","Wrong release metadata",
+        "Noncanonical bootstrap configuration","Invalid bootstrap configuration",
+        "Expired or invalid bundle profile","Bootstrap trust mismatch","Expired release",
+        "Artifact too large","Conflicting artifact retry","Duplicate ZIP entry",
+        "Unaccounted ZIP contents","Invalid ZIP bounds","Invalid ZIP directory bounds",
+        "Invalid bundle entry type or size","Bundle entry too large","Invalid ZIP artifact",
+    ];
+    const UNKNOWN:&str="Unrecognized server rejection; review company server logs";
+    if body.len()>4096{return UNKNOWN;}
+    let Ok(value)=serde_json::from_slice::<Value>(body) else{return UNKNOWN;};
+    let Some(reason)=value.get("error").and_then(Value::as_str) else{return UNKNOWN;};
+    REASONS.iter().copied().find(|candidate|*candidate==reason).unwrap_or(UNKNOWN)
+}
+
+async fn control_rejection(mut response:reqwest::Response)->ControlRejection {
+    let status=response.status();
+    let details=tokio::time::timeout(std::time::Duration::from_secs(2),async {
+        let mut body=Vec::new();
+        while let Some(chunk)=response.chunk().await? {
+            ensure!(body.len()+chunk.len()<=4096,"Worker rejection details exceed diagnostic limit");
+            body.extend_from_slice(&chunk);
+        }
+        Ok::<_,anyhow::Error>(body)
+    }).await;
+    let reason=match details {
+        Ok(Ok(body))=>public_rejection_reason(&body),
+        Ok(Err(_))=>"Server rejection details could not be read within the diagnostic limit",
+        Err(_)=>"Server rejection details timed out",
+    };
+    ControlRejection{status,reason}
+}
+
+async fn upload_build(client:&reqwest::Client,server:&str,token:&str,id:&str,bytes:Vec<u8>,hash:&str)->Result<Value> {
+    let uploaded=send_idempotent(client.put(format!("{}/api/v1/worker/builds/{id}/artifact",server.trim_end_matches('/')))
+        .bearer_auth(token).header("Content-Type","application/zip").body(bytes)).await;
+    match uploaded {
+        Ok(())=>Ok(json!({"success":true,"artifact_url":format!("{}/api/v1/downloads/{id}",server.trim_end_matches('/')),"sha256":hash,"log":"Verified signed inputs and uploaded company bundle."})),
+        Err(error) if error.downcast_ref::<ControlRejection>().is_some_and(ControlRejection::invalid_bundle)=>{
+            eprintln!("Build {id} upload rejected: {error}");
+            Ok(json!({"success":false,"artifact_url":"","sha256":"","log":format!("Bundle upload rejected ({error}). No package was published; retained output requires review.")}))
+        },
+        Err(error)=>Err(error),
+    }
+}
+
 async fn send_idempotent(request:reqwest::RequestBuilder)->Result<()> {
     for attempt in 0..3 {
         let response=request.try_clone().context("Worker retry requires a buffered request")?.send().await;
         match response {
             Ok(response) if response.status().is_success()=>return Ok(()),
             Ok(response) if !response.status().is_server_error() && response.status()!=reqwest::StatusCode::TOO_MANY_REQUESTS=>{
-                response.error_for_status()?;
-                anyhow::bail!("Unexpected completion response");
+                return Err(control_rejection(response).await.into());
             },
             _=>{},
         }
@@ -172,6 +235,104 @@ fn verify_windows(_path:&Path,_release:&Release,_directory:&Path,_check_msi:bool
 #[cfg(test)]
 mod verification_tests {
     use super::*;
+
+    async fn control_server(responses:Vec<(&'static str,String)>)->(String,tokio::task::JoinHandle<Vec<(String,Vec<u8>)>>) {
+        use tokio::io::{AsyncReadExt,AsyncWriteExt};
+        let listener=tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let address=listener.local_addr().unwrap();
+        let server=tokio::spawn(async move {
+            let mut requests=Vec::new();
+            for (status,body) in responses {
+                let (mut stream,_)=listener.accept().await.unwrap();let mut headers=Vec::new();
+                while !headers.ends_with(b"\r\n\r\n") {
+                    headers.push(stream.read_u8().await.unwrap());assert!(headers.len()<8192);
+                }
+                let headers=String::from_utf8(headers).unwrap();let lower=headers.to_ascii_lowercase();
+                assert!(lower.contains("authorization: bearer fixture-worker\r\n"));
+                let length=lower.lines().find_map(|line|line.strip_prefix("content-length:")).map(|value|value.trim().parse::<usize>().unwrap()).unwrap_or(0);
+                assert!(length<65536);let mut request_body=vec![0;length];stream.read_exact(&mut request_body).await.unwrap();
+                requests.push((headers.lines().next().unwrap().to_owned(),request_body));
+                let response=format!("HTTP/1.1 {status}\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",body.len());
+                stream.write_all(response.as_bytes()).await.unwrap();
+            }
+            requests
+        });
+        (format!("http://{address}"),server)
+    }
+
+    fn control_client()->reqwest::Client {
+        reqwest::Client::builder().no_proxy().timeout(std::time::Duration::from_secs(3)).build().unwrap()
+    }
+
+    #[tokio::test]
+    async fn permanent_bundle_rejection_is_reported_as_failure_without_a_download_link() {
+        let (endpoint,server)=control_server(vec![
+            ("400 Bad Request",json!({"error":"Unexpected ZIP footer"}).to_string()),
+            ("200 OK",json!({"ok":true}).to_string()),
+        ]).await;
+        let id="00000000-0000-4000-8000-000000000001";let client=control_client();
+        let result=upload_build(&client,&endpoint,"fixture-worker",id,b"retained original bundle".to_vec(),&"a".repeat(64)).await.unwrap();
+        assert_eq!(result["success"],false);assert_eq!(result["artifact_url"],"");assert_eq!(result["sha256"],"");
+        assert!(result["log"].as_str().unwrap().contains("Unexpected ZIP footer"));
+        report_completion(&client,&endpoint,"fixture-worker",id,&result).await.unwrap();
+        let requests=tokio::time::timeout(std::time::Duration::from_secs(5),server).await.unwrap().unwrap();
+        assert_eq!(requests.len(),2);
+        assert_eq!(requests[0].0,format!("PUT /api/v1/worker/builds/{id}/artifact HTTP/1.1"));
+        assert_eq!(requests[0].1,b"retained original bundle");
+        assert_eq!(requests[1].0,format!("PUT /api/v1/worker/builds/{id} HTTP/1.1"));
+        assert_eq!(serde_json::from_slice::<Value>(&requests[1].1).unwrap(),result);
+    }
+
+    #[tokio::test]
+    async fn validation_rejections_fail_but_authentication_and_conflicts_retain_recovery() {
+        for (status,failed) in [
+            ("400 Bad Request",true),("413 Payload Too Large",true),
+            ("415 Unsupported Media Type",true),("422 Unprocessable Entity",true),
+            ("401 Unauthorized",false),("403 Forbidden",false),("409 Conflict",false),
+        ] {
+            let (endpoint,server)=control_server(vec![(status,json!({"error":"fixture-worker private response https://example.invalid/?secret=value"}).to_string())]).await;
+            let result=upload_build(&control_client(),&endpoint,"fixture-worker","fixture-job",b"original".to_vec(),&"a".repeat(64)).await;
+            if failed {
+                let result=result.unwrap();assert_eq!(result["success"],false);
+                let log=result["log"].as_str().unwrap();assert!(!log.contains("fixture-worker") && !log.contains("secret=value") && !log.contains("example.invalid"));
+            }else{
+                let error=result.unwrap_err();let rejected=error.downcast_ref::<ControlRejection>().unwrap();
+                assert!(!rejected.invalid_bundle());assert!(!error.to_string().contains("fixture-worker"));
+            }
+            assert_eq!(tokio::time::timeout(std::time::Duration::from_secs(5),server).await.unwrap().unwrap().len(),1);
+        }
+    }
+
+    #[tokio::test]
+    async fn transient_upload_errors_retry_identical_bytes_before_reporting_success() {
+        let (endpoint,server)=control_server(vec![
+            ("503 Service Unavailable","{}".into()),("429 Too Many Requests","{}".into()),
+            ("200 OK","{}".into()),("200 OK","{}".into()),
+        ]).await;
+        let client=control_client();let id="00000000-0000-4000-8000-000000000002";let hash="a".repeat(64);
+        let result=tokio::time::timeout(std::time::Duration::from_secs(25),upload_build(&client,&endpoint,"fixture-worker",id,b"same verified bytes".to_vec(),&hash)).await.unwrap().unwrap();
+        assert_eq!(result["success"],true);assert_eq!(result["sha256"],hash);
+        report_completion(&client,&endpoint,"fixture-worker",id,&result).await.unwrap();
+        let requests=tokio::time::timeout(std::time::Duration::from_secs(5),server).await.unwrap().unwrap();
+        assert_eq!(requests.len(),4);
+        for request in &requests[..3]{assert_eq!(request.0,requests[0].0);assert_eq!(request.1,b"same verified bytes");}
+        assert_eq!(serde_json::from_slice::<Value>(&requests[3].1).unwrap(),result);
+    }
+
+    #[test]
+    fn server_error_details_are_bounded_and_never_reflect_arbitrary_remote_text() {
+        assert_eq!(public_rejection_reason(br#"{"error":"Unexpected ZIP footer","private":"fixture-secret"}"#),"Unexpected ZIP footer");
+        for body in [
+            br#"{"error":"fixture-secret"}"#.to_vec(),
+            br#"{"error":"Unexpected ZIP footer\nfixture-secret"}"#.to_vec(),
+            br#"{"error":{"password":"fixture-secret"}}"#.to_vec(),
+            b"not JSON fixture-secret".to_vec(),
+            json!({"error":"Unexpected ZIP footer","private":"fixture-secret".repeat(1000)}).to_string().into_bytes(),
+        ] {
+            let reason=public_rejection_reason(&body);
+            assert!(!reason.contains("fixture-secret"));assert_ne!(reason,"Unexpected ZIP footer");
+        }
+    }
 
     #[tokio::test]
     async fn server_recipe_preflight_rejects_old_or_incompatible_servers() {

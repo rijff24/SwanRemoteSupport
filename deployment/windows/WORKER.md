@@ -63,6 +63,21 @@ downloads are public; technician bundle downloads require authentication. Test
 both access paths and verify the downloaded hash before installation. Failed jobs
 must not be published as successful packages.
 
+A permanent upload-validation rejection (HTTP 400, 413, 415 or 422) produces a
+failed completion report with no download URL or artifact hash. The retained
+local bundle remains available for inspection. This prevents malformed or
+incompatible output from remaining a running job indefinitely. Review matching
+server/worker releases and approved inputs before queueing a replacement job.
+Authentication/authorization failures, conflicting state, network failures,
+rate limits and temporary server errors retain recovery rather than fabricating
+a terminal result. Temporary upload failures retry the identical buffered bytes.
+
+Error details admit only fixed public rejection labels from a bounded JSON
+response. Arbitrary server text, credentials and response URLs are not copied
+into job logs; diagnostic body reading also has a short deadline. This behavior
+requires deployment of the updated worker and does not repair old pending jobs
+by itself. See the dated acceptance record for unit/CI and runtime scope.
+
 After a company configuration-key rotation, independently verify the new public
 pin and update the protected worker configuration before restarting it. Automatic
 worker trust-pin rotation is not currently implemented. Regenerate bundles after
