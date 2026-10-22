@@ -4508,3 +4508,23 @@ Windows PowerShell runtime binding and preview rendering. Installation and
 browser actions were disabled; no company services were installed. The CI
 repeat-build test now exercises this preview mode and retains the PNG. This is
 preview-only runtime evidence, not actual server setup or deployment acceptance.
+
+The same pinned-reference launcher was exercised in preview-only mode on the
+existing Server 2016 Standard Evaluation VM, build `14393.693`, with .NET
+Framework release `394802`. It rendered a PNG and returned zero when observed
+through an owned `System.Diagnostics.Process` handle. The company server,
+installer worker and customer services remained running before and after.
+The PNG and original report were transferred and hash-verified under the private
+lab's `server-preview-pinned-refs-16-20261022/repeat-observation` directory.
+The headless SSH render omits some native window/border decoration; interactive
+appearance is not qualified by this image. No management process was started
+and no server installation was attempted.
+
+The first preview observation rendered an image but did not expose an exit code
+through Windows PowerShell's redirected `Start-Process` result. Its inconclusive
+report remains preserved; it was not counted as a pass. The original PID was
+confirmed absent before the repeat. The public preview test now owns the child
+process handle directly; its full repeated-compilation, package-rejection and
+preview checks also passed under Windows PowerShell 5.1 on the host, with records
+under `server-preview-process-ps5-validation-20261022`. This addresses test-result
+capture only and does not qualify deployment, upgrades or the full Windows matrix.

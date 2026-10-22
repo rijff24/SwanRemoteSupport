@@ -41,7 +41,15 @@ foreach($kind in @('framework','powershell')){
  if(-not $blocked -or (Test-Path -LiteralPath $rejectedReference)){throw 'Wrong reference package was not rejected before extraction.'}
 }
 $preview=[IO.Path]::GetFullPath((Join-Path $WorkDirectory 'packaged-preview.png'))
-$process=Start-Process -FilePath ([IO.Path]::GetFullPath($a)) -ArgumentList @('--render-preview',('"'+$preview+'"')) -WindowStyle Hidden -PassThru
+$start=[Diagnostics.ProcessStartInfo]::new()
+$start.FileName=[IO.Path]::GetFullPath($a)
+$start.Arguments='--render-preview "'+$preview+'"'
+$start.UseShellExecute=$false
+$start.CreateNoWindow=$true
+$start.WindowStyle=[Diagnostics.ProcessWindowStyle]::Hidden
+# Own the process handle directly so Windows PowerShell retains ExitCode even
+# when a short-lived child has already exited by the next observation.
+$process=[Diagnostics.Process]::Start($start)
 @{pid=$process.Id;executable_sha256=$hash;mode='preview-only'}|ConvertTo-Json|Set-Content -LiteralPath (Join-Path $WorkDirectory 'preview-process.json')
 if(-not $process.WaitForExit(60000)){throw 'Packaged preview is still running; inspect its recorded PID before retrying.'}
 if($process.ExitCode -ne 0 -or -not(Test-Path -LiteralPath $preview)){throw 'Packaged preview runtime failed.'}
