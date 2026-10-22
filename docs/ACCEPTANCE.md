@@ -4134,3 +4134,33 @@ source capsule. Merely downloading it into the build's artifacts directory did
 not include it in the workflow's previous explicit upload list. This correction
 keeps source material outside installed payloads while retaining it for release
 review. Its inclusion still needs verification in a subsequent native build.
+
+### Native build outcomes and independent artifact retention, 22 October
+
+Native workflow `39720429487` at source `50c08fd` completed successfully.
+Its independent companion `39720432071` built both apps and MSIs and passed the
+managed-policy/control regression tests and technician install/repair/uninstall
+checks, but the overall run failed during server packaging. Raw job
+`119633063832` reports a remote connection reset while downloading the pinned
+Caddy archive. This is a failed complete build, not an application/runtime pass
+or an independent complete-package comparison. Its completed technician MSI
+lifecycle artifact was retained; its final combined app artifact was skipped by
+the then-current success-only upload step.
+
+The workflow now retains explicitly named, completed client inputs before the
+independent server-packaging step. The earlier upload is gated on successful MSI
+creation, is clearly marked unsigned test input, and does not imply later
+lifecycle or server packaging passed. The complete combined artifact remains
+success-only. Source ZIP checksums are recorded before the early upload, without
+duplicating checksum entries during server packaging.
+
+Pinned server archive downloads now use at most three transfer attempts with
+bounded delays, HTTPS/TLS 1.2 support and SHA-256 validation before atomic file
+publication. A verified existing archive is reused; a mismatched existing file
+is preserved and rejected. Hash-mismatched downloaded bytes are retained for
+inspection and are not retried or published. Fault-injected tests for interrupted
+transfers, retry bounds, existing evidence, corruption, HTTPS enforcement and
+atomic publication passed locally under PowerShell 7 and Windows PowerShell
+5.1. These are transfer/integrity tests with simulated network failures; actual
+supplier download and early artifact retention still need a subsequent native
+build. No live download was restarted to make these changes.

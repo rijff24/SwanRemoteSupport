@@ -221,6 +221,7 @@ jobs:
           Copy-Item LICENCE artifacts/
 
       - name: Build unsigned customer and technician MSIs with pinned WiX
+        id: package-clients
         shell: pwsh
         run: |
           $toolPackage = Join-Path $env:RUNNER_TEMP 'wix-cli-x64-5.0.2.msi'
@@ -235,6 +236,8 @@ jobs:
           ./deployment/windows/Build-CustomerMsi.ps1 -WixExe $wix -SourceDirectory swan-client -AgentExe artifacts/swan-agent.exe -Version '${{ env.VERSION }}' -Output $customerOutput -UnsignedTest
           $customerHash = (Get-FileHash -LiteralPath $customerOutput -Algorithm SHA256).Hash.ToLowerInvariant()
           Add-Content artifacts/SHA256SUMS.txt ($customerHash+'  '+[IO.Path]::GetFileName($customerOutput))
+          $sourceHash = (Get-FileHash -LiteralPath artifacts/SwanRemoteSupport-build-source.zip -Algorithm SHA256).Hash.ToLowerInvariant()
+          Add-Content artifacts/SHA256SUMS.txt ($sourceHash+'  SwanRemoteSupport-build-source.zip')
 
       - name: Verify unsigned technician MSI installation repair and uninstall
         shell: pwsh
@@ -249,6 +252,31 @@ jobs:
           if-no-files-found: ignore
           path: ${{ runner.temp }}/swan-msi-lifecycle-*/**
 
+      - name: Retain completed client inputs before independent server packaging
+        if: always() && steps.package-clients.conclusion == 'success'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: SwanRemoteSupport-${{ env.VERSION }}-client-inputs-x64-UNSIGNED-TEST
+          if-no-files-found: error
+          path: |
+            artifacts/SwanRemoteSupport-*.exe
+            artifacts/SwanRemoteSupport-*.msi
+            artifacts/SwanRemoteSupport-build-source.zip
+            artifacts/*.msi.build.json
+            artifacts/*.msi.installed-files.json
+            artifacts/SHA256SUMS.txt
+            artifacts/swan-*.exe
+            artifacts/*-installed-files.unsigned.json
+            artifacts/topmost-source/**
+            artifacts/Install-Company.ps1
+            artifacts/Install-Worker.ps1
+            artifacts/Uninstall-Worker.ps1
+            artifacts/Open-Technician.ps1
+            artifacts/Uninstall-Technician.ps1
+            artifacts/Verify-Package.ps1
+            artifacts/Get-WindowsCompatibility.ps1
+            artifacts/LICENCE
+
       - name: Build unsigned company server setup with pinned components
         shell: powershell
         run: |
@@ -256,8 +284,9 @@ jobs:
           $pins = Get-Content deployment/windows/server-components.json -Raw | ConvertFrom-Json
           $transport = Join-Path $env:RUNNER_TEMP 'swan-server-transport.zip'
           $https = Join-Path $env:RUNNER_TEMP 'swan-server-https.zip'
-          Invoke-WebRequest -Uri $pins.transport.url -OutFile $transport -UseBasicParsing
-          Invoke-WebRequest -Uri $pins.https.url -OutFile $https -UseBasicParsing
+          ./deployment/windows/test_pinned_archive.ps1
+          ./deployment/windows/Get-PinnedArchive.ps1 -Uri $pins.transport.url -Sha256 $pins.transport.sha256 -Output $transport | Out-Null
+          ./deployment/windows/Get-PinnedArchive.ps1 -Uri $pins.https.url -Sha256 $pins.https.sha256 -Output $https | Out-Null
           $components = Join-Path $env:RUNNER_TEMP 'swan-server-components'
           ./deployment/windows/Prepare-ServerComponents.ps1 -TransportPackage $transport -HttpsPackage $https -OutputDirectory $components
           $setup = ./deployment/windows/Build-ServerSetup.ps1 -ManagementExecutable artifacts/swan-management.exe -ComponentsDirectory $components -OutputDirectory artifacts/server-setup -UnsignedTest
@@ -265,8 +294,6 @@ jobs:
           Copy-Item -LiteralPath $setup -Destination artifacts/SwanServerSetup-UNSIGNED-TEST.exe
           Copy-Item -LiteralPath artifacts/server-setup/SOURCE.json -Destination artifacts/SwanServerSetup-SOURCE.json
           Add-Content artifacts/SHA256SUMS.txt ($hash+'  SwanServerSetup-UNSIGNED-TEST.exe')
-          $sourceHash = (Get-FileHash -LiteralPath artifacts/SwanRemoteSupport-build-source.zip -Algorithm SHA256).Hash.ToLowerInvariant()
-          Add-Content artifacts/SHA256SUMS.txt ($sourceHash+'  SwanRemoteSupport-build-source.zip')
 
       - name: Upload unsigned installer and checksum
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
