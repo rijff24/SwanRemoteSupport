@@ -29,14 +29,16 @@ qualify the current candidate. Native source `becf3cd` passed workflow
 tests and the unsigned technician MSI lifecycle under the CI account. Its
 downloaded archive, 1,122 tracked source files, six generated bridge files and
 95 native payload files passed independent provenance/hash checks. Its
-authorization-log, control-permission and managed-install corrections still
-need lab runtime verification. This does not prove binary reproducibility.
+authorization-log and control-permission corrections still need receiving-device
+runtime verification. The latest standard-user tampered-cache GUI check also
+confirms the legacy upgrade card is absent; other legacy installation entry
+points remain to verify at runtime. This does not prove binary reproducibility.
 
 | Area | Latest established evidence | Still required for release |
 | --- | --- | --- |
 | Company setup | First-run branding/policy form contract and real Axum/SQLite setup tests pass on Windows/Linux; Linux deployment rehearsals pass. | Matching fresh Windows service/worker setup and equivalent full deployment acceptance. |
 | Native technician | Standard-user `c0bf4b4` MFA, authorized inventory/history, logout, live branding and offline refusal/cache pass against the older lab company. | Accepted support session with both corrected editions and a separate receiving machine. |
-| Receiving authorization | Older `bd13500` customer rejected a real stock client's legacy-password request. Native `c0bf4b4` refused a tampered cached profile. | Corrected receiver runtime, unauthorized direct connections, packet permissions, lease expiry and revocation. |
+| Receiving authorization | Older `bd13500` customer rejected a real stock client's legacy-password request. Native `c0bf4b4` and current `becf3cd` GUIs refused a tampered cached profile; the current UI also hides legacy upgrade cards. | Corrected receiver runtime, unauthorized direct connections, packet permissions, lease expiry and revocation. |
 | Customer session features | Earlier same-guest customer-approved desktop session; later graphical refusal. | Separate-machine input, transfer, clipboard, UAC, logon screen, multiple monitors, unattended consent/revocation and relay fallback. |
 | Installers | Source-specific administrator MSI lifecycle evidence is listed in the Windows matrix below. | Current-source company-generated EXE/MSI flow, standard-user technician installation and the complete upgrade/recovery matrix. |
 | Updates and recovery | Earlier signed lab update evidence, component rejection tests and real MSI rollback fixtures. | Current-source approved automatic rollout, session coordination, interrupted-update recovery and identity/consent preservation. MSI rollback alone does not prove these. |
@@ -3579,3 +3581,48 @@ CI-account lifecycle, not clean-machine, standard-user, enrollment, signature
 acceptance or remote-session verification. Private lab signing and latest-native
 GUI/receiver verification remain next; production signing, full reproducibility
 and the complete acceptance gates remain open.
+
+### Current lab signing and tampered-cache GUI regression, 22 October
+
+Five verified `becf3cd` inputs were copied to a separate private directory in
+Server 2016 and signed using its existing nonexportable disposable lab key.
+Each Authenticode signature and RFC3161 timestamp passed `/pa /all /tw`, pinned
+to certificate DER SHA-256
+`d5d4567bf67622ae8bda75e22db7b72b278c0eaa58450427bf8bf0e0bba3f94e`.
+The signed technician portable hash is
+`db903307fde776513ea1830a97843c23414b88e58239e213d11830a042135931`;
+the signed agent hash is
+`f31d217bacdc6a3234c417d8acb9e96abe7ac75541e106b5999df2d54d72b4b8`.
+All original input hashes were preserved. This is private lab signing only;
+none of the company server, worker or installed customer binaries was replaced.
+
+The new portable ran as the existing non-administrator SwanLabTech in desktop
+session 1, with a new public-only technician state fixture. Independent signature
+verification accepted the untouched original profile and rejected the fixture
+whose only decoded change was the technician display name. All 95 actual
+running native/Flutter files matched the verified CI manifest, including native
+EXE `5bdfcbf7d464511c51470e4a773ea583a853c2124cb4d83ab644acd0782d58e8`.
+A strict fixture path comparison initially rejected the executable's `\.\`
+segment; canonicalizing that observed path resolved the harness mismatch without
+changing the app or relaxing the expected extraction root.
+
+The GUI showed “Company setup is not complete,” with no forged branding,
+technician login, or device inventory. The legacy install/upgrade card exposed
+by the older build was absent. Closing this fallback incoming window kept the
+native process alive in the background. After independently checking its PID,
+path, hash, owner and desktop, only that test process was force-stopped. The
+first cleanup command stalled at cross-user confirmation; its exact pending
+PowerShell process was cancelled before explicit forced cleanup. The launcher
+then returned 0 and the task became Ready, with no native test process left.
+This is **not** a normal native-exit acceptance result. No VM reboot or existing
+service stop was used. The installed customer hash and both running services,
+original public profile, and unsigned build inputs were checked again afterward
+and preserved.
+
+Local evidence is in `candidate-becf3cd-inputs/signing-evidence` and
+`technician-becf-tamper-evidence-20261022/verified-runtime.json`, with independent
+verifiers retained outside the repository. This establishes the current local
+corrupted-cache/UI regression only. Ordinary technician login, legacy command
+refusal, hostile-HTTPS profile sync, corrected receiving-device permissions,
+automatic updates, clean-machine installers and the full release gates remain
+open.
