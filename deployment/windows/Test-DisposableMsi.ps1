@@ -80,11 +80,26 @@ if($Phase -eq 'repair' -and $Edition -eq 'customer'){
     # Modify only a previously hash-verified, non-executable package key path.
     [IO.File]::WriteAllText((Join-Path $install 'LICENSE.txt'),'Disposable repair test: replace this damaged packaged file.')
 }
+if($Phase -eq 'repair' -and $Edition -eq 'technician'){
+    # Prove missing-file recovery instead of merely invoking repair on an intact
+    # installation. Retain the previously verified test executable as evidence.
+    $repairSource=[IO.Path]::GetFullPath($main)
+    $repairBackup=[IO.Path]::GetFullPath((Join-Path $resultRoot 'repair-retained-technician.exe'))
+    if(-not $repairSource.StartsWith([IO.Path]::GetFullPath($install).TrimEnd('\')+'\',[StringComparison]::OrdinalIgnoreCase) -or
+       -not $repairBackup.StartsWith($resultRoot.TrimEnd('\')+'\',[StringComparison]::OrdinalIgnoreCase) -or
+       (Get-Item -LiteralPath $install).Attributes -band [IO.FileAttributes]::ReparsePoint -or
+       (Get-Item -LiteralPath $main).Attributes -band [IO.FileAttributes]::ReparsePoint -or
+       (Get-Item -LiteralPath $resultRoot).Attributes -band [IO.FileAttributes]::ReparsePoint -or
+       (Test-Path -LiteralPath $repairBackup)) {throw 'Repair fixture escaped its owned installation or evidence directory.'}
+    Move-Item -LiteralPath $repairSource -Destination $repairBackup
+    if((Get-FileHash -LiteralPath $repairBackup -Algorithm SHA256).Hash -ine $TechnicianSha256 -or (Test-Path -LiteralPath $main)){throw 'Missing-file repair preparation failed.'}
+}
 $operation=if($Phase -eq 'install'){'/i'}elseif($Phase -eq 'repair'){'/fvamus'}else{'/x'}
 $log=Join-Path $resultRoot 'msi.log'
 $windows=Get-ItemProperty -LiteralPath 'HKLM:/SOFTWARE/Microsoft/Windows NT/CurrentVersion'
 $os=[ordered]@{Caption=$windows.ProductName;Version=('{0}.{1}.{2}' -f $windows.CurrentMajorVersionNumber,$windows.CurrentMinorVersionNumber,$windows.CurrentBuildNumber);BuildNumber=$windows.CurrentBuildNumber;OSArchitecture='64-bit';revision=$windows.UBR}
 $report=[ordered]@{edition=$Edition;phase=$Phase;source=$SourceRevision;administrator=$administrator;standard_user_required=[bool]$RequireStandardUser;runner_sha256=(Get-FileHash -LiteralPath $PSCommandPath -Algorithm SHA256).Hash.ToLowerInvariant();package_sha256=$PackageSha256.ToLowerInvariant();agent_sha256=$AgentSha256.ToLowerInvariant();msi=$msi;platform=$compatibility;os=$os;exit_code=$null;reboot_required=$false;passed=$false;scope='Bare MSI lifecycle only; no company enrollment, publisher, update or session acceptance'}
+$report['missing_technician_file_repair']=($Phase -eq 'repair' -and $Edition -eq 'technician')
 try{
     $process=Start-Process -FilePath (Join-Path ([Environment]::GetFolderPath('System')) 'msiexec.exe') -ArgumentList @($operation,('"'+$packagePath+'"'),'/qn','/norestart','/l*v',('"'+$log+'"')) -WindowStyle Hidden -Wait -PassThru
     $report.exit_code=$process.ExitCode

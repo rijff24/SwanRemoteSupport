@@ -4268,3 +4268,28 @@ this correlation is recorded locally. Its actual exported inputs and binaries
 still require verification and comparison after completion. Different source
 commits elsewhere in the app do not establish or disprove engine reproducibility.
 Neither runtime qualification nor production approval is claimed.
+
+### Licensed Server 2022 standard-user fixture prepared, 22 October
+
+The preserved Server 2022 Desktop Experience guest booted normally at build
+`20348.587`. Read-only licensing inspection reports the evaluation licensed,
+with approximately 180 days remaining. A new disposable local standard account
+completed an actual graphical Windows logon. An owned limited interactive task
+then verified its identity, non-administrator token and session 1. Its new user
+profile has no technician installation or registration. Execution policy stayed
+at machine `RemoteSigned`, with no process/user override; no explicit
+`DisableMSI` policy value was present. No customer or company service was started.
+
+The public two-field lab identity marker remains System-owned and unchanged;
+only that marker gained read access for the test account. Credential storage
+remains protected, and product private-state permissions were not changed or
+tested. This fixture is for the positive current-source technician MSI lifecycle,
+separate from the previously blocked private-state access test. No new MSI phase
+or full Windows qualification is counted as passed yet.
+
+The disposable MSI runner now makes technician repair remove a previously
+verified installed executable by moving it into the new owned evidence directory,
+then requires the MSI to restore it. This distinguishes missing-file recovery
+from repair of an intact installation and preserves the original test bytes.
+Windows PowerShell parsing passed; execution against the pending current
+package and independent result/log verification remain required.

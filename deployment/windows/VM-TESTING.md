@@ -84,7 +84,10 @@ verify every manifested file and the running service's exact executable,
 arguments and LocalSystem identity. Customer repair first damages the verified
 packaged license file, then checks that MSI repair restores the complete
 manifest. Both editions check agent hashes, and technician checks its executable
-hash. Use `-RequireStandardUser` for technician tests to reject an elevated
+hash. Technician repair retains the verified installed executable in the new
+phase result directory, confirms it is missing from the installation, and then
+requires MSI repair to restore it. The retained executable is private test
+evidence and is not automatically deleted. Use `-RequireStandardUser` for technician tests to reject an elevated
 account; customer phases require administrator access. Reports record the
 actual administrator status. Both editions check Windows Installer registration.
 Uninstall checks all customer manifest files, application/agent executables,
