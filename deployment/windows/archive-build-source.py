@@ -81,6 +81,11 @@ def archive(root, output, components_only=False):
     manifest = {"schema": 1, "snapshot": "before-component-compilation" if components_only else "before-application-compilation",
                 "repositories": repositories, "generated_bridge_files": [] if components_only else list(BRIDGE_FILES),
                 "files": {}}
+    if not components_only:
+        epoch = git(root, "show", "-s", "--format=%ct", "HEAD").decode().strip()
+        if not epoch.isascii() or not epoch.isdecimal():
+            raise ValueError("Invalid source commit timestamp")
+        manifest["source_date_epoch"] = int(epoch)
     with output.open("xb") as destination, zipfile.ZipFile(destination, "w", compression=zipfile.ZIP_DEFLATED) as package:
         for name, (path, mode) in sorted(files.items()):
             data = path.read_bytes()

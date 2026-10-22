@@ -66,6 +66,13 @@ jobs:
             throw 'Application, portable packer, Flutter and installer artifact versions must agree.'
           }
 
+      - name: Set reproducible UTC application build date from public source
+        shell: pwsh
+        run: |
+          $epoch = (git show -s --format=%ct HEAD).Trim()
+          if ($LASTEXITCODE -ne 0 -or $epoch -cnotmatch '^[0-9]+$') { throw 'Source commit timestamp is unavailable.' }
+          Add-Content -LiteralPath $env:GITHUB_ENV -Value ('SOURCE_DATE_EPOCH='+$epoch)
+
       - name: Restore Flutter bridge files
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
@@ -174,6 +181,13 @@ jobs:
           cargo test --release --lib --features "flutter,swan_custom,hwcodec,vram" hbbs_http::sync::managed_sync_tests::managed_sync_rejects_legacy_endpoint_and_unsigned_options -- --exact 2>&1 | Tee-Object -FilePath artifacts/native-managed-sync-tests.log
           if ($LASTEXITCODE -ne 0) { throw 'Managed legacy-sync regression failed.' }
           if ((Get-Content artifacts/native-managed-sync-tests.log -Raw) -notmatch 'test result: ok\. 1 passed; 0 failed;') { throw 'Expected managed legacy-sync test did not run.' }
+
+      - name: Verify deterministic managed application build metadata
+        shell: pwsh
+        run: |
+          cargo test --release --lib --features "flutter,swan_custom,hwcodec,vram" build_metadata::tests:: 2>&1 | Tee-Object -FilePath artifacts/native-build-metadata-tests.log
+          if ($LASTEXITCODE -ne 0) { throw 'Managed build metadata regressions failed.' }
+          if ((Get-Content artifacts/native-build-metadata-tests.log -Raw) -notmatch 'test result: ok\. 3 passed; 0 failed;') { throw 'Expected managed build metadata tests did not run.' }
 
       - name: Reject system-control packets from view-only managed sessions
         shell: pwsh

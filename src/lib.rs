@@ -28,6 +28,8 @@ pub mod ipc;
 )))]
 pub mod ui;
 mod version;
+#[cfg(test)]
+mod build_metadata;
 pub use version::*;
 #[cfg(any(target_os = "android", target_os = "ios", feature = "flutter"))]
 mod bridge_generated;

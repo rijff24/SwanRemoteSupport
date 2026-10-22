@@ -39,6 +39,7 @@ class BuildSourceTests(unittest.TestCase):
                 self.assertNotIn("source/untracked.log", package.namelist())
                 receipt = json.loads(package.read("BUILD-SOURCE.json"))
                 self.assertEqual(len(receipt["generated_bridge_files"]), 6)
+                self.assertEqual(receipt["source_date_epoch"], int(source.git(root, "show", "-s", "--format=%ct", "HEAD")))
                 self.assertEqual(set(receipt["files"]), {"tracked.rs", ".gitignore", *source.BRIDGE_FILES})
             with self.assertRaises(FileExistsError):
                 source.archive(root, first)

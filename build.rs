@@ -77,8 +77,33 @@ fn install_android_deps() {
     println!("cargo:rustc-link-lib=OpenSLES");
 }
 
+#[path = "src/build_metadata.rs"]
+mod build_metadata;
+
+fn generate_version() -> Result<(), Box<dyn std::error::Error>> {
+    println!("cargo:rerun-if-env-changed=SWAN_BUILD");
+    println!("cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH");
+    println!("cargo:rerun-if-changed=Cargo.toml");
+    println!("cargo:rerun-if-changed=src/build_metadata.rs");
+    if std::env::var_os("CARGO_FEATURE_SWAN_CUSTOM").is_some()
+        || std::env::var("SWAN_BUILD").as_deref() == Ok("1")
+    {
+        let epoch = std::env::var("SOURCE_DATE_EPOCH")?;
+        let version = std::env::var("CARGO_PKG_VERSION")?;
+        let metadata = build_metadata::render_version(&version, &epoch)
+            .map_err(|message| std::io::Error::new(std::io::ErrorKind::InvalidInput, message))?;
+        std::fs::write("src/version.rs", metadata)?;
+    } else {
+        hbb_common::gen_version();
+    }
+    Ok(())
+}
+
 fn main() {
-    hbb_common::gen_version();
+    if let Err(error) = generate_version() {
+        eprintln!("Cannot generate application build metadata: {error}");
+        std::process::exit(1);
+    }
     install_android_deps();
     #[cfg(all(windows, feature = "inline"))]
     build_manifest();

@@ -4213,3 +4213,22 @@ completed successfully. Its original artifact is being preserved by the
 existing streaming download; complete verification and an independent
 same-recipe binary comparison remain pending. It was not substituted into the
 incompatible older bundle or counted as a runtime pass.
+
+### Native application date input, 22 October
+
+Inspection found that the pinned upstream `hbb_common::gen_version()` writes
+the machine's current local minute into the native application's `BUILD_DATE`.
+This is a separate source of nondeterministic executable data, beyond linker
+timestamps and the portable packer's cache marker.
+
+Managed application builds now render version metadata from Cargo's package
+version and a required `SOURCE_DATE_EPOCH` in UTC. The Windows workflow uses the
+source commit timestamp, and the application source capsule records that epoch
+so exported sources can reproduce the input without a Git checkout. Ordinary
+upstream builds retain their existing path. No submodule revision was changed.
+The five source-capsule tests passed locally, including repeatable archives,
+private-file exclusion and the recorded epoch's equality to its source commit.
+Three native Rust regressions cover fixed UTC output, invalid date rejection
+and Rust string-literal escaping. Their compilation/execution and an actual
+independent native binary comparison remain pending in a subsequent native
+build; the earlier running `5777ee1` engine experiment predates this correction.

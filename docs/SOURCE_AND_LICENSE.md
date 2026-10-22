@@ -33,6 +33,16 @@ selection refresh it even when the software version is unchanged. The metadata
 format stays compatible with the current launcher. This cache marker is not an
 authorization credential or a replacement for package signatures and hashes.
 
+Managed native builds require `SOURCE_DATE_EPOCH` and render their application
+build date in UTC from that recorded timestamp. The Windows workflow derives it
+from the exact public source commit; the application source capsule records it
+as `source_date_epoch` in `BUILD-SOURCE.json`. For a local managed build, set
+`$env:SOURCE_DATE_EPOCH = (git show -s --format=%ct HEAD).Trim()` before invoking
+the build. When rebuilding an exported source capsule without Git, use its
+recorded epoch. Missing, invalid or unsupported timestamps fail the managed
+build instead of silently substituting local wall-clock time. The ordinary
+upstream build retains its existing metadata path.
+
 The topmost-window helper is built from public upstream commit
 `ecd8d6a139eee76845ea66423fb739af450fda90`. Its x64 release workflow requests
 `/Brepro` for compilation and linking, disables incremental linking and records
