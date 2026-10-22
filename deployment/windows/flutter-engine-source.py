@@ -25,7 +25,9 @@ def load_recipe():
         raise ValueError("Unexpected engine source")
     if lock["depot_tools"]["repository"] != "https://chromium.googlesource.com/chromium/tools/depot_tools.git":
         raise ValueError("Unexpected depot-tools source")
-    for component in ("engine", "depot_tools"):
+    if lock["buildroot"]["repository"] != "https://github.com/flutter/buildroot.git":
+        raise ValueError("Unexpected Flutter buildroot source")
+    for component in ("engine", "depot_tools", "buildroot"):
         if not re.fullmatch(r"[0-9a-f]{40}", lock[component]["revision"]):
             raise ValueError("Source must use a full immutable revision")
     if lock["patch"]["file"] != "flutter-engine-windows.patch" or set(lock["patch"]["files"]) != {
@@ -44,6 +46,17 @@ def load_recipe():
     if (tinygltf["repository"] != "https://github.com/syoyo/tinygltf.git"
             or tinygltf["revision"] != "9bb5806df4055ac973b970ba5b3e27ce27d98148"):
         raise ValueError("Dependency mirror override must preserve the original DEPS commit")
+    buildroot = lock["buildroot"]
+    if (buildroot["patch_file"] != "flutter-engine-buildroot.patch"
+            or set(buildroot["files"]) != {"build/toolchain/win/setup_toolchain.py"}
+            or sha(RECIPE / buildroot["patch_file"]) != buildroot["patch_sha256"]):
+        raise ValueError("Unexpected buildroot toolset-selection patch")
+    if lock["windows_toolchain"] != {
+        "msvc_component": "Microsoft.VisualStudio.Component.VC.14.38.17.8.x86.x64",
+        "msvc_tools_version": "14.38.33130", "vcvars_selector": "14.38",
+        "windows_sdk_version": "10.0.22621.0",
+    }:
+        raise ValueError("Unexpected Windows engine toolset")
     return lock, patch
 
 
@@ -76,10 +89,51 @@ def apply_patch(engine):
     verify_checkout(engine, lock, True)
 
 
+def verify_buildroot(root, lock, patched):
+    root = root.resolve(strict=True)
+    expected = lock["buildroot"]
+    if Path(git(root, "rev-parse", "--show-toplevel").decode().strip()).resolve() != root:
+        raise ValueError("Expected the Flutter buildroot repository root")
+    if git(root, "rev-parse", "HEAD").decode().strip() != expected["revision"]:
+        raise ValueError("Buildroot source revision changed")
+    if git(root, "diff", "--cached", "--name-only").strip():
+        raise ValueError("Buildroot has staged changes")
+    changed = set(git(root, "diff", "--name-only").decode().splitlines())
+    if changed != (set(expected["files"]) if patched else set()):
+        raise ValueError("Unexpected buildroot source modifications")
+    for name, hashes in expected["files"].items():
+        path = root / name
+        if path.is_symlink() or sha(path) != hashes["patched_sha256" if patched else "original_sha256"]:
+            raise ValueError("Buildroot source bytes changed: " + name)
+
+
+def patch_buildroot(root):
+    lock, _ = load_recipe()
+    verify_buildroot(root, lock, False)
+    patch = RECIPE / lock["buildroot"]["patch_file"]
+    subprocess.run(["git", "-C", str(root), "apply", "--check", str(patch)], check=True)
+    subprocess.run(["git", "-C", str(root), "apply", str(patch)], check=True)
+    verify_buildroot(root, lock, True)
+
+
+def verify_commands(path, lock):
+    commands = path.read_text(encoding="utf-8-sig").replace("\\", "/")
+    if "_ALLOW_COMPILER_AND_STL_VERSION_MISMATCH" in commands:
+        raise ValueError("Compiler and standard-library compatibility checks must remain enabled")
+    msvc = set(re.findall(r'/VC/Tools/MSVC/([^/\s"]+)/', commands, re.IGNORECASE))
+    sdk = set(re.findall(r'/Windows Kits/10/(?:include|lib)/([^/\s"]+)/', commands, re.IGNORECASE))
+    if msvc != {lock["windows_toolchain"]["msvc_tools_version"]}:
+        raise ValueError("Generated compile/link commands do not use only the pinned MSVC toolset")
+    if sdk != {lock["windows_toolchain"]["windows_sdk_version"]}:
+        raise ValueError("Generated compile/link commands do not use only the pinned Windows SDK")
+
+
 def package(build, output):
     lock, patch = load_recipe()
     engine = build / "checkout/src/flutter"
     verify_checkout(engine, lock, True)
+    verify_buildroot(build / "checkout/src", lock, True)
+    verify_commands(build / "ninja-commands.txt", lock)
     if git(build / "depot_tools", "rev-parse", "HEAD").decode().strip() != lock["depot_tools"]["revision"]:
         raise ValueError("Depot-tools revision changed")
     for name, expected in lock["dependency_overrides"].items():
@@ -102,9 +156,13 @@ def package(build, output):
             or struct.unpack_from("<H", dll, pe + 4)[0] != 0x8664
             or not struct.unpack_from("<H", dll, pe + 22)[0] & 0x2000):
         raise ValueError("Engine is not Windows x64")
-    for name in ("dependency-revisions.txt", "toolchain.json"):
+    for name in ("dependency-revisions.txt", "toolchain.json", "ninja-commands.txt"):
         if not (build / name).is_file():
             raise ValueError("Missing engine build evidence: " + name)
+    toolchain = json.loads((build / "toolchain.json").read_text(encoding="utf-8-sig"))
+    for field in ("msvc_tools_version", "windows_sdk_version"):
+        if toolchain[field] != lock["windows_toolchain"][field]:
+            raise ValueError("Recorded toolchain differs from reviewed recipe")
     if not (release / "args.gn").is_file():
         raise ValueError("Missing generated engine build arguments")
     output.mkdir(parents=True)
@@ -117,10 +175,15 @@ def package(build, output):
             zipped.writestr(info, path.read_bytes())
     subprocess.run(["git", "-C", str(engine), "archive", "--format=zip",
                     "--output=" + str((output / "FlutterEngine-original-source.zip").resolve()), "HEAD"], check=True)
+    subprocess.run(["git", "-C", str(build / "checkout/src"), "archive", "--format=zip",
+                    "--output=" + str((output / "FlutterBuildroot-original-source.zip").resolve()), "HEAD"], check=True)
     for path in [RECIPE / "flutter-engine.lock.json", patch, Path(__file__),
-                 RECIPE / "Build-FlutterEngine.ps1", build / "dependency-revisions.txt", build / "toolchain.json"]:
+                 RECIPE / lock["buildroot"]["patch_file"], RECIPE / "Build-FlutterEngine.ps1",
+                 RECIPE / "Install-FlutterEngineToolchain.ps1", build / "dependency-revisions.txt",
+                 build / "toolchain.json", build / "ninja-commands.txt"]:
         (output / path.name).write_bytes(path.read_bytes())
     (output / "applied-source.patch").write_bytes(git(engine, "diff", "--binary", "--no-ext-diff"))
+    (output / "applied-buildroot.patch").write_bytes(git(build / "checkout/src", "diff", "--binary", "--no-ext-diff"))
     (output / "args.gn").write_bytes((release / "args.gn").read_bytes())
     (output / "gclient-config.txt").write_bytes((build / "checkout/.gclient").read_bytes())
     workflow = RECIPE.parents[1] / ".github/workflows/swan-flutter-engine.yml"
@@ -128,6 +191,8 @@ def package(build, output):
     result = {
         "schema": 1, "engine_revision": lock["engine"]["revision"],
         "depot_tools_revision": lock["depot_tools"]["revision"],
+        "buildroot_revision": lock["buildroot"]["revision"],
+        "msvc_tools_version": lock["windows_toolchain"]["msvc_tools_version"],
         "archive_sha256": sha(archive),
         "binary_files": {path.name: sha(path) for path in binaries},
         "evidence_files": {path.name: sha(path) for path in output.iterdir() if path.is_file()},
@@ -144,6 +209,10 @@ if __name__ == "__main__":
     sub = parser.add_subparsers(dest="command", required=True)
     patch_parser = sub.add_parser("patch")
     patch_parser.add_argument("engine", type=Path)
+    root_parser = sub.add_parser("patch-buildroot")
+    root_parser.add_argument("root", type=Path)
+    command_parser = sub.add_parser("verify-commands")
+    command_parser.add_argument("commands", type=Path)
     package_parser = sub.add_parser("package")
     package_parser.add_argument("build", type=Path)
     package_parser.add_argument("output", type=Path)
@@ -151,5 +220,11 @@ if __name__ == "__main__":
     if args.command == "patch":
         apply_patch(args.engine)
         print("Reviewed engine source and patch hashes verified")
+    elif args.command == "patch-buildroot":
+        patch_buildroot(args.root)
+        print("Reviewed buildroot source and toolset-selection patch verified")
+    elif args.command == "verify-commands":
+        verify_commands(args.commands, load_recipe()[0])
+        print("Generated commands use the pinned Microsoft toolset and Windows SDK")
     else:
         print(json.dumps(package(args.build, args.output)))

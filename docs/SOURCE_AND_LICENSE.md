@@ -72,13 +72,31 @@ upstream repository and retains the exact original DEPS commit
 both the checked-out commit and repository URL; the original engine DEPS file
 remains unchanged. The effective gclient configuration is included as evidence.
 
+The reconstruction selects MSVC tools `14.38.33130` and Windows SDK
+`10.0.22621.0`. A hash-checked patch to the engine's pinned Flutter buildroot
+`e265c359126b24351f534080fb22edaa159f2215` passes `-vcvars_ver=14.38` to
+Microsoft's environment setup. Before compilation and again before packaging,
+the verifier rejects generated commands that reference another Microsoft toolset
+or SDK, or disable compiler/STL compatibility checks. The original buildroot
+source, applied patch and actual compile/link commands accompany the result.
+The disposable GitHub runner installs the selected side-by-side Microsoft C++
+component when needed; this provisioning script refuses execution outside the
+GitHub Windows runner. Local builds require that component to be installed
+beforehand. Compiler/library hashes and toolchain diagnostics are recorded before
+compilation so a failed build still exposes its actual inputs.
+
 For an equivalent local build, run this in a new PowerShell process on a Windows
-machine with Visual Studio 2022 Enterprise, its C++ tools/Windows SDK, Git, Python,
-and at least 40 GiB free on the chosen build drive:
+machine with Visual Studio 2022, the selected MSVC/SDK versions, Git, Python,
+and at least 40 GiB free on the chosen build drive. The default Visual Studio path
+matches the GitHub runner's Enterprise installation:
 
 ```powershell
 pwsh -NoProfile -File deployment/windows/Build-FlutterEngine.ps1 -BuildRoot C:\SwanEngineSourceBuild
 ```
+
+For another Visual Studio edition, supply its installation directory through
+`-VisualStudioPath`, for example
+`-VisualStudioPath 'C:\Program Files\Microsoft Visual Studio\2022\Community'`.
 
 The build directory must not already exist. Downloads and compilation take place
 inside it. The recipe never removes existing toolchains to obtain disk space.

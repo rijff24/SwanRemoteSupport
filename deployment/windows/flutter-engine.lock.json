@@ -39,5 +39,23 @@
       "revision": "9bb5806df4055ac973b970ba5b3e27ce27d98148",
       "reason": "The Flutter mirror no longer exposes this exact DEPS commit; use the canonical upstream repository without changing the source revision."
     }
+  },
+  "buildroot": {
+    "repository": "https://github.com/flutter/buildroot.git",
+    "revision": "e265c359126b24351f534080fb22edaa159f2215",
+    "patch_file": "flutter-engine-buildroot.patch",
+    "patch_sha256": "a50c5f1bcb42746ea194b4949ece44a35ef7175caa1323f36d8de8b8cc348c51",
+    "files": {
+      "build/toolchain/win/setup_toolchain.py": {
+        "original_sha256": "ee45bc284922f01b107aea6b31b7b5b5f81d33480acd4cbf0c516ff09f47a03c",
+        "patched_sha256": "0eb81ef45f71b803e0a04d99a90c024de4c53ec009099557ac59ebf762126cef"
+      }
+    }
+  },
+  "windows_toolchain": {
+    "msvc_component": "Microsoft.VisualStudio.Component.VC.14.38.17.8.x86.x64",
+    "msvc_tools_version": "14.38.33130",
+    "vcvars_selector": "14.38",
+    "windows_sdk_version": "10.0.22621.0"
   }
 }

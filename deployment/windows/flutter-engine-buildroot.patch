@@ -1,0 +1,10 @@
+--- a/build/toolchain/win/setup_toolchain.py
++++ b/build/toolchain/win/setup_toolchain.py
+@@ -186,6 +186,7 @@
+     # building with a new and untested SDK. This should stay in sync with the
+     # packaged toolchain in build/vs_toolchain.py.
+     args.append(SDK_VERSION)
++    args.append('-vcvars_ver=14.38')
+     variables = _LoadEnvFromBat(args)
+   return _ExtractImportantEnvironment(variables)
+ 

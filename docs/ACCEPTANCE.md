@@ -3800,6 +3800,16 @@ engine dependency recipe pins an older Clang. A compatible pinned Microsoft
 toolset still needs to be selected and tested; the compiler compatibility check
 was not disabled. There is no successful source-built engine artifact yet.
 
+The next recipe pins MSVC tools `14.38.33130` and SDK `10.0.22621.0`, explicitly
+selects the older toolset through a hash-checked patch to pinned buildroot
+`e265c359126b24351f534080fb22edaa159f2215`, and verifies the generated compile/link
+commands before compilation and packaging. Three local guard tests passed,
+including mixed/wrong toolsets, SDK drift, changed patch/dependency pins and
+compiler/STL compatibility suppression. A real sparse checkout of the public
+buildroot commit accepted the reviewed patch and rejected changed source,
+a wrong revision and repeated patching. These are provenance/guard checks;
+successful engine compilation and runtime qualification are still required.
+
 Engine results remain separate candidates with explicit unverified binary
 rebuild/runtime/production flags. The application workflow still uses its
 previously reviewed engine archive hash. No source-built engine has been

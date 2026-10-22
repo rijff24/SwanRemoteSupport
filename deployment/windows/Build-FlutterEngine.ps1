@@ -1,9 +1,14 @@
-param([Parameter(Mandatory=$true)][string]$BuildRoot)
+param(
+ [Parameter(Mandatory=$true)][string]$BuildRoot,
+ [string]$VisualStudioPath='C:\Program Files\Microsoft Visual Studio\2022\Enterprise'
+)
 $ErrorActionPreference='Stop'
 $ProgressPreference='SilentlyContinue'
 $recipe=Get-Content -LiteralPath (Join-Path $PSScriptRoot 'flutter-engine.lock.json') -Raw | ConvertFrom-Json
 if($recipe.schema -ne 1 -or $recipe.engine.repository -cne 'https://github.com/flutter-team-archive/engine.git' -or $recipe.depot_tools.repository -cne 'https://chromium.googlesource.com/chromium/tools/depot_tools.git'){throw 'Unexpected engine source recipe'}
-foreach($component in @($recipe.engine,$recipe.depot_tools)){if($component.revision -cnotmatch '^[0-9a-f]{40}$'){throw 'An immutable source revision is required'}}
+if($recipe.buildroot.repository -cne 'https://github.com/flutter/buildroot.git'){throw 'Unexpected Flutter buildroot source'}
+foreach($component in @($recipe.engine,$recipe.depot_tools,$recipe.buildroot)){if($component.revision -cnotmatch '^[0-9a-f]{40}$'){throw 'An immutable source revision is required'}}
+if($recipe.windows_toolchain.msvc_tools_version -cne '14.38.33130' -or $recipe.windows_toolchain.windows_sdk_version -cne '10.0.22621.0'){throw 'Unexpected engine Windows toolchain'}
 $overrideProperties=@($recipe.dependency_overrides.PSObject.Properties)
 if($overrideProperties.Count -ne 1 -or $overrideProperties[0].Name -cne 'src/flutter/third_party/tinygltf' -or $overrideProperties[0].Value.repository -cne 'https://github.com/syoyo/tinygltf.git' -or $overrideProperties[0].Value.revision -cne '9bb5806df4055ac973b970ba5b3e27ce27d98148'){throw 'Dependency override must preserve the reviewed original DEPS commit'}
 $root=[IO.Path]::GetFullPath($BuildRoot)
@@ -11,16 +16,19 @@ if(Test-Path -LiteralPath $root){throw 'Build root must be a new dedicated direc
 $parent=Get-Item -LiteralPath ([IO.Path]::GetDirectoryName($root))
 if($parent.Attributes -band [IO.FileAttributes]::ReparsePoint){throw 'Build parent cannot be a reparse point'}
 if((Get-PSDrive -Name $parent.PSDrive.Name).Free -lt 40GB){throw 'Engine build requires at least 40 GiB free on its build drive'}
-New-Item -ItemType Directory -Path $root | Out-Null
 $env:DEPOT_TOOLS_UPDATE='0'
 $env:DEPOT_TOOLS_WIN_TOOLCHAIN='0'
 $env:GIT_CONFIG_COUNT='1'
 $env:GIT_CONFIG_KEY_0='core.autocrlf'
 $env:GIT_CONFIG_VALUE_0='false'
 $env:PYTHONIOENCODING='utf-8'
-$env:GYP_MSVS_OVERRIDE_PATH='C:\Program Files\Microsoft Visual Studio\2022\Enterprise'
+$env:GYP_MSVS_OVERRIDE_PATH=[IO.Path]::GetFullPath($VisualStudioPath)
 $env:WINDOWSSDKDIR='C:\Program Files (x86)\Windows Kits\10'
-if(-not(Test-Path -LiteralPath $env:GYP_MSVS_OVERRIDE_PATH)){throw 'Visual Studio 2022 Enterprise build tools are required'}
+if(-not(Test-Path -LiteralPath $env:GYP_MSVS_OVERRIDE_PATH)){throw 'Visual Studio 2022 C++ build tools are required'}
+$msvc=Join-Path $env:GYP_MSVS_OVERRIDE_PATH ('VC\Tools\MSVC\'+$recipe.windows_toolchain.msvc_tools_version)
+if(-not(Test-Path -LiteralPath (Join-Path $msvc 'lib\x64\libcpmt.lib'))){throw 'The pinned Microsoft C++ 14.38.33130 toolset is required'}
+if(-not(Test-Path -LiteralPath (Join-Path $env:WINDOWSSDKDIR ('Include\'+$recipe.windows_toolchain.windows_sdk_version)))){throw 'The pinned Windows SDK 10.0.22621.0 is required'}
+New-Item -ItemType Directory -Path $root | Out-Null
 function Invoke-Checked([string]$Executable,[string[]]$Arguments){
  & $Executable @Arguments
  if($LASTEXITCODE -ne 0){throw ('Engine build command failed: '+$Executable+' exit '+$LASTEXITCODE)}
@@ -53,17 +61,23 @@ try {
  [IO.File]::WriteAllText((Join-Path $root 'dependency-revisions.txt'),($revisions -join "`n"),[Text.UTF8Encoding]::new($false))
  $engine=Join-Path $checkout 'src\flutter'
  Invoke-Checked python @((Join-Path $PSScriptRoot 'flutter-engine-source.py'),'patch',$engine)
+ Invoke-Checked python @((Join-Path $PSScriptRoot 'flutter-engine-source.py'),'patch-buildroot',(Join-Path $checkout 'src'))
  if((Get-PSDrive -Name $parent.PSDrive.Name).Free -lt 12GB){throw 'Insufficient disk reserve after engine dependency checkout'}
- Push-Location (Join-Path $checkout 'src')
- try {
-  Invoke-Checked python @((Join-Path $engine 'tools\gn'),'--runtime-mode=release')
-  Invoke-Checked (Join-Path $engine 'third_party\ninja\ninja.exe') @('-C','out/host_release','-j4','flutter_windows.dll')
- } finally {Pop-Location}
  $compiler=Join-Path $engine 'buildtools\windows-x64\clang\bin\clang-cl.exe'
  if(-not(Test-Path -LiteralPath $compiler)){throw 'Pinned engine compiler is missing'}
  $compilerVersion=& $compiler --version | Out-String
  if($LASTEXITCODE -ne 0){throw 'Pinned engine compiler version could not be recorded'}
- $toolchain=@{runner_os=$env:RUNNER_OS;runner_image=$env:ImageOS;runner_image_version=$env:ImageVersion;git=(& git --version);python=(& python --version);compiler=$compilerVersion;visual_studio=$env:GYP_MSVS_OVERRIDE_PATH;msvc_directories=@(Get-ChildItem -Directory -LiteralPath (Join-Path $env:GYP_MSVS_OVERRIDE_PATH 'VC\Tools\MSVC') | Select-Object -ExpandProperty Name);windows_sdk_versions=@(Get-ChildItem -Directory -LiteralPath (Join-Path $env:WINDOWSSDKDIR 'Include') | Select-Object -ExpandProperty Name);gn_arguments=@('--runtime-mode=release');ninja_target='flutter_windows.dll';source_commit=$env:GITHUB_SHA;workflow_run=$env:GITHUB_RUN_ID}
+ $toolchain=@{runner_os=$env:RUNNER_OS;runner_image=$env:ImageOS;runner_image_version=$env:ImageVersion;git=(& git --version);python=(& python --version);compiler=$compilerVersion;compiler_sha256=(Get-FileHash -LiteralPath $compiler).Hash;visual_studio=$env:GYP_MSVS_OVERRIDE_PATH;msvc_tools_version=$recipe.windows_toolchain.msvc_tools_version;msvc_libcmt_sha256=(Get-FileHash -LiteralPath (Join-Path $msvc 'lib\x64\libcmt.lib')).Hash;msvc_libcpmt_sha256=(Get-FileHash -LiteralPath (Join-Path $msvc 'lib\x64\libcpmt.lib')).Hash;windows_sdk_version=$recipe.windows_toolchain.windows_sdk_version;msvc_directories=@(Get-ChildItem -Directory -LiteralPath (Join-Path $env:GYP_MSVS_OVERRIDE_PATH 'VC\Tools\MSVC') | Select-Object -ExpandProperty Name);windows_sdk_versions=@(Get-ChildItem -Directory -LiteralPath (Join-Path $env:WINDOWSSDKDIR 'Include') | Select-Object -ExpandProperty Name);gn_arguments=@('--runtime-mode=release');ninja_target='flutter_windows.dll';source_commit=$env:GITHUB_SHA;workflow_run=$env:GITHUB_RUN_ID}
  $toolchain | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $root 'toolchain.json') -Encoding utf8
+ Write-Output $compilerVersion
+ Push-Location (Join-Path $checkout 'src')
+ try {
+  Invoke-Checked python @((Join-Path $engine 'tools\gn'),'--runtime-mode=release')
+  $commands=& (Join-Path $engine 'third_party\ninja\ninja.exe') -C out/host_release -t commands flutter_windows.dll
+  if($LASTEXITCODE -ne 0){throw 'Could not record generated engine compile/link commands'}
+  [IO.File]::WriteAllText((Join-Path $root 'ninja-commands.txt'),($commands -join "`n"),[Text.UTF8Encoding]::new($false))
+  Invoke-Checked python @((Join-Path $PSScriptRoot 'flutter-engine-source.py'),'verify-commands',(Join-Path $root 'ninja-commands.txt'))
+  Invoke-Checked (Join-Path $engine 'third_party\ninja\ninja.exe') @('-C','out/host_release','-j4','flutter_windows.dll')
+ } finally {Pop-Location}
  Invoke-Checked python @((Join-Path $PSScriptRoot 'flutter-engine-source.py'),'package',$root,(Join-Path $root 'artifacts'))
 } finally {Pop-Location}
