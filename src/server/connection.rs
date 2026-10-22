@@ -5425,9 +5425,22 @@ impl Connection {
     }
 
     fn authorized_scope_violation(&self, msg: &Message) -> Option<&'static str> {
+        #[cfg(all(feature = "swan_custom", windows))]
+        let current_session_id = match msg.union.as_ref() {
+            Some(message::Union::Misc(misc))
+                if matches!(misc.union.as_ref(), Some(misc::Union::SelectedSid(_))) =>
+            {
+                crate::platform::get_current_process_session_id()
+            }
+            _ => None,
+        };
+        #[cfg(all(feature = "swan_custom", not(windows)))]
+        let current_session_id = None;
         #[cfg(feature = "swan_custom")]
         if let Some(violation) = Self::managed_control_scope_violation(
-            self.keyboard && self.managed_permission_cap("keyboard"), msg,
+            self.keyboard && self.managed_permission_cap("keyboard"),
+            current_session_id,
+            msg,
         ) {
             return Some(violation);
         }
@@ -5445,15 +5458,22 @@ impl Connection {
     }
 
     #[cfg(feature = "swan_custom")]
-    fn managed_control_scope_violation(keyboard: bool, msg: &Message) -> Option<&'static str> {
+    fn managed_control_scope_violation(
+        keyboard: bool,
+        current_session_id: Option<u32>,
+        msg: &Message,
+    ) -> Option<&'static str> {
         if keyboard { return None; }
         let Some(message::Union::Misc(misc)) = msg.union.as_ref() else { return None; };
         match misc.union.as_ref() {
             Some(misc::Union::ToggleVirtualDisplay(_))
             | Some(misc::Union::ElevationRequest(_))
             | Some(misc::Union::ChangeResolution(_))
-            | Some(misc::Union::ChangeDisplayResolution(_))
-            | Some(misc::Union::SelectedSid(_)) => Some("Company grant denies system control"),
+            | Some(misc::Union::ChangeDisplayResolution(_)) => Some("Company grant denies system control"),
+            // Acknowledging the current session starts monitor/camera subscriptions
+            // and delayed directory reads. Only switching sessions needs control.
+            Some(misc::Union::SelectedSid(sid)) if Some(*sid) != current_session_id =>
+                Some("Company grant denies system control"),
             _ => None,
         }
     }
@@ -6886,10 +6906,16 @@ mod test {
             // Exercise the same parsed wire message used by the receiving guard.
             let wire = packet.write_to_bytes().unwrap();
             let received = Message::parse_from_bytes(&wire).unwrap();
-            assert_eq!(Connection::managed_control_scope_violation(false, &received),
+            assert_eq!(Connection::managed_control_scope_violation(false, Some(1), &received),
                 Some("Company grant denies system control"));
-            assert_eq!(Connection::managed_control_scope_violation(true, &received), None);
+            assert_eq!(Connection::managed_control_scope_violation(true, Some(1), &received), None);
         }
+        let wire = misc_msg(|m| m.set_selected_sid(1)).write_to_bytes().unwrap();
+        let current_session = Message::parse_from_bytes(&wire).unwrap();
+        assert_eq!(Connection::managed_control_scope_violation(false, Some(1), &current_session), None);
+        // A failed OS lookup must not make an arbitrary requested session trusted.
+        assert_eq!(Connection::managed_control_scope_violation(false, None, &current_session),
+            Some("Company grant denies system control"));
         // View-only support must still select and capture existing monitors.
         for packet in [
             misc_msg(|m| m.set_switch_display(SwitchDisplay::new())),
@@ -6897,7 +6923,7 @@ mod test {
             misc_msg(|m| m.set_refresh_video(true)),
             misc_msg(|m| m.set_chat_message(ChatMessage::new())),
         ] {
-            assert_eq!(Connection::managed_control_scope_violation(false, &packet), None);
+            assert_eq!(Connection::managed_control_scope_violation(false, Some(1), &packet), None);
         }
     }
 

@@ -3700,3 +3700,22 @@ three original MSI logs and their receipts, runner/task identity, licensing
 result, activation failure, and labeled final-check stdout observation.
 The report explicitly records `full_windows_qualification: false` and whether
 the original final-check file download is still pending.
+
+### View-only Windows session acknowledgement correction, 22 October
+
+Source inspection after the `becf3cd` diagnostic found that the managed control
+filter rejected every `SelectedSid` packet when keyboard/control permission was
+absent. The client sends this packet to acknowledge the current Windows session;
+the receiver then starts monitor/camera subscriptions or completes delayed
+file-directory reads. Rejecting that acknowledgement could prevent legitimate
+view-only or file-only sessions from initializing on hosts with session selection.
+
+The receiver now compares the requested session with its own OS-reported process
+session ID. Acknowledging that same session is allowed; selecting a different
+session still requires both receiver control permission and the signed grant's
+keyboard permission. An unavailable OS session ID fails closed. Other system
+control packets retain their existing permission checks. The wire-message
+regression test now covers same-session acknowledgement, another-session denial
+and failed OS lookup, alongside elevation, resolution and virtual-display checks.
+Compilation/regression results and receiving-device runtime acceptance remain
+pending for this new source; the earlier native build does not cover it.
