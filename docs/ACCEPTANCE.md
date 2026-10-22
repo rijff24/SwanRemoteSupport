@@ -5033,3 +5033,33 @@ MSI acceptance, receiving-device enforcement, separate-machine/public transport,
 production signing and update qualification remain open. This native source
 also predates the newer `4c5accb` worker rejection fix; that fix's component tests
 must not be attributed to these native binaries.
+
+### Windows 10 administrative technician major upgrade, 23 October
+
+The preserved standard Windows 10 Pro x64 guest, build `19045.3803`, passed a
+real bare-MSI upgrade from source `e9d89ca` version 1.5.0 to native source
+`3bad169` version 1.5.1. The latter original MSI SHA-256 is
+`185e37ff134d756c741ec81e68eb03d09a2ef230920357272481ff920f4715e9`.
+Initial install, major upgrade, missing-executable repair and uninstall all
+returned 0 without requiring reboot. Actual technician application bytes changed;
+the old ProductCode became absent, the new ProductCode became installed, and
+the technician UpgradeCode remained stable. Repair checked the new payload;
+the independent original report confirms missing-file recovery.
+
+The original administrator profile's unused-directory guard first stopped
+before installation because an earlier technician directory already existed.
+That directory and its original failure evidence were preserved. The passing
+run used a fresh owned administrator profile with a password-authenticated,
+highest-privilege task. The harness used a process-only execution-policy option;
+persistent policies were unchanged. No customer enrollment or company services
+were present in this Windows 10 fixture before or after the test. Fourteen
+original fixture, invocation, result and MSI-log records were retained and
+verified against guest byte counts and SHA-256 values. An initial collector
+field-name assertion failed after transferring those records; a separate
+metadata-only verification validated the originals without repeating any MSI.
+
+Windows activation remains status 5 with zero grace minutes; no activation
+bypass was attempted. These are functional **administrative MSI upgrade**
+results on the specified guest, not complete licensed Windows compatibility,
+standard-user installation, company-generated distribution, production signing,
+enrollment preservation or automatic/interrupted-update qualification.
