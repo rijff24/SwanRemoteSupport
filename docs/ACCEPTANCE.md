@@ -1,6 +1,6 @@
 # Configurable product acceptance report
 
-Evidence through 22 October 2026. **The product is not complete or approved for
+Evidence through 23 October 2026. **The product is not complete or approved for
 production publication.** A passing component test is not evidence of a working
 native support session or a clean-machine installation.
 
@@ -4998,3 +4998,38 @@ verified. That full component/deployment check passed; the optional MSI job was
 skipped. These are HTTP/control-path regression tests, not a matched Windows
 worker/server publication test. Runtime publication and download authorization
 remain open while maintenance approval is pending.
+
+### Rebuilt native history-label regression, 23 October
+
+Native [run 39851990495](https://github.com/rijff24/SwanRemoteSupport/actions/runs/39851990495)
+passed every job at exact source
+`3bad1697b0d744421ded6386cbcd091ea0b13e67`. Its original unsigned artifact
+`12461520673` was retained: 254,500,267 bytes, SHA-256
+`be54aa65b24e0e0ebd4a3bb3bd0cb880e2336d0acba910db9cf1a257fc386ce8`.
+Verification matched 1,157 tracked public source files, all six generated bridge
+files, and the original selected engine source/evidence. All 95 extracted
+portable payload files matched the installed-file manifest without modifying
+executable bytes. This particular source has not yet passed an independent
+native rebuild comparison; earlier source-specific comparisons do not prove it.
+
+The unchanged extracted app and agent ran with isolated technician state under
+the owned standard Windows account on the retained Server 2016 lab guest. HTTPS
+setup accepted company profile revision 18 and displayed its branding. Normal
+MFA login with the owned company **administrator** account displayed inventory
+and existing closed sessions. Those history rows now visibly say `Closed`.
+No support request was made and no account, group or permission was changed.
+Sign-out removed inventory/history and cleared password/authenticator fields;
+the process and interactive task subsequently exited with result 0. Nine
+original setup, state, fixture and runtime records were transferred with byte
+counts and SHA-256 verification; the test password and TOTP secret were absent
+from them. All three existing lab services remained running.
+
+This confirms the native history-label correction, signed-profile startup and
+MFA/sign-out for that bounded fixture. Administrator login does not replace the
+earlier technician-role authorization tests. The unpacked app displayed an
+update-deferred warning and had no installed release; neither automatic updates
+nor the Windows Installer policy diagnostic was exercised. Fresh deployment,
+MSI acceptance, receiving-device enforcement, separate-machine/public transport,
+production signing and update qualification remain open. This native source
+also predates the newer `4c5accb` worker rejection fix; that fix's component tests
+must not be attributed to these native binaries.
