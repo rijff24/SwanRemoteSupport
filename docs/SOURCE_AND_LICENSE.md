@@ -241,6 +241,21 @@ reproducibility is **not established**. No shipping bytes were normalized.
 The newer pinned Roslyn setup compiler and source-built engine are separate
 changes requiring their own exact-source comparison and runtime qualification.
 
+### Source-built engine application comparison (22 October 2026)
+
+[Comparison run 39800887785](https://github.com/rijff24/SwanRemoteSupport/actions/runs/39800887785)
+verified public source and original archives for successful native builds
+`39777271372` and `39789147510`, both at
+`9e4ea6dfce7dc1e66eccf6e1068780a23ae8fd59` with the explicitly selected,
+independently reproduced `05d5369` engine. The
+[original report](../deployment/windows/native-9e4ea6d-rebuild-comparison.json)
+shows identical customer MSI, agent, management service, worker and server setup
+EXE bytes. This establishes the pinned Roslyn server launcher correction across
+two actual native CI builds. The portable technician EXE, its installer-name
+copy and the technician MSI still differ. The comparison failed as intended;
+complete native reproducibility and runtime/release qualification remain open.
+No shipping files were normalized or executed by the comparison.
+
 ### Server launcher compiler
 
 The server setup recipe uses MIT-licensed Microsoft Roslyn
