@@ -4989,5 +4989,12 @@ no download link. Auth/state conflicts and temporary network/server/rate-limit
 failures retain recovery. Diagnostics accept only fixed public error labels
 from a bounded response with a reading deadline. Wire regressions cover failed
 completion reporting, identical-byte transient retries, auth/conflict recovery
-and exclusion of arbitrary remote text/secrets. These new tests require CI;
-matched Windows runtime publication and download authorization remain open.
+and exclusion of arbitrary remote text/secrets. All four new regressions passed
+on Windows 2022 and Ubuntu at source
+`4c5accb7ae73615c799a43fa70dc2a49aeed0822` in
+[PR check 39855276940](https://github.com/rijff24/SwanRemoteSupport/actions/runs/39855276940).
+The original two job logs were retained and their individual passing test lines
+verified. That full component/deployment check passed; the optional MSI job was
+skipped. These are HTTP/control-path regression tests, not a matched Windows
+worker/server publication test. Runtime publication and download authorization
+remain open while maintenance approval is pending.
