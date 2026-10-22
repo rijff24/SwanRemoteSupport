@@ -15,9 +15,35 @@ ProductCode is a UUIDv5 derived from the stable edition UpgradeCode namespace
 and `windows-x64|<software-version>`. Identical-version rebuilds therefore keep
 the same product identity; a new software version gets a new identity. Company
 names and branding are not identity inputs. The customer builder uses the same
-rule with its own existing UpgradeCode. Package codes and build timestamps
-remain separate reproducibility work; stable ProductCode alone does not make
+rule with its own existing UpgradeCode. Stable ProductCode alone does not make
 MSI bytes reproducible or qualify upgrade/recovery behavior.
+
+`Set-ReproducibleMsiMetadata.ps1 -InputMsi <original> -OutputMsi <new-unsigned.msi>
+-SourceDateEpoch <release-commit-epoch>` prepares a separate unsigned copy before
+signing. It fixes summary timestamps, clears the permitted root-storage modified
+time and derives a UUIDv5 PackageCode from the resulting canonical package hash.
+Changes to package content or the epoch change the PackageCode. Existing outputs
+and signed inputs are rejected. Originals remain intact. Both MSI builders enable
+this step with `-SourceDateEpoch <release-commit-epoch>`, retaining the raw WiX
+output and recording the metadata receipt. It is not yet enabled in CI or the
+company worker by default.
+
+Two actual WiX 5.0.2 technician builds using the same `e6b87b9` payload produced
+identical prepared MSI bytes at epoch `1792648409`: SHA-256
+`68ea4ffe612d521a8354910381fb964b18624d413f73c207181bb068ae627855`.
+Two subsequent full technician builder invocations with this option produced
+identical final unsigned bytes, SHA-256
+`bc349fff46cf371579e2f99d78ec11713768896531013f074358daf01cd76efb`.
+The native metadata test passes under Windows PowerShell 5.1 and checks
+idempotence, changed-epoch and changed-table package identities, overwrite
+rejection, signed-input rejection and preservation of original files. This does
+not establish reproducibility across different input file timestamps, independent
+CI builds, signing operations or clean-machine installer lifecycles. Those remain
+release gates.
+
+Metadata format references: Microsoft's [package codes](https://learn.microsoft.com/en-us/windows/win32/msi/package-codes),
+[summary revision](https://learn.microsoft.com/en-us/windows/win32/msi/revision-number-summary)
+and [compound-file root directory](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-cfb/026fde6e-143d-41bf-a7da-c08b2130d50e).
 
 Windows Installer policy can prohibit unmanaged per-user installations. A
 standard-user test of the signed `e6b87b9` package on Server 2022 build

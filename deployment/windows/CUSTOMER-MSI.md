@@ -7,6 +7,16 @@ independent of company display names. The canonical application path is
 under `%ProgramData%/SwanRemoteSupport`. Company profiles, device identity and
 consent are not MSI-owned files and remain separate from release files.
 
+The builder accepts `-SourceDateEpoch <release-commit-epoch>` to prepare stable
+unsigned package metadata before signing, retaining the original WiX output.
+See [metadata preparation](TECHNICIAN-MSI.md). Two local builds using the full
+95-file `e6b87b9` application payload and epoch `1792648409` produced identical
+unsigned MSI SHA-256
+`fc4a992108904aa6ecc2f2cc43fc54ff7c1ab55648cf39d72b5f45cdb061cf84`.
+This verifies repeat builds with the same local inputs, not independent CI
+reproducibility, signed publication or installer lifecycle behavior. Different
+input file timestamps and complete clean-machine qualification remain untested.
+
 The package includes all payload libraries/assets and a local AGPL license
 notice. Its signed-release manifest covers those installed files. Windows
 Installer owns service installation, start/stop/removal and transaction-based
