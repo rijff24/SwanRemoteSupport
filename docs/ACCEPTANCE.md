@@ -5063,3 +5063,34 @@ bypass was attempted. These are functional **administrative MSI upgrade**
 results on the specified guest, not complete licensed Windows compatibility,
 standard-user installation, company-generated distribution, production signing,
 enrollment preservation or automatic/interrupted-update qualification.
+
+### Windows 10 standard-user technician major upgrade, 23 October
+
+The same original 1.5.0 `e9d89ca` and 1.5.1 `3bad169` technician MSIs subsequently
+passed install, real major upgrade, missing-file repair and uninstall under a
+fresh owned **standard** account on Windows 10 Pro `19045.3803`. Normal GUI
+sign-in initialized the account; the test used an interactive, limited task.
+The driver rejected administrator tokens, and the install/repair/uninstall
+reports independently recorded `administrator: false` and
+`standard_user_required: true`. All four operations returned 0. The upgrade
+removed old product registration and installed the new product with the stable
+technician UpgradeCode. Eighteen original fixture, task, marker, invocation,
+result and MSI-log records were retained and verified by byte counts and
+SHA-256 hashes.
+
+The first limited task failed before any MSI because the independent lab safety
+marker granted read access only to the older lab account. Its task record was
+preserved and disabled after confirming no instances, upgrade-start record or
+MSI result directory. Read-only access to that **lab marker** was added for the
+new account, preserving its bytes and owner; a separate guarded limited task
+then completed the actual tests. No customer product directory access probe or
+customer ACL change was performed. Persistent script policies and the lab
+marker remained unchanged during the passing test. A historical helper's
+plaintext disposable password was also rotated; its replacement stays in
+protected local storage and is not part of published evidence.
+
+This extends the exact-source functional MSI evidence to a standard Windows 10
+user. It does not qualify company bootstrap/enrollment, signed distribution,
+automatic updates, interruption/reboot recovery or remote sessions. The guest
+remains unactivated with zero grace minutes; licensed compatibility qualification
+and the remaining Windows matrix are still open.
