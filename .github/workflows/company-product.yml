@@ -12,9 +12,9 @@ on:
         options: [windows-2022, windows-2025]
         default: windows-2022
   push:
-    paths: ['product/**', 'deployment/**', '.cargo/config.toml', '.dockerignore', '.github/workflows/company-product.yml']
+    paths: ['product/**', 'deployment/**', 'libs/portable/build.rs', 'libs/portable/resource_order.rs', '.cargo/config.toml', '.dockerignore', '.github/workflows/company-product.yml']
   pull_request:
-    paths: ['product/**', 'deployment/**', '.cargo/config.toml', '.dockerignore', '.github/workflows/company-product.yml']
+    paths: ['product/**', 'deployment/**', 'libs/portable/build.rs', 'libs/portable/resource_order.rs', '.cargo/config.toml', '.dockerignore', '.github/workflows/company-product.yml']
 permissions:
   contents: read
   actions: read
@@ -32,6 +32,11 @@ jobs:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
       - name: Install pinned Rust
         run: rustup toolchain install 1.90.0 --profile minimal
+      - name: Reject randomized portable resource metadata ordering
+        shell: bash
+        run: |
+          rustc +1.90.0 --edition 2021 --test libs/portable/resource_order.rs -o "$RUNNER_TEMP/portable-resource-tests.exe"
+          "$RUNNER_TEMP/portable-resource-tests.exe"
       - name: Preserve company component source inputs
         shell: bash
         run: |

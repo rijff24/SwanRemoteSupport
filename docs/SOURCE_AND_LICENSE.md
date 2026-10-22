@@ -256,6 +256,18 @@ copy and the technician MSI still differ. The comparison failed as intended;
 complete native reproducibility and runtime/release qualification remain open.
 No shipping files were normalized or executed by the comparison.
 
+Local analysis of the preserved `49ced68` originals found identical bytes in all
+95 extracted application files and identical portable executable code sections.
+The portable version-resource string entries have different iteration orders;
+their resulting resource bytes and linker content hashes differ. The pinned
+`winres` 0.1.12 generator iterates unordered maps. The portable build now orders
+contiguous generated version/value directives before passing its RC source to
+the resource compiler, using `winres`'s existing-resource API. Resource blocks,
+values, icons, manifests and unsigned shipping inputs are preserved. Standalone
+ordering regressions run on Linux and Windows CI and in the native packaging
+step. A new independent full-build comparison is still required to establish
+that this change fixes every remaining shipping difference.
+
 ### Server launcher compiler
 
 The server setup recipe uses MIT-licensed Microsoft Roslyn
