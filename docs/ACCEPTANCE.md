@@ -40,8 +40,15 @@ This does not prove binary reproducibility.
 
 The application still pins the reviewed upstream Windows Flutter engine by
 archive hash, whose source-to-binary mapping remains unverified. A separate
-source-built candidate completed CI at `9f97ef0`; its artifact verification,
-independent rebuild comparison and runtime qualification remain open. The public upstream
+source-built candidate completed CI at `9f97ef0` and passed artifact, public
+source-tree and generated-command verification. Its isolated test with the
+older app bundle failed before GUI startup because the snapshot formats differed.
+Experimental build `39730064190` recompiles that bundle with a matching compiler;
+build `39730660383` additionally checks the new recorded UTC build-date input.
+The timestamp-controlled engine build at `b1d62b2` completed CI; its existing
+artifact transfer is live, and the independent same-recipe build is
+`39730890327`. Independent binary comparison and runtime qualification remain
+open. The public upstream
 source/patch reconstruction candidate and evidence limits are recorded in
 [Source availability and licensing](SOURCE_AND_LICENSE.md#patched-windows-flutter-engine-provenance).
 
