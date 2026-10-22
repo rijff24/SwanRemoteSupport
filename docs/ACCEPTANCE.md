@@ -534,7 +534,7 @@ full acceptance remains open on every row.
 
 | Operating system | Clean installation | Repair/upgrade/recovery | Native session behavior |
 | --- | --- | --- | --- |
-| Windows 10 x64 | Both lab-signed MSI 1.5.11 editions: administrator install on LTSC Evaluation 19044.1288; native `c0bf4b4`, agent `6503614`. Current `becf3cd` technician MSI 1.5.0 standard-user lifecycle passed as a functional diagnostic; this later run recorded expired evaluation status 5 with zero grace. Earlier licensing status was not recorded. | Repair/uninstall pass; current technician repair restored a deliberately missing executable. Full qualification requires a valid Windows environment. Upgrade, reboot and automatic recovery unverified. | Unverified. |
+| Windows 10 x64 | Fresh standard Pro 19045.3803: administrator technician MSI 1.5.0 lifecycle passed using application `e6b87b9` and installer recipe `67786dd`; unactivated, license status 5, zero grace. Earlier LTSC Evaluation 19044.1288 tests covered both administrator editions and a later standard-user technician functional diagnostic on the expired evaluation. | Fresh Pro install, missing-executable repair and uninstall returned 0; original logs verified. Full current-source qualification, customer MSI, standard-user Pro, upgrade, reboot and automatic recovery remain unverified. | Unverified. |
 | Windows 11 x64 | Unverified | Unverified | Unverified |
 | Server 2016 Desktop Experience | Existing 14393.693 lab deployment; current-source fresh company setup unverified. | Historical signed lab upgrades/reboot evidence; current-source full lifecycle/recovery unverified. | Older same-guest accepted session; `c0bf4b4` technician GUI checks and `bd13500` receiver legacy-password denial. Separate-machine/full-feature acceptance open. |
 | Server 2019 Desktop Experience | Administrator lab-signed MSI 1.5.9 lifecycle, native `c0bf4b4`, agent `053a52e`, build 17763.3650. | Twelve verified operations include customer 1.5.8-to-1.5.9 upgrade, repair/uninstall/reinstall and technician lifecycle. Latest `6503614` existing-unsafe-state rejection also passes; full current-source recovery unverified. | Unverified. |
@@ -4558,3 +4558,47 @@ This is engine startup/rendering/clean-exit evidence only. It does not prove
 authentication, remote-session behavior, public connectivity, independent PDB
 reproducibility, installer/updater compatibility, production signing or the full
 Windows matrix. The default application engine remains unchanged.
+
+### Fresh standard Windows 10 Pro MSI lifecycle, 22 October
+
+A new disposable VM was installed from Microsoft's Media Creation Tool standard
+Windows 10 x64 ISO, selecting Pro. The ISO SHA-256 is
+`ac6f8bd452c476f07f2ca14d85622e7c8723af6517aa27a014ddc4831e38b693`.
+First interactive logon and the guarded provisioning report completed. Tests
+recorded Windows 10 Pro x64 `19045.3803`. This is a standard unactivated
+installation: the read-only licensing observation recorded status 5 and zero
+grace. No activation bypass, rearm, clock change or licensed-trial claim applies.
+
+The previously verified unsigned technician MSI 1.5.0, SHA-256
+`f3cb6e56229488b9d6d4dec0e07318a5520b82ee66177435ae358c98faf348e7`,
+contains lab-signed application `e6b87b9` and uses installer recipe `67786dd`.
+Under the VM's Administrator account, installation, repair of a deliberately
+missing technician executable, and uninstall each returned 0. The public harness
+checked installed executable hashes, registration, shortcut and removal. Nine
+original result/driver/log records were collected and hash-verified under the
+private lab's `technician-win10-admin-20261022/lifecycle-evidence` directory.
+
+The first unsigned test-script invocation was rejected by the default PowerShell
+policy before installation; that failed observation remains retained. The
+verified test driver then ran in a child process with `-ExecutionPolicy Bypass`.
+Its reported process policy is explicit. No machine/user PowerShell or Windows
+Installer policy was configured for this test; machine/user PowerShell policy
+snapshots matched. The child process exited 0 and the
+original phase reports independently recorded each MSI result. This is an
+administrator bare-MSI functional result for this exact package and OS build,
+not standard-user, customer, company-worker, enrollment, update, licensed-Windows
+or complete Windows 10 qualification.
+
+### Complete component/deployment CI observation, 22 October
+
+The manual company-product run
+[39766139184](https://github.com/rijff24/SwanRemoteSupport/actions/runs/39766139184)
+at exact source `fa188bcfe78152bef9504fca41a161a0679587bc` completed successfully.
+Windows 2022 and Ubuntu 24.04 component verification jobs passed, including the
+pinned server compiler/references reproducibility and packaged preview checks on
+Windows. The Linux deployment job passed its fresh setup/persistence, isolated
+HTTPS/transport rehearsal, maintained transport source build, and backup recovery
+checks. The optional technician MSI lifecycle job was skipped; this run supplies
+no evidence for that job. These CI checks do not replace the outstanding real
+Windows server deployment, public-network, interactive session, signing and full
+compatibility acceptance requirements.
