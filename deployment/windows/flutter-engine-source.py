@@ -48,9 +48,15 @@ def load_recipe():
         raise ValueError("Dependency mirror override must preserve the original DEPS commit")
     buildroot = lock["buildroot"]
     if (buildroot["patch_file"] != "flutter-engine-buildroot.patch"
-            or set(buildroot["files"]) != {"build/toolchain/win/setup_toolchain.py", "build/config/compiler/BUILD.gn"}
+            or set(buildroot["files"]) != {"build/toolchain/win/setup_toolchain.py", "build/config/compiler/BUILD.gn",
+                                         "build/toolchain/win/BUILD.gn"}
             or sha(RECIPE / buildroot["patch_file"]) != buildroot["patch_sha256"]):
         raise ValueError("Unexpected buildroot toolset-selection patch")
+    if lock.get("linker") != {
+        "path": "buildtools/windows-x64/clang/bin/lld-link.exe",
+        "source": "pinned-engine-DEPS-clang-package", "threads": 1,
+    }:
+        raise ValueError("Unexpected experimental engine linker")
     if lock["windows_toolchain"] != {
         "msvc_component": "Microsoft.VisualStudio.Component.VC.14.38.17.8.x86.x64",
         "msvc_atl_component": "Microsoft.VisualStudio.Component.VC.14.38.17.8.ATL",
@@ -130,16 +136,22 @@ def verify_commands(path, lock):
     compiles = [line for line in commands.splitlines() if re.search(r'clang-cl(?:\.exe)?\b', line)]
     if not compiles or any("/Brepro" not in line or "-fdebug-compilation-dir=." not in line for line in compiles):
         raise ValueError("Generated compiler commands lack deterministic timestamp/path controls")
+    links = [line for line in commands.splitlines()
+             if re.search(r'/OUT:(?:\./)?flutter_windows\.dll(?:\s|$)', line, re.IGNORECASE)]
+    if len(links) != 1 or "flutter/" + lock["linker"]["path"] not in links[0]:
+        raise ValueError("Final engine command must use the pinned DEPS LLVM linker")
 
 
 def verify_link_response(path):
     response = path.read_text(encoding="utf-8-sig")
-    for flag in ("/Brepro", "/PDBALTPATH:%_PDB%", "/INCREMENTAL:NO"):
+    for flag in ("/Brepro", "/PDBALTPATH:%_PDB%", "/INCREMENTAL:NO", "/threads:1"):
         if flag.lower() not in response.lower().split():
             raise ValueError("Final engine link lacks deterministic flag: " + flag)
     switches = re.findall(r'/INCREMENTAL(?::(?:YES|NO))?(?=\s|$)', response, re.IGNORECASE)
     if any(switch.lower() != "/incremental:no" for switch in switches):
         raise ValueError("Incremental linking cannot be used for reproducible engine builds")
+    if any(switch.lower() != "/threads:1" for switch in re.findall(r'/threads:\S+', response, re.IGNORECASE)):
+        raise ValueError("Experimental engine linking requires a single integration thread")
 
 
 def package(build, output):
@@ -178,6 +190,9 @@ def package(build, output):
     for field in ("msvc_tools_version", "windows_sdk_version"):
         if toolchain[field] != lock["windows_toolchain"][field]:
             raise ValueError("Recorded toolchain differs from reviewed recipe")
+    if (toolchain.get("linker_relative_path") != lock["linker"]["path"]
+            or toolchain.get("linker_sha256") != sha(engine / lock["linker"]["path"])):
+        raise ValueError("Recorded LLVM linker differs from the pinned engine package")
     if not (release / "args.gn").is_file():
         raise ValueError("Missing generated engine build arguments")
     output.mkdir(parents=True)

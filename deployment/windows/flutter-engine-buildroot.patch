@@ -1,17 +1,8 @@
---- a/build/toolchain/win/setup_toolchain.py
-+++ b/build/toolchain/win/setup_toolchain.py
-@@ -186,6 +186,7 @@
-     # building with a new and untested SDK. This should stay in sync with the
-     # packaged toolchain in build/vs_toolchain.py.
-     args.append(SDK_VERSION)
-+    args.append('-vcvars_ver=14.38')
-     variables = _LoadEnvFromBat(args)
-   return _ExtractImportantEnvironment(variables)
- 
+diff --git a/build/config/compiler/BUILD.gn b/build/config/compiler/BUILD.gn
+index d38a4cf..8fcb1b9 100644
 --- a/build/config/compiler/BUILD.gn
 +++ b/build/config/compiler/BUILD.gn
-@@ -81,6 +81,14 @@
-       "/FS",  # Preserve previous PDB behavior.
+@@ -82,4 +82,14 @@ config("compiler") {
        "/guard:cf",  # Enable control flow guard security checks.
      ]
 +    if (!is_debug) {
@@ -20,8 +11,59 @@
 +      ldflags += [ "/Brepro", "/PDBALTPATH:%_PDB%" ]
 +      if (is_clang) {
 +        cflags += [ "-fdebug-compilation-dir=." ]
++        # Keep PDB type integration ordering deterministic in the pinned LLD.
++        ldflags += [ "/threads:1" ]
 +      }
 +    }
    } else {
      # Common GCC compiler flags setup.
-     # --------------------------------
+diff --git a/build/toolchain/win/BUILD.gn b/build/toolchain/win/BUILD.gn
+index 006c805..cd33388 100644
+--- a/build/toolchain/win/BUILD.gn
++++ b/build/toolchain/win/BUILD.gn
+@@ -90,4 +90,8 @@ template("msvc_toolchain") {
+
+     cl = invoker.cl
++    linker = "link.exe"
++    if (toolchain_is_clang) {
++      linker = rebase_path("$clang_base_path/bin/lld-link.exe", root_build_dir)
++    }
+
+     # Make these apply to all tools below.
+@@ -203,5 +207,5 @@ template("msvc_toolchain") {
+       rspfile = "${dllname}.rsp"
+
+-      link_command = "\"$python_path\" $tool_wrapper_path link-wrapper $env False link.exe /nologo /IMPLIB:$libname /DLL /OUT:$dllname /PDB:${dllname}.pdb @$rspfile"
++      link_command = "\"$python_path\" $tool_wrapper_path link-wrapper $env False $linker /nologo /IMPLIB:$libname /DLL /OUT:$dllname /PDB:${dllname}.pdb @$rspfile"
+
+       # TODO(brettw) support manifests
+@@ -214,8 +218,11 @@ template("msvc_toolchain") {
+       outputs = [
+         dllname,
+-        expname,
+         libname,
+         pdbname,
+       ]
++      # LLD writes the import library directly without an intermediate .exp.
++      if (!toolchain_is_clang) {
++        outputs += [ expname ]
++      }
+       link_output = libname
+       depend_output = libname
+@@ -234,5 +241,5 @@ template("msvc_toolchain") {
+       pdbfile = "$binary_output.pdb"
+
+-      link_command = "\"$python_path\" $tool_wrapper_path link-wrapper $env False link.exe /nologo /OUT:$binary_output /PDB:$pdbfile @$rspfile"
++      link_command = "\"$python_path\" $tool_wrapper_path link-wrapper $env False $linker /nologo /OUT:$binary_output /PDB:$pdbfile @$rspfile"
+
+       # TODO(brettw) support manifests
+diff --git a/build/toolchain/win/setup_toolchain.py b/build/toolchain/win/setup_toolchain.py
+index 521c243..e33ac0a 100644
+--- a/build/toolchain/win/setup_toolchain.py
++++ b/build/toolchain/win/setup_toolchain.py
+@@ -187,4 +187,5 @@ def _LoadToolchainEnv(cpu, toolchain_root, sdk_dir, target_store):
+     # packaged toolchain in build/vs_toolchain.py.
+     args.append(SDK_VERSION)
++    args.append('-vcvars_ver=14.38')
+     variables = _LoadEnvFromBat(args)
+   return _ExtractImportantEnvironment(variables)

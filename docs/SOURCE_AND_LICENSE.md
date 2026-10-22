@@ -119,6 +119,18 @@ listing alone refers to that file without exposing its flags. These controls
 follow [LLVM's deterministic-build guidance](https://blog.llvm.org/2019/11/deterministic-builds-with-clang-and-lld.html).
 They are necessary inputs to the independent comparison, not proof that all
 remaining sources of binary variation have been removed.
+The two timestamp-controlled builds produced identical DLL/import-library bytes
+but different PDBs, despite identical original engine/buildroot source bytes,
+recorded toolchain hashes and generated commands. The next reconstruction
+experiment replaces the Microsoft linker with `lld-link.exe` from the same
+pinned engine DEPS compiler package and requests one linker integration thread.
+Its public buildroot patch records all three changed source files, and receipts
+record the linker's version and hash. Generated-command checks reject a different
+linker, and final-response checks reject absent or conflicting thread controls.
+Ninja does not require a Microsoft-specific intermediate `.exp` output for LLD.
+This is an investigation of debug-symbol reproducibility, not a demonstrated
+fix. New independent output comparisons and matching-bundle runtime tests are
+required; the application workflow still defaults to its previous engine.
 The disposable GitHub runner installs the selected side-by-side Microsoft C++
 component when needed; this provisioning script refuses execution outside the
 GitHub Windows runner. Local builds require that component to be installed

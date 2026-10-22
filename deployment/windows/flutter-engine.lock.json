@@ -44,7 +44,7 @@
     "repository": "https://github.com/flutter/buildroot.git",
     "revision": "e265c359126b24351f534080fb22edaa159f2215",
     "patch_file": "flutter-engine-buildroot.patch",
-    "patch_sha256": "f48a7c237edc00bafe5abcd45e05c2909bb5975443d5585a73b29239bad2b405",
+    "patch_sha256": "25d3a7d84390dff0868ef79e0e500b90d05029882b571789caeab72383dc5f0c",
     "files": {
       "build/toolchain/win/setup_toolchain.py": {
         "original_sha256": "ee45bc284922f01b107aea6b31b7b5b5f81d33480acd4cbf0c516ff09f47a03c",
@@ -52,7 +52,11 @@
       },
       "build/config/compiler/BUILD.gn": {
         "original_sha256": "db1892df2c28b8b5b730467a777a3d722f2f3f07e81a902e691ee19b6264c9de",
-        "patched_sha256": "6843af44a5e08f2cfe4f93caa0008ba83021b5872bb5a469d6dac043b5475f99"
+        "patched_sha256": "cb3d429220cae24978a9f96a3232d85ee6a3d798d2d4539e108203fbd5b87ca8"
+      },
+      "build/toolchain/win/BUILD.gn": {
+        "original_sha256": "26a00b317541f63d548bf605f5554a2b08580318fe79f052c5fcb67e0d1449db",
+        "patched_sha256": "45b90f488725ec3501a05127d5dcafc29d7f071d9d0bf2667aed8dfefcba0cf2"
       }
     }
   },
@@ -62,5 +66,10 @@
     "vcvars_selector": "14.38",
     "windows_sdk_version": "10.0.22621.0",
     "msvc_atl_component": "Microsoft.VisualStudio.Component.VC.14.38.17.8.ATL"
+  },
+  "linker": {
+    "path": "buildtools/windows-x64/clang/bin/lld-link.exe",
+    "source": "pinned-engine-DEPS-clang-package",
+    "threads": 1
   }
 }

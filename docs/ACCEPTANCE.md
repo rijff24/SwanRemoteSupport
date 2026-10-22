@@ -4352,3 +4352,13 @@ not established as a timestamp-only difference. Three exported text recipes
 differ only by independently checked CRLF/LF checkout conversions; original
 PDB and binary bytes were never normalized. Complete engine-output and native
 application/installer reproducibility remain open.
+
+The original engine/buildroot source archives, dependency revision records,
+generated commands, link response, applied patches and GN arguments match
+between the two timestamp-controlled builds; recorded toolchain fields differ
+only in the source commit and workflow identifiers. The next public recipe
+tests the pinned DEPS LLVM linker with single-threaded integration. Patch/hash
+validation, four provenance/flag regression tests and PowerShell parsing pass
+locally. Its compilation, independent PDB comparison and native runtime behavior
+remain unverified. The previous successful GUI smoke test does not qualify this
+new linker experiment.

@@ -38,7 +38,7 @@ class EngineSourceTests(unittest.TestCase):
         lock, _ = source.load_recipe()
         valid = ('clang-cl /Brepro -fdebug-compilation-dir=. -imsvc"C:\\VS\\VC\\Tools\\MSVC\\14.38.33130\\include" '
                  '-imsvc"C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\ucrt"\n'
-                 'lld-link /libpath:"C:\\VS\\VC\\Tools\\MSVC\\14.38.33130\\lib\\x64" '
+                 '../../flutter/buildtools/windows-x64/clang/bin/lld-link.exe /OUT:./flutter_windows.dll /libpath:"C:\\VS\\VC\\Tools\\MSVC\\14.38.33130\\lib\\x64" '
                  '/libpath:"C:\\Program Files (x86)\\Windows Kits\\10\\lib\\10.0.22621.0\\um\\x64"\n')
         rejected = [
             valid.replace("14.38.33130", "14.44.35207"),
@@ -47,6 +47,8 @@ class EngineSourceTests(unittest.TestCase):
             valid + " -D_ALLOW_COMPILER_AND_STL_VERSION_MISMATCH=1",
             valid.replace("/Brepro", ""),
             valid.replace("-fdebug-compilation-dir=.", ""),
+            valid.replace("../../flutter/buildtools/windows-x64/clang/bin/lld-link.exe", "link.exe"),
+            valid.replace("../../flutter/buildtools/windows-x64/clang/bin/lld-link.exe", "C:/unreviewed/lld-link.exe"),
             "clang-cl without auditable toolchain paths",
         ]
         with tempfile.TemporaryDirectory() as directory:
@@ -60,13 +62,15 @@ class EngineSourceTests(unittest.TestCase):
                         source.verify_commands(commands, lock)
 
     def test_final_link_response_rejects_timestamp_and_incremental_drift(self):
-        valid = "objects.obj /Brepro /PDBALTPATH:%_PDB% /INCREMENTAL:NO /DEBUG"
+        valid = "objects.obj /Brepro /PDBALTPATH:%_PDB% /INCREMENTAL:NO /DEBUG /threads:1"
         with tempfile.TemporaryDirectory() as directory:
             response = Path(directory) / "link-response.txt"
             response.write_text(valid, encoding="utf-8")
             source.verify_link_response(response)
             for text in (valid.replace("/Brepro", ""), valid.replace("/PDBALTPATH:%_PDB%", ""),
-                         valid.replace("/INCREMENTAL:NO", "/INCREMENTAL"), valid + " /INCREMENTAL:YES"):
+                         valid.replace("/INCREMENTAL:NO", "/INCREMENTAL"), valid + " /INCREMENTAL:YES",
+                         valid.replace("/threads:1", ""), valid.replace("/threads:1", "/threads:4"),
+                         valid + " /threads:4"):
                 with self.subTest(response=text):
                     response.write_text(text, encoding="utf-8")
                     with self.assertRaises(ValueError):

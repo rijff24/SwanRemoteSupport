@@ -68,7 +68,14 @@ try {
  if(-not(Test-Path -LiteralPath $compiler)){throw 'Pinned engine compiler is missing'}
  $compilerVersion=& $compiler --version | Out-String
  if($LASTEXITCODE -ne 0){throw 'Pinned engine compiler version could not be recorded'}
+ $linker=Join-Path $engine 'buildtools\windows-x64\clang\bin\lld-link.exe'
+ if($recipe.linker.path -cne 'buildtools/windows-x64/clang/bin/lld-link.exe' -or $recipe.linker.threads -ne 1 -or -not(Test-Path -LiteralPath $linker)){throw 'Pinned experimental LLVM linker is unavailable'}
+ $linkerVersion=& $linker --version | Out-String
+ if($LASTEXITCODE -ne 0 -or $linkerVersion -notmatch 'LLD'){throw 'Pinned LLVM linker version could not be recorded'}
  $toolchain=@{runner_os=$env:RUNNER_OS;runner_image=$env:ImageOS;runner_image_version=$env:ImageVersion;git=(& git --version);python=(& python --version);compiler=$compilerVersion;compiler_sha256=(Get-FileHash -LiteralPath $compiler).Hash;visual_studio=$env:GYP_MSVS_OVERRIDE_PATH;msvc_tools_version=$recipe.windows_toolchain.msvc_tools_version;msvc_libcmt_sha256=(Get-FileHash -LiteralPath (Join-Path $msvc 'lib\x64\libcmt.lib')).Hash;msvc_libcpmt_sha256=(Get-FileHash -LiteralPath (Join-Path $msvc 'lib\x64\libcpmt.lib')).Hash;msvc_atls_sha256=(Get-FileHash -LiteralPath (Join-Path $msvc 'ATLMFC\lib\x64\atls.lib')).Hash;windows_sdk_version=$recipe.windows_toolchain.windows_sdk_version;msvc_directories=@(Get-ChildItem -Directory -LiteralPath (Join-Path $env:GYP_MSVS_OVERRIDE_PATH 'VC\Tools\MSVC') | Select-Object -ExpandProperty Name);windows_sdk_versions=@(Get-ChildItem -Directory -LiteralPath (Join-Path $env:WINDOWSSDKDIR 'Include') | Select-Object -ExpandProperty Name);gn_arguments=@('--runtime-mode=release');ninja_target='flutter_windows.dll';source_commit=$env:GITHUB_SHA;workflow_run=$env:GITHUB_RUN_ID}
+ $toolchain.linker_relative_path=$recipe.linker.path
+ $toolchain.linker_sha256=(Get-FileHash -LiteralPath $linker).Hash.ToLowerInvariant()
+ $toolchain.linker_version=$linkerVersion
  $toolchain | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $root 'toolchain.json') -Encoding utf8
  Write-Output $compilerVersion
  Push-Location (Join-Path $checkout 'src')
