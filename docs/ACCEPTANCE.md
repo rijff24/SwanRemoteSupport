@@ -3725,6 +3725,16 @@ qualification on the updated OS; the three installer operations ran on
 `19044.1288`. The guest acknowledged a normal shutdown request, QEMU exited 0,
 and only its disconnected viewer was closed. No forced power-off was used.
 
+A separate boot of this updated guest checked normal Microsoft activation once
+more after the OS update. The existing evaluation's activation attempt at
+03:20:52 UTC failed again, leaving license status 5, zero grace and reason
+`0xC004F009`. No keys, KMS configuration, clock or rearm state were changed.
+The collected local activation receipt has SHA-256
+`06bf83d0307684e8cb27d2ed5c37a5a1005a68c8e770c3ecd57ef298bd637bc9`.
+The guest acknowledged normal shutdown and its QEMU process exited 0. No
+installer operations were repeated during this licensing check. A valid
+Windows 10 test installation remains required for final qualification.
+
 ### View-only Windows session acknowledgement correction, 22 October
 
 Source inspection after the `becf3cd` diagnostic found that the managed control
@@ -3820,8 +3830,11 @@ compatibility failure is resolved, but this is not a successful engine build.
 Diagnostic artifact `12398238710` retains the actual toolchain, dependency
 revisions and generated commands (archive SHA-256
 `230ced36cdfddb7be630dc84d45709c50c63affd301fbb59e4b09e98b500a637`).
-The next recipe adds the matching MSVC 14.38 ATL component, checks its headers
-and library before building, and records its library hash. Engine linking,
+Source `9f97ef0` adds the matching MSVC 14.38 ATL component, checks its headers
+and library before building, and records its library hash. Workflow
+`39716739857` passed the provenance tests and pinned toolchain/ATL installation
+and entered the source-build step. This is an in-progress observation, not a
+successful build result. Engine linking,
 artifact verification, independent rebuild comparison and runtime acceptance
 remain pending.
 
