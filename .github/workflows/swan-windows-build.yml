@@ -186,6 +186,11 @@ jobs:
           python3 deployment/windows/archive-build-source.py . artifacts/SwanRemoteSupport-build-source.zip
           if ($LASTEXITCODE -ne 0) { throw 'Exact build input archive failed.' }
 
+      - name: Record exact default MSVC compiler library and header inputs
+        shell: pwsh
+        run: |
+          ./deployment/windows/Record-MsvcToolchain.ps1 -Output artifacts/native-msvc-toolchain.json
+
       - name: Build branded client
         shell: pwsh
         run: |
@@ -362,6 +367,7 @@ jobs:
             artifacts/engine-source/**
             artifacts/engine-selection.json
             artifacts/native-desktop-pe-metadata.json
+            artifacts/native-msvc-toolchain.json
             artifacts/Install-Company.ps1
             artifacts/Install-Worker.ps1
             artifacts/Uninstall-Worker.ps1
@@ -420,6 +426,7 @@ jobs:
             artifacts/engine-source/**
             artifacts/engine-selection.json
             artifacts/native-desktop-pe-metadata.json
+            artifacts/native-msvc-toolchain.json
             artifacts/*.msi.build.json
             artifacts/*.msi.installed-files.json
             artifacts/SHA256SUMS.txt

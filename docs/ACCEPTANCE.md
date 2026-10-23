@@ -6260,3 +6260,14 @@ Matching PE Rich records do not establish identical compiler binaries, libraries
 or headers. Toolchain drift is now a concrete difference to investigate; it is
 not yet established as the cause. A future passing reproduction must compare
 original shipping bytes with pinned toolchain identity as well as public source.
+
+
+Toolchain capture probe 40030510222 passed and retained 618 compiler, header and
+library input hashes under Visual Studio 17.14.37806.7, default MSVC directory
+14.44.35207. Its provider ZIP digest and CRC passed independent collection.
+The independent manifest identity calculation exposed culture-sensitive record
+ordering in the capture script. The script now explicitly sorts paths ordinally;
+that corrected identity format still requires an actual Windows run. The native
+product workflow now retains this manifest in both client and final artifacts.
+This adds provenance evidence; it does not establish a reproducible product,
+identify the historical mismatch's cause or pin Windows SDK inputs.
