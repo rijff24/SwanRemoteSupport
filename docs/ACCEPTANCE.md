@@ -6170,3 +6170,17 @@ account and existing customer were unchanged. Eleven original records/logs were
 collected and hash-verified; independent post-test catalog, state hashes and
 marker checks also passed. This is administrative f84ffb0 packaging/d8fad20
 payload lifecycle evidence, not automatic-update or standard-user acceptance.
+
+The exact f84ffb0 push workflow 40003837369 also completed the actual Linux
+deployment job 120586573130. Its original log was retained with SHA-256
+c733aa743f6676cb514e22d2a6217b87234497cf51723b22b313e22d04ceef4f.
+Fresh non-root/read-only Docker startup, private storage, company setup,
+administrator MFA/replay denial, enrollment approval and restart persistence
+passed. Both pinned upstream and maintained transport stack rehearsals passed
+HTTPS trust/untrusted rejection, actual signed profiles, MFA/enrollment/logout,
+complete encrypted archive recovery and replacement startup with original trust.
+The three integration scripts matched their previously inspected d8fad20 source
+exactly. These are actual isolated Linux deployment tests; they do not establish
+native desktop sessions, UDP traversal, public ACME/external reachability or
+Windows TLS/transport restore. A fresh Windows 11 qualification environment also
+awaits additional lab storage while the older moved endpoint disk remains frozen.
