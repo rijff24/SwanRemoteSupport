@@ -534,12 +534,12 @@ full acceptance remains open on every row.
 
 | Operating system | Clean installation | Repair/upgrade/recovery | Native session behavior |
 | --- | --- | --- | --- |
-| Windows 10 x64 | Fresh standard Pro 19045.3803: administrator and standard-user technician MSI 1.5.0 lifecycles passed using application `e6b87b9` and installer recipe `67786dd`; unactivated, license status 5, zero grace. Earlier LTSC Evaluation 19044.1288 tests covered both administrator editions and a later standard-user technician functional diagnostic on the expired evaluation. | Both Pro accounts: install, missing-executable repair and uninstall returned 0; original logs verified. Full current-source qualification, customer MSI, upgrade, reboot and automatic recovery remain unverified. | Unverified. |
+| Windows 10 x64 | Standard Pro 19045.3803: administrator and standard-user technician tests, plus administrator customer MSI tests at `3bad169`; unactivated, license status 5, zero grace. Earlier LTSC evidence remains separately scoped. | Both accounts pass real technician 1.5.0-to-1.5.1 upgrade, missing-executable repair and uninstall. Customer install succeeds; repair returns 3010, actual reboot restores verified payload/service, then uninstall succeeds. Automatic updates and full qualification remain open. | Unverified. |
 | Windows 11 x64 | Fresh activated Enterprise Evaluation 26300.9457: both unsigned MSI 1.5.0 editions from `9e4ea6d` install as Administrator; Secure Boot and TPM 2.0 verified. | Nine install/repair/uninstall operations return 0 across administrator customer/technician and standard-user technician tests; customer license repair and technician missing-executable repair pass. Upgrade and interruption tests remain open. | Unverified. |
-| Server 2016 Desktop Experience | Existing 14393.693 lab deployment; current-source fresh company setup unverified. | Historical signed lab upgrades/reboot evidence; current-source full lifecycle/recovery unverified. | Older same-guest accepted session; `c0bf4b4` technician GUI checks and `bd13500` receiver legacy-password denial. Separate-machine/full-feature acceptance open. |
-| Server 2019 Desktop Experience | Administrator lab-signed MSI 1.5.9 lifecycle, native `c0bf4b4`, agent `053a52e`, build 17763.3650. | Twelve verified operations include customer 1.5.8-to-1.5.9 upgrade, repair/uninstall/reinstall and technician lifecycle. Latest `6503614` existing-unsafe-state rejection also passes; full current-source recovery unverified. | Unverified. |
-| Server 2022 Desktop Experience | Both lab-signed MSI 1.5.11 editions on clean 20348.587; native `c0bf4b4`, agent `6503614`. | Six lifecycle operations pass. Separate MSI 1.5.12 uninstall-failure fixtures restore payload/registration/watcher; automatic update interruption unverified. | Unverified. |
-| Server 2025 Desktop Experience | Both unsigned `bd13500` MSI editions install as Administrator on 26100.32230. | Six install/repair/uninstall operations pass; signed/current-source upgrades and recovery unverified. Standard-user technician MSI precondition was blocked by OS policy, not passed. | Unverified. |
+| Server 2016 Desktop Experience | Existing 14393.693 customer deployment retained; fresh current-source company/customer setup unverified. | Administrative technician 1.5.0-to-1.5.1 upgrade, repair and uninstall at `699c9e0` pass; standard-user install returns policy error 1625. Full lifecycle/recovery remains open. | Older same-guest accepted session and `bd13500` receiver legacy-password denial. Later GUI/MFA/inventory checks include `699c9e0` technician-role API authorization and `3bad169` history-label regression. Separate-machine/full-feature acceptance open. |
+| Server 2019 Desktop Experience | Latest `4c5accb` technician MSI installs in a fresh administrator profile on retained 17763.3650. Preserved insecure customer state is not replaced for a positive install. | Technician real 1.5.0-to-1.5.1 upgrade, missing-file repair and uninstall pass. Latest customer MSI rejects original insecure state through its deferred preparation action before payload copy; positive current-source clean customer lifecycle remains open. Historical signed fixtures remain separately scoped. | Unverified. |
+| Server 2022 Desktop Experience | Both original unsigned `4c5accb` MSI editions install as Administrator on retained 20348.587. | Seven operations return 0: technician install/real 1.5.0-to-1.5.1 upgrade/repair/uninstall and customer install/repair/uninstall. Prior standard-user policy rejection and automatic update interruption remain open. | Unverified. |
+| Server 2025 Desktop Experience | Both original unsigned `4c5accb` MSI editions install as Administrator on retained 26100.32230. | Seven analogous lifecycle/major-upgrade operations return 0. Prior standard-user technician policy rejection remains separately recorded; automatic update and full recovery qualification remain open. | Unverified. |
 
 See [VM testing](../deployment/windows/VM-TESTING.md) and
 [local HTTPS testing](../deployment/windows/LOCAL-TESTING.md). Test credentials,
@@ -5219,3 +5219,44 @@ enrolled-device identity preservation, signed company distribution, automatic
 updates or remote-session acceptance. Activation was not collected in this
 bounded run. The prior Server 2025 standard-user policy rejection remains open
 as separately recorded; this administrator result does not supersede it.
+
+### Latest Server 2019 technician upgrade and unsafe-state rejection, 23 October
+
+On retained Server 2019 Standard Evaluation Desktop Experience x64
+`17763.3650`, a fresh owned administrator profile passed technician 1.5.0
+`e9d89ca` install, real upgrade to original 1.5.1 `4c5accb`, missing-executable
+repair and uninstall. All four returned 0; old registration was removed and the
+UpgradeCode remained stable. Fifteen original task, fixture, invocation,
+result, state and MSI-log/payload records were retained and hash-verified.
+Before/after customer-folder file hashes, owners and DACLs independently match;
+the pre-existing unsafe customer fixture was preserved. This is not enrolled
+identity/consent evidence or a fresh company-server setup test.
+
+The same original `4c5accb` customer MSI recorded for Server 2022/2025 was then
+run as Administrator against that existing inherited broadly writable state.
+It returned 1603, and rollback left no product registration, payload or service.
+The original cancellation marker/helper bytes and all captured owners/DACLs
+remained unchanged. Ten original records, including the raw MSI log, before/after
+state and the initially failed test assertion, were transferred and matched
+against independent guest hashes. Raw MSI log SHA-256:
+`2c026c4c8a66c5612bcbf0117f755a091a21b917978448d81230bb6961c1351a`.
+
+The initial assertion incorrectly treated `Action start/ended` scheduling
+entries as actual deferred execution. Independent inspection of the retained
+original log instead finds `CustomActionSchedule` for `PrepareCustomerState`
+with deferred action type 3074, followed by its **actual error code 1** and
+InstallFinalize failure. No actual FileCopy, FileMove, folder creation or service
+installation operation occurred. Scheduling an InstallFiles action therefore
+did not mean payload was copied. The MSI's embedded preparation agent was
+statically extracted and matched original native agent SHA-256
+`030c230b9ed43eec3eb4b4b857dd77f626b0ffe3ccf81835f63a4bc932b2606a`.
+Four local verifier controls using modified log copies reject missing failure,
+injected actual file copy, truncated deferred execution and an incorrect final
+return code. No original log or shipping bytes were altered and no MSI was rerun
+to obtain this corrected analysis; the initial failed assertion remains intact.
+
+This proves **compiled-MSI rejection of the original unsafe state before payload
+copy**, not positive customer installation on a clean current-source machine.
+No replacement customer folder, standard-account file-access probe, ACL change
+or company-server startup was performed. Positive clean customer lifecycle,
+enrollment, signing, automatic updates and remote sessions remain open.
