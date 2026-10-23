@@ -10,16 +10,20 @@ observed healthy. Original customer identity and consent, profile revision 18,
 paused updates and the existing HTTPS binding were preserved. Both original
 sequence-9 bundle jobs completed; public customer download, protected technician
 download, file hashes and independent bundle-content verification passed.
-Installation of these generated bundles and end-to-end support acceptance remain
-open. Earlier guest unresponsiveness, Caddy faults and the separate endpoint-lab
+The original bundles contain unsigned CI application payloads and are not complete
+release packages. The later corrected technician bundle passed explicit setup
+recovery in an administrator profile; customer installation and end-to-end support
+acceptance remain open. Earlier guest unresponsiveness, Caddy faults and the separate endpoint-lab
 storage hash discrepancy remain recorded below; recovery is not proof that their
 causes have been resolved. No production or full compatibility acceptance is claimed.
 
 The subsequent generated-technician installation test reached final verification
 and correctly rejected the unsigned application inside the lab-signed MSI.
-Installation recovery remains pending and its release sequence stayed zero.
-The corrective lab package must sign its payload before building/signing the MSI;
-no generated-bundle installation pass is claimed.
+Its release sequence stayed zero until a corrected sequence-10 package, built
+from signed payloads, completed explicit recovery. The old pending marker was
+archived unchanged, installed signatures/hashes passed, and sequence 10 was
+recorded. This is an existing Server 2016 administrator-profile recovery result,
+not fresh-machine, standard-user, graphical-session or automatic-update acceptance.
 
 The latest accepted-desktop lab run used technician source `e6b87b9` against the
 preserved older `bd13500` customer on Server 2016 with the parallel transport
@@ -5680,3 +5684,63 @@ has .NET Framework release 394802 (4.6.2), below WiX's 4.7.2 requirement. Micros
 is being prepared for this lab build prerequisite; installation and a corrected
 MSI build have not yet been verified. No signing key was exported and no
 production publication is approved.
+
+### Correctly signed technician bundle and explicit setup recovery, 23 October
+
+Microsoft's official .NET Framework 4.8 offline installer was downloaded once;
+its 121,346,568 bytes had SHA-256
+`0a3a390c47e639d0f7fc65b21195fee6b7f65b066f80f70c60fab191d14b7e40`.
+Its Microsoft Corporation Authenticode signature was verified on the host and
+again after transfer to the owned guest. It was not executed on the host. Guest
+preflight excluded active support sessions and worker jobs. The installer returned
+3010 and the old runtime registry value remained until the required normal guest
+reboot. Post-reboot observation verified .NET release 528049, all three Swan
+services Running, unchanged HTTPS configuration, and preserved original customer
+identity, consent and accepted release sequence. The pre-reboot result was retained
+rather than rewritten as a completed runtime verification.
+
+The pinned technician builder then ran with its default signed-input checks,
+without `UnsignedTest`, on exact source `4c5accb`, WiX 5.0.2 and release epoch
+1792703512. Both executable and agent were already signed by the same lab
+publisher. Prepared unsigned MSI SHA-256 was
+`208401a37ca44af99d4c1e4c50f35b397dc07bbcfe9b78939796d44acad446d4`.
+After signing and timestamp verification, MSI SHA-256 was
+`b777a37508aa4aab91c851274f645df9bd6b22cc997696090ebfd2f62b382e3b`.
+Software version remained 1.5.1, ProductCode remained
+`{D32FA420-4F84-50A6-BAB2-CBFDA73F87C9}`, and UpgradeCode remained
+`{A4374699-436F-4917-9A4E-223F62A9E634}`. No fake software-version increase or
+company-dependent product identity was introduced.
+
+A separately signed test release, sequence 10, referenced that MSI and its signed
+installed executable. The server rejected an unapproved build with 409, then
+approval and one build request created job
+`1a744e32-8439-45b1-a8f1-0e268efca717`. It completed normally. Anonymous technician
+download returned 401; authenticated download returned 200. The 30,296,131-byte ZIP
+had SHA-256 `97e397701511465e80c92386c91ee97c80e4115b83aa6ac5d11b069a8c518896`,
+matching the job result. Independent host inspection verified the 12-entry layout,
+CRCs, seven exact pinned-source texts, six public bootstrap fields, original trust
+pins, signed profile/release envelopes and artifact hashes. Profile revision 18
+and paused updates remained unchanged.
+
+At 14:50 UTC, the existing owned administrator profile invoked the original
+bundle's `Install-Company.ps1` with explicit `ReplaceFailedSetup`. Its preflight
+required the exact pending sequence-9 setup, zero recorded release sequence and
+existing MSI registration. The normal program archived that original marker
+unchanged, performed the same-version MSI repair with signed payloads, verified
+installed files and publishers, retained the signed installer cache, wrote the
+exact signed sequence-10 release envelope and removed the active setup marker.
+The installed agent's separate `verify-installed` command returned zero. MSI
+registration and the user shortcut were present. Twelve original records and
+installed/cache artifacts were collected over pinned SFTP and hash-checked;
+independent verification matched the exact bundle/cache/agent bytes, executable
+hash, both signed state envelopes and the byte-identical archived sequence-9
+envelope. An initial collection-query syntax error was retained and corrected;
+neither the installation nor its result was rerun for collection.
+
+The original customer identity, consent, service and company/worker services were
+rechecked afterward. This result proves recovery of this failed setup in an
+administrator profile with the lab publisher explicitly trusted. It does not prove
+a fresh-machine or standard-user installation, graphical technician login/session,
+customer enrollment, automatic update rollout, public reachability or production
+signing. A corrected signed customer package and the other release gates remain
+outstanding.

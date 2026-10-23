@@ -16,6 +16,12 @@ MSI alone leaves its embedded executable unsigned: setup can install its files
 but final installed-publisher verification rejects it, retains recovery state
 and does not record a completed release. The 23 October lab test demonstrates
 this rejection; it is not a successful company-bundle installation.
+The subsequent sequence-10 lab package followed the correct signing order and
+passed explicit failed-setup recovery in a Server 2016 administrator profile,
+including installed publisher/hash checks, retained old-marker evidence and
+sequence commit. See the dated [acceptance report](../../docs/ACCEPTANCE.md) for
+the exact source and limits; fresh-machine and standard-user bundle acceptance
+remain open.
 
 The pinned WiX 5.0.2 build tool requires .NET Framework 4.7.2 or later on the
 MSI build machine. An unupdated Server 2016 image with 4.6.2 needs this build
