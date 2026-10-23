@@ -6244,3 +6244,19 @@ initial /d1trimfile form did not remove path sensitivity. This compile-only
 experiment is not a product rebuild. No generated DLL was run or normalized.
 A follow-up tests relative source input and path mapping before selecting a
 product change. The prior timed-out probe's original partials remain retained.
+
+
+Follow-up compiler probe 40028879677 (d93b067) also passed its harness. Original
+[observations](../deployment/windows/cpp-path-probe-d93b067-observations.json)
+show that relative input and /pathmap did not make different-directory DLLs
+identical. No product flags were changed based on these experiments.
+
+Inspection of both full native job logs then established different hosted images
+(20261021.343.1 versus 20261012.333.1) and Visual Studio servicing versions
+(17.14.37806.7 versus 17.14.37710.0). Both logs name the same MSVC 14.44.35207
+installation directory. The original log digests and selected observations are
+retained in [native-f84ffb0-toolchain-observations.json](../deployment/windows/native-f84ffb0-toolchain-observations.json).
+Matching PE Rich records do not establish identical compiler binaries, libraries
+or headers. Toolchain drift is now a concrete difference to investigate; it is
+not yet established as the cause. A future passing reproduction must compare
+original shipping bytes with pinned toolchain identity as well as public source.

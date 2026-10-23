@@ -1,0 +1,307 @@
+{
+  "cases": [
+    {
+      "builds": [
+        {
+          "lambda_names": [
+            "<lambda_06eae38a316eb2e5a0f37bc2cf7529a3>"
+          ],
+          "compiler_exit": 0,
+          "sha256": "4da93fcb3262830b4ecd860541e24ca0186a54394e3083c8f7856d61225596ab",
+          "usable": true,
+          "iteration": 1
+        },
+        {
+          "lambda_names": [
+            "<lambda_06eae38a316eb2e5a0f37bc2cf7529a3>"
+          ],
+          "compiler_exit": 0,
+          "sha256": "4da93fcb3262830b4ecd860541e24ca0186a54394e3083c8f7856d61225596ab",
+          "usable": true,
+          "iteration": 2
+        }
+      ],
+      "variant": "link-only",
+      "mode": "same-path-new-mtime",
+      "original_dlls_identical": true
+    },
+    {
+      "builds": [
+        {
+          "lambda_names": [
+            "<lambda_9455154c6b1191619a39a8e18adddbe3>"
+          ],
+          "compiler_exit": 0,
+          "sha256": "dea26705004e39894a2e6635804cb49c91f2fde4215fca5aa01d48ace70829ff",
+          "usable": true,
+          "iteration": 1
+        },
+        {
+          "lambda_names": [
+            "<lambda_1af3a9270409049f764fa8f127c2be03>"
+          ],
+          "compiler_exit": 0,
+          "sha256": "d1562790024718c490153db5ce7b5b15d8a14189316cf56f322b513bf0d71946",
+          "usable": true,
+          "iteration": 2
+        }
+      ],
+      "variant": "link-only",
+      "mode": "different-paths",
+      "original_dlls_identical": false
+    },
+    {
+      "builds": [
+        {
+          "lambda_names": [
+            "<lambda_be6131b957f15562aa491c9057da2280>"
+          ],
+          "compiler_exit": 0,
+          "sha256": "eee06590b203c07d7345a0fa86c6b1c1649336a8b91f842ec5ffb318859d4604",
+          "usable": true,
+          "iteration": 1
+        },
+        {
+          "lambda_names": [
+            "<lambda_be6131b957f15562aa491c9057da2280>"
+          ],
+          "compiler_exit": 0,
+          "sha256": "eee06590b203c07d7345a0fa86c6b1c1649336a8b91f842ec5ffb318859d4604",
+          "usable": true,
+          "iteration": 2
+        }
+      ],
+      "variant": "compiler-brepro",
+      "mode": "same-path-new-mtime",
+      "original_dlls_identical": true
+    },
+    {
+      "builds": [
+        {
+          "lambda_names": [
+            "<lambda_43c9d04fcb2ec7b9992eda92bc4fd085>"
+          ],
+          "compiler_exit": 0,
+          "sha256": "e2bf0ed25c81cb6ab5622233eeb35e1de4301a1815134a4056356ea7f20cff3b",
+          "usable": true,
+          "iteration": 1
+        },
+        {
+          "lambda_names": [
+            "<lambda_5152f9ef4c09d668693444aa2270d295>"
+          ],
+          "compiler_exit": 0,
+          "sha256": "5ce902ae40e06897fbfc59fb68d974a37edf0c517509f42fb14b3b0b643b32fa",
+          "usable": true,
+          "iteration": 2
+        }
+      ],
+      "variant": "compiler-brepro",
+      "mode": "different-paths",
+      "original_dlls_identical": false
+    },
+    {
+      "builds": [
+        {
+          "lambda_names": [
+            "<lambda_2dd0ad7d3eeb654dc3d99c987cd9d42f>"
+          ],
+          "compiler_exit": 0,
+          "sha256": "103eaf79139dc1cc0fd87ae17cef7488366bfe29c189272dcc6e9e0d65b68e91",
+          "usable": true,
+          "iteration": 1
+        },
+        {
+          "lambda_names": [
+            "<lambda_2dd0ad7d3eeb654dc3d99c987cd9d42f>"
+          ],
+          "compiler_exit": 0,
+          "sha256": "103eaf79139dc1cc0fd87ae17cef7488366bfe29c189272dcc6e9e0d65b68e91",
+          "usable": true,
+          "iteration": 2
+        }
+      ],
+      "variant": "compiler-deterministic",
+      "mode": "same-path-new-mtime",
+      "original_dlls_identical": true
+    },
+    {
+      "builds": [
+        {
+          "lambda_names": [
+            "<lambda_a16a9cd9f0b14c7fdff1e0af8bcf19a1>"
+          ],
+          "compiler_exit": 0,
+          "sha256": "9b3814bbd47e5d8dd1bd952423989411f2d23609951d7d3b5f77b45e76507de2",
+          "usable": true,
+          "iteration": 1
+        },
+        {
+          "lambda_names": [
+            "<lambda_420a2d1d2c768b7442d00c7a69c5b864>"
+          ],
+          "compiler_exit": 0,
+          "sha256": "895068bddb546029248974b6da1e701d8d79723ec66e8c65a8585303290ad3d8",
+          "usable": true,
+          "iteration": 2
+        }
+      ],
+      "variant": "compiler-deterministic",
+      "mode": "different-paths",
+      "original_dlls_identical": false
+    },
+    {
+      "builds": [
+        {
+          "lambda_names": [
+            "<lambda_6b81b06cad09fbfb86716eda2f14647a>"
+          ],
+          "compiler_exit": 0,
+          "sha256": "aa350976cdbf49a69e5bc1f89eccdd6f465cd09cb950f5fe8a9683795f4c425a",
+          "usable": true,
+          "iteration": 1
+        },
+        {
+          "lambda_names": [
+            "<lambda_6b81b06cad09fbfb86716eda2f14647a>"
+          ],
+          "compiler_exit": 0,
+          "sha256": "aa350976cdbf49a69e5bc1f89eccdd6f465cd09cb950f5fe8a9683795f4c425a",
+          "usable": true,
+          "iteration": 2
+        }
+      ],
+      "variant": "compiler-brepro-trim",
+      "mode": "same-path-new-mtime",
+      "original_dlls_identical": true
+    },
+    {
+      "builds": [
+        {
+          "lambda_names": [
+            "<lambda_85b6dcf30f1d7d30250d942acb2fe5b8>"
+          ],
+          "compiler_exit": 0,
+          "sha256": "f4f8526b3603e8fb9b7661fe203ec13912ce00a32b4b8cf8a5f4752db45ee8f5",
+          "usable": true,
+          "iteration": 1
+        },
+        {
+          "lambda_names": [
+            "<lambda_22295d44df15688dc34a26889e71972f>"
+          ],
+          "compiler_exit": 0,
+          "sha256": "ad6fdf9f8d8a58b9db421ddf3dd896ae4a3de4d08cbe3617a88542ca87d7da93",
+          "usable": true,
+          "iteration": 2
+        }
+      ],
+      "variant": "compiler-brepro-trim",
+      "mode": "different-paths",
+      "original_dlls_identical": false
+    },
+    {
+      "builds": [
+        {
+          "lambda_names": [
+            "<lambda_34b3eab3f9e802263d73b95999e2fce0>"
+          ],
+          "compiler_exit": 0,
+          "sha256": "129354a9a5ee1335b943c34f68d93ad4a0dd0db24755d8e03e0b049692efd36a",
+          "usable": true,
+          "iteration": 1
+        },
+        {
+          "lambda_names": [
+            "<lambda_34b3eab3f9e802263d73b95999e2fce0>"
+          ],
+          "compiler_exit": 0,
+          "sha256": "129354a9a5ee1335b943c34f68d93ad4a0dd0db24755d8e03e0b049692efd36a",
+          "usable": true,
+          "iteration": 2
+        }
+      ],
+      "variant": "compiler-relative-source",
+      "mode": "same-path-new-mtime",
+      "original_dlls_identical": true
+    },
+    {
+      "builds": [
+        {
+          "lambda_names": [
+            "<lambda_8bca299b3ce7abdd8d3e331b284c8199>"
+          ],
+          "compiler_exit": 0,
+          "sha256": "b3cf2ebf523864603077e00630e55e087f1e983e7d8d3903bd465e6878adb57f",
+          "usable": true,
+          "iteration": 1
+        },
+        {
+          "lambda_names": [
+            "<lambda_a6c86505a98d2be0e2689fb651f2789f>"
+          ],
+          "compiler_exit": 0,
+          "sha256": "8c2094c39cb04280a84fee4f66d7a006f4731efaa0bb10b5a6ebbc5b7986e438",
+          "usable": true,
+          "iteration": 2
+        }
+      ],
+      "variant": "compiler-relative-source",
+      "mode": "different-paths",
+      "original_dlls_identical": false
+    },
+    {
+      "builds": [
+        {
+          "lambda_names": [
+            "<lambda_7d04346f771e8639b586e19dc5e6d891>"
+          ],
+          "compiler_exit": 0,
+          "sha256": "4d68816b8ca7b557e1ef434bad843e247d1db41f6a8ae795ea1c2b806eeb8d5b",
+          "usable": true,
+          "iteration": 1
+        },
+        {
+          "lambda_names": [
+            "<lambda_7d04346f771e8639b586e19dc5e6d891>"
+          ],
+          "compiler_exit": 0,
+          "sha256": "4d68816b8ca7b557e1ef434bad843e247d1db41f6a8ae795ea1c2b806eeb8d5b",
+          "usable": true,
+          "iteration": 2
+        }
+      ],
+      "variant": "compiler-pathmap",
+      "mode": "same-path-new-mtime",
+      "original_dlls_identical": true
+    },
+    {
+      "builds": [
+        {
+          "lambda_names": [
+            "<lambda_e68f26fdac8330294c845e2694fb23cc>"
+          ],
+          "compiler_exit": 0,
+          "sha256": "a13dd650b01ec22760b3f110dbe77f6baa73f5aca865a54396a5c08414b973e3",
+          "usable": true,
+          "iteration": 1
+        },
+        {
+          "lambda_names": [
+            "<lambda_f63ff74a22d0c5711dff1acf2f93a1e6>"
+          ],
+          "compiler_exit": 0,
+          "sha256": "ea297c44357c07dd46c3158d3936e2ac1662e7dc9696b8719c65e2f581e82de4",
+          "usable": true,
+          "iteration": 2
+        }
+      ],
+      "variant": "compiler-pathmap",
+      "mode": "different-paths",
+      "original_dlls_identical": false
+    }
+  ],
+  "binaries_executed": false,
+  "scope": "Controlled compiler-only lambda/anonymous-namespace observations; no generated DLL executed; not a product rebuild",
+  "shipping_normalized": false
+}
