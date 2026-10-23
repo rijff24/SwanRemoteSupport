@@ -23,7 +23,7 @@ extern "C" __declspec(dllexport) const char* anonymous_name() {
 }
 '@
 $records=@()
-foreach($variant in @('link-only','compiler-brepro','compiler-deterministic','compiler-brepro-trim')){
+foreach($variant in @('link-only','compiler-brepro','compiler-deterministic','compiler-brepro-trim','compiler-relative-source','compiler-pathmap')){
  foreach($mode in @('same-path-new-mtime','different-paths')){
   $case=Join-Path $root ($variant+'-'+$mode)
   New-Item -ItemType Directory -Path $case|Out-Null
@@ -38,14 +38,17 @@ foreach($variant in @('link-only','compiler-brepro','compiler-deterministic','co
     'link-only' {''}
     'compiler-brepro' {'/Brepro'}
     'compiler-deterministic' {'/experimental:deterministic'}
-    'compiler-brepro-trim' {'/Brepro /d1trimfile:"'+$working+'\\"'}
+    'compiler-brepro-trim' {'/Brepro /d1trimfile:"'+$working+'"'}
+    'compiler-relative-source' {'/Brepro'}
+    'compiler-pathmap' {'/Brepro /pathmap:"'+$working+'=C:\swan-probe"'}
    }
+   $compileSource=if($variant -eq 'compiler-relative-source'){'probe.cpp'}else{$sourcePath}
    $command=@"
 @echo off
 call "$vcvars" >nul
 if errorlevel 1 exit /b %errorlevel%
 cd /d "$working"
-cl.exe /LD /MT /O2 /EHsc /std:c++17 /W4 /WX $flags "$sourcePath" /Fo:probe.obj /link /Brepro /INCREMENTAL:NO /PDBALTPATH:probe.pdb /OUT:probe.dll
+cl.exe /LD /MT /O2 /EHsc /std:c++17 /W4 /WX $flags "$compileSource" /Fo:probe.obj /link /Brepro /INCREMENTAL:NO /PDBALTPATH:probe.pdb /OUT:probe.dll
 exit /b %errorlevel%
 "@
    $batch=Join-Path $working 'compile.cmd'
