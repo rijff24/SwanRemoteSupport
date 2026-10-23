@@ -20,8 +20,11 @@ repair and uninstall. A real standard-user desktop technician MSI attempt was
 blocked by effective Windows Installer policy (1625); no policy or privileges
 were relaxed. These are bounded installation results, not native session tests.
 Independent `d8fad20` native builds reproduced all eight shipping files. New
-`f84ffb0` component checks/source verification passed, but native builds
-`40003860186` and `40003868465` still require completion and comparison.
+`f84ffb0` component checks/source verification and both native builds passed.
+Their independent comparison failed for the client packages; the server setup,
+management, worker and agent matched. Client reproducibility remains a release
+gate. The later `7928f87` generic Flutter feature-guard correction compiled
+successfully for Windows and Linux x64; the broader workflow remains incomplete.
 
 Current receiving-device/session features, separate-machine and public transport,
 fresh matching Windows deployment, the complete Windows matrix, current automatic
@@ -6197,3 +6200,27 @@ the runner host while keeping the i686 compilation target; this also needs CI
 validation and does not add 32-bit product support. Original failure logs are
 retained. Independent f84ffb0 artifact comparison and local download verification
 remain pending; these failures are not hidden by the dedicated product builds.
+
+The original f84ffb0 comparison subsequently failed in workflow 40016176888:
+four shipping outputs matched (server setup, agent, management and worker), while
+both client MSIs and both portable EXE outputs differed across
+the builds. The unmodified failed report is retained as
+[native-f84ffb0-rebuild-comparison.json](../deployment/windows/native-f84ffb0-rebuild-comparison.json).
+This is a failed reproducibility gate, not a passing rebuild with metadata ignored.
+Bounded ZIP manifest diagnostics isolated 12 differing packaged files: the native
+launcher and C++ Flutter plugins. A separate pinned diagnostic workflow
+40020904002 verified both original archive hashes, extracted the original
+payloads without execution and retained their byte/section/compiler/debug
+observations. All copied diagnostic payload hashes were checked independently.
+Compiler-generated lambda/anonymous-namespace identifiers differed; compiler
+Rich records and linker versions matched in the observed binaries. A controlled
+compile-only MSVC probe is pending; no normalization or speculative build-flag
+fix has been accepted as a successful reproduction.
+
+For the separate non-company build failure, the later 7928f87 workflow
+40017774069 passed its actual Windows x64 job 120636061516 and Linux x64 job
+120636061669. This verifies compilation after moving the feature guard around
+the company-only macro. The full workflow is still running; its legacy 32-bit
+job now passes compiler installation but fails at a later build step. Deferred
+platform compilation is not advertised product support, and the workflow is not
+reported green. No newer native product rebuild has yet qualified the C++ bytes.
