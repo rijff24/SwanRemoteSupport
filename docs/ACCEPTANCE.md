@@ -6284,3 +6284,22 @@ trust-boundary tests passed, including missing/changed input identity and unsafe
 or duplicate records. No generated DLL was executed and no shipping bytes were
 normalized. Independent product builds 40031742464 and 40031748532 at da0c621
 are still running; their provenance and shipping equality remain unverified.
+
+
+Independent native product builds 40031742464 and 40031748532 at exact public
+source da0c621845057bed321a98a1886ef15891e431a9 both completed successfully.
+Frozen comparator 4102bb36b02923bd12c297abf7d91c47bf638364, workflow 40040238668,
+verified both original provider archive digests, public source/bridge provenance,
+shipping checksums and required compiler manifests. All eight original unsigned
+shipping outputs matched byte-for-byte. Both compiler records independently
+validated the same 618-file identity
+cc28be208566e3a22107767ee1c5a7dbd926154258b518b9abf7f15810a81f47.
+The original [comparison report](../deployment/windows/native-da0c621-rebuild-comparison.json)
+was collected with provider digest and ZIP CRC verification, without executing
+payloads or normalizing any shipping bytes. The older f84 failed report remains
+preserved; this new passing pair does not retroactively explain that failure.
+This establishes bounded unsigned reproducibility for da0c621 and the recorded
+MSVC inputs. SDK/actual CMake command provenance, lab signing, clean-machine
+runtime qualification, public sessions and production signing remain separate.
+The first full archive is downloading locally for subsequent installer testing;
+its local completion has not yet been verified.
