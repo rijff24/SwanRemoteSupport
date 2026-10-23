@@ -6224,3 +6224,23 @@ the company-only macro. The full workflow is still running; its legacy 32-bit
 job now passes compiler installation but fails at a later build step. Deferred
 platform compilation is not advertised product support, and the workflow is not
 reported green. No newer native product rebuild has yet qualified the C++ bytes.
+
+
+The full first f84ffb0 native archive subsequently downloaded and passed its
+provider digest, ZIP CRC, corresponding source and shipping checksum checks
+(artifact 12526383159, SHA-256
+9e450f89d14d2bbec9ea9505f44b57f42abc7b703c4e1a0eef71bf419b5b03cc).
+Downloaded executables were not run; the cross-build gate remains failed.
+
+Compiler probe 40027967521 at public tooling source 0fd6519 completed after its
+process-tree wait was corrected. Its original report is retained as
+[cpp-path-probe-0fd6519-observations.json](../deployment/windows/cpp-path-probe-0fd6519-observations.json).
+The provider archive digest verified as
+ dfdb62605446753e04bf560bff0a2e819bb02dc93f226989a72c8faee05fcccf.
+All four variants produced identical original DLL bytes when only source mtime
+changed at the same path, but differing lambda identifiers and DLL bytes when
+build paths changed. Compiler /Brepro, /experimental:deterministic and the
+initial /d1trimfile form did not remove path sensitivity. This compile-only
+experiment is not a product rebuild. No generated DLL was run or normalized.
+A follow-up tests relative source input and path mapping before selecting a
+product change. The prior timed-out probe's original partials remain retained.
