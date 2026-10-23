@@ -23,7 +23,15 @@ foreach($directory in @('include','lib\x64','bin\Hostx64\x64')){
 foreach($required in @('bin/Hostx64/x64/cl.exe','bin/Hostx64/x64/c1xx.dll','bin/Hostx64/x64/c2.dll','bin/Hostx64/x64/link.exe','include/typeinfo','include/memory')){
  if(-not @($records|Where-Object {$_.path -ceq $required}).Count){throw ('Required compiler input missing: '+$required)}
 }
-$canonical=(@($records|Sort-Object path|ForEach-Object {$_.path+"`0"+$_.sha256}) -join "`n")+"`n"
+$byPath=@{}
+foreach($record in $records){
+ if($byPath.ContainsKey($record.path)){throw 'Duplicate compiler input path'}
+ $byPath[$record.path]=$record
+}
+$orderedPaths=[string[]]@($byPath.Keys)
+[Array]::Sort($orderedPaths,[StringComparer]::Ordinal)
+$records=@($orderedPaths|ForEach-Object {$byPath[$_]})
+$canonical=(@($records|ForEach-Object {$_.path+"`0"+$_.sha256}) -join "`n")+"`n"
 $hasher=[Security.Cryptography.SHA256]::Create()
 try{$digest=([BitConverter]::ToString($hasher.ComputeHash([Text.Encoding]::UTF8.GetBytes($canonical)))).Replace('-','').ToLowerInvariant()}finally{$hasher.Dispose()}
 @{
