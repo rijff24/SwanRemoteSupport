@@ -81,3 +81,5 @@ exit /b %errorlevel%
 $result=@{scope='Controlled compiler-only lambda/anonymous-namespace observations; no generated DLL executed; not a product rebuild';binaries_executed=$false;shipping_normalized=$false;cases=$records}
 $result|ConvertTo-Json -Depth 8|Set-Content -LiteralPath (Join-Path $root 'compiler-observations.json')
 $result|ConvertTo-Json -Depth 8 -Compress
+
+& (Join-Path $PSScriptRoot 'Record-MsvcToolchain.ps1') -Output (Join-Path $root 'msvc-toolchain.json')
