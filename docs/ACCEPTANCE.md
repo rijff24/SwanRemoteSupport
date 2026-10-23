@@ -5189,3 +5189,33 @@ results in retained lab installations and an owned administrator profile, not
 fresh company setup, standard-user qualification, signing, company-generated
 downloads, automatic updates or support-session acceptance. Server 2022's prior
 standard-user policy rejection remains separately documented.
+
+### Latest native MSIs on retained Server 2025, 23 October
+
+The original `4c5accb` technician and customer MSIs also passed on Windows Server
+2025 Standard Evaluation Desktop Experience x64, `26100.32230`, with the same
+package hashes recorded for Server 2022. A fresh owned administrator profile
+completed technician 1.5.0 `e9d89ca` install, real upgrade to 1.5.1 `4c5accb`,
+missing-executable repair and uninstall. All four returned 0; old registration
+was removed, new registration installed, and the UpgradeCode remained stable.
+Fourteen original fixture/task/invocation, result and MSI-log/payload records
+were retained and verified by byte counts and SHA-256 values.
+
+Customer administrative install, damaged-license repair and uninstall each
+returned 0 without requiring reboot. The harness verified all 96 packaged files,
+the agent and the service's exact path, Running state and LocalSystem account.
+Uninstall removed packaged files, agent, registration and service; a separate
+final observation confirmed the service absent. Twelve original fixture,
+invocation, result and MSI-log records were transferred and hash-verified.
+A local staging template initially pointed to the technician fixture; the
+existing-directory guard stopped it before file transfer or MSI execution. A
+separate corrected customer path was used for the actual tests.
+
+The fixture contained no customer enrollment or company services before these
+tests. Persistent script policies were unchanged; no company-server setup,
+configuration, group or authorization change was made. These are **bare MSI
+lifecycle/major-upgrade** results, not standard-user policy qualification,
+enrolled-device identity preservation, signed company distribution, automatic
+updates or remote-session acceptance. Activation was not collected in this
+bounded run. The prior Server 2025 standard-user policy rejection remains open
+as separately recorded; this administrator result does not supersede it.
