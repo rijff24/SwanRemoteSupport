@@ -4,7 +4,37 @@ Evidence through 23 October 2026. **The product is not complete or approved for
 production publication.** A passing component test is not evidence of a working
 native support session or a clean-machine installation.
 
-**Latest Windows company-lab state:** after explicitly approved cold migration of
+## Current status, 23 October
+
+The preserved company VM now runs the lab-signed `f84ffb0` management service
+and worker after a verified encrypted management-only backup and coordinated
+upgrade. Identity, consent, HTTPS binding, transport trust, paused profile 18,
+customer process/watcher and interrupted customer setup evidence were preserved.
+The new worker's generated bundle installed the already-approved signed
+`d8fad20` technician payload in a second administrative account while preserving
+the first account: real MSI state 2 became state 5. Exact new installer texts,
+signed profile/release and installed identity were independently checked.
+
+The signed `d8fad20` customer MSI passed Server 2016 reinstall, damaged-license
+repair and uninstall. A real standard-user desktop technician MSI attempt was
+blocked by effective Windows Installer policy (1625); no policy or privileges
+were relaxed. These are bounded installation results, not native session tests.
+Independent `d8fad20` native builds reproduced all eight shipping files. New
+`f84ffb0` component checks/source verification passed, but native builds
+`40003860186` and `40003868465` still require completion and comparison.
+
+Current receiving-device/session features, separate-machine and public transport,
+fresh matching Windows deployment, the complete Windows matrix, current automatic
+rollout/recovery, full Windows TLS/transport restore and production signing remain
+release gates. Private HTTPS binding and full Windows backup/restore approval
+blocks remain unresolved. Management-only backups do not prove full restore.
+Latest successful graphical sessions still use the earlier technician and older
+receiver on one VM, as detailed below. No complete-product acceptance is claimed.
+
+The following early-23-October summary and 22-October snapshot are historical;
+the final dated sections contain subsequent source-specific evidence.
+
+**Earlier Windows company-lab state:** after explicitly approved cold migration of
 the existing company disk to KVM, all three services and the HTTPS API were
 observed healthy. Original customer identity and consent, profile revision 18,
 paused updates and the existing HTTPS binding were preserved. Both original
@@ -54,7 +84,7 @@ Earlier entries below retain their original source-specific observations;
 later evidence does not retroactively validate older packages or every Windows
 version. The full release gates remain open.
 
-## Current release gates, 22 October
+## Earlier release-gate snapshot, 22 October
 
 The dated evidence below is source-specific. Earlier passing packages do not
 qualify the current candidate. Native source `ebef5a6` passed workflow
@@ -6082,3 +6112,37 @@ records/artifacts were collected and hash-verified. Services were unchanged.
 Independent native builds 40003860186 and 40003868465 were still running;
 matching release qualification and deployment were not established by these
 component/source/signing checks.
+
+The existing company server and worker were subsequently upgraded together to
+the lab-signed f84ffb0 components. A fresh management-only encrypted backup was
+authenticated independently, including wrong-passphrase/tamper rejection,
+SQLite quick_check and exact release/job snapshot checks. Six original backup
+records and eight original upgrade records were collected and hash-verified.
+The upgrade preserved customer identity/token, consent, sequence, pending
+installation evidence, Running watcher and service process, profile revision 18,
+paused rollout, HTTPS binding bytes, transport keys, service environments and
+release approvals. The live bundle recipe matched the pinned source calculation.
+Old binaries were retained and checked; neither rollback nor restore was run.
+This backup does not include the separate TLS/transport private material.
+
+The new worker then generated a protected technician bundle for the already
+approved d8fad20 sequence-13 release (job 805e52fe-b286-40d1-b90e-5c7535858534).
+Its seven installer/license texts matched f84ffb0 exactly after the documented
+line-ending conversion; the signed MSI, agent and release envelope were unchanged
+from the earlier pinned release. Public bootstrap/trust remained unchanged,
+profile/release signatures verified, and anonymous download returned 401 while
+authenticated download returned 200. No new release approval or rollout occurred.
+
+That exact generated bundle completed installation in the company's owned
+Administrator profile while the same ProductCode was installed in a different
+Windows account. The real catalog moved from state 2 to state 5 for the new
+account; the unmodified generated helper/setup, payload publishers, installed
+release, cached MSI and agent verification all passed. Sequence 13 and profile
+18 were recorded. The account's earlier uninstall cancellation and rollback
+marker were resolved by normal complete setup, without manual deletion. The
+other technician account and existing customer were unchanged. Nine original
+records/files were collected and independently verified, including cached signed
+state without device credentials. This verifies the actual per-user correction
+and setup cancellation recovery in an administrative profile, using f84ffb0
+packaging with d8fad20 endpoint payloads. It is not standard-user, first-install
+on a new disk, f84ffb0 native-payload, login or remote-session qualification.
