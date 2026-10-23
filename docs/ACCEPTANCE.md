@@ -5266,6 +5266,19 @@ guest stopped responding to SSH; the existing viewer remained black after wake
 and secure-attention input. QEMU still reported Running. The attempted normal
 guest shutdown connection failed before authentication, and a normal ACPI
 power-off request was sent at 01:20 UTC on 23 October. Power-off/recovery is not
-yet verified; no force-stop, reset, disk replacement or fixture cleanup was
-performed. The cause is unproven. The bounded MSI results above do not establish
-guest stability, reboot recovery or complete Server 2019 acceptance.
+yet verified at that point; no force-stop, reset, disk replacement or fixture
+cleanup had been performed. After a 15-minute wait the guest was still
+unresponsive. The exact disposable QEMU instance was then closed through its
+monitor `quit` command after confirming its existing clean OS snapshot and all
+collected test evidence. This was an **unclean guest power-off**, not a successful
+Windows shutdown. Its original process completed with exit 0; read-only qcow2
+checks reported zero container errors and the clean snapshot remained present.
+
+One controlled restart subsequently restored the Windows lock screen and SSH
+on the same `17763.3650` guest. Independent checks found the original customer
+fixture's file bytes, owners and DACLs unchanged, the rejected product/services
+still absent, and a clear Windows NTFS dirty flag. This proves bounded **basic
+lab guest boot and fixture recovery** after that incident. The cause remains
+unproven; it does not qualify long-term guest stability, software update recovery,
+company backup/restore or complete Server 2019 acceptance. No original disk or
+snapshot was deleted or replaced.
