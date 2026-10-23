@@ -6146,3 +6146,14 @@ state without device credentials. This verifies the actual per-user correction
 and setup cancellation recovery in an administrative profile, using f84ffb0
 packaging with d8fad20 endpoint payloads. It is not standard-user, first-install
 on a new disk, f84ffb0 native-payload, login or remote-session qualification.
+
+The same unmodified generated setup then passed explicit `-Repair` in that
+second administrative profile after its previously hash-verified technician
+executable was moved into protected test evidence. Repair restored the exact
+signed executable; the retained original hash, agent signature, MSI registration
+and final installed-identity verification passed. Managed state and installed
+release metadata remained byte-identical, with no setup/cancellation marker left.
+The other technician profile and customer process, pending marker and watcher
+were preserved. Four original files, including the retained executable, were
+collected and independently hash-checked. This remains f84ffb0 packaging with
+d8fad20 payloads and does not establish automatic-update recovery.
