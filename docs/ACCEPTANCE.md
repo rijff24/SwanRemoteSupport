@@ -4,6 +4,14 @@ Evidence through 23 October 2026. **The product is not complete or approved for
 production publication.** A passing component test is not evidence of a working
 native support session or a clean-machine installation.
 
+**Latest Windows company-lab state:** the paired `4c5accb` upgrade passed its
+bounded checks, but subsequent bundle-job observations were interrupted by guest
+unresponsiveness. Same-disk recovery preserved the customer identity and consent;
+the company service was then observed Stopped, with Caddy access violations in
+its retained log. Completion/download checks for the two sequence-9 jobs remain
+unverified. Lab infrastructure recovery is in progress; the later dated sections
+do not imply production or full compatibility acceptance.
+
 The latest accepted-desktop lab run used technician source `e6b87b9` against the
 preserved older `bd13500` customer on Server 2016 with the parallel transport
 candidate and experimental `9f97ef0` source-built engine. Standard-user MFA, inventory/history, customer approval, desktop
@@ -5432,3 +5440,60 @@ forced power-off or disk replacement was performed during these observations.
 Original jobs and retained outputs must be inspected after the wait before any
 recovery decision. Successful bundle upload, public customer download, protected
 technician download and installation of either generated bundle remain unproven.
+
+### Bundle-test interruption and same-disk recovery, 23 October
+
+After the explicit fifteen-minute observation wait, SSH still failed and the
+company guest display did not wake. A normal ACPI shutdown request at 10:20 UTC
+did not stop the existing VM during its grace period. Monitor `quit` was then
+requested, followed by termination of that exact owned emulator process when it
+also failed to exit. This was an **unclean guest power-off**. The original disk
+was retained; offline qcow2 checking reported zero container errors. No build
+record was edited, duplicate job submitted, database restored or disk replaced.
+
+The same company disk booted again at 10:42 UTC with a private lab allocation
+of 3 GiB RAM and two virtual processors, compared with the former 2 GiB/one
+processor. The old private settings and launcher were preserved. SSH returned,
+and an independent administrative check at 10:58 UTC matched device ID, token
+hash, unattended consent/revision and accepted release sequence against the
+pre-maintenance record. This proves bounded identity/consent persistence through
+this incident, not complete service recovery or an interrupted endpoint update.
+
+The company service was observed Stopped with Win32 exit code 1. The worker log
+repeatedly reported refusal at the HTTPS recipe endpoint. Original Caddy,
+rendezvous and relay logs were collected through SFTP. The 1,049,730-byte Caddy
+log, SHA-256
+`0f4f21d782fb2e55a64e63df9615d20febdfe03ba28dcf784597b0ac88b95a65`,
+contains access violations and Go runtime fatal faults in the pinned Caddy
+2.10.2 component, including TLS/runtime stack frames. It also contains older
+incidents; its contents do not by themselves establish the cause of the latest
+guest-wide communication interruption. A subsequent service-start SSH connection
+failed during banner exchange, before a verified service-start action. Job
+terminal states and generated downloads must still be observed through a healthy
+server. Increasing guest capacity has not established sustained stability.
+
+The separately retained, already unresponsive Server 2019 test guest was also
+powered off uncleanly after normal shutdown and emulator-exit attempts failed.
+Its original disk, clean snapshot and collected installer evidence were retained;
+offline qcow2 checking reported zero container errors. It was not restarted or
+replaced with another company deployment.
+
+Independent endpoint work prepared private latest-source Windows 11 fixtures for
+the actual technician 1.5.0-to-1.5.1 upgrade and customer MSI lifecycle; neither
+was executed at this point. A separate fresh Server 2016 endpoint-only seed was
+prepared with distinct lab access keys. Its KVM setup stopped at environment
+preflights before any Windows installation: the minimal owned Linux runtime
+lacked optional helper commands. A shell-only continuation preserves the partial
+fixture and equivalent kernel read-only-mount checks. This preparation is not
+Windows installation or compatibility evidence.
+
+A supported storage move of the stopped, owned endpoint-lab WSL distribution
+from D: to a protected C: directory is being verified separately. All emulators
+inside that distribution were checked absent first; other distributions and the
+default registration were not selected for modification. VM resume is gated on
+the completed move, unchanged registration and matching entire-VHD hashes. The
+prepared Windows 11 resume keeps its original 4 GiB guest allocation, 6 GiB host
+memory guard and 100 GiB reserve on the actual virtual-disk volume, and requires
+its existing TPM state file. A company-VM migration remains pending fresh human
+approval because the earlier automatic review blocked company backup/restore/
+migration work. No company disk was copied into a new hypervisor environment.
