@@ -6271,3 +6271,16 @@ that corrected identity format still requires an actual Windows run. The native
 product workflow now retains this manifest in both client and final artifacts.
 This adds provenance evidence; it does not establish a reproducible product,
 identify the historical mismatch's cause or pin Windows SDK inputs.
+
+
+Corrected ordinal capture then passed actual Windows probe 40031644530 at
+bc6eed56f0e3e6ac11d361fba50bd0e4415a080c. The retained provider archive digest
+and CRC verified; an independent Python calculation of all 618 original input
+records agreed with the captured identity. The actual comparison verifier also
+accepted those original manifest bytes, including their UTF-8 BOM. Its bounded
+[validation record](../deployment/windows/cpp-toolchain-ordinal-validation.json)
+records the original manifest and archive digests. Eleven focused comparison
+trust-boundary tests passed, including missing/changed input identity and unsafe
+or duplicate records. No generated DLL was executed and no shipping bytes were
+normalized. Independent product builds 40031742464 and 40031748532 at da0c621
+are still running; their provenance and shipping equality remain unverified.

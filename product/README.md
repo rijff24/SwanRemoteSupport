@@ -15,6 +15,16 @@ cargo +1.90.0 build --manifest-path product/Cargo.toml --workspace --release --l
 
 Windows production builds use MSVC. GNU compilation has verified the product components on the local development machine. Native endpoint builds additionally require the pinned Flutter and vcpkg dependencies in `.github/workflows/swan-windows-build.yml`; the company-product CI separately checks Windows and Linux management components. The root application enables management integration with the `swan_custom` feature.
 
+Native CI also retains `native-msvc-toolchain.json`: hashes of the default x64
+MSVC compiler, headers and libraries, sorted ordinally for a portable identity.
+Independent comparisons require and validate this record when the pinned source
+contains its capture script. A shared toolset directory or Visual Studio version
+label does not establish identical inputs. This record does not yet pin Windows
+SDK files or prove which compiler commands CMake executed; preserve that
+limitation in release evidence. Reproducibility still requires matching original
+shipping bytes, not normalized binaries or matching compiler labels alone.
+
+
 Successful company-product CI jobs export `CompanyComponents-<runner>-UNSIGNED-TEST`
 artifacts containing the management service, configuration agent and worker,
 their SHA-256 values, compiler/source revision metadata and a source-input archive.
