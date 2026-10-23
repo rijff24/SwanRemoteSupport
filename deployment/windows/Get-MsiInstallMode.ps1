@@ -4,14 +4,17 @@ $ErrorActionPreference = 'Stop'
 # Read only: no installer actions or custom actions are executed.
 $installer = New-Object -ComObject WindowsInstaller.Installer
 $database = $installer.OpenDatabase((Resolve-Path -LiteralPath $Package).Path, 0)
-function Read-Property([string]$Name) {
+function Read-Property([string]$Name,[switch]$Optional) {
     $view = $database.OpenView("SELECT ``Value`` FROM ``Property`` WHERE ``Property`` = '$Name'")
-    $null = $view.Execute()
-    $row = $view.Fetch()
-    if ($null -eq $row) { throw "MSI property is missing: $Name." }
-    $value = $row.StringData(1)
-    $null = $view.Close()
-    return $value
+    try {
+        $null = $view.Execute()
+        $row = $view.Fetch()
+        if ($null -eq $row) {
+            if ($Optional) { return '' }
+            throw "MSI property is missing: $Name."
+        }
+        return $row.StringData(1)
+    } finally { $null = $view.Close() }
 }
 function ConvertTo-MsiVersion([string]$Value) {
     # Windows Installer ignores a legacy package's fourth version field.
@@ -32,4 +35,9 @@ foreach ($related in $installer.RelatedProducts($upgrade)) {
 $state = $installer.ProductState($code)
 if ($state -eq 5) { Write-Output '/fvamus' }
 elseif ($state -in @(-1, 1)) { Write-Output '/i' }
+elseif ($state -eq 2 -and [string]::IsNullOrEmpty((Read-Property 'ALLUSERS' -Optional))) {
+    # INSTALLSTATE_ABSENT means another user has this product. An ordinary
+    # per-user MSI can install independently for the current Windows account.
+    Write-Output '/i'
+}
 else { throw "MSI product registration cannot be safely recovered (state $state)." }

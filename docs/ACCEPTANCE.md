@@ -6017,3 +6017,26 @@ installer's negative version guard; it does not resolve the old interrupted
 fixture or establish a successful customer upgrade. Positive endpoint installation,
 standard-user technician qualification and the other full release gates remain
 open.
+
+The original generated sequence-13 technician bundle subsequently completed an
+upgrade in its existing owned administrative Windows profile. Its accepted
+sequence advanced from 10 to 13, both installed executables and the cached MSI
+matched the signed bundle, and installed-state verification succeeded. Company
+bootstrap/trust, profile revision 18 and the earlier cancelled-setup archive
+were preserved; no pending marker remained. Thirteen original evidence files
+were independently collected and checked. The customer service, watcher and
+pending marker were unchanged. This is not standard-user, technician login or
+remote-session qualification.
+
+A separate Windows profile exposed another preflight defect: Windows Installer
+reported state 2 for the technician product installed under the other account.
+Microsoft documents this as INSTALLSTATE_ABSENT, not corrupt registration.
+The helper now allows installation in that state only for an ordinary per-user
+MSI (missing or empty ALLUSERS); machine-wide and dual-purpose packages still
+fail closed. Related-product downgrade and conflicting-version guards remain.
+Sixteen isolated catalog cases and seven watcher-recovery checks pass. A read-only
+probe against the actual signed MSI/catalog selected installation for the new
+profile, still rejected the newer customer fixture, and preserved both existing
+installations and customer evidence. No MSI action ran and no distributed bundle
+was patched during that probe. A rebuilt matching bundle and positive second-user
+installation remain required.
