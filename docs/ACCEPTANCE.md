@@ -5542,3 +5542,28 @@ handle denies writable access to the original disk while copying. Independent
 source/target hash equality and an offline qcow2 check are required before the
 copy can be committed or booted. Copy completion, KVM boot, service recovery and
 post-migration identity checks remain unverified at this entry.
+
+### Company disk migration copy verified, 23 October
+
+The live pipe-based direct copy was deliberately stopped after its measured
+throughput proved unsuitable; its incomplete disk remains retained. A subsequent
+mount preflight correctly refused to copy when drvfs ignored `ro`. The continuation
+used a separate bind mount, verified the kernel mount's read-only flag, held the
+original disk against Windows writers, and retained all previous partial copies.
+
+The complete 29,104,275,456-byte company disk was copied into the separate protected
+Linux runtime on C:. Independent host-source and Linux-target SHA-256 values both
+equal `fbe14b2cf543e2c341bac8b87d1bd5cfc5c76f7dde265a7e886716b172381da2`.
+The copied qcow2 image check reported no errors before its final name was committed.
+The original disk and encrypted backup remain retained. The original native boot
+helpers have a migration guard; the KVM boot wrapper also holds the original disk
+against writable access for its entire lifetime.
+
+At 13:26 UTC, the verified copy was launched using pinned QEMU 11.0.3 under KVM,
+with 3 GiB memory, two virtual processors, the original default e1000 MAC, installed
+disk boot, and the existing loopback forwards. No company setup, key replacement,
+restore or HTTPS-binding change was performed. Successful guest boot, service
+health, preservation of live company state and the two original build-job results
+still require post-boot observation; a successful disk copy alone proves none of
+those acceptance requirements. The separate endpoint VHDX hash discrepancy remains
+unresolved and that distribution remains unused.
