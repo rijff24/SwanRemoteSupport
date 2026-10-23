@@ -8,6 +8,7 @@ on:
       - deployment/windows/test_native_build_comparison.py
       - deployment/windows/diagnose-native-payload.py
       - deployment/windows/test_native_payload_diagnostic.py
+      - deployment/windows/Probe-CppReproducibility.ps1
   pull_request:
     paths:
       - .github/workflows/compare-native-builds.yml
@@ -15,6 +16,7 @@ on:
       - deployment/windows/test_native_build_comparison.py
       - deployment/windows/diagnose-native-payload.py
       - deployment/windows/test_native_payload_diagnostic.py
+      - deployment/windows/Probe-CppReproducibility.ps1
   workflow_dispatch:
     inputs:
       first_run:
@@ -29,6 +31,10 @@ on:
         description: Exact public 40-character source commit shared by both runs
         required: true
         type: string
+      compiler_probe:
+        description: Run only the controlled Windows compiler probe
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -50,7 +56,7 @@ jobs:
           python3 -m unittest discover -s deployment/windows -p test_native_payload_diagnostic.py
 
   compare:
-    if: github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'workflow_dispatch' && !inputs.compiler_probe
     needs: tests
     runs-on: ubuntu-24.04
     timeout-minutes: 15
@@ -123,3 +129,25 @@ jobs:
           path: evidence/payload-diagnostic
           if-no-files-found: ignore
           retention-days: 90
+
+  compiler-probe:
+    if: github.event_name == 'workflow_dispatch' && inputs.compiler_probe
+    needs: tests
+    runs-on: windows-2022
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+      - name: Observe original compiler outputs with controlled paths and mtimes
+        shell: pwsh
+        run: ./deployment/windows/Probe-CppReproducibility.ps1 -WorkDirectory "$env:RUNNER_TEMP/cpp-repro-observations"
+      - name: Preserve compiler observations and original probe binaries
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: cpp-repro-observations
+          path: ${{ runner.temp }}/cpp-repro-observations
+          if-no-files-found: warn
+          retention-days: 90
+
