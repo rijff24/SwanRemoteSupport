@@ -5157,3 +5157,35 @@ worker fix. It does not deploy that worker into the older mixed lab deployment,
 qualify company-generated publication/download permissions, extend earlier
 runtime/MSI results automatically to new binaries, or approve production signing
 and rollout. Those acceptance gates remain open.
+
+### Latest native MSIs on retained Server 2022, 23 October
+
+Original `4c5accb` native MSIs were tested on the retained Windows Server 2022
+Standard Evaluation Desktop Experience x64 guest, `20348.587`. A fresh owned
+administrator profile completed technician 1.5.0 `e9d89ca` install, real upgrade
+to 1.5.1 `4c5accb`, missing-executable repair and uninstall. All four returned 0.
+The new original technician MSI SHA-256 is
+`fb13e6f43656164b7d6d4f18601edb186e2f7d511791383e2a62fbd7e158acf8`.
+The old product registration was removed, the new registration installed, and
+the UpgradeCode remained stable. Fourteen original fixture/task/invocation,
+result and MSI-log/payload records were retained and verified by byte counts
+and SHA-256 values. The initial broad evidence transfer timed out; metadata-first
+SFTP collected the originals without repeating any MSI operation.
+
+The original customer MSI SHA-256 is
+`b7f98073f17e32d206e6026392f1f47f540adfc60a6dae5a5f03b75a634bdc5b`.
+It separately passed administrative install, damaged-license repair and uninstall,
+all with exit 0 and no reboot requirement. All 96 packaged files and the agent
+matched their original manifests; the harness checked the running service's
+exact executable path and LocalSystem ownership after install/repair. Uninstall
+removed packaged files, agent, registration and service; an independent final
+observation also confirmed the service absent. Twelve original fixture,
+invocation, result and MSI-log records were transferred and hash-verified.
+
+No customer enrollment or company services existed before the technician test.
+The test preserved that absence; it is not enrolled identity/consent evidence.
+Persistent script policies were unchanged. These are exact-source **bare MSI**
+results in retained lab installations and an owned administrator profile, not
+fresh company setup, standard-user qualification, signing, company-generated
+downloads, automatic updates or support-session acceptance. Server 2022's prior
+standard-user policy rejection remains separately documented.
