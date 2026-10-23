@@ -151,5 +151,45 @@ class NativeBuildComparisonTests(unittest.TestCase):
             self.assertIsInstance(storage_argument, str)
 
 
+class MsvcInputIdentityTests(unittest.TestCase):
+    def manifest(self):
+        paths = ["bin/Hostx64/x64/" + n for n in ("cl.exe", "c1xx.dll", "c2.dll", "link.exe")]
+        paths += ["include/typeinfo", "include/memory"]
+        files = [{"path": p, "bytes": 1, "sha256": hashlib.sha256(p.encode()).hexdigest()} for p in paths]
+        canonical = "".join(e["path"] + "\0" + e["sha256"] + "\n" for e in sorted(files, key=lambda e: e["path"]))
+        return {"files": files, "input_identity_sha256": hashlib.sha256(canonical.encode()).hexdigest()}
+
+    def verify(self, manifest):
+        stream = io.BytesIO()
+        with zipfile.ZipFile(stream, "w") as archive:
+            if manifest is not None:
+                archive.writestr("native-msvc-toolchain.json", b"\xef\xbb\xbf" + json.dumps(manifest).encode())
+        with zipfile.ZipFile(stream) as archive:
+            return comparison.verify_msvc_inputs(archive, True)
+
+    def test_original_identity_does_not_depend_on_record_order(self):
+        manifest = self.manifest()
+        manifest["files"].reverse()
+        self.assertEqual(self.verify(manifest)["input_identity_sha256"], manifest["input_identity_sha256"])
+
+    def test_missing_or_changed_compiler_evidence_is_rejected(self):
+        with self.assertRaises(comparison.VerificationError):
+            self.verify(None)
+        manifest = self.manifest()
+        manifest["files"][0]["sha256"] = "0" * 64
+        with self.assertRaisesRegex(comparison.VerificationError, "digest differs"):
+            self.verify(manifest)
+
+    def test_duplicate_unsafe_and_malformed_records_are_rejected(self):
+        for entry in ({"path": "../escape", "bytes": 1, "sha256": "0" * 64},
+                      {"path": "INCLUDE/MEMORY", "bytes": 1, "sha256": "0" * 64},
+                      {"path": "include/invalid", "bytes": 1, "sha256": []}, []):
+            with self.subTest(entry=entry):
+                manifest = self.manifest()
+                manifest["files"].append(entry)
+                with self.assertRaises(comparison.VerificationError):
+                    self.verify(manifest)
+
+
 if __name__ == "__main__":
     unittest.main()

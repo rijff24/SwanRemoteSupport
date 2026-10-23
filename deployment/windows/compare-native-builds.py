@@ -134,6 +134,47 @@ def verify_source(archive, tracked, repositories, epoch):
             "declared_source_text_checkout_conversions": conversions}
 
 
+def verify_msvc_inputs(archive, required):
+    name = "native-msvc-toolchain.json"
+    if name not in archive.namelist():
+        if required:
+            raise VerificationError("Required MSVC input identity is missing")
+        return None
+    if archive.getinfo(name).file_size > 2 * 1024 ** 2:
+        raise VerificationError("MSVC input identity exceeds bound")
+    manifest = json.loads(archive.read(name).decode("utf-8-sig"))
+    files = manifest.get("files")
+    if not isinstance(files, list) or not 6 <= len(files) <= 10000:
+        raise VerificationError("Invalid MSVC input file set")
+    seen = set()
+    for entry in files:
+        if not isinstance(entry, dict):
+            raise VerificationError("Invalid MSVC input entry")
+        path = entry.get("path", "")
+        digest = entry.get("sha256", "")
+        if (not isinstance(path, str) or not path or path.startswith("/")
+                or any(p in ("", ".", "..") for p in path.split("/"))
+                or not path.isascii() or any(ord(c) < 32 for c in path)
+                or "\\" in path or ":" in path
+                or path.casefold() in seen
+                or not isinstance(digest, str) or not re.fullmatch(r"[0-9a-f]{64}", digest)
+                or type(entry.get("bytes")) is not int or entry["bytes"] < 0):
+            raise VerificationError("Unsafe or invalid MSVC input entry")
+        seen.add(path.casefold())
+    required_files = {"bin/hostx64/x64/" + n for n in ("cl.exe", "c1xx.dll", "c2.dll", "link.exe")}
+    if not required_files.union({"include/typeinfo", "include/memory"}) <= seen:
+        raise VerificationError("Required MSVC inputs missing")
+    canonical = "".join(e["path"] + "\0" + e["sha256"] + "\n"
+                        for e in sorted(files, key=lambda e: e["path"]))
+    identity = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+    if identity != manifest.get("input_identity_sha256"):
+        raise VerificationError("MSVC input identity digest differs")
+    return {"input_identity_sha256": identity, "files": len(files),
+            "visual_studio_version": manifest.get("visual_studio_version"),
+            "toolset_directory_version": manifest.get("toolset_directory_version"),
+            "scope": "Recorded default x64 MSVC inputs; not Windows SDK or actual compiler-command verification"}
+
+
 def compare(first, second, checkout, revision):
     tracked, repositories = source_tree(checkout, revision)
     epoch = int(git(checkout, "show", "-s", "--format=%ct", revision))
@@ -142,6 +183,8 @@ def compare(first, second, checkout, revision):
         proof = [verify_source(z, tracked, repositories, epoch) for z in (a, b)]
         if proof[0]["bridge_hashes"] != proof[1]["bridge_hashes"]:
             raise VerificationError("Independently generated bridge bytes differ")
+        toolchains = [verify_msvc_inputs(z, "deployment/windows/Record-MsvcToolchain.ps1" in tracked)
+                      for z in (a, b)]
         outputs = [{n for n in ns if "/" not in n and n.lower().endswith((".exe", ".msi", ".dll"))} for ns in names]
         required = shipping_names(source_version(checkout, revision))
         if outputs[0] != required or outputs[1] != required:
@@ -162,6 +205,9 @@ def compare(first, second, checkout, revision):
                             "second_bytes": b.getinfo(name).file_size,
                             "identical": left == right and a.getinfo(name).file_size == b.getinfo(name).file_size})
     return {"schema": 1, "source_commit": revision, "source_date_epoch": epoch, "source_proofs": proof,
+            "msvc_input_proofs": toolchains,
+            "recorded_msvc_inputs_identical": (toolchains[0]["input_identity_sha256"] == toolchains[1]["input_identity_sha256"]
+                                               if all(toolchains) else None),
             "outputs": records, "all_shipping_bytes_identical": all(r["identical"] for r in records),
             "normalization_applied_to_shipping_files": False,
             "executables_run": False, "runtime_qualified": False, "production_approved": False,
