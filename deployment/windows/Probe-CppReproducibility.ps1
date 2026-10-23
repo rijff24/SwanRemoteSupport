@@ -31,9 +31,9 @@ foreach($variant in @('link-only','compiler-brepro','compiler-deterministic','co
   foreach($iteration in 1,2){
    $working=Join-Path $case $(if($mode -eq 'same-path-new-mtime'){'build'}else{'build-'+$iteration})
    New-Item -ItemType Directory -Path $working -Force|Out-Null
-   $input=Join-Path $working 'probe.cpp'
-   [IO.File]::WriteAllText($input,$source,[Text.UTF8Encoding]::new($false))
-   (Get-Item -LiteralPath $input).LastWriteTimeUtc=[DateTime]::new(2020+$iteration,1,1,0,0,0,[DateTimeKind]::Utc)
+   $sourcePath=Join-Path $working 'probe.cpp'
+   [IO.File]::WriteAllText($sourcePath,$source,[Text.UTF8Encoding]::new($false))
+   (Get-Item -LiteralPath $sourcePath).LastWriteTimeUtc=[DateTime]::new(2020+$iteration,1,1,0,0,0,[DateTimeKind]::Utc)
    $flags=switch($variant){
     'link-only' {''}
     'compiler-brepro' {'/Brepro'}
@@ -45,7 +45,7 @@ foreach($variant in @('link-only','compiler-brepro','compiler-deterministic','co
 call "$vcvars" >nul
 if errorlevel 1 exit /b %errorlevel%
 cd /d "$working"
-cl.exe /LD /MT /O2 /EHsc /std:c++17 /W4 /WX $flags "$input" /Fo:probe.obj /link /Brepro /INCREMENTAL:NO /PDBALTPATH:probe.pdb /OUT:probe.dll
+cl.exe /LD /MT /O2 /EHsc /std:c++17 /W4 /WX $flags "$sourcePath" /Fo:probe.obj /link /Brepro /INCREMENTAL:NO /PDBALTPATH:probe.pdb /OUT:probe.dll
 exit /b %errorlevel%
 "@
    $batch=Join-Path $working 'compile.cmd'
