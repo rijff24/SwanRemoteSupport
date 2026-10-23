@@ -45,7 +45,13 @@ signed MSI runs this commit action, so it does not depend on the deleted install
 executable. It retains `pending-uninstall`, identity and consent. Failed removal
 retains rollback information until Windows Installer invokes rollback. This avoids
 a successful uninstall leaving a record that blocks the next removal after a bare
-MSI reinstall. Real repeated install/uninstall verification of this fix is pending.
+MSI reinstall. Two real uninstall/explicit-repair reinstall cycles passed in a
+Server 2016 administrative technician profile using the signed d8fad20 MSI and
+f84ffb0 generated setup. Each uninstall retained cancellation and company state,
+cleared obsolete rollback records, and removed only that account's payload.
+Explicit repair restored its exact signed identity and cleared cancellation;
+the other technician account and customer service were preserved. This does not
+qualify standard-user, customer-edition or automatic-update recovery.
 The technician MSI uses the same commit cleanup in the installing user's context
 and restricts its state path to that user's local application data. Customer
 cleanup runs under SYSTEM and restricts its path to the machine-wide customer

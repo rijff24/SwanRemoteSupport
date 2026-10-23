@@ -6157,3 +6157,16 @@ The other technician profile and customer process, pending marker and watcher
 were preserved. Four original files, including the retained executable, were
 collected and independently hash-checked. This remains f84ffb0 packaging with
 d8fad20 payloads and does not establish automatic-update recovery.
+
+Two subsequent real uninstall/explicit-repair reinstall cycles passed in that
+same technician profile. Both MSI removals returned 0, removed that account's
+payload, retained its cancellation marker and company state, and cleared obsolete
+uninstall rollback records. Because the product remained installed under the
+other account, the current account's catalog state became 2 rather than unknown.
+Each unmodified generated `-Repair` then reinstalled the exact signed payload,
+returned catalog state 5, cleared cancellation/setup markers, preserved managed
+state and release bytes, and passed agent verification. The other technician
+account and existing customer were unchanged. Eleven original records/logs were
+collected and hash-verified; independent post-test catalog, state hashes and
+marker checks also passed. This is administrative f84ffb0 packaging/d8fad20
+payload lifecycle evidence, not automatic-update or standard-user acceptance.
