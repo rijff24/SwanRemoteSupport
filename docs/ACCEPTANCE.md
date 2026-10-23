@@ -5331,3 +5331,66 @@ consent/revision and accepted release sequence were unchanged. No server/worker
 upgrade, restore, transport/TLS-key export or live network change was performed.
 This closes the approved maintenance prerequisite, not full Windows deployment
 backup/restore, migration recovery or coordinated upgrade acceptance.
+
+### Coordinated Server 2016 management/worker upgrade, 23 October
+
+The same disposable deployment subsequently upgraded both management and worker
+to exact reproduced source `4c5accb7ae73615c799a43fa70dc2a49aeed0822`.
+Original unsigned input SHA-256 values:
+
+| Input | SHA-256 |
+| --- | --- |
+| Management | `43a0002c9c17372bf8958eb91ae27092b71434adc9441d9da4e6a19d30618bc3` |
+| Worker | `9624a05cae857d48d02270a7128992faa3522903801a7fce3cbbb32996f3ef12` |
+
+Both came from the previously verified independent native build `39867956814`;
+the earlier public comparison established all eight outputs identical to the
+first build. The existing private lab publisher signed these inputs without
+exporting its private key. The first signing attempt failed because the guest
+could not reach DigiCert's timestamp endpoint; the failed attempt and logs were
+preserved. Retrying with Sectigo's documented RFC3161 endpoint succeeded, with
+the unchanged signer requiring `signtool verify /pa /all /tw` and valid
+Authenticode. See [Sectigo timestamp documentation](https://www.sectigo.com/resource-library/time-stamping-server).
+These remain **private lab signatures**, not approved project production signing.
+Installed signed management SHA-256 is
+`8808af5c56b4e0c90b63a934f69c4f83f9816a4294b4a76f4a847848e96e08d0`;
+signed worker SHA-256 is
+`59e3d4354af0b529a10e061ebc39a0573226e44ea06ce356d44c491bd5742664`.
+
+Independent inspection of the encrypted pre-upgrade snapshot found schema
+version 2, matching the target, so no schema migration was needed. The guarded
+replacement retained both old binaries and the worker receipt, stopped the
+worker before management, and checked verified HTTPS health before starting the
+new worker. The first attempt falsely rejected a renewed signed profile because
+the harness compared the entire envelope: the profile endpoint refreshes issue
+and expiry timestamps on every request. That failure exercised binary rollback;
+both original hashes and all Running service states were independently observed
+after restoration. It was a harness assertion failure, not evidence of changed
+company settings or a shipping runtime fix.
+
+A separate retained second attempt compared all configuration fields apart from
+the validated renewable timestamps and completed at 09:47 UTC. The authenticated
+worker recipe endpoint returned
+`6c5691a926cdea242020ca10df46ba2ee4d4e3456a93fa4e14e64cb8831aadf0`,
+matching an independent calculation from the pinned source's seven bundled text
+files. Fourteen original signing, journal, script, result and profile records
+were collected and matched against independent guest hashes. Both original
+before/after profile signatures verified against the worker's existing pinned
+Ed25519 public key; their complete configuration matched, revision remained 18,
+and updates remained paused. The initial collector omitted explicit TLS 1.2
+selection for its observation; its failed version was preserved, and a corrected
+observation verified the already-collected originals without repeating transfer
+or the upgrade.
+
+All three original services were independently observed Running on the installed
+hashes, with no active builds. Customer identity/token hash, consent/revision and
+accepted release sequence were preserved, and its service process was unchanged.
+Release approvals, service environments, Caddy configuration and transport trust
+keys were unchanged. The transport/HTTPS component binaries were not replaced;
+management's normal component restart used the existing configuration. No host
+services, firewall/DNS settings, peer bind change or public endpoint was changed.
+
+This closes the **paired lab binary upgrade and recipe endpoint** prerequisite.
+It does not yet prove new company-generated bundles upload/download correctly,
+installation of those bundles, automated endpoint updates, full deployment
+restore, schema migration rollback or public direct/relay operation.
