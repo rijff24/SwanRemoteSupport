@@ -6184,3 +6184,16 @@ exactly. These are actual isolated Linux deployment tests; they do not establish
 native desktop sessions, UDP traversal, public ACME/external reachability or
 Windows TLS/transport restore. A fresh Windows 11 qualification environment also
 awaits additional lab storage while the older moved endpoint disk remains frozen.
+
+Both f84ffb0 native product builds, 40003860186 and 40003868465, completed
+successfully. Main CI, component, transport and portable wait checks also passed.
+The separate full Flutter workflow 40003844885 failed: its Windows/Linux x64
+non-company builds compiled TX_COMPANY's lazy_static expansion while CompanyTask
+was excluded, reporting E0573/E0574/E0412. The feature guard was moved around
+the entire company-only macro invocation; validation of that correction is
+pending a new run. The legacy 32-bit job separately selected a 32-bit compiler
+host that current rustup refused on its runner. Its pinned nightly now selects
+the runner host while keeping the i686 compilation target; this also needs CI
+validation and does not add 32-bit product support. Original failure logs are
+retained. Independent f84ffb0 artifact comparison and local download verification
+remain pending; these failures are not hidden by the dedicated product builds.

@@ -2326,7 +2326,9 @@ pub(super) mod async_tasks {
     type CompanyTask = (String, flutter_rust_bridge::StreamSink<String>);
     lazy_static::lazy_static! {
         static ref TX_QUERY_ONLINES: Arc<Mutex<Option<TxQueryOnlines>>> = Default::default();
-        #[cfg(feature = "swan_custom")]
+    }
+    #[cfg(feature = "swan_custom")]
+    lazy_static::lazy_static! {
         static ref TX_COMPANY: Mutex<Option<tokio::sync::mpsc::Sender<CompanyTask>>> = Default::default();
     }
 
