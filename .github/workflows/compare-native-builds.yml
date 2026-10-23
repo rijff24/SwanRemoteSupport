@@ -6,11 +6,15 @@ on:
       - .github/workflows/compare-native-builds.yml
       - deployment/windows/compare-native-builds.py
       - deployment/windows/test_native_build_comparison.py
+      - deployment/windows/diagnose-native-payload.py
+      - deployment/windows/test_native_payload_diagnostic.py
   pull_request:
     paths:
       - .github/workflows/compare-native-builds.yml
       - deployment/windows/compare-native-builds.py
       - deployment/windows/test_native_build_comparison.py
+      - deployment/windows/diagnose-native-payload.py
+      - deployment/windows/test_native_payload_diagnostic.py
   workflow_dispatch:
     inputs:
       first_run:
@@ -40,6 +44,10 @@ jobs:
           persist-credentials: false
       - name: Verify comparison trust boundaries
         run: python3 -m unittest discover -s deployment/windows -p test_native_build_comparison.py
+      - name: Verify bounded original-payload diagnostics
+        run: |
+          python3 -m pip install Brotli==1.1.0
+          python3 -m unittest discover -s deployment/windows -p test_native_payload_diagnostic.py
 
   compare:
     if: github.event_name == 'workflow_dispatch'
@@ -76,6 +84,7 @@ jobs:
           persist-credentials: false
 
       - name: Verify original archives and compare every shipping output
+        id: original_comparison
         env:
           GITHUB_TOKEN: ${{ github.token }}
           FIRST_RUN: ${{ inputs.first_run }}
@@ -87,6 +96,16 @@ jobs:
             --source "$SOURCE_COMMIT" --checkout source-proof \
             --work comparison-inputs --output evidence/native-build-comparison.json
 
+      - name: Diagnose differing original payloads without execution
+        if: failure() && steps.original_comparison.outcome == 'failure'
+        run: |
+          if [ -f evidence/native-build-comparison.json ]; then
+            python3 -m pip install Brotli==1.1.0
+            python3 deployment/windows/diagnose-native-payload.py \
+              --report evidence/native-build-comparison.json --work comparison-inputs \
+              --output evidence/payload-diagnostic
+          fi
+
       - name: Preserve comparison report even when original binaries differ
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -94,4 +113,13 @@ jobs:
           name: native-comparison-${{ inputs.first_run }}-${{ inputs.second_run }}
           path: evidence/native-build-comparison.json
           if-no-files-found: warn
+          retention-days: 90
+
+      - name: Preserve original differing payloads and diagnostic metadata
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: native-payload-diagnostic-${{ inputs.first_run }}-${{ inputs.second_run }}
+          path: evidence/payload-diagnostic
+          if-no-files-found: ignore
           retention-days: 90
