@@ -5260,3 +5260,12 @@ copy**, not positive customer installation on a clean current-source machine.
 No replacement customer folder, standard-account file-access probe, ACL change
 or company-server startup was performed. Positive clean customer lifecycle,
 enrollment, signing, automatic updates and remote sessions remain open.
+
+After the Server 2019 results and original evidence were collected, the retained
+guest stopped responding to SSH; the existing viewer remained black after wake
+and secure-attention input. QEMU still reported Running. The attempted normal
+guest shutdown connection failed before authentication, and a normal ACPI
+power-off request was sent at 01:20 UTC on 23 October. Power-off/recovery is not
+yet verified; no force-stop, reset, disk replacement or fixture cleanup was
+performed. The cause is unproven. The bounded MSI results above do not establish
+guest stability, reboot recovery or complete Server 2019 acceptance.
