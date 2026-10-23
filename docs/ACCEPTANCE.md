@@ -5829,3 +5829,40 @@ change. A new explicit approval request is pending; the earlier automatic review
 blocked that change, and the separate approved migration preserved the binding.
 No replacement listener, proxy, host firewall change or DNS change was used to
 work around it. Other full release gates remain open.
+
+### Installer-fix build evidence and clean endpoint preparation, 23 October
+
+Company component run `39983860542` passed for source
+`d8fad20408281c5936425da0e37ccb7606f1d2f7`. Its Windows artifact archive was
+downloaded without execution and verified against GitHub's SHA-256 digest
+`16778d74d7a5b8c1338de45335ddcafaa3bbe002db77dfeeb70f24c5bba4e1d6`.
+All component and source-archive hashes matched `SOURCE.json`. The corresponding
+source archive contained exactly the expected 156 tracked inputs: 14 matched
+public Git blobs byte for byte, and 142 differed solely by Windows checkout CRLF
+line endings. Both raw hashes were retained for those differences; archived
+bytes were not rewritten. This verifies source correspondence, not independent
+component reproducibility, installed behavior or production signing.
+
+Independent Windows application runs `39984444925` and `39984452304` were still
+building at the observation. Their bridge jobs passed, but application binaries
+and a comparison of their shipping bytes were not yet available. The unrelated
+successful comparison-workflow trigger is not proof of these builds matching.
+
+General CI run `39983870640` failed because the installer-wait test spawned the
+standalone name `tests::child_fixture` inside the application crate, where the
+actual name includes `install_wait::`. The child therefore ran zero tests and
+returned success instead of the expected failure code. A test-only fix derives
+the module prefix in both contexts. Focused regression run `39988354836` then
+passed on Windows 2022 and Ubuntu 24.04: each platform compiled both standalone
+and embedded contexts and passed all three tests in each, using actual child
+processes and verifying failure status and the minimum wait. Full application
+CI and acceptance remain separate gates.
+
+A distinct endpoint-only Server 2016 evaluation VM was provisioned with a new
+32 GiB disk, separate lab credentials and pinned SSH keys in the healthy KVM lab
+runtime. The existing company VM and frozen Windows 11 storage were not replaced
+or booted respectively. Host storage reserved the full new disk plus 100 GiB
+before launch. Windows setup visibly reached 69% of file preparation; later
+disk activity continued, but the provisioned SSH endpoint and final Windows
+installation had not yet been verified. No company management service was
+started in this endpoint fixture. Its installation is not a passed product test.
