@@ -5497,3 +5497,29 @@ memory guard and 100 GiB reserve on the actual virtual-disk volume, and requires
 its existing TPM state file. A company-VM migration remains pending fresh human
 approval because the earlier automatic review blocked company backup/restore/
 migration work. No company disk was copied into a new hypervisor environment.
+
+### Approved cold migration preflight, 23 October
+
+The human subsequently explicitly approved migrating the existing disposable
+company VM to KVM, retaining the original disk and backup, preserving its company
+configuration and HTTPS binding, and never running both copies together. This
+approval does not establish that the migration succeeded.
+
+The original company emulator remained live after more than 30 minutes following
+the recorded normal shutdown request. A monitor exit request also failed to
+terminate it. After a further grace period, only that verified emulator process
+was stopped. Its original qcow2 disk remains on D:; a subsequent offline image
+check reported no errors. This was an unclean shutdown, not proof of guest
+filesystem or service health. The company disk has not yet been copied or booted
+under KVM.
+
+The separate endpoint-lab WSL storage move's command observer timed out. Windows
+now registers the original distribution identity at its C: destination, and the
+original VHD path is absent. The destination has the expected 25,041,043,456-byte
+length, but its full-file SHA-256 differs from the pre-move value. The VHDX image
+check reported no errors and its dirty flag was false; neither result explains
+the hash difference or proves the retained guest contents unchanged. All guests
+in that distribution remain stopped, its resume verification gate remains
+unsatisfied, and read-only offline investigation is in progress. No move was
+repeated, no registration was manually rewritten, and no hash guard was relaxed.
+The unrelated working host services remain untouched.
