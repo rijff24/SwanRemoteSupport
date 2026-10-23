@@ -52,7 +52,13 @@ exit /b %errorlevel%
    [IO.File]::WriteAllText($batch,$command,[Text.ASCIIEncoding]::new())
    $stdout=Join-Path $case ('compile-'+$iteration+'.stdout')
    $stderr=Join-Path $case ('compile-'+$iteration+'.stderr')
-   $process=Start-Process -FilePath $env:ComSpec -ArgumentList @('/d','/c',('"'+$batch+'"')) -WindowStyle Hidden -Wait -PassThru -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+   $process=Start-Process -FilePath $env:ComSpec -ArgumentList @('/d','/c',('"'+$batch+'"')) -WindowStyle Hidden -PassThru -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+   # Wait only for cmd, not long-lived compiler helper descendants.
+   if(-not $process.WaitForExit(120000)){
+    Stop-Process -Id $process.Id -ErrorAction SilentlyContinue
+    throw 'Compiler command exceeded two minutes; preserve partial observations'
+   }
+   $process.WaitForExit()
    $log=[IO.File]::ReadAllText($stdout)+[IO.File]::ReadAllText($stderr)
    $dll=Join-Path $working 'probe.dll'
    $usable=$process.ExitCode -eq 0 -and (Test-Path -LiteralPath $dll) -and $log -notmatch 'D9002'
