@@ -6040,3 +6040,45 @@ profile, still rejected the newer customer fixture, and preserved both existing
 installations and customer evidence. No MSI action ran and no distributed bundle
 was patched during that probe. A rebuilt matching bundle and positive second-user
 installation remain required.
+
+The retained signed d8fad20 customer MSI also completed a bare-MSI reinstall,
+damaged-license repair and uninstall on SWAN-END-16, Server 2016 Standard
+Evaluation Desktop Experience 14393.693 x64, running as SYSTEM. Each operation
+returned 0; installed publishers and all 96 packaged file hashes were checked.
+Thirteen original logs/reports were collected and independently hash-verified.
+The endpoint had previously uninstalled the 4c5accb customer package: its only
+remaining customer state was the intentionally retained zero-byte
+pending-uninstall marker. The original clean-state preflight rejected that
+directory; a separate guarded preparation allowed exactly that existing marker
+without deleting it. This is repeated-install/removal evidence, not a first
+installation on a new disk. It does not demonstrate enrollment, cancellation
+clearance by complete company setup, GUI, updates, or the later f84ffb0 helper.
+
+The signed d8fad20 technician MSI was then attempted from the actual
+SWAN-END-16 standard-user desktop, session 2, using an Interactive/Limited
+scheduled task without stored task credentials. Installation returned 1625.
+The original MSI log accepted the package signature at the unrestricted
+software-restriction level, then reported effective DisableMsi=1 and explicitly
+rejected a non-assigned application for a non-administrator. Both
+AlwaysInstallElevated policies were 0. Four original failure records were
+collected and hash-verified. This establishes an installer policy restriction,
+distinct from the previous batch-logon 1601 failure; it is not a successful
+standard-user installation. No policy was relaxed and no administrator membership
+was granted. See [Microsoft DisableMSI documentation](https://learn.microsoft.com/en-us/windows/win32/msi/disablemsi).
+Managed deployment under this policy, and current standard-user qualification
+on Windows client editions, remain open.
+
+For f84ffb0, push workflow 40003837369 completed its company-component checks.
+Its original Windows artifact (ID 12524175355) matched GitHub's SHA-256 digest
+2f6909f404f82823941454c9bfe4adcea7b4ff6732fddec1b8805b6f63b70efb.
+All three binary hashes matched SOURCE.json; the corresponding source archive
+matched 157 tracked public-source files, with 14 exact blobs and 143 differences
+limited to recorded Windows checkout line endings. No archive was normalized.
+The PR workflow's separate artifact identified its merge commit 00aefa5a, so it
+was retained separately and was not used as the f84ffb0 input. The exact push
+binaries were staged and signed with the existing nonexportable disposable lab
+publisher; timestamp and publisher checks passed, and eight original signing
+records/artifacts were collected and hash-verified. Services were unchanged.
+Independent native builds 40003860186 and 40003868465 were still running;
+matching release qualification and deployment were not established by these
+component/source/signing checks.
