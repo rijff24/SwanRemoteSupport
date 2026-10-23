@@ -5126,3 +5126,34 @@ payload/service recovery and uninstall** in the specified lab. It does not prove
 company enrollment, consent/identity preservation, graphical support sessions,
 signed distribution or automatic update recovery. The unactivated Windows
 limitation and the other release gates remain open.
+
+### Latest worker-fix native reproducibility, 23 October
+
+Both native builds at exact source
+`4c5accb7ae73615c799a43fa70dc2a49aeed0822` passed every job:
+[first 39867952641](https://github.com/rijff24/SwanRemoteSupport/actions/runs/39867952641)
+and [independent 39867956814](https://github.com/rijff24/SwanRemoteSupport/actions/runs/39867956814).
+They include the worker permanent-upload-rejection fix as well as the earlier
+technician history/update-diagnostic changes. The pinned
+[comparison 39876756059](https://github.com/rijff24/SwanRemoteSupport/actions/runs/39876756059)
+passed and its original [report](../deployment/windows/native-4c5accb-rebuild-comparison.json)
+was retained unchanged. All eight shipping outputs are byte-identical across
+the independent builds; no shipping-file normalization or execution occurred.
+Both public source proofs verified 1,157 tracked files and six generated bridge
+files at the exact source timestamp.
+
+Only the completed independent build's full original archive was downloaded
+locally: artifact `12467476411`, 254,512,609 bytes, SHA-256
+`58e48e54d33a4ebfe57e37d336c53bb6e8c993773d020fd23449a303855c3dd0`.
+The local collector separately verified its complete public source, bridge and
+original engine evidence. Its eight shipping file hashes/lengths match the
+comparison report's second build. All 95 extracted portable files match their
+original installed manifest. The original comparison-report archive was also
+retained: artifact `12469100351`, 17,454 bytes, SHA-256
+`730b91a56cd0c6999c1ab51ea077a1f7b749103898c958fdf8e37ba9a43b70d6`.
+
+This extends exact-source **unsigned build reproducibility** to the latest
+worker fix. It does not deploy that worker into the older mixed lab deployment,
+qualify company-generated publication/download permissions, extend earlier
+runtime/MSI results automatically to new binaries, or approve production signing
+and rollout. Those acceptance gates remain open.
