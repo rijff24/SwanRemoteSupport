@@ -5523,3 +5523,22 @@ in that distribution remain stopped, its resume verification gate remains
 unsatisfied, and read-only offline investigation is in progress. No move was
 repeated, no registration was manually rewritten, and no hash guard was relaxed.
 The unrelated working host services remain untouched.
+
+Offline parsing of the relocated endpoint VHDX found ext4 state `1` (clean) and
+readable retained Windows 11 disk, firmware-variable and TPM-state files. Their
+current hashes were retained privately. No corresponding pre-move hashes of
+those individual files were available to prove equality, so the whole-VHD
+verification gate remains unsatisfied and that distribution was not booted.
+
+The approved company migration is proceeding separately in a newly imported,
+minimal owned Linux runtime on C:, using the already verified Alpine rootfs and
+pinned QEMU 11.0.3 packages. Existing distribution identities and the default
+registration were verified unchanged. This is storage for the existing company
+disk, not initialization of another company backend. The first streaming copy
+failed with a host `MemoryError`; its partial disk and diagnostics were retained,
+and it was never booted. A subsequent copy uses direct writes to bound Linux file
+cache growth. Native company launch scripts are guarded, and a Windows reader
+handle denies writable access to the original disk while copying. Independent
+source/target hash equality and an offline qcow2 check are required before the
+copy can be committed or booted. Copy completion, KVM boot, service recovery and
+post-migration identity checks remain unverified at this entry.
