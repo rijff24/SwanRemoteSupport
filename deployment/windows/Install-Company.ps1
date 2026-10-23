@@ -62,11 +62,6 @@ $recordArguments = @('record-installation',(Join-Path $root 'release.json'),$ins
 if ($Repair) { $packageArguments += '--repair'; $recordArguments += '--repair' }
 & $agent @packageArguments
 if ($LASTEXITCODE -ne 0) { throw 'Installer metadata, hash or publisher validation failed.' }
-$prepareArguments = @('prepare-installation',(Join-Path $root 'release.json'),$installers[0].FullName)
-if ($Repair) { $prepareArguments += '--repair' }
-if ($ReplaceFailedSetup) { $prepareArguments += '--replace-failed-setup' }
-& $agent @prepareArguments
-if ($LASTEXITCODE -ne 0) { throw 'Cannot prepare explicit installation or preserve cancelled update evidence.' }
 $systemDirectory = [Environment]::GetFolderPath('System')
 $msiExecutable = Join-Path $systemDirectory 'msiexec.exe'
 $msiOperation = '/i'
@@ -74,7 +69,14 @@ if ($installers[0].Extension -eq '.msi') {
     $msiOperation = (& (Join-Path $systemDirectory 'WindowsPowerShell/v1.0/powershell.exe') -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File (Join-Path $root 'Get-MsiInstallMode.ps1') -Package $installers[0].FullName | Out-String).Trim()
     if ($LASTEXITCODE -ne 0 -or $msiOperation -notin @('/i','/fvamus')) { throw 'Cannot select a safe MSI installation or repair mode.' }
 }
+$prepareArguments = @('prepare-installation',(Join-Path $root 'release.json'),$installers[0].FullName)
+if ($Repair) { $prepareArguments += '--repair' }
+if ($ReplaceFailedSetup) { $prepareArguments += '--replace-failed-setup' }
+& $agent @prepareArguments
+if ($LASTEXITCODE -ne 0) { throw 'Cannot prepare explicit installation or preserve cancelled update evidence.' }
 $installationMarker = Join-Path $editionDirectory 'pending-install.json'
+$configurationTaskRestore = $null
+try {
 $activityStream = [IO.File]::Open((Join-Path $editionDirectory 'activity.lock'),[IO.FileMode]::OpenOrCreate,[IO.FileAccess]::ReadWrite,[IO.FileShare]::ReadWrite)
 $activityLocked = $false
 try {
@@ -91,6 +93,7 @@ if ($bootstrap.edition -eq 'customer') {
     if ($configurationTask.Count -eq 1) {
         $expectedAgent = [IO.Path]::GetFullPath((Join-Path $editionDirectory 'swan-agent.exe'))
         if ($configurationTask[0].Actions.Count -ne 1 -or [IO.Path]::GetFullPath($configurationTask[0].Actions[0].Execute) -ine $expectedAgent -or $configurationTask[0].Actions[0].Arguments -cne 'watch' -or $configurationTask[0].Principal.UserId -notin @('SYSTEM','S-1-5-18','NT AUTHORITY\SYSTEM')) { throw 'Existing configuration task does not match this installation.' }
+        $configurationTaskRestore = @{name=$configurationTask[0].TaskName;path=$configurationTask[0].TaskPath;enabled=($configurationTask[0].State.ToString() -ne 'Disabled');active=($configurationTask[0].State.ToString() -in @('Running','Queued'))}
         $configurationTask[0] | Disable-ScheduledTask | Out-Null
         $configurationTask[0] | Stop-ScheduledTask
         $stopDeadline = [DateTime]::UtcNow.AddSeconds(10)
@@ -165,4 +168,21 @@ if ($bootstrap.edition -eq 'customer') {
         $uninstallShortcut.Save()
     }
     Write-Host 'Technician application installed. Use the Start menu shortcut to sign in and request support sessions.'
+}
+} catch {
+    $setupError = $_
+    if ($configurationTaskRestore) {
+        try {
+            $restore = @(Get-ScheduledTask -TaskName $configurationTaskRestore.name -TaskPath $configurationTaskRestore.path)
+            $expectedAgent = [IO.Path]::GetFullPath((Join-Path $editionDirectory 'swan-agent.exe'))
+            if ($restore.Count -ne 1 -or $restore[0].Actions.Count -ne 1 -or [IO.Path]::GetFullPath($restore[0].Actions[0].Execute) -ine $expectedAgent -or $restore[0].Actions[0].Arguments -cne 'watch' -or $restore[0].Principal.UserId -notin @('SYSTEM','S-1-5-18','NT AUTHORITY\SYSTEM')) { throw 'Configuration task changed during setup; refusing to start it.' }
+            if ($configurationTaskRestore.enabled) {
+                $restore[0] | Enable-ScheduledTask | Out-Null
+                if ($configurationTaskRestore.active) { $restore[0] | Start-ScheduledTask }
+            } else { $restore[0] | Disable-ScheduledTask | Out-Null }
+        } catch {
+            throw [InvalidOperationException]::new(('Customer setup failed and its configuration task could not be restored: '+$_.Exception.Message+' Original setup error: '+$setupError.Exception.Message),$setupError.Exception)
+        }
+    }
+    throw $setupError
 }

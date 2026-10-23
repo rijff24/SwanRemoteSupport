@@ -93,6 +93,10 @@ jobs:
         run: |
           powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File ./deployment/windows/test_company_setup_entrypoint.ps1
           if ($LASTEXITCODE -ne 0) { throw 'Company setup entry-point checks failed.' }
+          powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File ./deployment/windows/test_msi_install_mode.ps1
+          if ($LASTEXITCODE -ne 0) { throw 'MSI version preflight checks failed.' }
+          powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File ./deployment/windows/test_company_watch_recovery.ps1
+          if ($LASTEXITCODE -ne 0) { throw 'Company configuration watcher recovery checks failed.' }
       - name: Render the Windows setup wizard without installation
         if: runner.os == 'Windows'
         shell: pwsh

@@ -25,6 +25,16 @@ archived unchanged, installed signatures/hashes passed, and sequence 10 was
 recorded. This is an existing Server 2016 administrator-profile recovery result,
 not fresh-machine, standard-user, graphical-session or automatic-update acceptance.
 
+The correctly signed customer sequence-11 bundle also passed generation, public
+download and independent content verification. Its in-place installation was
+correctly refused because the existing lab MSI is registered as 1.5.7 although
+its application binary reports 1.5.0. The original application, identity and
+consent remain intact; configuration syncing was restored after the failed setup.
+A pending sequence-11 setup marker remains preserved. A source fix now checks
+related MSI versions earlier and restores the previous configuration-task state
+on later failures. Targeted Windows PowerShell checks pass; matching rebuilt
+binaries and fresh-client qualification are still required.
+
 The latest accepted-desktop lab run used technician source `e6b87b9` against the
 preserved older `bd13500` customer on Server 2016 with the parallel transport
 candidate and experimental `9f97ef0` source-built engine. Standard-user MFA, inventory/history, customer approval, desktop
@@ -5744,3 +5754,78 @@ a fresh-machine or standard-user installation, graphical technician login/sessio
 customer enrollment, automatic update rollout, public reachability or production
 signing. A corrected signed customer package and the other release gates remain
 outstanding.
+
+### Signed customer bundle and failed downgrade attempt, 23 October
+
+The 95 unsigned customer payload files were verified against the independently
+reproduced `4c5accb` artifacts. The application was signed separately using the
+existing non-exportable lab key; signed application SHA-256 is
+`9ec538bc34b50f1f84fe48561f664f9f572eeaa41c5f2aa48a6ff39bb90138b3`.
+Python 3.12.10's official portable build runtime was checked against its published
+archive checksum and its core executable/DLL Authenticode publishers, then used
+only inside the lab build folder. The original payload was retained.
+
+The pinned customer builder ran without `UnsignedTest`, using the already signed
+application and agent. Its manifest covered 96 installed files. Compared with the
+original unsigned CI manifest, the application hash changed for signing, and the
+license used exact Git LF text where the CI copy used CRLF. The license texts were
+compared equal after that explicit conversion; no original shipping artifact was
+normalized or changed for a reproducibility comparison. An initial manifest check
+that assumed only one changed file was retained and corrected before metadata was
+signed or imported.
+
+Prepared unsigned MSI SHA-256 was
+`a8e9ba3d45d61d0d990468b5f7d641dc1b2c15356ef440e1b377a29793ddec74`;
+signed MSI SHA-256 was
+`78613eafa2cc56fed53b2a550b2aec7db10b82733d8cd6f781b26bb34218b47c`.
+Version 1.5.1 and stable customer product/upgrade identities were checked unchanged.
+The signed test release used sequence 11, unchanged company trust pins and Server
+2016 scope. Its unapproved build returned 409. After approval, original job
+`425fc1b5-cc46-49a1-9877-dd545cd9f61f` completed. Anonymous HTTPS download returned
+200 with 32,492,051 bytes and SHA-256
+`ec13dd18d1bb3b33da872966430ffd15c75932a4208e7d52801a85291b3cc64c`.
+Independent host verification checked the original ZIP's 12-entry layout, CRCs,
+seven pinned-source texts, public-only bootstrap, pre-existing profile/release
+pins, signatures and complete signed installed-file manifest. Eight original
+download/build records and the archive were retained.
+
+Pre-upgrade checks found Server 2016 Standard Evaluation Desktop Experience
+14393.693, approved enrollment, profile revision 18, release sequence 8, consent
+false at revision 6, no active support session or recovery marker, and no Tailscale
+service. The original generated setup was run as SYSTEM. At 15:29 UTC it failed
+with MSI 1603; Windows Installer's event identified its newer-version launch
+condition. Read-only inspection established that the old MSI is registered as
+1.5.7 with ProductCode `{32063221-0D0B-4749-B725-5E4504E5B2A9}`, despite application
+file version `1.5.0+68`. The new 1.5.1 product was not registered and the original
+application hash, identity, credential, consent and sequence were unchanged. No
+version was inflated and no downgrade condition was bypassed to force a pass.
+
+This failure exposed a separate installer defect: setup had already stopped and
+disabled its existing configuration task. The original validated action and signed
+agent were restored to Running, while the pending sequence-11 marker was retained
+unchanged. Customer, company and worker services were Running. Nine original
+failure/restoration records were collected over pinned SFTP and hash-checked;
+device credentials were excluded. This is a failed customer-upgrade test, not
+fresh enrollment, a successful upgrade or complete rollback.
+
+The source fix now rejects newer related MSI registrations, and incompatible
+same-version registrations with different product identities, before preparing a
+setup marker or stopping configuration syncing. If a later setup step fails, it
+restores the prior enabled/active task state only after validating the current
+task's action and SYSTEM principal again. Restoration failure is reported together
+with the original setup error; pending installation evidence is retained.
+Windows PowerShell 5.1 checks passed ten isolated read-only MSI catalog cases,
+seven actual-handler scheduler-substitute cases, and the existing real setup
+entry-point/trust-rejection checks. These are bounded regression checks, not
+successful product installations. The new preflight was also executed against
+the real lab MSI catalog: it rejected registered 1.5.7 versus candidate 1.5.1 with
+no MSI actions, unchanged pending-marker bytes and the original watcher Running
+before and after. Both Windows CI workflows now include the regression checks.
+Matching server/worker/agent builds must be regenerated because bundled source
+texts and their recipe changed.
+
+Fresh customer testing needs the previously reviewed private guest HTTPS binding
+change. A new explicit approval request is pending; the earlier automatic review
+blocked that change, and the separate approved migration preserved the binding.
+No replacement listener, proxy, host firewall change or DNS change was used to
+work around it. Other full release gates remain open.

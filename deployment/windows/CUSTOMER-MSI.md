@@ -17,6 +17,15 @@ still rejects an unsigned application and leaves installation recovery pending.
 See [technician packaging](TECHNICIAN-MSI.md) for signing order and the separate
 WiX build-machine prerequisite.
 
+Company setup checks related registered MSI versions before publishing its setup
+marker or stopping configuration syncing. A downgrade or incompatible same-version
+product is rejected; do not change registration or inflate a package version to
+get past that check. After later setup failures, the installer restores the prior
+configuration task's enabled/running state after checking its action and principal,
+while retaining installation recovery evidence. Restoration errors are surfaced
+with the original failure. Matching server and worker releases are required when
+their bundled setup texts change.
+
 The builder accepts `-SourceDateEpoch <release-commit-epoch>` to prepare stable
 unsigned package metadata before signing, retaining the original WiX output.
 See [metadata preparation](TECHNICIAN-MSI.md). Two local builds using the full
