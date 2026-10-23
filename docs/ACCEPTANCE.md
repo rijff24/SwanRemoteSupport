@@ -5949,3 +5949,71 @@ removed after verifying their exact owned account, comment and session-only
 persistence; existing host credentials were not replaced. This lab-control path
 is not evidence of Swan connectivity. The standard-user technician test and the
 separately pending company HTTPS-listener approval remain open.
+
+### Existing company upgraded and matching bundles generated, 23 October
+
+A fresh authorized management-only backup was created before installing the
+`d8fad20` management/worker pair. Its encrypted archive is 160,757 bytes with
+SHA-256 `df03fdfe6c8d57e89517e8ff4ab8f717a1747471f030079c52fd2b62e9850876`.
+Independent in-memory verification authenticated AES-GCM, rejected tampering and
+the wrong passphrase, checked ZIP integrity and SQLite `quick_check`, and matched
+backed-up management material and release/job state. The original archive was
+unchanged; only a disposable in-memory SQLite copy's journal-mode header was
+adapted for deserialize. The passphrase remained separately protected in the VM
+and was not saved on the host. No transport/TLS export or Windows restore was
+performed, and no additional releases were withdrawn.
+
+The existing Server 2016 company VM then completed a guarded coordinated upgrade
+to the matching lab-signed `d8fad20` management service and installer worker.
+Independent observation verified installed hashes/signatures, the original
+profile trust pin and both before/after profile signatures, unchanged profile
+revision 18 with rollout paused, and the new matching bundle recipe
+`3c38e520a233282bd1ae06739b4bd6cdc8409439f7ac46c11edc837e1d71c2d5`.
+Customer identity/token hashes, consent, release sequence, process ID, running
+configuration watcher and the original pending sequence-11 marker were preserved.
+HTTPS configuration bytes, transport keys, service environments and release
+approvals were unchanged. All three services were Running; the previous signed
+management/worker binaries were retained and independently hash-verified for
+rollback. This successful upgrade did not exercise rollback or restore.
+
+Matching customer and technician MSIs were built using the exact public source,
+reproduced native payloads, and 213 verified inputs. The existing pinned WiX 5.0.2
+and Python 3.12.10 inputs were reused without downloading them again. Default
+signed-input checks were used, with the application and agent signed before MSI
+construction and the resulting MSIs separately signed and timestamp-verified.
+All original build inputs remained unchanged and no private key was exported.
+Fifteen original build/signing records and outputs were collected and checked.
+The customer's 96-file manifest matched all 94 unchanged native payloads, its
+new signed main executable, and the exact public-source license text. Read-only
+MSI inspection confirmed version 1.5.1, x64, and the stable product/upgrade IDs
+for both editions. The lab-signed MSI hashes are:
+
+- Customer: `1b804b8c008cc1e164f88791c2192c4acd1814b4c76446a812a6c995f1ae5d31`.
+- Technician: `d0bcede9234a90f272ef34a71f734cf4f1813b2fbcc2fbe376208061a5a84bda`.
+
+The upgraded server rejected build requests before release approval, then its
+worker completed customer sequence 12 and technician sequence 13. The customer
+bundle downloaded anonymously with HTTP 200; technician access returned 401
+without authentication and 200 with it. Both original ZIPs matched their completed
+job hashes. Each contained exactly 12 safe flat entries, the seven exact pinned
+bundle texts, only six public bootstrap fields, the original signed release
+envelope, and the expected signed MSI/agent hashes. Profile and release signatures
+were independently verified against preexisting pins; modified signed payloads
+were rejected. These are isolated company-server distribution checks with rollout
+paused and Server 2016 test-channel metadata, not external reachability, fresh
+customer enrollment, successful endpoint upgrade or production publication.
+
+The complete generated sequence-12 customer setup was also invoked once against
+the earlier contaminated 1.5.7 MSI fixture, with explicit failed-setup replacement
+requested. Its bundled MSI preflight rejected candidate 1.5.1 before preparing or
+replacing installation evidence. The initial harness expected the generic outer
+error, but Windows PowerShell surfaced the native child's version error first.
+That original error was preserved. A read-only continuation and independent
+collection confirmed identical before/after snapshots: identity/token hashes,
+consent, sequence 8, payload hashes, service process, Running watcher, pending
+marker, cancelled archives and MSI registration were unchanged. The candidate
+was not registered. Setup was not rerun. This verifies the actual generated
+installer's negative version guard; it does not resolve the old interrupted
+fixture or establish a successful customer upgrade. Positive endpoint installation,
+standard-user technician qualification and the other full release gates remain
+open.
