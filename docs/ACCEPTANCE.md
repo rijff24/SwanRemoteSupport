@@ -5282,3 +5282,13 @@ lab guest boot and fixture recovery** after that incident. The cause remains
 unproven; it does not qualify long-term guest stability, software update recovery,
 company backup/restore or complete Server 2019 acceptance. No original disk or
 snapshot was deleted or replaced.
+
+On a subsequent observation at approximately 02:10 UTC, SSH again timed out
+during banner exchange. The existing console still showed the lock screen at
+03:54 local time and did not advance after one viewer-provided guest secure
+attention action. The attempted normal shutdown after the earlier recovery had
+also failed before SSH authentication. The guest process remained present; no
+second forced power-off or restart was performed in this observation. The
+earlier bounded recovery result therefore does not establish sustained guest
+stability. Original disks, snapshots and collected installer evidence remain
+preserved.
