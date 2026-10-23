@@ -5866,3 +5866,86 @@ before launch. Windows setup visibly reached 69% of file preparation; later
 disk activity continued, but the provisioned SSH endpoint and final Windows
 installation had not yet been verified. No company management service was
 started in this endpoint fixture. Its installation is not a passed product test.
+
+### Clean Server 2016 signed customer lifecycle, 23 October
+
+The separate endpoint reached the Windows desktop. Its original specialize
+command returned `0x1` before creating the lab directory; the original cause
+was not established. Default Windows management access, forwarded temporarily
+through loopback only, allowed the owned endpoint to be identified and its
+pinned seed scripts to be verified. A bootstrap recovery installed the existing
+pinned OpenSSH payload but stopped at its combined key-permissions command.
+The exact existing key bytes were retained, private key files were restricted
+to SYSTEM and Administrators, and key-only SSH was verified against the
+pre-provisioned host key. Automatic logon was disabled and its saved password
+removed. The temporary management forwarding was then removed. This repaired
+only endpoint lab access; the company VM HTTPS binding was not changed.
+
+On Server 2016 Standard Evaluation Desktop Experience 14393.693 x64, the
+corrected source-`4c5accb` company-lab-signed customer MSI
+`78613eafa2cc56fed53b2a550b2aec7db10b82733d8cd6f781b26bb34218b47c`
+passed fresh installation, repair of a deliberately damaged packaged license,
+and uninstall as SYSTEM. All three MSI exit codes were zero. Each installed
+phase verified all 96 manifest files, the exact agent hash, service executable
+and SYSTEM ownership, and valid application/agent signatures from the expected
+disposable lab publisher. Uninstall removed packaged files, product registration
+and the customer service. Thirteen original scripts, reports and MSI logs were
+collected through pinned SFTP and independently hash-checked, including hashes
+recorded by the phase results. This is a passed signed bare-MSI lifecycle on
+this exact Windows build, not company enrollment, interactive UAC, automatic
+update, remote desktop or complete Server 2016 qualification. No project signing
+approval or production publication is implied.
+
+The corrected signed technician MSI was also attempted from an owned standard
+account. Task Scheduler initially denied batch logon (`0x80070569`), so only that
+account's batch-logon right was added; before/after exports verified all other
+user rights unchanged and the account remained outside Administrators. The
+resulting actual standard-user install attempt failed with MSI 1601; its original
+log records connection to the installer service denied with `0x80070005`.
+Four original failure records were collected and hash-checked. A separate
+credential-based interactive-token process launch produced no lifecycle result;
+its launcher's null child exit code is not a pass. Installer policy was not
+relaxed. Standard-user technician installation on this VM remains unqualified
+and requires further diagnosis in a normal logged-on user session.
+
+### Installer-fix independent rebuild verified, 23 October
+
+Native Windows runs `39984444925` and `39984452304` both completed successfully
+for source `d8fad20408281c5936425da0e37ccb7606f1d2f7`, using the same pinned
+source-built Flutter engine candidate. Comparison run `39995075014`, executed
+from frozen comparison-tool source `89039772db027868eecb4de3217fa3dbd9fb8c79`,
+verified both corresponding source archives (1,160 tracked source inputs and
+six generated bridge files each) and found all eight original shipping files
+byte-identical. No shipping-file normalization or executable execution was used.
+The original report is retained in
+`deployment/windows/native-d8fad20-rebuild-comparison.json`. Its SHA-256 is
+`d339ad4e039af68e04f93da38c105bc21697f0fca418b9843ff28e4504caaec1`.
+The retained first-build archive additionally matched GitHub's digest
+`c67a287094a504220626c7f4d88a12e76fb67a607fdb4de955ffe68c240bc960`
+and every first-build output in the comparison report. This is reproducibility
+evidence for the exact unsigned candidate, not runtime or release approval.
+
+The same three management/worker/agent input files also matched the independently
+compiled Windows company-component run `39983860542` byte for byte. Copies were
+signed with the existing non-exportable disposable-lab publisher and verified
+using timestamp-required SignTool checks and Windows signature validation.
+Eight original signing/provenance records and signed files were retained and
+their signed binary hashes checked independently. Company services were not
+changed; coordinated installation and end-to-end testing remain outstanding.
+
+The original Linux deployment job `120517833123` in run `39983860542` was retained
+and its successful steps inspected. Actual isolated Docker tests passed fresh
+setup/persistence, MFA/replay checks, enrollment approval, HTTPS/profile signing,
+and complete encrypted backup recovery into replacement containers, with both
+pinned upstream and maintained transport components. Their logs explicitly leave
+native sessions, UDP traversal, external reachability and public ACME unverified.
+
+To investigate the standard-user MSI failure, the disposable endpoint was also
+prepared for loopback-only RDP lab control with NLA retained and the owned test
+account outside Administrators. No successful standard-user desktop login was
+demonstrated: Windows UI automation could observe owned login/file dialogs but
+did not reliably target their controls. Temporary host credential entries were
+removed after verifying their exact owned account, comment and session-only
+persistence; existing host credentials were not replaced. This lab-control path
+is not evidence of Swan connectivity. The standard-user technician test and the
+separately pending company HTTPS-listener approval remain open.
