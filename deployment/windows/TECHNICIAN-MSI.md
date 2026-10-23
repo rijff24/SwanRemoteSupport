@@ -6,6 +6,22 @@ installs the packed technician executable, agent, graphical-launcher script and
 license under `%LOCALAPPDATA%/SwanRemoteSupport-Technician`, with a Start menu
 shortcut. Upgrade removal is scheduled inside the MSI transaction. Company
 state is not an MSI-owned file and is preserved through major upgrades.
+
+Release signing order matters: sign the packed technician executable and agent
+with the same release publisher before invoking `Build-TechnicianMsi.ps1`
+without `-UnsignedTest`. Prepare the unsigned MSI's reproducible metadata, then
+sign and timestamp that MSI. Generate release metadata from the final signed
+MSI, signed packed executable and signed agent hashes. Signing an unsigned CI
+MSI alone leaves its embedded executable unsigned: setup can install its files
+but final installed-publisher verification rejects it, retains recovery state
+and does not record a completed release. The 23 October lab test demonstrates
+this rejection; it is not a successful company-bundle installation.
+
+The pinned WiX 5.0.2 build tool requires .NET Framework 4.7.2 or later on the
+MSI build machine. An unupdated Server 2016 image with 4.6.2 needs this build
+prerequisite separately. This is distinct from the endpoint application's
+runtime requirements. The ordinary company worker bundles already built,
+signed release packages; it does not rebuild their MSI payloads by default.
 Versions must use canonical ASCII `major.minor.build` fields without leading
 zeroes (except `0`), within `255.255.65535`. Both builders reject aliases and
 overflow before authoring product identities. These limits follow Microsoft's

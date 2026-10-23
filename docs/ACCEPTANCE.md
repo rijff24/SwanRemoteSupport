@@ -15,6 +15,12 @@ open. Earlier guest unresponsiveness, Caddy faults and the separate endpoint-lab
 storage hash discrepancy remain recorded below; recovery is not proof that their
 causes have been resolved. No production or full compatibility acceptance is claimed.
 
+The subsequent generated-technician installation test reached final verification
+and correctly rejected the unsigned application inside the lab-signed MSI.
+Installation recovery remains pending and its release sequence stayed zero.
+The corrective lab package must sign its payload before building/signing the MSI;
+no generated-bundle installation pass is claimed.
+
 The latest accepted-desktop lab run used technician source `e6b87b9` against the
 preserved older `bd13500` customer on Server 2016 with the parallel transport
 candidate and experimental `9f97ef0` source-built engine. Standard-user MFA, inventory/history, customer approval, desktop
@@ -5625,3 +5631,52 @@ These are company-lab-signed packages, not trusted production project releases.
 The generated bundles have not yet been installed on a fresh endpoint or a new
 technician profile. Internet reachability, separate-machine sessions, automatic
 rollout and the remaining Windows compatibility gates are still unproven.
+
+### Generated technician bundle: installed-signature rejection, 23 October
+
+The original technician ZIP was used unchanged in a newly created owned
+administrator profile on the existing Server 2016 guest. Its first scheduled
+attempt reached its time limit without a result. An earlier diagnostic SSH
+timeout had left the exact read-only MFA observer running inside the guest,
+expanding filesystem log metadata during JSON serialization. The orphan consumed
+over 2 GiB and approximately 579 CPU seconds. Its executable, PID and encoded
+command SHA-256 were checked against the retained helper before stopping only
+that observer. No product service was targeted. This establishes a diagnostic
+resource problem; it does not resolve the earlier Caddy access violations.
+
+Inspection retained the prepared technician state at profile revision 18 and
+release sequence zero. A guarded continuation ran the original bundle setup.
+It verified the installer, prepared the durable setup marker, installed the MSI
+files and copied the signed agent, then failed final installed-publisher
+verification. The MSI and agent both verified as trusted in the original and new
+profiles; Microsoft SignTool and the agent's separate `verify-package` command
+also passed. The failure was therefore not an MSI trust rejection: the installed
+packed executable still had its original unsigned source hash
+`cede4bad34a29a78a70d627b751e949b51db02cb95b324aaffa1173f2499fa0a`
+and Authenticode status `NotSigned`. The installed agent had the expected signed
+hash and status `Valid`. The pending-install marker remained and sequence zero
+was not advanced. A later guarded retry refused the changed, pending installation
+state before attempting another install. No marker was deleted and no signature
+requirement was bypassed.
+
+This exposed a lab-input preparation error: signing the original unsigned CI MSI
+wrapper did not sign its embedded application. Both existing MSI builders require
+signed payloads by default; the CI `UnsignedTest` artifacts remain unsuitable for
+a complete signed release. Seventeen original scripts, result records and logs
+were collected over pinned SFTP and independently hash-checked. The account
+password was excluded from collection. The original customer identity/consent,
+its service and the company/worker services still passed their separate checks.
+
+Corrective staging signed a separate copy of the pinned technician executable
+using the existing non-exportable company lab key and RFC3161 timestamp
+verification. Its signed SHA-256 is
+`12ce1f1cef84eb3c4c121b3b3922faf13fa6cf3aef4573d5f0d841daf67204e5`;
+the original failed-install file was unchanged. The planned MSI retains software
+version 1.5.1 and its existing stable product identity. Seventy-nine build inputs
+from exact source `4c5accb` and the pinned WiX 5.0.2 supplier MSI were transferred
+and hash-verified. Build preflight stopped before executing WiX because this VM
+has .NET Framework release 394802 (4.6.2), below WiX's 4.7.2 requirement. Microsoft's
+[.NET Framework 4.8 offline installer](https://dotnet.microsoft.com/en-us/download/dotnet-framework/thank-you/net48-offline-installer)
+is being prepared for this lab build prerequisite; installation and a corrected
+MSI build have not yet been verified. No signing key was exported and no
+production publication is approved.

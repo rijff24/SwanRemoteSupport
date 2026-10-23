@@ -7,6 +7,16 @@ independent of company display names. The canonical application path is
 under `%ProgramData%/SwanRemoteSupport`. Company profiles, device identity and
 consent are not MSI-owned files and remain separate from release files.
 
+Sign the application executable and agent with the release publisher before
+building a release MSI with the builder's default signature checks. Prepare
+reproducible unsigned MSI metadata, then sign and timestamp the MSI. Generate
+the release's installed-file manifest from the exact signed payload bytes and
+its package hash from the final signed MSI. Signing only an unsigned CI MSI
+does not sign its contained application. Final installed-publisher verification
+still rejects an unsigned application and leaves installation recovery pending.
+See [technician packaging](TECHNICIAN-MSI.md) for signing order and the separate
+WiX build-machine prerequisite.
+
 The builder accepts `-SourceDateEpoch <release-commit-epoch>` to prepare stable
 unsigned package metadata before signing, retaining the original WiX output.
 See [metadata preparation](TECHNICIAN-MSI.md). Two local builds using the full
