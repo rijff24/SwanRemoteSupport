@@ -4,13 +4,16 @@ Evidence through 23 October 2026. **The product is not complete or approved for
 production publication.** A passing component test is not evidence of a working
 native support session or a clean-machine installation.
 
-**Latest Windows company-lab state:** the paired `4c5accb` upgrade passed its
-bounded checks, but subsequent bundle-job observations were interrupted by guest
-unresponsiveness. Same-disk recovery preserved the customer identity and consent;
-the company service was then observed Stopped, with Caddy access violations in
-its retained log. Completion/download checks for the two sequence-9 jobs remain
-unverified. Lab infrastructure recovery is in progress; the later dated sections
-do not imply production or full compatibility acceptance.
+**Latest Windows company-lab state:** after explicitly approved cold migration of
+the existing company disk to KVM, all three services and the HTTPS API were
+observed healthy. Original customer identity and consent, profile revision 18,
+paused updates and the existing HTTPS binding were preserved. Both original
+sequence-9 bundle jobs completed; public customer download, protected technician
+download, file hashes and independent bundle-content verification passed.
+Installation of these generated bundles and end-to-end support acceptance remain
+open. Earlier guest unresponsiveness, Caddy faults and the separate endpoint-lab
+storage hash discrepancy remain recorded below; recovery is not proof that their
+causes have been resolved. No production or full compatibility acceptance is claimed.
 
 The latest accepted-desktop lab run used technician source `e6b87b9` against the
 preserved older `bd13500` customer on Server 2016 with the parallel transport
@@ -5567,3 +5570,58 @@ health, preservation of live company state and the two original build-job result
 still require post-boot observation; a successful disk copy alone proves none of
 those acceptance requirements. The separate endpoint VHDX hash discrepancy remains
 unresolved and that distribution remains unused.
+
+### Migrated company API and original installer bundles, 23 October
+
+The same company guest responded over its existing pinned SSH access after KVM
+boot. At 13:28 UTC, customer, management and worker services were Running. Checks
+against the original pre-maintenance invariant preserved the customer device ID,
+token hash, unattended-consent value/revision and accepted release sequence. The
+Caddyfile retained its original loopback bind; its live SHA-256 was
+`72afc6ad51fffacc41e436de01bb819696c4870129725fa7850631b7b10f748a`.
+No company restore, new setup, transport-key replacement or endpoint-binding
+change was performed.
+
+A fresh login using the existing local administrator and TOTP created a session
+at 13:28:58 UTC. A subsequent bounded API-only observation at 13:33:55 UTC returned
+health `ok`, revision 18 with updates paused, all three services Running, and both
+original job IDs in `completed` state. No replacement jobs were queued.
+
+At 13:34 UTC, real HTTPS downloads verified:
+
+| Edition | Anonymous request | Authenticated download | Bytes | SHA-256 |
+| --- | --- | --- | --- | --- |
+| Customer | 200, downloaded | Not required | 32,481,317 | `d03f13ac895f3e1bb424b021628c31cb68357c34010199572887b6d777b73568` |
+| Technician | 401, denied | 200, downloaded | 30,276,919 | `c43f529426b7a1829d1a4bbe06ecd67b86851d3d70b299c96ce0ede09f1fd6c6` |
+
+Both downloaded hashes matched the corresponding completed job result. Customer
+identity, consent, release sequence and service process remained unchanged during
+these checks; revision 18 and paused updates were rechecked afterward. Six original
+guest records, including both ZIPs, were collected over pinned SFTP, with the ZIP
+sizes and hashes verified again on the host.
+
+Independent host verification of both original ZIPs established exactly 12 unique
+flat entries, valid CRCs, no directory or symlink entries, and seven bundled
+scripts/license texts byte-identical to normalized pinned source `4c5accb`.
+Bootstrap had exactly six public fields and matched the existing company and
+release trust pins. Both signed envelopes verified against those pre-existing
+pins; changing signed payload bytes failed verification. Profile revision 18,
+paused updates and valid lifetimes were checked. The release envelope matched the
+original imported envelope, version 1.5.1, sequence 9, test channel and Server 2016
+scope. MSI and agent hashes matched that signed metadata. The customer manifest
+contained 96 installed-file entries; technician contained one. The initial host
+verifier incorrectly assumed the import request itself was an envelope; its
+failure was retained, and the corrected check compares its actual `envelope`
+member. No package was rebuilt or changed to satisfy that check.
+
+The diagnostic helpers also exposed an observation problem: Windows PowerShell
+serialized filesystem metadata attached to log lines into a very large JSON
+response. A later compact observer encountered a live-log sharing violation. Both
+failed observations were retained. The successful API-only observer omits log
+objects and limits output size. These helper failures do not prove that the
+earlier Caddy faults or guest freezes share the same cause.
+
+These are company-lab-signed packages, not trusted production project releases.
+The generated bundles have not yet been installed on a fresh endpoint or a new
+technician profile. Internet reachability, separate-machine sessions, automatic
+rollout and the remaining Windows compatibility gates are still unproven.
