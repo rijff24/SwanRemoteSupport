@@ -5394,3 +5394,41 @@ This closes the **paired lab binary upgrade and recipe endpoint** prerequisite.
 It does not yet prove new company-generated bundles upload/download correctly,
 installation of those bundles, automated endpoint updates, full deployment
 restore, schema migration rollback or public direct/relay operation.
+
+### Current-source company bundle jobs, 23 October: completion unconfirmed
+
+The original independently reproduced `4c5accb` customer and technician MSIs
+and configuration agent were staged and signed using the existing private lab
+publisher and the same verified timestamp policy. Signing the outer MSIs did not
+alter their embedded payloads or actual MSI ProductVersion `1.5.1`. Signed input
+SHA-256 values:
+
+| Input | SHA-256 |
+| --- | --- |
+| Customer MSI | `e7387695be27942849fe345308dcf32260b439c79a12e00205f4e5173bcb0545` |
+| Technician MSI | `1b22ef4726db3cd0d8aad084afd564976c828565804cf49118d4a196086733bd` |
+| Configuration agent | `cfab98c90b1ae7ac5ba1ee2111d4381ce54de48fda8204806556d3d92aa973b7` |
+
+The existing owned lab release key signed exact metadata for sequence 9, test
+channel, version `1.5.1`, pinned public source `4c5accb`, and the original payload
+manifests (96 customer files and one packed technician executable). No private
+release key was transferred to the worker. These test declarations are scoped
+to Server 2016 for this run and do not qualify that OS or other Windows versions.
+Updates remained paused at company revision 18.
+
+Normal server import succeeded for both new releases. Before approval, build
+requests returned 409 for each; after approval, exactly one job per edition was
+queued: customer `23755146-ed3c-4577-8c80-e6efb16d1395`, technician
+`7b271526-963b-4f96-ac43-0ba66c550142`. The obsolete sequence-8 releases remained
+withdrawn. No installer was executed or endpoint update enabled.
+
+The first status observation subsequently exceeded its 240-second SSH observer
+timeout, and a separate small SSH probe timed out during banner exchange. The
+existing VM process remained present and its read-only monitor reported Running.
+The console woke to the desktop; a subsequent Task Manager shortcut had not
+produced its window by the next observation. This does not establish the cause
+or terminal state of either build. No duplicate job, service restart, VM reset,
+forced power-off or disk replacement was performed during these observations.
+Original jobs and retained outputs must be inspected after the wait before any
+recovery decision. Successful bundle upload, public customer download, protected
+technician download and installation of either generated bundle remain unproven.
