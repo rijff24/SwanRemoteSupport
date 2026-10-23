@@ -5292,3 +5292,42 @@ second forced power-off or restart was performed in this observation. The
 earlier bounded recovery result therefore does not establish sustained guest
 stability. Original disks, snapshots and collected installer evidence remain
 preserved.
+
+### Approved Server 2016 management maintenance, 23 October
+
+Following explicit human approval, the existing disposable Server 2016 company
+VM completed guarded management-only maintenance. A fresh MFA session and
+preflight found no active claimed support sessions. The installer worker was
+stopped, and only `8-Customer-test` and `8-Technician-test` were withdrawn using
+the normal `DELETE /api/v1/releases/{id}/approve` endpoint. The earlier review
+draft's POST withdrawal URL was incorrect and was not executed. Withdrawal
+closed the two obsolete running jobs through the server's existing behavior;
+no job status was edited manually. All other release approval flags and release
+metadata were verified unchanged.
+
+The previously retained, locally trusted lab-signed management CLI, SHA-256
+`cf7b5077a633f8ff9ad830d2e2a9847d16b35494bbeaf061645abbe8c37c07d4`,
+created a 125,096-byte encrypted management-only backup. Archive SHA-256:
+`00a0883277079052c2875aafd5167a6abf259267ed9d33d184823cde233e389c`.
+A newly generated random passphrase was stored in a separate protected guest
+directory, outside the archive directory. Both directories allow only SYSTEM
+and Administrators. Six original guest records were collected and independently
+matched against guest byte counts and hashes.
+
+Independent in-memory validation authenticated AES-GCM, rejected a changed
+ciphertext and an incorrect passphrase, checked ZIP CRCs, and matched backed-up
+management key/setup/HTTPS-recipe file hashes against their live counterparts.
+The database snapshot contained the expected withdrawals and closed jobs.
+SQLite `quick_check` returned `ok`. The first verifier could not deserialize a
+WAL-mode database into memory; its failed version was retained. The continuation
+adapted only the journal-mode header bytes in a disposable in-memory database
+copy. The original encrypted archive and collected records were unchanged;
+decrypted contents and passphrase were not saved on the host.
+
+The worker was restored in a `finally` block and independently observed Running.
+All three original lab services were Running; management and customer service
+process IDs were unchanged. Customer device identity, token hash, unattended
+consent/revision and accepted release sequence were unchanged. No server/worker
+upgrade, restore, transport/TLS-key export or live network change was performed.
+This closes the approved maintenance prerequisite, not full Windows deployment
+backup/restore, migration recovery or coordinated upgrade acceptance.
