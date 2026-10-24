@@ -6382,3 +6382,34 @@ company server/worker/watcher are running, legacy customer PID1924 is unchanged,
 profile18 remains paused, and the original Caddy binding/pending-install hashes
 are unchanged. The company VM and host RustDesk services were not stopped for
 these tests. Cross-VM HTTPS approval and additional Windows11 storage remain open.
+
+
+On a newly created endpoint-only Server2022 Standard Evaluation Desktop Experience
+VM (20348.587 x64), the current lab-signed da0c621 customer MSI passed
+administrative install, damaged-license repair, a real reboot with automatic
+LocalSystem service startup, all 96 installed payload hashes and publishers,
+and uninstall. Install, repair and uninstall each returned 0. A pre-install
+record established both product registrations absent and no prior endpoint data.
+The technician MSI then passed administrative per-user install,
+missing-executable repair and uninstall, each returning 0, in its first
+application context on that same VM after customer testing. Eighteen customer
+and thirteen technician original evidence files were independently collected
+and hash-checked. See
+[the fresh Server2022 MSI evidence](../deployment/windows/da0c621-server22-fresh-msi-evidence.json).
+
+Initial lab setup had reached the desktop but SSH was stopped: its copied host
+key inherited Authenticated Users read access, and the exact sshd diagnostic
+rejected that key. The two lab access files were restricted to Administrator and
+SYSTEM with explicit protected ACLs, preserving their bytes and the pinned host
+identity. The corrected local seed generator checks those ACLs. A temporary
+loopback management forward used for diagnosis was removed after pinned SSH
+worked, and both setup CDs were detached before Swan MSI execution. An optional
+TrustedPublisher store import returned access denied before any MSI ran; that
+attempt was retained, and subsequent tests used the already installed lab root,
+valid signatures and explicit publisher verification without retrying that store.
+
+These are raw administrative MSI lifecycle checks with lab signing. They do not
+establish standard-user technician installation, generated company enrollment,
+GUI login, sessions, public transport, software-version upgrades or automatic
+updates. The approved company test metadata remains Server2016-only. Production
+signing, the remaining OS matrix and full product acceptance remain incomplete.
