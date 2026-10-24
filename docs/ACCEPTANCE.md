@@ -6413,3 +6413,25 @@ establish standard-user technician installation, generated company enrollment,
 GUI login, sessions, public transport, software-version upgrades or automatic
 updates. The approved company test metadata remains Server2016-only. Production
 signing, the remaining OS matrix and full product acceptance remain incomplete.
+
+
+A subsequent non-administrator technician test on that Server2022 VM failed
+installation with MSI1601. Original evidence verifies the user's non-admin token
+and separate loaded profile. The Windows Installer log reports failure to
+connect to its service with 0x80070005, before the technician executable existed.
+This was a password-backed scheduled batch task, so it does not establish the
+result of an interactive desktop installation. The connection denial's root
+cause remains unproven; standard-user acceptance remains failed/incomplete.
+[The original failed test evidence](../deployment/windows/da0c621-server22-standard-batch-failure.json)
+retains 16 independently collected and hash-checked records.
+
+Earlier lab launch attempts were also preserved: password-free task registration
+was denied, secondary-logon process initialization failed before the harness,
+and scheduled startup initially lacked the batch-logon right (0x80070569).
+After confirming no explicit batch deny policy, only the owned test account was
+temporarily granted SeBatchLogonRight. That allowed the non-admin test to execute.
+The temporary right was then removed and the prior account rights verified;
+both test tasks are disabled with no running instance. Windows Installer policy
+and administrator group membership were not relaxed. Interactive installation
+and the failed standard-user requirement need further verification and any
+necessary product fix; the earlier administrative passes remain bounded.
