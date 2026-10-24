@@ -6343,3 +6343,42 @@ updates or complete OS qualification. Cross-VM HTTPS and session tests still
 require the pending guarded private-listener approval; Windows11 storage awaits
 the user's additional drive. No acceptance scope has been broadened from these
 bounded tests.
+
+
+Current lab-signed da0c621 customer MSI also passed administrative install,
+damaged-license repair and uninstall on the existing Windows10 Pro x64 disk
+(19045.3803), each returning 0. A real intervening reboot was independently
+established; all 96 payload hashes, installed publishers and automatic service
+startup under LocalSystem passed. Original test, MSI and reboot records were
+collected and hash-checked. The first post-reboot observation incorrectly mixed
+UTC and local DateTime values; its failure was retained, and the test driver was
+corrected to compare UTC instants and enumerate decoded PowerShell5 arrays.
+The correction did not rerun installation or the reboot. See
+[da0c621-win10-bounded-evidence.json](../deployment/windows/da0c621-win10-bounded-evidence.json).
+
+Later in that lab run, the Windows10 console went black and SSH/WinRM stopped
+responding while QEMU remained running. ACPI shutdown did not stop it. A recorded
+forced VM stop was followed by a qcow2 container check with zero errors and a
+successful cold-start recovery; event evidence includes a disk retry (153) near
+the stall, without an established cause. A subsequent normal shutdown completed.
+These bounded MSI checks are not complete Windows10 qualification, fresh-disk
+acceptance, enrollment, sessions or approved automatic-update evidence.
+
+A legacy private lab helper's password was inadvertently displayed during the
+run. Its embedded literal was removed from the helper; the original was retained
+privately. The first reset attempt stalled before changing the password, as
+confirmed by the account's original last-set timestamp after recovery. Automatic
+approval review then rejected both a combined reset/verification script and a
+simpler reset, and also rejected temporary-file cleanup, with "blocked by policy".
+Explicit approval is pending. The replacement was not displayed; its one-time
+transfer remains in a verified Administrator/SYSTEM-only directory inside the
+affected VM, which is now offline. This incident remains unresolved pending reset
+and cleanup and is not treated as a passing security check.
+
+The original Server2016 endpoint was restored on the same disk, MAC and memory,
+without setup media and with its prior loopback ports preserved. Its latest MSI
+task still reports success and the zero-byte cancellation marker remains. The
+company server/worker/watcher are running, legacy customer PID1924 is unchanged,
+profile18 remains paused, and the original Caddy binding/pending-install hashes
+are unchanged. The company VM and host RustDesk services were not stopped for
+these tests. Cross-VM HTTPS approval and additional Windows11 storage remain open.

@@ -1,0 +1,71 @@
+{
+  "source": "da0c621845057bed321a98a1886ef15891e431a9",
+  "bounded_customer_msi_result": {
+    "source": "da0c621845057bed321a98a1886ef15891e431a9",
+    "package_sha256": "c53626be8ed32f4678d1c7cc1a4b88ca53a07a86f94d36e94b61e68d5f9f06a2",
+    "passed": true,
+    "phases": [
+      {
+        "phase": "install",
+        "exit_code": 0
+      },
+      {
+        "phase": "repair",
+        "exit_code": 0
+      },
+      {
+        "phase": "uninstall",
+        "exit_code": 0
+      }
+    ],
+    "actual_reboot_verified": true,
+    "service_automatically_restarted": true,
+    "installed_manifest_files": 96,
+    "os": {
+      "Caption": "Microsoft Windows 10 Pro",
+      "Version": "10.0.19045",
+      "BuildNumber": "19045",
+      "OSArchitecture": "64-bit",
+      "revision": 3803
+    },
+    "scope": "Administrative lab-signed raw MSI on existing Windows10 Pro disk, real reboot and service verification; not enrollment, sessions, automatic updates or fresh-disk qualification",
+    "full_product_acceptance": false
+  },
+  "test_driver_corrections": {
+    "utc_vs_local_datetime_guard_fixed": true,
+    "powershell5_array_enumeration_fixed": true,
+    "original_failed_guard_preserved": true,
+    "no_extra_reboot_or_installation_to_fix_guard": true
+  },
+  "later_lab_runtime_concern": {
+    "console_black_and_ssh_winrm_unresponsive": true,
+    "qemu_remained_running": true,
+    "acpi_powerdown_did_not_stop_guest": true,
+    "forced_vm_stop_recorded": true,
+    "after_forced_stop_container_check_errors": 0,
+    "guest_recovered_after_cold_start": true,
+    "disk_retry_event_153_observed": true,
+    "cause_established": false,
+    "subsequent_guest_shutdown_completed": true,
+    "full_windows10_qualification": false
+  },
+  "lab_credential_incident": {
+    "legacy_private_test_password_displayed": true,
+    "literal_removed_from_legacy_helper": true,
+    "replacement_not_displayed": true,
+    "password_reset_not_completed": true,
+    "reset_and_private_file_cleanup_rejected_by_automatic_review": "blocked by policy",
+    "explicit_approval_requested": true,
+    "affected_vm_offline": true,
+    "private_transfer_file_retained_in_administrator_system_only_directory": true
+  },
+  "restoration": {
+    "original_endpoint_reachable": true,
+    "company_services_and_customer_pid_preserved": true,
+    "company_https_binding_unchanged": true,
+    "updates_remain_paused": true,
+    "host_rustdesk_services_not_changed": true
+  },
+  "production_approved": false,
+  "full_product_acceptance": false
+}
