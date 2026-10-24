@@ -222,6 +222,12 @@ pub fn core_main() -> Option<Vec<String>> {
                 }
                 return None;
             } else if args[0] == "--update" {
+                #[cfg(feature = "swan_custom")]
+                {
+                    log::warn!("Managed updates require the approved company update agent");
+                }
+                #[cfg(not(feature = "swan_custom"))]
+                {
                 if config::is_disable_installation() {
                     return None;
                 }
@@ -247,6 +253,7 @@ pub fn core_main() -> Option<Vec<String>> {
                     .duration(Duration::Short)
                     .show()
                     .ok();
+                }
                 return None;
             } else if args[0] == "--after-install" {
                 if let Err(err) = platform::run_after_install() {
@@ -269,6 +276,8 @@ pub fn core_main() -> Option<Vec<String>> {
                     Ok(_) => translate("Installation Successful!".to_string()),
                     Err(err) => {
                         println!("Failed with error: {err}");
+                        #[cfg(feature = "swan_custom")]
+                        std::process::exit(1);
                         translate("Installation failed!".to_string())
                     }
                 };

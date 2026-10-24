@@ -1896,6 +1896,10 @@ class RustdeskImpl {
     throw UnimplementedError("sessionPrinterResponse");
   }
 
+  Stream<String> mainCompanyRequest({required String request, dynamic hint}) {
+    throw UnimplementedError("mainCompanyRequest");
+  }
+
   Future<String> mainGetCommon({required String key, dynamic hint}) {
     throw UnimplementedError("mainGetCommon");
   }

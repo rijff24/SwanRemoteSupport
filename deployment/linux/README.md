@@ -1,0 +1,109 @@
+# Company Linux deployment
+
+Each company operates its own management, rendezvous and relay services. The
+project does not supply hosting. These deployment files still require the
+release checks in [ACCEPTANCE.md](../../docs/ACCEPTANCE.md); intended Windows
+compatibility and production signing are not verified claims.
+
+From this directory, copy `company.env.example` to `company.env`, set the
+company's public hostname and trusted project release verification public key,
+then run:
+
+```sh
+docker compose --env-file company.env up -d --build
+```
+
+The company supplies DNS, inbound TCP 80/443 for HTTPS provisioning, TCP
+21115/21116/21117 and UDP 21116 for native transport. Office hosting may need
+port forwarding or a separately reachable company relay under CGNAT. Setup
+diagnostics run from the company server and do not prove external connectivity.
+Do not alter an existing production deployment to rehearse these instructions.
+
+Open `https://YOUR_COMPANY_HOSTNAME` for the first-run administration wizard.
+Retrieve the one-time setup token privately on the company server:
+
+```sh
+docker compose --env-file company.env exec management cat /var/lib/swan/setup-token.txt
+```
+
+Keep the token out of shared logs and issues. Enter the company identity,
+branding, HTTPS and transport addresses, administrator credentials and an
+authenticator code in the wizard. The transport public key can be read from
+`/root/id_ed25519.pub` in the `hbbs` container; the corresponding private key
+must remain on the company server. Endpoints receive public bootstrap
+configuration and require company approval after enrollment. A Linux server
+also needs a company-controlled Windows worker for Windows installation bundles.
+
+Management runs as UID 10001 with a read-only root filesystem and private
+persistent storage. Docker's SIGTERM requests a graceful shutdown. Preserve
+all management, transport and Caddy volumes. Follow [SERVER_BACKUP.md](../../docs/SERVER_BACKUP.md)
+for encrypted database, configuration, transport and full TLS storage backup
+and restore; backing up only the management volume is insufficient.
+
+## Build and deployment checks
+
+The root and management Dockerfile both carry matching deny-by-default context
+rules, including explicit child exclusions for older Docker engines. They admit
+the named Cargo manifests, source, embedded scripts and branding assets while
+excluding local environment files, keys, databases, installers and caches from
+the build daemon and intermediate layers. Add newly required public build
+inputs explicitly when changing the embedded source.
+
+The Rust builder, Debian runtime, Caddy HTTPS proxy and RustDesk transport images
+are pinned by manifest digest.
+Update those digests deliberately and rerun these checks when applying base-image
+security updates. The runtime copies its public certificate trust bundle from
+the pinned builder, rather than installing packages from live repositories.
+Rustls reads that bundle through `SSL_CERT_FILE`; HTTPS certificate verification
+remains enabled. An isolated offline rebuild of the exact `8cfdd8f` source,
+using the pinned builder with a verified-empty target directory, produced the
+same management executable SHA-256 as its original release build. Docker target
+volumes must use `volume-nocopy`; otherwise Docker populates them with compiled
+files from the builder image and the check reuses artifacts. This establishes
+that Linux management binary comparison only. OCI image timestamps, other
+components and native Windows builds still require separate reproducibility
+checks; ordinary deployment tests do not establish them.
+
+From the repository root, with a working Linux Docker engine and OpenSSL:
+
+```sh
+python3 deployment/linux/test_build_context.py
+docker build --file deployment/linux/Dockerfile --tag swan-management:test .
+python3 deployment/linux/test_container_startup.py swan-management:test
+python3 deployment/linux/test_container_stack.py swan-management:test
+```
+
+The context test uses tracked public source and synthetic canaries, never local
+credentials. The container test uses uniquely named disposable storage and a
+loopback-only listener. It checks fresh setup, MFA and replay denial, required
+device approval, policy denial, graceful shutdown and persisted company/device
+identity. It also uses the real CLI for encrypted management backup and a second
+volume for restore, checking wrong-password rejection before writes, retained
+branding/policy/enrollment/consent, private key permissions, MFA replay denial
+and revocation. Passphrases enter the CLI through stdin and stay out of arguments
+and Docker container metadata. The test removes only its own containers and
+volumes. Management-only restore does not prove transport or TLS-volume recovery.
+These are actual Docker checks, but are not evidence for public
+HTTPS, transport sessions, worker-generated installations, certificate renewal
+or the Windows compatibility matrix.
+
+The component-stack test runs the pinned Caddy and RustDesk images on a private
+Docker network with loopback-only published ports. It adds an internal test
+issuer to a disposable copy of the proxy recipe, disables trust-store
+installation, and verifies HTTPS using that CA explicitly. Default system trust
+must reject the connection. It verifies real signed profiles, tamper/wrong-key
+rejection, setup, MFA/enrollment/logout and retained company/transport trust
+after restart. Native NAT-test replies prove local rendezvous protocol readiness;
+they do not demonstrate NAT traversal or an authorized remote desktop session.
+The test also stops the components, exports management, actual transport keys
+and database, private deployment settings and Caddy storage into one encrypted
+archive, then restores into separate volumes. A wrong password must fail before
+creating restore files. Replacement services must retain the original HTTPS
+CA, signed company profile, transport identity, enrollment and consent. MFA
+replay, logged-out credentials and revoked device access remain denied; revoking
+a device in the replacement must leave the original deployment unchanged.
+Private keys remain inside volumes and the backup passphrase enters through
+stdin. Empty storage directories need not appear in the archive; every original
+TLS file must match the recovered copy.
+Public ACME, UDP and external direct/relay sessions remain separate gates.
+The company-product CI runs all three checks.

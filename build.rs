@@ -77,42 +77,33 @@ fn install_android_deps() {
     println!("cargo:rustc-link-lib=OpenSLES");
 }
 
-fn validate_swan_build_environment() {
-    if std::env::var_os("CARGO_FEATURE_SWAN_CUSTOM").is_none() {
-        return;
+#[path = "src/build_metadata.rs"]
+mod build_metadata;
+
+fn generate_version() -> Result<(), Box<dyn std::error::Error>> {
+    println!("cargo:rerun-if-env-changed=SWAN_BUILD");
+    println!("cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH");
+    println!("cargo:rerun-if-changed=Cargo.toml");
+    println!("cargo:rerun-if-changed=src/build_metadata.rs");
+    if std::env::var_os("CARGO_FEATURE_SWAN_CUSTOM").is_some()
+        || std::env::var("SWAN_BUILD").as_deref() == Ok("1")
+    {
+        let epoch = std::env::var("SOURCE_DATE_EPOCH")?;
+        let version = std::env::var("CARGO_PKG_VERSION")?;
+        let metadata = build_metadata::render_version(&version, &epoch)
+            .map_err(|message| std::io::Error::new(std::io::ErrorKind::InvalidInput, message))?;
+        std::fs::write("src/version.rs", metadata)?;
+    } else {
+        hbb_common::gen_version();
     }
-
-    // These are public routing/trust values, not credentials. Environment
-    // variables can override them for a test build, while ordinary Swan
-    // builds remain zero-configuration and pinned to the private Tailscale
-    // deployment.
-    const DEFAULT_RENDEZVOUS_SERVER: &str = "100.82.236.84";
-    const DEFAULT_RELAY_SERVER: &str = "100.82.236.84";
-    const DEFAULT_RS_PUB_KEY: &str = "I0s1JvqJ19WDNKBLFY+FC5HekcOqNWPpH+6xGmKUQLI=";
-
-    for (variable, default_value) in [
-        ("RENDEZVOUS_SERVER", DEFAULT_RENDEZVOUS_SERVER),
-        ("RELAY_SERVER", DEFAULT_RELAY_SERVER),
-        ("RS_PUB_KEY", DEFAULT_RS_PUB_KEY),
-    ] {
-        println!("cargo:rerun-if-env-changed={variable}");
-        let value = std::env::var(variable)
-            .ok()
-            .filter(|value| !value.trim().is_empty())
-            .unwrap_or_else(|| default_value.to_owned());
-        println!("cargo:rustc-env={variable}={value}");
-    }
-
-    println!("cargo:rerun-if-env-changed=API_SERVER");
-    println!(
-        "cargo:rustc-env=API_SERVER={}",
-        std::env::var("API_SERVER").unwrap_or_default()
-    );
+    Ok(())
 }
 
 fn main() {
-    validate_swan_build_environment();
-    hbb_common::gen_version();
+    if let Err(error) = generate_version() {
+        eprintln!("Cannot generate application build metadata: {error}");
+        std::process::exit(1);
+    }
     install_android_deps();
     #[cfg(all(windows, feature = "inline"))]
     build_manifest();

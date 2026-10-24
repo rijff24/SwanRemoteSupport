@@ -9,11 +9,11 @@
 </p>
 
 > [!IMPORTANT]
-> This branch contains the **Swan Remote Support** managed client maintained by Swan Computing. It is pinned to RustDesk `1.4.9`, uses Swan branding, embeds the public Swan server routing/trust defaults, provides an express consented-unattended installation, and hides the customer-facing ID/password after setup. Customer release is blocked until the public-source, privacy, Tailnet-policy, testing, and trusted code-signing gates pass. Start with the [Swan build/deployment guide](docs/SWAN_CUSTOM_BUILD.md), [Tailscale deployment](docs/TAILSCALE_DEPLOYMENT.md), [code-signing policy](docs/CODE_SIGNING_POLICY.md), [privacy statement](docs/PRIVACY.md), and [source/licensing notes](docs/SOURCE_AND_LICENSE.md).
+> **Swan Remote Support** is evolving into a configurable AGPL product that each company hosts independently. Its server manages branding, enrollment, technician authorization and approved updates; customer and technician apps use signed company configuration. Start with the [company product build/deployment guide](product/README.md) and [acceptance report](docs/ACCEPTANCE.md). This is a development branch, not a production release. Native sessions, installers, recovery and the complete Windows matrix still require verification. The original Swan/Tailscale deployment is preserved at tag `swan-single-company-baseline-1.4.9`.
 
-Continuing on the live server? Use the evidence-first [server continuation prompt](docs/SERVER_CONTINUATION_PROMPT.md).
+Maintaining the preserved Swan/Tailscale deployment? Use its historical [server continuation prompt](docs/SERVER_CONTINUATION_PROMPT.md).
 
-**[Code signing policy](docs/CODE_SIGNING_POLICY.md):** Free code signing provided by [SignPath.io](https://about.signpath.io/), certificate by [SignPath Foundation](https://signpath.org/).
+**[Code signing policy](docs/CODE_SIGNING_POLICY.md):** Production publication requires an approved signing provider, valid signatures and completed release checks. No signing approval or free signing of arbitrary company builds is assumed.
 
 > [!Caution]
 > **Misuse Disclaimer:** <br>

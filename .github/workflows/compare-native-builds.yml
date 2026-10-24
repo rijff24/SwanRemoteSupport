@@ -1,0 +1,97 @@
+name: Compare independent native build artifacts
+
+on:
+  push:
+    paths:
+      - .github/workflows/compare-native-builds.yml
+      - deployment/windows/compare-native-builds.py
+      - deployment/windows/test_native_build_comparison.py
+  pull_request:
+    paths:
+      - .github/workflows/compare-native-builds.yml
+      - deployment/windows/compare-native-builds.py
+      - deployment/windows/test_native_build_comparison.py
+  workflow_dispatch:
+    inputs:
+      first_run:
+        description: First successful native workflow run ID
+        required: true
+        type: string
+      second_run:
+        description: Independent successful native workflow run ID
+        required: true
+        type: string
+      source:
+        description: Exact public 40-character source commit shared by both runs
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+      - name: Verify comparison trust boundaries
+        run: python3 -m unittest discover -s deployment/windows -p test_native_build_comparison.py
+
+  compare:
+    if: github.event_name == 'workflow_dispatch'
+    needs: tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Check out comparison tools
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+
+      - name: Validate independent build identities
+        env:
+          FIRST_RUN: ${{ inputs.first_run }}
+          SECOND_RUN: ${{ inputs.second_run }}
+          SOURCE_COMMIT: ${{ inputs.source }}
+        run: |
+          python3 - <<'PY'
+          import os, re
+          first, second = os.environ['FIRST_RUN'], os.environ['SECOND_RUN']
+          if not all(re.fullmatch(r'[1-9][0-9]*', n) for n in (first, second)) or first == second:
+              raise SystemExit('Two different positive native run IDs are required')
+          if not re.fullmatch(r'[0-9a-f]{40}', os.environ['SOURCE_COMMIT']):
+              raise SystemExit('An exact public source commit is required')
+          PY
+
+      - name: Check out exact public source and pinned submodules
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          ref: ${{ inputs.source }}
+          path: source-proof
+          submodules: recursive
+          persist-credentials: false
+
+      - name: Verify original archives and compare every shipping output
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          FIRST_RUN: ${{ inputs.first_run }}
+          SECOND_RUN: ${{ inputs.second_run }}
+          SOURCE_COMMIT: ${{ inputs.source }}
+        run: |
+          python3 deployment/windows/compare-native-builds.py \
+            --first-run "$FIRST_RUN" --second-run "$SECOND_RUN" \
+            --source "$SOURCE_COMMIT" --checkout source-proof \
+            --work comparison-inputs --output evidence/native-build-comparison.json
+
+      - name: Preserve comparison report even when original binaries differ
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: native-comparison-${{ inputs.first_run }}-${{ inputs.second_run }}
+          path: evidence/native-build-comparison.json
+          if-no-files-found: warn
+          retention-days: 90

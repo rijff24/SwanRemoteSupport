@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "repository": "https://github.com/rustdesk/rustdesk-server",
+  "commit": "9bae9f2f39d92c4b4ba2e28e089da5071897b22e",
+  "hbb_common_commit": "83419b6549636ee39dacef7776c473f5802e08d6",
+  "rust_toolchain": "1.90.0",
+  "cargo_lock_sha256": "a9c8c1a941df0c66a33eeadbb1b7fd413287aefb5f06e0e6ca30ceb92f8caad9",
+  "patches": [
+    {
+      "path": "patches/0001-udp-address-regression.patch",
+      "sha256": "e2ecf9da94c84e5447e81e8667a75dc73d4ab9179efec4f465414599c1f9ec15",
+      "before_sha256": "c7da75a4db64fea07f6dce1ad5a791fb4d791b15dcc41672129b0f6438ad8b2f",
+      "after_sha256": "024397429d5ec03888bff1b856f968764c4bb4e6b09ffa1b9c780ef93a6efac3"
+    },
+    {
+      "path": "patches/0002-udp-address-normalization.patch",
+      "sha256": "c862020cf0fddf6a50e401674006d41775dd955c3eb2a2e7c149260ad888adc2",
+      "before_sha256": "024397429d5ec03888bff1b856f968764c4bb4e6b09ffa1b9c780ef93a6efac3",
+      "after_sha256": "c881d983b3b1cb77be30cf557be84e65064c72f69b414792cd62230fa99811f4"
+    }
+  ],
+  "scope": "Candidate transport patch; not approved for production or substituted into current installers"
+}

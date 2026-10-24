@@ -1,0 +1,90 @@
+{
+  "source": "da0c621845057bed321a98a1886ef15891e431a9",
+  "lab_signing_only": true,
+  "production_approved": false,
+  "signed_customer_msi_sha256": "c53626be8ed32f4678d1c7cc1a4b88ca53a07a86f94d36e94b61e68d5f9f06a2",
+  "signed_technician_msi_sha256": "9e339a4140c204846c7b51c33068da9502593fcdd79e6351691426d7fe1319e3",
+  "installed_customer_manifest_files": 96,
+  "default_signed_input_checks_used": true,
+  "company_worker_distribution": {
+    "source": "da0c621845057bed321a98a1886ef15891e431a9",
+    "profile_revision": 18,
+    "updates_remain_paused": true,
+    "editions": [
+      {
+        "edition": "customer",
+        "sequence": 14,
+        "job_id": "26ab7ada-34c3-4f74-9ae8-8882c7516e84",
+        "bundle_sha256": "1befe45998b9be1e24a13cc885141d509bf784ab8a54413e95011786776fb81b",
+        "bytes": 32508767,
+        "entries": 12,
+        "seven_pinned_source_texts_exact": true,
+        "public_bootstrap_fields_only": true,
+        "both_signatures_verified_against_preexisting_pins": true,
+        "tampered_signed_payload_rejected": true,
+        "release_envelope_unchanged": true,
+        "signed_msi_and_agent_hashes_verified": true,
+        "anonymous_status": 200,
+        "authorized_status": 200,
+        "unapproved_build_rejected": true
+      },
+      {
+        "edition": "technician",
+        "sequence": 15,
+        "job_id": "39640b31-b45e-4f10-9a71-b5f6d842b5c7",
+        "bundle_sha256": "ad96efa8099f28c7792a76f64d1fb1fa81e6e8c9ee0bfac788c6a85e7d2e87d4",
+        "bytes": 30301910,
+        "entries": 12,
+        "seven_pinned_source_texts_exact": true,
+        "public_bootstrap_fields_only": true,
+        "both_signatures_verified_against_preexisting_pins": true,
+        "tampered_signed_payload_rejected": true,
+        "release_envelope_unchanged": true,
+        "signed_msi_and_agent_hashes_verified": true,
+        "anonymous_status": 401,
+        "authorized_status": 200,
+        "unapproved_build_rejected": true
+      }
+    ],
+    "installer_executed": false,
+    "external_reachability_proven": false,
+    "production_approved": false
+  },
+  "technician_explicit_upgrade": {
+    "source": "da0c621845057bed321a98a1886ef15891e431a9",
+    "original_evidence_files": 13,
+    "generated_bundle_sequence_13_to_15_upgrade_passed": true,
+    "administrator_profile_test": true,
+    "standard_user_acceptance": false,
+    "installed_signed_payload_and_cached_msi_hashes_verified": {
+      "installed-technician.exe": "008a5198410b29e74dbc6cd402ef9c1de31535a821a71a9d3f2dbab66f70ec1a",
+      "installed-agent.exe": "c7bfac26344a8f46aa2238b631e3be25785eaaeb5fd721cbf844c438be4d6206",
+      "cached-installer15.msi": "9e339a4140c204846c7b51c33068da9502593fcdd79e6351691426d7fe1319e3"
+    },
+    "profile_signatures_and_original_pins_verified": true,
+    "company_configuration_preserved": true,
+    "original_failed_setup_archive_preserved": true,
+    "pending_install_marker_absent": true,
+    "before_and_after_native_verify_installed_exit": 0,
+    "customer_service_and_pending_evidence_unchanged": true,
+    "technician_company_login_or_native_session_tested": false,
+    "production_approved": false
+  },
+  "scope": "Existing isolated company on Server2016; lab publisher only; real worker distribution, administrative explicit technician upgrade, separate endpoint raw customer MSI lifecycle. Not public connectivity, standard-user, automatic-update or full product qualification.",
+  "customer_msi_lifecycle": {
+    "passed": true,
+    "source": "da0c621845057bed321a98a1886ef15891e431a9",
+    "package_sha256": "c53626be8ed32f4678d1c7cc1a4b88ca53a07a86f94d36e94b61e68d5f9f06a2",
+    "guest": "SWAN-END-16",
+    "os": "Server 2016 Standard Evaluation Desktop Experience 14393.693 x64",
+    "run_as": "NT AUTHORITY\\SYSTEM",
+    "phases": [
+      "install",
+      "repair",
+      "uninstall"
+    ],
+    "installed_manifest_files": 96,
+    "scope": "Administrative customer company-lab-signed bare MSI reinstall after prior uninstall retained its cancellation marker, damaged-license repair and uninstall; all 96 payload hashes and installed publishers checked. Not enrollment, GUI, update or complete Windows qualification.",
+    "full_product_acceptance": false
+  }
+}

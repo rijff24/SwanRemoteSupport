@@ -8,6 +8,7 @@ use std::{
 use bin_reader::BinaryReader;
 
 pub mod bin_reader;
+mod install_wait;
 #[cfg(windows)]
 mod ui;
 
@@ -133,6 +134,7 @@ fn is_windows_7() -> bool {
 }
 
 fn execute(path: PathBuf, args: Vec<String>, _ui: bool) {
+    let wait_for_install=args.iter().any(|argument|argument=="--silent-install");
     println!("executing {}", path.display());
     // setup env
     let exe = std::env::current_exe().unwrap_or_default();
@@ -160,6 +162,10 @@ fn execute(path: PathBuf, args: Vec<String>, _ui: bool) {
             .stderr(Stdio::inherit());
     }
     let _child = cmd.spawn();
+    if wait_for_install {
+        let code=install_wait::installation_exit_code(_child);
+        std::process::exit(code);
+    }
 
     #[cfg(windows)]
     if _ui {

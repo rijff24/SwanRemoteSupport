@@ -1,5 +1,7 @@
 # Swan Remote Support build and deployment guide
 
+> Historical guide for the single-company baseline tagged `swan-single-company-baseline-1.4.9`. Its Tailscale/password flow is preserved for migration; it is not the configurable product's installation flow. Use [product/README.md](../product/README.md) for current development builds and deployments.
+
 ## Purpose and current status
 
 This branch turns the RustDesk `1.4.9` client into **Swan Remote Support** for Swan Computing. It provides:

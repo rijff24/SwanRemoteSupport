@@ -1,5 +1,7 @@
 # Unsigned two-laptop test
 
+> Historical test procedure for `swan-single-company-baseline-1.4.9`. Its Tailscale and password steps apply only to the preserved single-company deployment. For the configurable company-hosted product, use the [product guide](../product/README.md) and [acceptance report](ACCEPTANCE.md).
+
 This procedure is only for an isolated spare laptop owned or controlled by Swan Computing. The current 1.4.9 build is unsigned. Do not use it on a real customer computer, do not place customer data on the spare laptop, and do not weaken Microsoft Defender, SmartScreen, Windows Firewall, or another security control.
 
 ## Before starting
