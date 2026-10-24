@@ -1,10 +1,57 @@
 # Configurable product acceptance report
 
-Evidence through 23 October 2026. **The product is not complete or approved for
+Evidence through 24 October 2026. **The product is not complete or approved for
 production publication.** A passing component test is not evidence of a working
 native support session or a clean-machine installation.
 
-## Current status, 23 October
+## Current status, 24 October
+
+The latest tested application source is `da0c621845057bed321a98a1886ef15891e431a9`.
+Later evidence/documentation commits do not change those application binaries.
+The product remains incomplete and is not approved for production publication.
+
+- **Reproduction:** two independent da0c621 native builds produced identical
+  original bytes for all eight shipping outputs and the same 618 recorded MSVC
+  inputs. SDK/actual CMake command provenance and production signing remain
+  separate gates. See [the comparison](../deployment/windows/native-da0c621-rebuild-comparison.json).
+- **Distribution:** the existing company worker generated lab-signed customer
+  sequence 14 and technician sequence 15 bundles. Public customer and protected
+  technician downloads and independent content checks passed. The generated
+  technician setup passed explicit sequence 13-to-15 upgrade in an administrative
+  profile. That is not an automatic software-version upgrade. Company profile 18
+  remains paused; approved test metadata targets Server2016 only. See
+  [distribution evidence](../deployment/windows/da0c621-lab-distribution-evidence.json).
+- **Fresh Server2022:** on 20348.587 x64 Desktop Experience, the current customer
+  MSI passed administrative install, repair, a real reboot with automatic
+  LocalSystem service startup, and uninstall. All 96 payload hashes and installed
+  publishers passed. Technician administrative install/repair/uninstall also
+  passed after customer testing on that VM. See
+  [the bounded fresh-VM evidence](../deployment/windows/da0c621-server22-fresh-msi-evidence.json).
+- **Standard-user technician:** the Server2022 batch-context test failed with
+  MSI1601/Windows Installer connection denial 0x80070005. A non-admin token and
+  separate profile were verified. Temporary batch-logon rights were restored and
+  test tasks disabled. An actual desktop-context test is staged but has not run;
+  console activation failed twice and awaits restored UI access. See
+  [the original failure](../deployment/windows/da0c621-server22-standard-batch-failure.json).
+- **Windows10:** bounded current MSI/reboot checks passed, but a later guest hang
+  has no established cause. A legacy lab password disclosure still requires the
+  separately requested reset and cleanup; automatic approval review blocked
+  those actions. The affected VM remains offline. These are unresolved failures,
+  not complete Windows10 acceptance. See
+  [the bounded evidence and incident](../deployment/windows/da0c621-win10-bounded-evidence.json).
+
+Current cross-machine enrollment/sessions and public direct/relay transport,
+customer consent/revocation and desktop features, current branding/key-rotation
+runtime checks, approved automatic rollout/interruption recovery, the remaining
+clean-machine Windows matrix, full Windows TLS/transport backup/restore and
+production signing remain release gates. Existing partial and older-source
+results below do not close those requirements. Private company HTTPS binding
+and full Windows restore approval remain pending; Windows11 awaits additional
+storage. A read-only observation after the Server2022 tests confirmed the company
+server, worker and original customer process still running and the public profile
+endpoint returning HTTP200. No working-company rollout was unpaused for these tests.
+
+## Historical status, 23 October
 
 The preserved company VM now runs the lab-signed `f84ffb0` management service
 and worker after a verified encrypted management-only backup and coordinated
