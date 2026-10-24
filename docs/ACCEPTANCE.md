@@ -6303,3 +6303,43 @@ MSVC inputs. SDK/actual CMake command provenance, lab signing, clean-machine
 runtime qualification, public sessions and production signing remain separate.
 The first full archive is downloading locally for subsequent installer testing;
 its local completion has not yet been verified.
+
+
+The full first da0c621 native archive completed local download and passed its
+provider digest, ZIP CRC, exact source and shipping checksum checks. The packed
+customer payload was extracted without execution and all 95 files matched the
+native MSI manifest. Both company-lab-signed MSIs were built using 213 pinned
+inputs; originals and timestamp/publisher receipts were independently collected
+and checked, including the 96-entry signed customer manifest. The existing
+nonexportable lab key stayed inside the VM. Production signing is not approved.
+
+The existing company worker generated new sequence-14 customer and sequence-15
+technician bundles after unapproved build attempts were rejected. Customer
+download was public (200); technician anonymous access returned 401 and the
+authenticated download returned 200. Seven bundled texts matched exact public
+source da0c621, bootstrap contained only six public fields, both signatures
+validated against preexisting pins, and MSI/agent hashes matched. Profile 18 and
+paused rollout remained unchanged, as did the existing customer's identity,
+consent, sequence and service process. Exact job/artifact identities and bounded
+results are retained in
+[da0c621-lab-distribution-evidence.json](../deployment/windows/da0c621-lab-distribution-evidence.json).
+
+The complete generated technician bundle then passed explicit upgrade from
+sequence 13 to 15 in the existing administrative test profile. Installed signed
+EXE/agent, sequence-15 cached MSI, MSI registration, original trust/configuration,
+failed-setup archive and before/after native verification all passed. Thirteen
+original runtime evidence files were independently collected and hash-checked.
+The first collector mistakenly sampled the old sequence-13 MSI under a
+sequence-15 name; that failed collection was preserved and the corrected path
+was collected separately without rerunning installation. This does not establish
+standard-user installation, automatic updating, technician login or sessions.
+
+On the separate Server2016 endpoint (14393.693 x64), the current signed customer
+MSI passed administrative reinstall after retained uninstall cancellation,
+damaged-license repair and uninstall, all returning 0. All 96 payload hashes and
+installed publishers were checked; 13 original evidence files were collected.
+This reused a previously tested disk and is not fresh-disk enrollment, GUI,
+updates or complete OS qualification. Cross-VM HTTPS and session tests still
+require the pending guarded private-listener approval; Windows11 storage awaits
+the user's additional drive. No acceptance scope has been broadened from these
+bounded tests.
