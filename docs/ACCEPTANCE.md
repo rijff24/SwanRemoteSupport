@@ -6668,3 +6668,17 @@ worker starts. The Windows build workflow must compile and run that regression
 before producing candidate artifacts. Version metadata/lockfiles agree locally;
 native compilation, real 1.5.1-to-1.5.2 rollout and recovery are still pending.
 This candidate is not a production release or an accepted automatic-update test.
+
+Signed company policy revision 3 enabled unattended support as a company option,
+while the approved customer retained false device consent. An assigned technician's
+unattended grant remained denied with 403. The customer UI then displayed the
+company/domain and sign-in-screen implications in an explicit confirmation.
+Accepting it persisted local consent revision 1, updated the server and enabled
+an independently verified signed unattended grant bound to company, technician,
+device, proof and expiry. Native GUI revocation increased the local consent
+revision, cleared server consent and denied subsequent unattended grants with
+403 while leaving the customer service running. The prior unused grant was
+closed and its lease cleared, but it had expired before the final inspection.
+[Native unattended consent evidence](../deployment/linux/native-unattended-consent-evidence.json)
+does not qualify an active native session, unexpired-lease termination,
+standard-user consent, reboot/logon-screen access or public connectivity.
