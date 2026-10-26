@@ -6640,3 +6640,21 @@ and the original company identity/revision.
 records significant delays. Their cause and acceptable responsiveness remain
 unresolved. No active remote session was present, so immediate disconnection,
 standard-user control and offline authorization denial are not qualified.
+
+The independent Linux company's coordinated encrypted deployment export included
+management data, transport keys/database, full TLS storage, the actual proxy
+recipe/deployment settings and both generated installer bundles. Wrong-password
+restore failed before creating files. Authenticated restore retained exact
+transport key bytes, the complete TLS file tree, settings and installer hashes.
+Separate recovered service volumes then started management, Caddy and transport.
+HTTPS validated against the original lab root/hostname; the signed profile
+verified against its original pin. Administrator MFA, device approval/consent,
+completed jobs, both existing download paths/hashes and logout revocation passed.
+The existing Windows customer's credential also authenticated to the recovered
+API over the same trust without changing its bootstrap or credential. Recovery
+containers were stopped afterward, original endpoints remained unchanged, and
+the verified encrypted archive/passphrase are stored separately outside Git.
+[Full Linux recovery evidence](../deployment/linux/company-full-backup-restore-evidence.json)
+retains the initial internal-network HTTPS timeout and corrected loopback bridge
+check. It does not qualify native desktop transport, public ACME/Internet access,
+or full Windows company-server recovery.
