@@ -15,6 +15,17 @@ cargo +1.90.0 build --manifest-path product/Cargo.toml --workspace --release --l
 
 Windows production builds use MSVC. GNU compilation has verified the product components on the local development machine. Native endpoint builds additionally require the pinned Flutter and vcpkg dependencies in `.github/workflows/swan-windows-build.yml`; the company-product CI separately checks Windows and Linux management components. The root application enables management integration with the `swan_custom` feature.
 
+The Windows native workflow installs Flutter 3.24.5 with
+`deployment/windows/install-pinned-flutter.ps1`. It verifies the exact archive
+SHA-256 from the [official Windows release manifest](https://storage.googleapis.com/flutter_infra_release/releases/releases_windows.json),
+then checks the framework and engine revisions before exporting the SDK path.
+It never resolves the latest stable version. `flutter-sdk-identity.json` is
+retained with both native artifact sets. For an offline build, pass `-Archive`
+with the same official ZIP; its hash is still mandatory. Use a fresh destination
+directory and PowerShell 7. The independently pinned source-engine selector
+continues to verify the matching SDK snapshot compiler before replacing runtime
+files.
+
 Native CI also retains `native-msvc-toolchain.json`: hashes of the default x64
 MSVC compiler, headers and libraries, sorted ordinally for a portable identity.
 Independent comparisons require and validate this record when the pinned source

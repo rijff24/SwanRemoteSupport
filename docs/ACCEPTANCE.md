@@ -6724,3 +6724,19 @@ authenticated to this recovery endpoint without changing its bootstrap or token;
 its credential stayed on the guest. Recovery services were stopped afterward.
 This extends the installed-key rotation evidence above; no recovered transport
 or native session was started, and interrupted activation remains unqualified.
+
+The first 1.5.2 native artifact from d74a631 was downloaded and its complete
+archive digest and SHA256SUMS entries verified. All 1,186 tracked source files
+matched their public Git objects (allowing only declared text checkout newline
+conversion), and six generated bridge files matched that exact workflow's
+bridge archive. Native security regression logs and packaging steps passed.
+The independent attempt 40410425646 stopped before native compilation: the old
+Flutter installation action selected latest stable despite its requested
+version, and the engine selector rejected the missing pinned SDK. Its failure
+is retained; byte reproduction has not passed. The Windows workflow now uses a
+fixed official archive/hash and verifies framework/engine revisions, with local
+negative tests proving wrong versions and altered archives cannot extract or
+change the exported environment. Successful fresh CI installation of this fix,
+new independent native builds, and runtime upgrades remain separate gates.
+[First 1.5.2 artifact evidence](../deployment/windows/d74a631-native-build-evidence.json)
+is not a production release or a completed automatic-update qualification.

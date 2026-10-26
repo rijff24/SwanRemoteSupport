@@ -90,12 +90,14 @@ jobs:
         with:
           version: "${{ env.LLVM_VERSION }}"
 
-      - name: Install Flutter
-        uses: subosito/flutter-action@2783a3f08e1baf891508463f8c6653c258246225 # v2.12.0
-        with:
-          channel: stable
-          flutter-version: "${{ env.FLUTTER_VERSION }}"
-          architecture: x64
+      - name: Install hash-pinned Flutter SDK
+        shell: pwsh
+        run: |
+          python -m unittest discover -s deployment/windows -p test_pinned_flutter_sdk.py
+          if ($LASTEXITCODE -ne 0) { throw 'Pinned SDK rejection tests failed.' }
+          ./deployment/windows/install-pinned-flutter.ps1 -Destination (Join-Path $env:RUNNER_TEMP 'swan-flutter-sdk') -ExpectedVersion $env:FLUTTER_VERSION
+          New-Item -ItemType Directory -Path artifacts -Force | Out-Null
+          Copy-Item -LiteralPath (Join-Path $env:RUNNER_TEMP 'swan-flutter-sdk/sdk-identity.json') -Destination artifacts/flutter-sdk-identity.json
 
       - name: Replace Flutter engine with RustDesk Windows engine
         if: inputs.engine == 'reviewed-upstream'
@@ -108,7 +110,7 @@ jobs:
             throw 'Pinned Flutter engine hash mismatch. Review the upstream artifact before changing this pin.'
           }
           Expand-Archive -Path windows-x64-release.zip -DestinationPath windows-x64-release
-          Move-Item -Path windows-x64-release\* -Destination C:\hostedtoolcache\windows\flutter\stable-${{ env.FLUTTER_VERSION }}-x64\bin\cache\artifacts\engine\windows-x64-release\ -Force
+          Move-Item -Path windows-x64-release\* -Destination (Join-Path $env:FLUTTER_ROOT 'bin/cache/artifacts/engine/windows-x64-release') -Force
 
       - name: Download the exact experimental source-engine build
         if: inputs.engine == 'source-candidate-9f97ef0'
@@ -137,7 +139,7 @@ jobs:
           flutter doctor -v
           flutter precache --windows
           python -m unittest discover -s deployment/windows -p test_engine_candidate.py
-          python deployment/windows/select-engine-candidate.py --candidate artifacts/engine-source --sdk C:/hostedtoolcache/windows/flutter/stable-${{ env.FLUTTER_VERSION }}-x64 --receipt artifacts/engine-selection.json --source-candidate "$env:SWAN_ENGINE_CANDIDATE"
+          python deployment/windows/select-engine-candidate.py --candidate artifacts/engine-source --sdk "$env:FLUTTER_ROOT" --receipt artifacts/engine-selection.json --source-candidate "$env:SWAN_ENGINE_CANDIDATE"
 
       - name: Patch Flutter 3.24 dropdown support
         shell: bash
@@ -375,6 +377,7 @@ jobs:
             artifacts/engine-selection.json
             artifacts/native-desktop-pe-metadata.json
             artifacts/native-msvc-toolchain.json
+            artifacts/flutter-sdk-identity.json
             artifacts/native-managed-updater-tests.log
             artifacts/Install-Company.ps1
             artifacts/Install-Worker.ps1
@@ -436,6 +439,7 @@ jobs:
             artifacts/native-desktop-pe-metadata.json
             artifacts/native-msvc-toolchain.json
             artifacts/*.msi.build.json
+            artifacts/flutter-sdk-identity.json
             artifacts/*.msi.installed-files.json
             artifacts/SHA256SUMS.txt
             artifacts/swan-*.exe
