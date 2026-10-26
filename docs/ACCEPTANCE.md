@@ -37,8 +37,14 @@ The saved lab transport profile still points to parallel-test ports with no
 active parallel listeners; installed transport processes use their normal ports.
 The maintained transport candidate remains separate from shipping component
 pins. Current native enrollment and direct/relay sessions still require testing.
-Windows10 lab account repair is authorized but remains unexecuted and unverified;
-the affected VM is still offline.
+The single Windows10 standard lab account was subsequently reset by its
+administrator. The new credential was accepted and the recorded old value
+rejected; that saved old value had also failed before the reset. Account identity
+and standard-user status were preserved, both credential records are protected,
+and one-time guest and host inputs were removed. Permanent execution policies
+were retained. See [the bounded repair evidence](../deployment/windows/win10-lab-account-repair-evidence.json).
+This resolves the lab credential repair; it does not establish the cause of the
+earlier guest hang or complete Windows10 product acceptance.
 
 The additional dedicated lab drive removed the Windows11 storage shortage. The
 large local source, media and VM files were moved with SHA256 content verification

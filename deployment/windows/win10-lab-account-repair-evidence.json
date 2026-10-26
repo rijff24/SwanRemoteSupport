@@ -1,0 +1,24 @@
+{
+  "date": "2026-10-26",
+  "scope": "Repair of one disposable Windows10 standard-user lab credential; no application binary or company deployment changed.",
+  "administrator_reset_completed": true,
+  "new_credential_accepted": true,
+  "recorded_old_credential_rejected": true,
+  "recorded_old_credential_already_rejected_before_reset": true,
+  "account_identity_preserved": true,
+  "administrator_membership_not_added": true,
+  "host_and_guest_credential_records_updated": true,
+  "host_credential_record_protected": true,
+  "guest_credential_record_protected": true,
+  "guest_one_time_inputs_removed": true,
+  "host_one_time_inputs_removed": true,
+  "permanent_execution_policies_unchanged": true,
+  "execution_note": "Owned repair script ran with process-only execution policy; permanent policy settings retained.",
+  "credential_values_or_hashes_published": false,
+  "private_original_record_sha256": "1c8bb786f8ec11ebee681db1dda2e3100a089bf493707805610fbfd26acf9e0e",
+  "limitations": [
+    "Does not establish the cause or recovery of the earlier Windows10 guest hang.",
+    "Does not qualify standard-user installation, native sessions or automatic updates."
+  ],
+  "full_product_acceptance": false
+}
