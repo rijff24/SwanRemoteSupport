@@ -1,8 +1,29 @@
 # Configurable product acceptance report
 
-Evidence through 24 October 2026. **The product is not complete or approved for
+Evidence through 26 October 2026. **The product is not complete or approved for
 production publication.** A passing component test is not evidence of a working
 native support session or a clean-machine installation.
+
+## Lab continuation, 26 October
+
+The additional dedicated lab drive removed the Windows11 storage shortage. The
+large local source, media and VM files were moved with SHA256 content verification
+of 49,822 files (327,044,501,570 bytes), preservation of access restrictions, and
+runtime checks of the existing company services and signed paused profile 18.
+Machine paths and private migration receipts remain outside this repository.
+The frozen client distribution was not booted; its earlier unresolved integrity
+question is not closed by verification of this move.
+
+The Server2022 standard-user console was reached and the desktop test task
+launched PowerShell in console session 1. It stalled before writing the first
+driver observation or starting Windows Installer. The bounded attempt was
+terminated and disabled; its process was confirmed absent and no msiexec process
+was running. This is an inconclusive harness startup failure, not a passing MSI
+test or an established product defect. Original event and final-state records
+are retained privately. The earlier batch-context failure remains unresolved.
+
+No application binary changed for these lab operations. All current release
+gates below remain open except the shortage of lab storage.
 
 ## Current status, 24 October
 
