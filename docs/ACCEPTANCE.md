@@ -6616,3 +6616,13 @@ the inventory and denied new grants; the lab assignment was subsequently restore
 [Technician authorization evidence](../deployment/linux/technician-authorization-evidence.json)
 qualifies the management API only. Native receiver enforcement, customer consent,
 actual desktop sessions, lease expiry and in-session revocation remain open.
+
+The generated technician edition was launched through its original verified
+launcher on the owned administrator desktop. Its actual Flutter interface showed
+updated company branding and HTTPS origin, accepted username/password/TOTP,
+listed the authorized native-enrolled device and group, and displayed session
+history. An independent server audit matched this later GUI login, distinct from
+the earlier API tests. GUI sign-out cleared inventory and secret input fields.
+[Native technician interface evidence](../deployment/linux/native-technician-interface-evidence.json)
+does not qualify a remote desktop session: this was the same Windows2019 machine
+as the customer endpoint, and standard-user installation remains open.
