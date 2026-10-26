@@ -23,7 +23,7 @@ env:
   FLUTTER_ENGINE_SHA256: "ec8cabf36ee4ff24c8d98de25b00e70781eb03876265aee84d0fe554a110036e"
   VCPKG_COMMIT_ID: "120deac3062162151622ca4860575a33844ba10b"
   VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
-  VERSION: "1.5.1"
+  VERSION: "1.5.2"
 
 jobs:
   generate-bridge:
@@ -204,6 +204,13 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Managed legacy-sync regression failed.' }
           if ((Get-Content artifacts/native-managed-sync-tests.log -Raw) -notmatch 'test result: ok\. 1 passed; 0 failed;') { throw 'Expected managed legacy-sync test did not run.' }
 
+      - name: Reject upstream updater entry points in managed editions
+        shell: pwsh
+        run: |
+          cargo test --release --lib --features "flutter,swan_custom,hwcodec,vram" updater::managed_update_tests::managed_edition_rejects_every_legacy_update_entry_point -- --exact 2>&1 | Tee-Object -FilePath artifacts/native-managed-updater-tests.log
+          if ($LASTEXITCODE -ne 0) { throw 'Managed updater isolation regression failed.' }
+          if ((Get-Content artifacts/native-managed-updater-tests.log -Raw) -notmatch 'test result: ok\. 1 passed; 0 failed;') { throw 'Expected managed updater isolation test did not run.' }
+
       - name: Verify desktop launcher and plugin reproducibility metadata
         shell: pwsh
         run: |
@@ -368,6 +375,7 @@ jobs:
             artifacts/engine-selection.json
             artifacts/native-desktop-pe-metadata.json
             artifacts/native-msvc-toolchain.json
+            artifacts/native-managed-updater-tests.log
             artifacts/Install-Company.ps1
             artifacts/Install-Worker.ps1
             artifacts/Uninstall-Worker.ps1

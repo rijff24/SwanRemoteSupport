@@ -939,7 +939,7 @@ pub fn is_modifier(evt: &KeyEvent) -> bool {
 }
 
 pub fn check_software_update() {
-    if is_custom_client() {
+    if cfg!(feature = "swan_custom") || is_custom_client() {
         return;
     }
     let opt = LocalConfig::get_option(keys::OPTION_ENABLE_CHECK_UPDATE);
@@ -948,8 +948,14 @@ pub fn check_software_update() {
     }
 }
 
+#[cfg(feature = "swan_custom")]
+pub fn do_check_software_update() -> hbb_common::ResultType<()> {
+    bail!("Managed editions require company-approved releases")
+}
+
 // No need to check `danger_accept_invalid_cert` for now.
 // Because the url is always `https://api.rustdesk.com/version/latest`.
+#[cfg(not(feature = "swan_custom"))]
 #[tokio::main(flavor = "current_thread")]
 pub async fn do_check_software_update() -> hbb_common::ResultType<()> {
     let (request, url) =

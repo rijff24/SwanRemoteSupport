@@ -6658,3 +6658,13 @@ the verified encrypted archive/passphrase are stored separately outside Git.
 retains the initial internal-network HTTPS timeout and corrected loopback bridge
 check. It does not qualify native desktop transport, public ACME/Internet access,
 or full Windows company-server recovery.
+
+The unreleased 1.5.2 candidate closes legacy updater entry points for managed
+editions. Background start/stop helpers do not initialize the upstream worker;
+manual requests and direct legacy checks reject before MSI inspection or upstream
+version requests. The company agent remains responsible for approved updates.
+A native regression checks all legacy entry points and verifies that no upstream
+worker starts. The Windows build workflow must compile and run that regression
+before producing candidate artifacts. Version metadata/lockfiles agree locally;
+native compilation, real 1.5.1-to-1.5.2 rollout and recovery are still pending.
+This candidate is not a production release or an accepted automatic-update test.

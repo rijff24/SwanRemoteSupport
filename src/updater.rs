@@ -22,6 +22,9 @@ lazy_static::lazy_static! {
 
 static CONTROLLING_SESSION_COUNT: AtomicUsize = AtomicUsize::new(0);
 
+#[cfg(test)]
+static LEGACY_WORKER_STARTS: AtomicUsize = AtomicUsize::new(0);
+
 const DUR_ONE_DAY: Duration = Duration::from_secs(60 * 60 * 24);
 
 pub fn update_controlling_session_count(count: usize) {
@@ -30,11 +33,19 @@ pub fn update_controlling_session_count(count: usize) {
 
 #[allow(dead_code)]
 pub fn start_auto_update() {
+    // Managed editions use signed, company-approved releases through swan-agent.
+    // Do not initialize the upstream worker, including through its stop path.
+    if cfg!(feature = "swan_custom") {
+        return;
+    }
     let _sender = TX_MSG.lock().unwrap();
 }
 
 #[allow(dead_code)]
 pub fn manually_check_update() -> ResultType<()> {
+    if cfg!(feature = "swan_custom") {
+        bail!("Managed editions require company-approved releases");
+    }
     let sender = TX_MSG.lock().unwrap();
     sender.send(UpdateMsg::CheckUpdate)?;
     Ok(())
@@ -42,6 +53,9 @@ pub fn manually_check_update() -> ResultType<()> {
 
 #[allow(dead_code)]
 pub fn stop_auto_update() {
+    if cfg!(feature = "swan_custom") {
+        return;
+    }
     let sender = TX_MSG.lock().unwrap();
     sender.send(UpdateMsg::Exit).unwrap_or_default();
 }
@@ -76,6 +90,8 @@ fn has_no_controlling_conns() -> bool {
 }
 
 fn start_auto_update_check() -> Sender<UpdateMsg> {
+    #[cfg(test)]
+    LEGACY_WORKER_STARTS.fetch_add(1, Ordering::SeqCst);
     let (tx, rx) = channel();
     std::thread::spawn(move || start_auto_update_check_(rx));
     return tx;
@@ -118,6 +134,10 @@ fn start_auto_update_check_(rx_msg: Receiver<UpdateMsg>) {
 }
 
 fn check_update(manually: bool) -> ResultType<()> {
+    // Keep the trust boundary even if another caller bypasses the public helpers.
+    if cfg!(feature = "swan_custom") {
+        bail!("Managed editions require company-approved releases");
+    }
     #[cfg(target_os = "windows")]
     let update_msi = crate::platform::is_msi_installed()? && !crate::is_custom_client();
     if !(manually || config::Config::get_bool_option(config::keys::OPTION_ALLOW_AUTO_UPDATE)) {
@@ -294,4 +314,29 @@ fn update_new_version(update_msi: bool, version: &str, file_path: &PathBuf) {
 pub fn get_download_file_from_url(url: &str) -> Option<PathBuf> {
     let filename = url.split('/').last()?;
     Some(std::env::temp_dir().join(filename))
+}
+
+#[cfg(all(test, feature = "swan_custom"))]
+mod managed_update_tests {
+    use super::*;
+
+    #[test]
+    fn managed_edition_rejects_every_legacy_update_entry_point() {
+        let starts = LEGACY_WORKER_STARTS.load(Ordering::SeqCst);
+        start_auto_update();
+        stop_auto_update();
+        crate::common::check_software_update();
+        for result in [
+            manually_check_update(),
+            check_update(false),
+            check_update(true),
+            crate::common::do_check_software_update(),
+        ] {
+            assert!(result
+                .unwrap_err()
+                .to_string()
+                .contains("company-approved releases"));
+        }
+        assert_eq!(LEGACY_WORKER_STARTS.load(Ordering::SeqCst), starts);
+    }
 }
