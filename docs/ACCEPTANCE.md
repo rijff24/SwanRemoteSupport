@@ -6604,3 +6604,15 @@ remained running. [Automatic branding synchronization evidence](../deployment/li
 qualifies the installed configuration path only. Native visible branding,
 offline display, restart/upgrade persistence and trusted key rotation still need
 their separate acceptance evidence.
+
+Management authorization was then checked against that genuinely enrolled device
+after explicit lab approval. Two technician accounts authenticated using TOTP.
+The assigned technician could list the device and receive an independently
+verified signed attended grant bound to company, device, technician, proof key
+and short expiry. The unassigned technician saw no devices and grant requests
+returned 403. Technician attempts to create an administrator-only worker returned
+401. Unattended grants without consent returned 403. Removing group access hid
+the inventory and denied new grants; the lab assignment was subsequently restored.
+[Technician authorization evidence](../deployment/linux/technician-authorization-evidence.json)
+qualifies the management API only. Native receiver enforcement, customer consent,
+actual desktop sessions, lease expiry and in-session revocation remain open.

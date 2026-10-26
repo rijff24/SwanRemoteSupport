@@ -1,0 +1,18 @@
+{
+  "actual_native_enrolled_device_approved": true,
+  "technician_totp_logins": 2,
+  "assigned_technician_inventory_contains_device": true,
+  "unassigned_technician_inventory_empty": true,
+  "unassigned_grant_status": 403,
+  "technician_admin_worker_creation_status": 401,
+  "unattended_without_consent_status": 403,
+  "authorized_attended_grant_signature_verified": true,
+  "grant_company_device_technician_proof_and_expiry_verified": true,
+  "group_revocation_denies_inventory_and_new_grants": true,
+  "authorized_group_access_restored": true,
+  "resumed_test_sessions_logged_out": true,
+  "first_attempt_unused_tokens_expire_normally": true,
+  "native_protocol_session_or_lease_qualified": false,
+  "date": "2026-10-26",
+  "scope": "Management API authorization against the device enrolled by the generated native customer installer. No receiving native session or lease was exercised."
+}
