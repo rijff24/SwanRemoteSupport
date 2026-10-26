@@ -6559,3 +6559,16 @@ interactive technician test task reached its ten-minute limit before the
 first driver observation or MSI execution. The task is disabled and its
 [failed bounded attempt](../deployment/windows/win10-standard-desktop-bounded-failure.json)
 is retained. No standard-user installer pass or root cause is claimed.
+
+The independent Linux company subsequently registered its own Windows2019
+installer worker, imported and approved new test-only release metadata, and
+completed one customer and one technician bundle. Both downloaded over validated
+HTTPS with matching server artifact hashes. Anonymous customer download returned
+200; anonymous technician download returned 401 and authenticated download 200.
+Independent ZIP checks verified the public-only bootstrap schema, company and
+release signatures against their existing pins, tamper rejection, all seven
+bundled source texts, and signed MSI/agent hashes.
+[Worker and bundle evidence](../deployment/linux/company-worker-bundle-evidence.json)
+remains limited to test signing and Server2019 release metadata. Rollout remains
+paused. Generated customer installation/enrollment and native sessions require
+separate evidence and are not implied by bundle generation.

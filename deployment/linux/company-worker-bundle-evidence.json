@@ -1,0 +1,43 @@
+{
+  "worker_signed_sha256": "9a3b67ee8a90944c7443d3cfa00a4ac921ddbb44ab98f0f9670ed23aa7cba84a",
+  "full_product_acceptance": false,
+  "worker_unsigned_current_source_byte_identity_verified": true,
+  "independent_linux_company": true,
+  "production_signing": false,
+  "test_channel_only": true,
+  "management_source": "761b5c56cca8cd7eecb65d3438de0d6f0075bd4e",
+  "editions": [
+    {
+      "signed_payload_hashes_verified": true,
+      "seven_source_texts_exact": true,
+      "download_status": 200,
+      "anonymous_status": 200,
+      "edition": "customer",
+      "bundle_sha256": "f276b6e74adf33ce990684cfb505803211fcc9dc67185d2f28160bcdb0a6f84c",
+      "bytes": 32508760,
+      "profile_and_release_signatures_verified": true,
+      "public_bootstrap_only": true,
+      "tamper_rejection_verified": true
+    },
+    {
+      "signed_payload_hashes_verified": true,
+      "seven_source_texts_exact": true,
+      "download_status": 200,
+      "anonymous_status": 401,
+      "edition": "technician",
+      "bundle_sha256": "21ae1dcf0239debfd096cfed652e09be50196f7c25d3ecd90755b992d5f9a4ec",
+      "bytes": 30301818,
+      "profile_and_release_signatures_verified": true,
+      "public_bootstrap_only": true,
+      "tamper_rejection_verified": true
+    }
+  ],
+  "application_source": "da0c621845057bed321a98a1886ef15891e431a9",
+  "limitations": [
+    "Lab-signed Server2019-only test releases; no production signing or public Internet reachability claimed.",
+    "Completed bundle generation and download checks do not establish customer installation, enrollment, native sessions, automatic rollout or the remaining OS matrix."
+  ],
+  "worker_os": "Windows Server 2019 x64 build 17763.3650",
+  "updates_paused": true,
+  "date": "2026-10-26"
+}
