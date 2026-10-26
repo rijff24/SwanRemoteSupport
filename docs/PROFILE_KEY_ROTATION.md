@@ -52,10 +52,17 @@ pre-upgrade backup in an empty directory, with public endpoints unavailable.
 Reconcile all changes made since that backup before exposing a restored server.
 
 Component tests cover process exclusion, authorized transition checks, restart,
-new-key signatures, encrypted restore and pre-upgrade backup recovery. Real
-HTTPS rotation across installed apps, offline machines, interrupted activation,
-live session termination and complete server migration rollback remain release
-acceptance requirements.
+new-key signatures, encrypted restore and pre-upgrade backup recovery. The
+[independent Linux company rehearsal](../deployment/linux/installed-profile-key-rotation-evidence.json)
+also verified real HTTPS rotation through the normal background refresh of both
+installed 1.5.1 editions on Server 2019, rejection by a shipping agent that missed
+the transition, withdrawal of old downloads and verified replacement bundles.
+An encrypted post-rotation backup restored the active database key, original
+HTTPS identity, administrator MFA, approved device with revoked unattended
+consent and replacement downloads. The existing device credential authenticated
+to the recovered API without reconfiguration. These bounded checks do not
+qualify interrupted activation, active native-session termination, all Windows
+versions, public HTTPS deployment or complete server migration rollback.
 
 ## Local HTTPS rehearsal
 
