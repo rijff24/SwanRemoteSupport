@@ -6710,3 +6710,14 @@ byte-identical after validation, and no installed state or system clock changed.
 [Shipping-agent cached-policy evidence](../deployment/linux/shipping-agent-cached-policy-negative-evidence.json)
 is local validation evidence; incoming hostile HTTPS profiles, active native
 sessions and other Windows/account contexts remain separately unqualified.
+
+A separate encrypted backup taken after rotation was restored into fresh storage.
+The recovered management service used the rotated database key while its legacy
+seed remained unchanged, and the recovered HTTPS proxy validated with the
+original lab CA and hostname. Revision 5, administrator MFA, approved device
+identity, revoked unattended consent, both replacement bundle hashes and the
+withdrawn old links survived. The existing Windows customer credential also
+authenticated to this recovery endpoint without changing its bootstrap or token;
+its credential stayed on the guest. Recovery services were stopped afterward.
+This extends the installed-key rotation evidence above; no recovered transport
+or native session was started, and interrupted activation remains unqualified.

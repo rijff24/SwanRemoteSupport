@@ -31,9 +31,9 @@
   "production_signing": false,
   "limitations": [
     "No active desktop session during rotation; native session termination unqualified",
-    "No interrupted activation recovery or rotated full-server restore in this check",
     "Only owned Server 2019 endpoint; broader Windows matrix remains open",
-    "Loopback lab HTTPS does not qualify public Internet deployment"
+    "Loopback lab HTTPS does not qualify public Internet deployment",
+    "No interrupted activation recovery; restored native transport/session behavior remains unqualified"
   ],
   "replacement_bundle_verification": [
     {
@@ -60,5 +60,44 @@
       "anonymous_status": 401,
       "download_status": 200
     }
-  ]
+  ],
+  "post_rotation_encrypted_backup": {
+    "utc": "2026-10-26T21:29:37.159260+00:00",
+    "bytes": 125642740,
+    "sha256": "934ed759b19a6fe364c51fe8eaf33f86dda9620122aa26cf918f7828dd95aa0d",
+    "separate_passphrase": true
+  },
+  "rotated_company_restore": {
+    "utc": "2026-10-26T21:30:48.244867+00:00",
+    "restored_https_original_ca_and_hostname": true,
+    "restored_active_signing_key_from_database": true,
+    "legacy_seed_unchanged": true,
+    "profile_revision": 5,
+    "administrator_mfa": true,
+    "device_approval_identity_and_revoked_consent_preserved": true,
+    "replacement_downloads": [
+      {
+        "edition": "customer",
+        "bundle_sha256": "89e7d0989d00a97bad4ae4560ca7a24c70e9ce3ebba30ca6f918dcdfa0461dd7"
+      },
+      {
+        "edition": "technician",
+        "bundle_sha256": "2cda243b34fb5647eba32851784df6ca90f18cef5963f128fa4cdf533703f4f1"
+      }
+    ],
+    "old_downloads_still_withdrawn": true,
+    "no_native_transport_started": true,
+    "native_session_qualified": false
+  },
+  "restored_existing_device_credential": {
+    "company_and_device_identity_match": true,
+    "approval_state": "approved",
+    "existing_customer_credential_authenticated_to_restored_server": true,
+    "utc": "2026-10-26T21:31:15.5723682Z",
+    "original_https_trust_used": true,
+    "credential_value_disclosed": false,
+    "native_session_tested": false,
+    "customer_bootstrap_and_credential_unchanged": true
+  },
+  "recovery_services_stopped": true
 }
