@@ -6,6 +6,23 @@ native support session or a clean-machine installation.
 
 ## Lab continuation, 26 October
 
+The current da0c621 customer and technician lab-signed MSIs passed bounded
+administrative lifecycle checks on a newly created Server2019 Standard Evaluation
+Desktop Experience VM, build 17763.3650 x64. Customer install, repair and uninstall
+returned 0; a real reboot preserved all 96 packaged files and valid publishers,
+and the LocalSystem customer service started automatically. Technician install,
+missing-executable repair and uninstall also returned 0 in its first application
+context after the customer test. Thirty-one original records were collected and
+hash-verified. See [the bounded evidence](../deployment/windows/da0c621-server19-fresh-msi-evidence.json).
+
+The OS setup's lab bootstrap command had returned 1 and left the test tools
+absent. Its original cause is unproven. The pinned bootstrap was run manually
+after reaching the administrative console, lab access was verified, automatic
+login disabled, and setup media detached before Swan testing. This is not proof
+of unattended OS provisioning. These MSI checks do not establish enrollment,
+sessions, standard-user installation, software-version upgrades or automatic
+updates on Server2019; company-approved test metadata still targets Server2016.
+
 The additional dedicated lab drive removed the Windows11 storage shortage. The
 large local source, media and VM files were moved with SHA256 content verification
 of 49,822 files (327,044,501,570 bytes), preservation of access restrictions, and

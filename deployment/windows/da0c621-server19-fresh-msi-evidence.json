@@ -1,0 +1,264 @@
+{
+  "source": "da0c621845057bed321a98a1886ef15891e431a9",
+  "customer": {
+    "source": "da0c621845057bed321a98a1886ef15891e431a9",
+    "package_sha256": "c53626be8ed32f4678d1c7cc1a4b88ca53a07a86f94d36e94b61e68d5f9f06a2",
+    "passed": true,
+    "phases": [
+      {
+        "phase": "install",
+        "exit_code": 0
+      },
+      {
+        "phase": "repair",
+        "exit_code": 0
+      },
+      {
+        "phase": "uninstall",
+        "exit_code": 0
+      }
+    ],
+    "actual_reboot_verified": true,
+    "service_automatically_restarted": true,
+    "installed_manifest_files": 96,
+    "os": {
+      "Caption": "Microsoft Windows Server 2019 Standard Evaluation",
+      "Version": "10.0.17763",
+      "BuildNumber": "17763",
+      "OSArchitecture": "64-bit",
+      "revision": 3650
+    },
+    "original_evidence_records": [
+      {
+        "sha256": "20eb044ba33bd8e302aac436adc2bfa4791434abc68a97de69c50a9468c382cf",
+        "name": "fresh-before-install.json",
+        "bytes": 346
+      },
+      {
+        "sha256": "a966ee27d175123f3ff78e7217df919806de649e7cde90a9b9c4688cdd913e9c",
+        "name": "transfer-manifest.json",
+        "bytes": 779
+      },
+      {
+        "sha256": "61ba432a068e1fb31ee1090f59e4256925f9a31735a387751a0b0955a27b8e04",
+        "name": "Run-InstallRepair.ps1",
+        "bytes": 4756
+      },
+      {
+        "sha256": "4429ee9fa887b00d0f5d370ba83a56ddd1ffac516fb1d5532bbef992e08c2864",
+        "name": "Verify-RebootUninstall-Utc.ps1",
+        "bytes": 3991
+      },
+      {
+        "sha256": "10cacf2be9e211dad0f9166114f159e1fb6b4d6f21144c420e676dae515c61b1",
+        "name": "installed-files.json",
+        "bytes": 14349
+      },
+      {
+        "sha256": "fdcc0e863bccc4bd5cba533a2a98d7091fd52e08e1e3135d1061b5cb07003dc4",
+        "name": "lifecycle-started.json",
+        "bytes": 736
+      },
+      {
+        "sha256": "cfe16fbf63f914cb12b46a02730fd53813de3b9d0cd2f7433e79fe5dc81b3412",
+        "name": "pre-reboot-boot.json",
+        "bytes": 55
+      },
+      {
+        "sha256": "ad1a04e61b1fe5afbef06db8764ae07c14f6fc3568f5387962a97d14a571ae4c",
+        "name": "pre-reboot-lifecycle.json",
+        "bytes": 1548
+      },
+      {
+        "sha256": "1ebb02545504b2f4649695552aaf87773d2ea9ae8d8a202281c8ff5b7844a2bd",
+        "name": "reboot-request.json",
+        "bytes": 304
+      },
+      {
+        "sha256": "a89210877ade5e740f6c173b60a6c4e792051f0ea2518eef88ed0682ff354761",
+        "name": "reboot-verification.json",
+        "bytes": 278
+      },
+      {
+        "sha256": "d2e5323a5a0e2e1f77bdfb84f6c2cb6d179f5194426ce1aaa81eb698ca6a4841",
+        "name": "post-reboot-service-original.json",
+        "bytes": 253
+      },
+      {
+        "sha256": "293a235f78429b83e958b2d1076fc78af287ff1efbb3883bc94c81af50171403",
+        "name": "post-reboot-lifecycle.json",
+        "bytes": 507
+      },
+      {
+        "sha256": "1fd5f97cc8a6a2170529227fcb24f64a23e09779b22bba6cdb17969fd8bc7ea2",
+        "name": "results/install/result.json",
+        "bytes": 1265
+      },
+      {
+        "sha256": "0480dec30cfd59ce9389c2e695efb9f7eebdc11059c5db527a48a8eb312468ed",
+        "name": "results/install/msi.log",
+        "bytes": 356012
+      },
+      {
+        "sha256": "b4b4decaad9c4142b250458168ab2fd66ff2baced0207b70b9687c51122aae5e",
+        "name": "results/repair/result.json",
+        "bytes": 1264
+      },
+      {
+        "sha256": "3d218038ade04eb09773781e4aadf6cffbb8780c7cd2a67cb8b74377cdef2c5c",
+        "name": "results/repair/msi.log",
+        "bytes": 403498
+      },
+      {
+        "sha256": "d4b4c1ccabb72a98184d6943eab82354540cde1e9cbb739d9fa6f13636d28eaa",
+        "name": "results/uninstall/result.json",
+        "bytes": 1267
+      },
+      {
+        "sha256": "354009478592e75a09b21de32beb560d3cf1cad35ddf96941d010096b0ebb346",
+        "name": "results/uninstall/msi.log",
+        "bytes": 272284
+      }
+    ],
+    "fresh_before_install": {
+      "build": "17763",
+      "technician_product_state": -1,
+      "installation_type": "Server",
+      "customer_product_state": -1,
+      "utc": "2026-10-26T16:28:31.3212963Z",
+      "company_management_started": false,
+      "revision": 3650,
+      "caption": "Microsoft Windows Server 2019 Standard Evaluation",
+      "fresh_vm": true
+    },
+    "scope": "Administrative lab-signed raw customer MSI on a newly created WindowsServer2019 Desktop Experience disk with absent customer and technician registrations before installation; real reboot and service verification. Not enrollment, sessions or automatic updates",
+    "full_product_acceptance": false
+  },
+  "technician": {
+    "source": "da0c621845057bed321a98a1886ef15891e431a9",
+    "passed": true,
+    "edition": "technician",
+    "package_sha256": "9e339a4140c204846c7b51c33068da9502593fcdd79e6351691426d7fe1319e3",
+    "administrative": true,
+    "phases": [
+      {
+        "passed": true,
+        "exit_code": 0,
+        "missing_file_repair": false,
+        "log_sha256": "66f7c9bff7b978860545a5983b9ab5f4c1e1da4ad9e85d5d2c833eda8b2bc8c4",
+        "phase": "install",
+        "result_sha256": "e0a2e4fd66e1e7cd9fa099accb0eb2a5098fa6e7622c2c79370883ee1c5ee245"
+      },
+      {
+        "passed": true,
+        "exit_code": 0,
+        "missing_file_repair": true,
+        "log_sha256": "ac63d397e3de860eb3ae8c996935d2ed78921ab1494e1fe7ba7d7ce1a4a15a0c",
+        "phase": "repair",
+        "result_sha256": "3d177540e692ec11cc408201de337bcaf64975f7b65ccb5a3c8e9268b684d689"
+      },
+      {
+        "passed": true,
+        "exit_code": 0,
+        "missing_file_repair": false,
+        "log_sha256": "a60c50b83b78b653a7bd5fe0e81742269c141ab4984f5e863aca60f4e8812eca",
+        "phase": "uninstall",
+        "result_sha256": "832842f46f9ce743261d96e8254676ab293a7001315792cec4a85628972cfb27"
+      }
+    ],
+    "os": {
+      "Caption": "Microsoft Windows Server 2019 Standard Evaluation",
+      "Version": "10.0.17763",
+      "BuildNumber": "17763",
+      "OSArchitecture": "64-bit",
+      "revision": 3650
+    },
+    "original_evidence_records": [
+      {
+        "sha256": "316bb962459e8cae87b884bb64ef2f1c6a14343ea38849e75e2362dbefda04b7",
+        "name": "transfer-manifest.json",
+        "bytes": 577
+      },
+      {
+        "sha256": "1eb6c2f66ba4ceb58a52026fc797bb9e35010b9b821c34ae77511d39ee855d28",
+        "name": "Run-Lifecycle.ps1",
+        "bytes": 4342
+      },
+      {
+        "sha256": "4a3e98464044e3511a38c6f917f01f63ff43c2b41253d52e0819bde22c313384",
+        "name": "Test-DisposableMsi.ps1",
+        "bytes": 11239
+      },
+      {
+        "sha256": "64b7144b38c8b963b98cbb96f9964395c9413ce1a1b614d10fd0d57484f7619e",
+        "name": "Get-MsiIdentity.ps1",
+        "bytes": 1035
+      },
+      {
+        "sha256": "845e8355e969b95b38b6ea83f4b89103fdc541aa088d95e2602f0d23005aa8ea",
+        "name": "Get-WindowsCompatibility.ps1",
+        "bytes": 1202
+      },
+      {
+        "sha256": "fb92a86dc385eae59c46a8abcb84ae7acf0ef32c5a87fb5178c0d45e0c6a59ee",
+        "name": "lifecycle-started.json",
+        "bytes": 736
+      },
+      {
+        "sha256": "b8e852b5573170fab53127a3fbdf16a2a0c93fb2de3a2dfc3c572a8ecf13db99",
+        "name": "lifecycle-result.json",
+        "bytes": 1941
+      },
+      {
+        "sha256": "e0a2e4fd66e1e7cd9fa099accb0eb2a5098fa6e7622c2c79370883ee1c5ee245",
+        "name": "results/install/result.json",
+        "bytes": 1267
+      },
+      {
+        "sha256": "66f7c9bff7b978860545a5983b9ab5f4c1e1da4ad9e85d5d2c833eda8b2bc8c4",
+        "name": "results/install/msi.log",
+        "bytes": 130814
+      },
+      {
+        "sha256": "3d177540e692ec11cc408201de337bcaf64975f7b65ccb5a3c8e9268b684d689",
+        "name": "results/repair/result.json",
+        "bytes": 1265
+      },
+      {
+        "sha256": "ac63d397e3de860eb3ae8c996935d2ed78921ab1494e1fe7ba7d7ce1a4a15a0c",
+        "name": "results/repair/msi.log",
+        "bytes": 102614
+      },
+      {
+        "sha256": "832842f46f9ce743261d96e8254676ab293a7001315792cec4a85628972cfb27",
+        "name": "results/uninstall/result.json",
+        "bytes": 1269
+      },
+      {
+        "sha256": "a60c50b83b78b653a7bd5fe0e81742269c141ab4984f5e863aca60f4e8812eca",
+        "name": "results/uninstall/msi.log",
+        "bytes": 94686
+      }
+    ],
+    "scope": "Raw lab-signed technician MSI first application context on newly created Server2019 VM after customer lifecycle testing; administrative install, missing-executable repair and uninstall. Not standard-user, login, sessions, software-version upgrade or approved automatic updates.",
+    "full_product_acceptance": false
+  },
+  "lab_bootstrap": {
+    "original_specialize_command_exit": 1,
+    "initial_lab_tools_absent": true,
+    "original_failure_cause_established": false,
+    "repair": "Manually ran the pinned seed bootstrap after reaching the administrative console; pinned SSH identity verified, automatic login disabled, and original setup diagnostics retained. This is a test-infrastructure repair, not a Swan installer workaround.",
+    "temporary_management_forward_removed": true,
+    "setup_media_detached_before_installers": true,
+    "no_swan_products_present_before_first_customer_install": true
+  },
+  "limitations": [
+    "Lab signing only; production signing not approved.",
+    "Raw MSI lifecycle, not generated company enrollment on this OS.",
+    "Technician uses administrative per-user context after customer lifecycle; not standard-user qualification.",
+    "No GUI login, remote sessions, public NAT traversal, grant enforcement, software-version upgrade or automatic update acceptance is established.",
+    "Company-approved test release metadata still targets Server2016 only.",
+    "Operating-system lab bootstrap required manual repair; this does not prove unattended OS provisioning."
+  ],
+  "full_product_acceptance": false
+}
