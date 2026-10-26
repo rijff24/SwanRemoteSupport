@@ -6740,3 +6740,15 @@ change the exported environment. Successful fresh CI installation of this fix,
 new independent native builds, and runtime upgrades remain separate gates.
 [First 1.5.2 artifact evidence](../deployment/windows/d74a631-native-build-evidence.json)
 is not a production release or a completed automatic-update qualification.
+
+On the newly installed Server 2025 Standard Evaluation Desktop Experience VM,
+build 26100.32230 x64, the da0c621 lab-signed technician MSI passed administrative
+installation, missing-executable repair and uninstall, each returning 0. This was
+the first Swan application installation context on that VM, before customer
+edition testing. A one-time administrator S4U task ran the pinned test scripts;
+no account password was supplied to task registration. All 13 original source,
+result and MSI-log records were collected and hash-verified.
+[Server 2025 technician MSI evidence](../deployment/windows/da0c621-server25-technician-msi-evidence.json)
+does not qualify standard-user execution, technician login, native sessions,
+software-version upgrades or automatic updates. Customer reboot verification
+and the wider release matrix remain separate.
