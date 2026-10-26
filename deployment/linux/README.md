@@ -42,6 +42,10 @@ and restore; backing up only the management volume is insufficient.
 
 ## Build and deployment checks
 
+The management image builds with two Cargo jobs by default to limit simultaneous
+compiler memory use. Larger build hosts can override `CARGO_BUILD_JOBS` as a
+Docker build argument. This setting applies only to the builder stage.
+
 The root and management Dockerfile both carry matching deny-by-default context
 rules, including explicit child exclusions for older Docker engines. They admit
 the named Cargo manifests, source, embedded scripts and branding assets while
