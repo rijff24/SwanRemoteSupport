@@ -6594,3 +6594,13 @@ Its state held no customer device token and no pending installation marker.
 [Technician company-setup evidence](../deployment/linux/generated-technician-setup-evidence.json)
 is explicitly administrative: standard-user installation, technician MFA login,
 permissions and native sessions remain separate requirements.
+
+The installed customer's configuration watcher subsequently fetched the signed
+branding revision 2 automatically, without an explicit sync command, installer
+rebuild or reinstall. Its cached envelope independently verified against the
+original company signing pin. Device/company identity, unattended consent and
+software release sequence were preserved; the customer service and watcher
+remained running. [Automatic branding synchronization evidence](../deployment/linux/automatic-branding-sync-evidence.json)
+qualifies the installed configuration path only. Native visible branding,
+offline display, restart/upgrade persistence and trusted key rotation still need
+their separate acceptance evidence.
