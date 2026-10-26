@@ -6626,3 +6626,17 @@ the earlier API tests. GUI sign-out cleared inventory and secret input fields.
 [Native technician interface evidence](../deployment/linux/native-technician-interface-evidence.json)
 does not qualify a remote desktop session: this was the same Windows2019 machine
 as the customer endpoint, and standard-user installation remains open.
+
+During a guarded five-minute outage of only the isolated management container,
+the native customer UI opened from its installed shortcut and displayed cached
+updated branding. Its window initially became unresponsive and later recovered
+while management was still offline. Customer Stop support eventually changed to
+Resume support; an independent query confirmed the customer service was absent
+and the installer worker remained running. Resume support restored the customer
+service without changing enrollment, consent, software sequence, signed executable
+or branding revision. The management restart safeguard restored healthy HTTPS
+and the original company identity/revision.
+[Offline customer/control evidence](../deployment/linux/customer-offline-controls-evidence.json)
+records significant delays. Their cause and acceptable responsiveness remain
+unresolved. No active remote session was present, so immediate disconnection,
+standard-user control and offline authorization denial are not qualified.
