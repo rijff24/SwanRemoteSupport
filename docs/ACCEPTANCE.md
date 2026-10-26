@@ -6666,7 +6666,10 @@ version requests. The company agent remains responsible for approved updates.
 A native regression checks all legacy entry points and verifies that no upstream
 worker starts. The Windows build workflow must compile and run that regression
 before producing candidate artifacts. Version metadata/lockfiles agree locally;
-native compilation, real 1.5.1-to-1.5.2 rollout and recovery are still pending.
+the first native Windows workflow (40398269765) has now compiled and passed
+its regression and packaging steps. Artifact integrity/source verification, an
+independent rebuild (40410425646), and real 1.5.1-to-1.5.2 rollout/recovery remain
+pending.
 This candidate is not a production release or an accepted automatic-update test.
 
 Signed company policy revision 3 enabled unattended support as a company option,
