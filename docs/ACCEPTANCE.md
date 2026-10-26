@@ -6585,3 +6585,12 @@ approval, and rejected an administrator's pre-approval session grant with 403.
 [Generated customer enrollment evidence](../deployment/linux/generated-customer-enrollment-evidence.json)
 does not establish a native authorized session, UAC, Internet transport,
 automatic updates or the full Windows matrix.
+
+The generated technician bundle also completed per-user company setup in the
+owned Server2019 administrator profile. It pinned the independent company's
+identity, verified the installed publisher, recorded technician release sequence
+2, and fetched signed branding revision 2 published after the bundle was built.
+Its state held no customer device token and no pending installation marker.
+[Technician company-setup evidence](../deployment/linux/generated-technician-setup-evidence.json)
+is explicitly administrative: standard-user installation, technician MFA login,
+permissions and native sessions remain separate requirements.
