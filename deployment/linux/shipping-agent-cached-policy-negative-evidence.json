@@ -1,0 +1,72 @@
+{
+  "schema": 1,
+  "application_source": "da0c621845057bed321a98a1886ef15891e431a9",
+  "shipping_agent_sha256": "c7bfac26344a8f46aa2238b631e3be25785eaaeb5fd721cbf844c438be4d6206",
+  "environment": "Owned Server 2019 Desktop lab endpoint",
+  "command": "verify-bootstrap with process-local SWAN_STATE_DIR and isolated public-only state copies",
+  "network_used": false,
+  "existing_installed_state_modified": false,
+  "cached_validation": {
+    "utc": "2026-10-26T21:26:20.2022527Z",
+    "shipping_agent_sha256": "c7bfac26344a8f46aa2238b631e3be25785eaaeb5fd721cbf844c438be4d6206",
+    "cases": [
+      {
+        "accepted": true,
+        "case": "valid-control",
+        "error": "",
+        "state_unchanged": true,
+        "exit_code": 0
+      },
+      {
+        "accepted": false,
+        "case": "tampered-payload",
+        "error": "Error: Invalid signature\n\nCaused by:\n    0: signature error: Verification equation was not satisfied\n    1: Verification equation was not satisfied",
+        "state_unchanged": true,
+        "exit_code": 1
+      },
+      {
+        "accepted": false,
+        "case": "wrong-company",
+        "error": "Error: Wrong company or schema",
+        "state_unchanged": true,
+        "exit_code": 1
+      },
+      {
+        "accepted": false,
+        "case": "older-revision",
+        "error": "Error: Replayed profile",
+        "state_unchanged": true,
+        "exit_code": 1
+      }
+    ],
+    "network_not_used": true
+  },
+  "expiration_validation": {
+    "installed_company_state_unchanged": true,
+    "utc": "2026-10-26T21:27:29.1362011Z",
+    "cases": [
+      {
+        "accepted": true,
+        "case": "signed-valid-control",
+        "error": "",
+        "state_unchanged": true,
+        "exit_code": 0
+      },
+      {
+        "accepted": false,
+        "case": "signed-expired",
+        "error": "Error: Expired or future profile",
+        "state_unchanged": true,
+        "exit_code": 1
+      }
+    ],
+    "fresh_disposable_fixture_issuer_only": true,
+    "network_not_used": true
+  },
+  "expiration_issuer": "Fresh disposable test key; private key never persisted or transferred; valid and expired controls signed by the same fixture issuer",
+  "limitations": [
+    "Does not prove incoming hostile HTTPS profile rejection",
+    "Does not prove session receiver authorization or live session termination",
+    "Does not qualify non-administrator execution or other Windows versions"
+  ]
+}

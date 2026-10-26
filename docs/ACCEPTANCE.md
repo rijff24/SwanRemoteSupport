@@ -6699,3 +6699,14 @@ customer downloads remained public and technician downloads required authenticat
 [Installed profile-key rotation evidence](../deployment/linux/installed-profile-key-rotation-evidence.json)
 does not qualify active native-session termination, interrupted activation,
 rotated server restore, the wider Windows matrix or public connectivity.
+
+The installed-release configuration agent was also executed against isolated,
+credential-free cached-state copies on Server 2019. Its verify-bootstrap command
+accepted the unchanged valid control, rejected a modified signed payload,
+rejected a wrong company, and rejected a revision below the stored minimum.
+Using a fresh disposable fixture issuer, it accepted a correctly signed fresh
+control and rejected a correctly signed expired policy. Every fixture remained
+byte-identical after validation, and no installed state or system clock changed.
+[Shipping-agent cached-policy evidence](../deployment/linux/shipping-agent-cached-policy-negative-evidence.json)
+is local validation evidence; incoming hostile HTTPS profiles, active native
+sessions and other Windows/account contexts remain separately unqualified.
