@@ -6682,3 +6682,18 @@ closed and its lease cleared, but it had expired before the final inspection.
 [Native unattended consent evidence](../deployment/linux/native-unattended-consent-evidence.json)
 does not qualify an active native session, unexpired-lease termination,
 standard-user consent, reboot/logon-screen access or public connectivity.
+
+The independent Linux company completed a profile-signing key rotation against
+both installed 1.5.1 editions on the Server 2019 lab endpoint. A fresh encrypted
+full deployment backup preceded preparation. Both apps cached old-key-signed
+transition revision 4 before activation, then adopted revision 5 and its new pin
+through their normal background refresh without manual agent sync or reinstall.
+Customer unattended consent remained revoked at consent revision 2; software
+release sequences stayed unchanged. A separate shipping-agent fixture that
+missed the transition rejected the replacement signature and retained its exact
+cached state. Old customer and technician download links returned 404. The worker
+pin was explicitly updated from the accepted transition, and replacement test
+bundles were queued; their completion remains separate.
+[Installed profile-key rotation evidence](../deployment/linux/installed-profile-key-rotation-evidence.json)
+does not qualify active native-session termination, interrupted activation,
+rotated server restore, the wider Windows matrix or public connectivity.

@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "observed_utc": "2026-10-26T21:23:15.229005+00:00",
+  "environment": "Independent Linux company, loopback HTTPS with owned Server 2019 Desktop endpoint",
+  "management_source": "761b5c56cca8cd7eecb65d3438de0d6f0075bd4e",
+  "installed_application_source": "da0c621845057bed321a98a1886ef15891e431a9",
+  "before_profile_revision": 3,
+  "prepared_profile_revision": 4,
+  "activated_profile_revision": 5,
+  "both_editions_cached_old_key_signed_transition_before_activation": true,
+  "both_installed_editions_automatically_adopted_new_key": true,
+  "manual_agent_sync_used_for_installed_editions": false,
+  "customer_unattended_consent_remained_revoked": true,
+  "customer_consent_revision": 2,
+  "software_release_sequences_preserved": {
+    "customer": 1,
+    "technician": 2
+  },
+  "missed_transition_shipping_agent_rejected_new_signature": true,
+  "missed_transition_cached_state_byte_identical": true,
+  "negative_harness_note": "PowerShell stopped on expected native signature error; a separate read-only inspection verified unchanged cached state without rerunning sync.",
+  "pre_rotation_encrypted_backup": {
+    "utc": "2026-10-26T21:16:35.635462+00:00",
+    "bytes": 62837995,
+    "sha256": "5c8830582da1f56e6c58c0f02a5a556146b3aadb678d082f89e988bd874ed11d",
+    "separate_passphrase": true
+  },
+  "worker_pin_updated_by_operator_from_trusted_transition": true,
+  "old_both_bundle_links_returned_404": true,
+  "replacement_test_bundles": "queued; completion and artifact verification remain separate",
+  "production_signing": false,
+  "limitations": [
+    "No active desktop session during rotation; native session termination unqualified",
+    "No interrupted activation recovery or rotated full-server restore in this check",
+    "Only owned Server 2019 endpoint; broader Windows matrix remains open",
+    "Loopback lab HTTPS does not qualify public Internet deployment"
+  ]
+}
