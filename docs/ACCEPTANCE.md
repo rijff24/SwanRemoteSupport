@@ -23,6 +23,23 @@ of unattended OS provisioning. These MSI checks do not establish enrollment,
 sessions, standard-user installation, software-version upgrades or automatic
 updates on Server2019; company-approved test metadata still targets Server2016.
 
+The company VM's private lab HTTPS binding was subsequently enabled with its
+rollback backup retained. Company HTTPS recovered and device identity and
+consent were preserved. From the separate Server2019 VM, normal HTTPS validation
+accepted the explicitly trusted public lab CA, the public profile returned 200,
+its signature verified against the original configuration pin, and anonymous
+device inventory returned 401. Profile 18 remains paused. See
+[the bounded peer connectivity evidence](../deployment/windows/server19-company-peer-https-evidence.json).
+No private TLS key was transferred. This removes the private HTTPS connectivity
+block for subsequent tests, while public reachability remains unproven.
+
+The saved lab transport profile still points to parallel-test ports with no
+active parallel listeners; installed transport processes use their normal ports.
+The maintained transport candidate remains separate from shipping component
+pins. Current native enrollment and direct/relay sessions still require testing.
+Windows10 lab account repair is authorized but remains unexecuted and unverified;
+the affected VM is still offline.
+
 The additional dedicated lab drive removed the Windows11 storage shortage. The
 large local source, media and VM files were moved with SHA256 content verification
 of 49,822 files (327,044,501,570 bytes), preservation of access restrictions, and

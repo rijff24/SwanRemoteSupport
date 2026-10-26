@@ -1,0 +1,31 @@
+{
+  "date": "2026-10-26",
+  "scope": "Existing company deployment reached from separate newly installed WindowsServer2019 x64 lab VM using normal HTTPS validation and isolated lab DNS. This is a network/trust check, not native client qualification.",
+  "maintenance": {
+    "private_lab_https_binding_verified": true,
+    "company_https_healthy": true,
+    "device_identity_and_consent_preserved": true,
+    "host_settings_unchanged": true,
+    "rollback_backup_retained": true
+  },
+  "peer": {
+    "profile_https_status": 200,
+    "certificate_validation_enabled": true,
+    "unauthenticated_inventory_status": 401,
+    "tls_private_key_transferred": false,
+    "profile_signature_verified_against_original_pin": true,
+    "company_identity_matches_original_bundle": true,
+    "profile_revision": 18,
+    "profile_currently_time_valid": true,
+    "updates_remain_paused": true,
+    "native_enrollment_or_sessions_tested": false
+  },
+  "private_original_record_sha256": "cf456ce025963449a82d57971e0249e434cfbf0ecebede529f0e404ef848eb8a",
+  "limitations": [
+    "Public CA material was explicitly trusted and isolated lab DNS configured on the disposable guest; this does not establish Internet DNS, public ACME or public reachability.",
+    "The saved lab transport profile points to parallel-test ports without active parallel listeners; installed transport components use their normal ports. Transport testing remains open.",
+    "No native device enrollment, technician login, direct/relay session or update rollout was exercised.",
+    "Machine-specific addresses, configuration and keys remain outside the repository."
+  ],
+  "full_product_acceptance": false
+}
