@@ -6572,3 +6572,16 @@ bundled source texts, and signed MSI/agent hashes.
 remains limited to test signing and Server2019 release metadata. Rollout remains
 paused. Generated customer installation/enrollment and native sessions require
 separate evidence and are not implied by bundle generation.
+
+The generated Linux-company customer bundle was then downloaded anonymously by
+the Server2019 endpoint over validated HTTPS and installed using its original
+company setup script with explicit lab hostname confirmation. It automatically
+pinned company configuration and enrolled the native device without address
+editing or Tailscale. Installed identities and release sequence were recorded,
+the customer service ran, the existing installer worker was preserved, and no
+installation recovery marker remained. Unattended consent stayed false. The
+server inventory independently matched the enrolled device, retained pending
+approval, and rejected an administrator's pre-approval session grant with 403.
+[Generated customer enrollment evidence](../deployment/linux/generated-customer-enrollment-evidence.json)
+does not establish a native authorized session, UAC, Internet transport,
+automatic updates or the full Windows matrix.
