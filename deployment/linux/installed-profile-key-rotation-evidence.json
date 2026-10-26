@@ -27,12 +27,38 @@
   },
   "worker_pin_updated_by_operator_from_trusted_transition": true,
   "old_both_bundle_links_returned_404": true,
-  "replacement_test_bundles": "queued; completion and artifact verification remain separate",
+  "replacement_test_bundles": "Both worker jobs completed; downloaded and independently verified",
   "production_signing": false,
   "limitations": [
     "No active desktop session during rotation; native session termination unqualified",
     "No interrupted activation recovery or rotated full-server restore in this check",
     "Only owned Server 2019 endpoint; broader Windows matrix remains open",
     "Loopback lab HTTPS does not qualify public Internet deployment"
+  ],
+  "replacement_bundle_verification": [
+    {
+      "edition": "customer",
+      "bundle_sha256": "89e7d0989d00a97bad4ae4560ca7a24c70e9ce3ebba30ca6f918dcdfa0461dd7",
+      "bytes": 32508756,
+      "public_bootstrap_only": true,
+      "profile_and_release_signatures_verified": true,
+      "tamper_rejection_verified": true,
+      "seven_source_texts_exact": true,
+      "signed_payload_hashes_verified": true,
+      "anonymous_status": 200,
+      "download_status": 200
+    },
+    {
+      "edition": "technician",
+      "bundle_sha256": "2cda243b34fb5647eba32851784df6ca90f18cef5963f128fa4cdf533703f4f1",
+      "bytes": 30301813,
+      "public_bootstrap_only": true,
+      "profile_and_release_signatures_verified": true,
+      "tamper_rejection_verified": true,
+      "seven_source_texts_exact": true,
+      "signed_payload_hashes_verified": true,
+      "anonymous_status": 401,
+      "download_status": 200
+    }
   ]
 }

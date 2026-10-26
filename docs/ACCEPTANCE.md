@@ -6693,7 +6693,9 @@ release sequences stayed unchanged. A separate shipping-agent fixture that
 missed the transition rejected the replacement signature and retained its exact
 cached state. Old customer and technician download links returned 404. The worker
 pin was explicitly updated from the accepted transition, and replacement test
-bundles were queued; their completion remains separate.
+bundles completed. Both replacement downloads verified against the rotated
+profile key, unchanged release key, package hashes and exact bundled source;
+customer downloads remained public and technician downloads required authentication.
 [Installed profile-key rotation evidence](../deployment/linux/installed-profile-key-rotation-evidence.json)
 does not qualify active native-session termination, interrupted activation,
 rotated server restore, the wider Windows matrix or public connectivity.
