@@ -6543,3 +6543,19 @@ both test tasks are disabled with no running instance. Windows Installer policy
 and administrator group membership were not relaxed. Interactive installation
 and the failed standard-user requirement need further verification and any
 necessary product fix; the earlier administrative passes remain bounded.
+
+An independently configured Linux company lab built the pinned public source
+`761b5c5` using two Cargo jobs and started the published management, Caddy and
+transport components with loopback-only test ports. HTTPS certificate and
+hostname validation, signed custom branding, fresh inventory, administrator
+TOTP login, invalid-code/replay rejection, protected worker registration and
+logout revocation passed. [The bounded Linux evidence](../deployment/linux/fresh-company-lab-evidence.json)
+does not establish worker-generated packages, native sessions, public ACME,
+Internet reachability or Windows server setup/restore. New private lab inputs
+remain outside Git; the existing company's disk and keys were preserved.
+
+The Windows10 standard-user console login was verified, but its password-free
+interactive technician test task reached its ten-minute limit before the
+first driver observation or MSI execution. The task is disabled and its
+[failed bounded attempt](../deployment/windows/win10-standard-desktop-bounded-failure.json)
+is retained. No standard-user installer pass or root cause is claimed.
