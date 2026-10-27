@@ -26,9 +26,26 @@ LocalSystem service and native watcher started without intervention, and all
 The 1.5.4 source adds narrowly scoped OS-cache maintenance under installation
 and session exclusion. It retains project signature/hash checks, rejects links,
 defers locked files and active recovery, and never takes its source from company
-configuration. Linux/Windows component checks passed for a6670d6; the complete
-native build and a real stale-cache Windows test remain required. This source
-change is not yet a qualified release.
+configuration. Linux/Windows component checks passed for a6670d6. Both complete
+native runs 40520718494 and 40534403214 passed; comparison run 40549751275
+verified identical original bytes for all eight shipping outputs, matching
+compiler inputs and exact public source/bridges. The first full archive and
+all public source objects were also verified locally. The company worker then
+generated both lab-signed bundles. A real 20% rollout automatically upgraded
+Windows 10 to 1.5.4/sequence7 without a manual installer, cache refresh or task
+repair. All 96 signed files, MSI registration, publisher, enrollment and consent
+verified; a normal kernel reboot started the service and watcher automatically.
+With rollout paused, replacing only the generated helper with an older genuine
+Microsoft RuntimeBroker exercised the installed native watcher: it restored the
+current System32 bytes and timestamp automatically, while all 96 project files
+and identity/trust/consent remained unchanged. The shipping verifier passed.
+The Server2019 technician also upgraded to 1.5.4, opened its actual native UI,
+and passed MFA login with two approved devices and history visible; its process
+and loaded libraries matched the reproduced payload, with no new crash event.
+These bounded checks leave fresh installs, the full OS/feature matrix and
+production signing open. See
+[the lab runtime evidence](../deployment/windows/a6670d6-lab-upgrade-cache-reboot-and-technician.json) and
+[the original-byte 1.5.4 comparison](../deployment/windows/a6670d6-native-independent-comparison.json).
 
 An actual 1.5.3 technician on Server 2019 connected to the upgraded Windows 10
 customer after its visible Accept prompt. Desktop pixels and a remote pointer
@@ -38,6 +55,17 @@ connection required fresh company authorization. Original group access was
 restored without reviving the old grant. This session does not qualify its
 transport path, clipboard, transfer, UAC, reboot or multiple monitors. See
 [the bounded update and session evidence](../deployment/windows/7bfce49-win10-automatic-recovery-and-native-revocation.json).
+
+The same two 1.5.3 apps also demonstrated explicit unattended consent, native
+desktop access without another Accept prompt, and remote Windows sign-in after
+the owned guest was signed out. The customer then revoked consent from its own
+UI: the company disabled consent and closed all five outstanding unattended
+leases, the native connection required new authorization, and a fresh grant
+request from an authorized technician with a valid proof key returned 403.
+Consent was left disabled. Multiple reconnect records during the sign-in
+transition require session-history cleanup review; this does not qualify
+clipboard, transfer, UAC, multiple monitors or public transport. See
+[the bounded unattended evidence](../deployment/windows/7bfce49-win10-unattended-signin-and-revocation.json).
 
 **1.5.3 now passes installed native technician startup and MFA login on the
 Server2019 lab endpoint.** The generated company bundle upgraded 1.5.2/sequence5
