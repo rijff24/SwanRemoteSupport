@@ -14,13 +14,27 @@ A guarded lab-only refresh from the current Windows file allowed the unchanged
 installed verifier to pass and the automatic update to reach its helper. The
 temporary diagnostic watcher action then triggered the helper's task-ownership
 guard; its original native action was restored without launching another
-installer. The existing recovery and final customer upgrade remain pending.
+installer. Existing durable recovery then completed the actual 1.5.1/sequence4
+to 1.5.3/sequence6 upgrade. Independent checks verified all 96 project files,
+publisher signatures, MSI registration, original enrollment credential, trust
+and consent, restored native watcher/service, and recovery cleanup. The excluded
+Server 2019 customer stayed on 1.5.1. Further lab rollout is paused.
 
 The 1.5.4 source adds narrowly scoped OS-cache maintenance under installation
 and session exclusion. It retains project signature/hash checks, rejects links,
 defers locked files and active recovery, and never takes its source from company
-configuration. Linux/Windows regression tests and a real stale-cache Windows
-test are still required; this source change is not yet a qualified release.
+configuration. Linux/Windows component checks passed for a6670d6; the complete
+native build and a real stale-cache Windows test remain required. This source
+change is not yet a qualified release.
+
+An actual 1.5.3 technician on Server 2019 connected to the upgraded Windows 10
+customer after its visible Accept prompt. Desktop pixels and a remote pointer
+selection were independently observed on the customer console. Revoking that
+technician's group access closed the exact claimed server session and the native
+connection required fresh company authorization. Original group access was
+restored without reviving the old grant. This session does not qualify its
+transport path, clipboard, transfer, UAC, reboot or multiple monitors. See
+[the bounded update and session evidence](../deployment/windows/7bfce49-win10-automatic-recovery-and-native-revocation.json).
 
 **1.5.3 now passes installed native technician startup and MFA login on the
 Server2019 lab endpoint.** The generated company bundle upgraded 1.5.2/sequence5
@@ -32,7 +46,8 @@ loaded Rust/Flutter libraries matched the reproduced payload, with no new
 application crash event. A path-only verifier initially rejected the native
 launcher's equivalent `/./` path; canonical inspection passed while retaining
 exact-byte and process-creation checks. A native remote session and customer
-upgrade/reboot qualification remain pending. See
+reboot qualification remain pending. The later Windows 10 session is recorded
+above. See
 [the bounded startup and distribution evidence](../deployment/windows/7bfce49-lab-distribution-and-technician-startup.json).
 
 Both native runs 40468079337 and 40489196703 passed. Comparison run 40499642535
@@ -42,9 +57,9 @@ The first full archive and source were also verified locally; the runner-side
 comparison avoided a second large host download. All seven new lab signatures
 and original receipts were checked against the existing nonexportable guest key.
 Public customer and protected technician bundle downloads passed. The lab now
-has an open maintenance window and a 20% rollout for the eligible Windows 10
-customer; Server 2019 is excluded. Closed-window checks passed on both installed
-agents. Failed 1.5.2 downloads remain withdrawn. See
+completed a 20% staged rollout to the eligible Windows 10 customer while Server
+2019 was excluded, and is now paused. Closed-window checks passed on both
+installed agents. Failed 1.5.2 downloads remain withdrawn. See
 [the original-byte comparison](../deployment/windows/7bfce49-native-independent-comparison.json).
 
 The first 1.5.3 workflow, run 40468079337 from pinned source `7bfce49`, now

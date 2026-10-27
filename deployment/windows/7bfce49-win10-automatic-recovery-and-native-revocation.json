@@ -1,0 +1,55 @@
+{
+  "automatic_update": {
+    "after_version": "1.5.3",
+    "recovery_markers_and_task_cleaned": true,
+    "all_signed_files_verified": 96,
+    "shipping_verifier_passed": true,
+    "consent_revision": 0,
+    "msi_registered_installed": true,
+    "reboot_qualified": false,
+    "after_sequence": 6,
+    "utc": "2026-10-27T14:23:38.2342671Z",
+    "manual_installer_not_started": true,
+    "unattended_consent": false,
+    "lab_cache_refresh_was_required": true,
+    "service_running_auto_system": true,
+    "native_watch_running": true,
+    "identity_credential_consent_and_trust_preserved": true,
+    "source": "7bfce49aba857e035663f19cb25353828204e9c0",
+    "production_publication": false
+  },
+  "attended_native_session": {
+    "observed_utc": "2026-10-27T14:28:29.757389+00:00",
+    "source": "7bfce49aba857e035663f19cb25353828204e9c0",
+    "technician_os": "Windows Server 2019 Desktop Experience",
+    "customer_os": "Windows 10 Pro 22H2",
+    "version": "1.5.3",
+    "session_id": "3eab301e-f798-43d3-8f6f-53a91be27347",
+    "actual_native_mfa_login": true,
+    "customer_accept_prompt_observed_and_clicked": true,
+    "native_remote_desktop_pixels_observed": true,
+    "remote_pointer_selected_customer_recycle_bin": true,
+    "selection_independently_observed_on_customer_console": true,
+    "server_revoked_exact_claimed_active_session": true,
+    "native_session_closed_with_company_authorization_required": true,
+    "fresh_authorized_session_required": true,
+    "unattended_consent_remained_off": true,
+    "clipboard_transfer_uac_reboot_multimonitor_not_tested_in_this_session": true,
+    "public_internet_or_relay_path_not_qualified_by_this_session": true,
+    "production_publication": false
+  },
+  "rollout": {
+    "closed_maintenance_both_installed_agents_deferred": true,
+    "eligible_customer_cohort": 16,
+    "excluded_server19_cohort": 78,
+    "rollout_percent": 20,
+    "excluded_customer_remained_on_151": true,
+    "further_lab_rollout_paused_after_recovery": true
+  },
+  "limitations": [
+    "A lab-only refresh of the stale Windows-owned privacy helper was required before update handoff.",
+    "The diagnostic watcher action initially triggered the ownership guard; restoring its original native action allowed existing durable recovery to complete.",
+    "This does not qualify a fully unattended upgrade across Windows servicing changes; 1.5.4 cache maintenance still requires native testing.",
+    "Reboot, other support capabilities and public transport require separate qualification."
+  ]
+}
