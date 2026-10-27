@@ -1,8 +1,22 @@
 # Configurable product acceptance report
 
-Evidence through 26 October 2026. **The product is not complete or approved for
+Evidence through 27 October 2026. **The product is not complete or approved for
 production publication.** A passing component test is not evidence of a working
 native support session or a clean-machine installation.
+
+## Latest source checks, 27 October
+
+Native source `9ba592ca0431ce734a1edf7391aec183f5c100fa` built successfully in
+run 40435586938. Its full corresponding source archive matched 1,203 pinned public
+Git files and all six generated bridge files matched that run's retained bridge
+artifact. See [exact-source evidence](../deployment/windows/9ba592c-native-source-evidence.json).
+The technician helper rejection and actual unsigned customer MSI service-start
+checks also passed; [their evidence](../deployment/windows/9ba592c-native-startup-ci-evidence.json)
+states the limits. Independent run 40442895972 built successfully, but comparison
+of its original shipping bytes remains pending. These results do not qualify
+installed technician startup, customer cold-boot recovery, automatic upgrades,
+the complete Windows matrix or production signing. The source-specific runtime
+and historical sections below retain the earlier results and failures.
 
 ## Lab continuation, 26 October
 
