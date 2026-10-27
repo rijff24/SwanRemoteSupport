@@ -6736,8 +6736,11 @@ version, and the engine selector rejected the missing pinned SDK. Its failure
 is retained; byte reproduction has not passed. The Windows workflow now uses a
 fixed official archive/hash and verifies framework/engine revisions, with local
 negative tests proving wrong versions and altered archives cannot extract or
-change the exported environment. Successful fresh CI installation of this fix,
-new independent native builds, and runtime upgrades remain separate gates.
+change the exported environment. The first fixed-SDK workflow 40415706839 passed
+fresh installation, native security regressions and packaging. Its archive and
+shipping hashes were verified; tracked source and six generated bridge files
+matched pinned public source and the exact workflow bridge archive. Independent
+reproduction and runtime upgrades remain separate gates.
 [First 1.5.2 artifact evidence](../deployment/windows/d74a631-native-build-evidence.json)
 is not a production release or a completed automatic-update qualification.
 
@@ -6765,3 +6768,16 @@ hash-verified, alongside the 13 technician records above.
 qualifies this administrative lifecycle only. Managed enrollment, standard-user
 installation, native remote access including the logon screen, software-version
 upgrades and approved automatic rollout remain separate acceptance requirements.
+
+The isolated Linux company subsequently used a distinct protected Windows worker
+on Server 2025 to generate an authenticated technician bundle. Its protected
+local artifact matched the server result; anonymous technician download was
+rejected. The actual shipped company setup installed the lab-signed 1.5.1
+technician edition with current signed profile revision 5, release sequence 3
+and no device token. Native username/password/TOTP login showed company
+branding, the approved device/group and session history, independently matched
+by the server login audit.
+[Server 2025 generated company technician evidence](../deployment/windows/da0c621-server25-company-technician-evidence.json)
+qualifies administrative per-user setup and native login only. The customer
+was offline during login; separate-machine remote access, receiver permission
+enforcement, standard-user setup and automatic rollout remain unqualified.
