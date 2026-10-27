@@ -6752,3 +6752,16 @@ result and MSI-log records were collected and hash-verified.
 does not qualify standard-user execution, technician login, native sessions,
 software-version upgrades or automatic updates. Customer reboot verification
 and the wider release matrix remain separate.
+
+The same new Server 2025 VM subsequently passed the da0c621 lab-signed customer
+MSI installation, damaged-license repair and uninstall, each returning 0. A real
+Windows restart preserved all 96 packaged file hashes, the configuration agent
+and valid installed publishers. The customer service started automatically as
+LocalSystem; the verifier did not start it manually. The one-time startup task
+then uninstalled the package successfully and disabled itself against repeat
+execution. All 18 original customer source/result/log records were collected and
+hash-verified, alongside the 13 technician records above.
+[Server 2025 customer MSI evidence](../deployment/windows/da0c621-server25-customer-msi-evidence.json)
+qualifies this administrative lifecycle only. Managed enrollment, standard-user
+installation, native remote access including the logon screen, software-version
+upgrades and approved automatic rollout remain separate acceptance requirements.
