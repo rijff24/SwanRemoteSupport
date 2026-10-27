@@ -6741,6 +6741,8 @@ fresh installation, native security regressions and packaging. Its archive and
 shipping hashes were verified; tracked source and six generated bridge files
 matched pinned public source and the exact workflow bridge archive. Independent
 reproduction and runtime upgrades remain separate gates.
+[Fixed-SDK build evidence](../deployment/windows/a1d67be-native-build-evidence.json)
+records the exact artifact digest and verified SDK identity.
 [First 1.5.2 artifact evidence](../deployment/windows/d74a631-native-build-evidence.json)
 is not a production release or a completed automatic-update qualification.
 
@@ -6781,3 +6783,24 @@ by the server login audit.
 qualifies administrative per-user setup and native login only. The customer
 was offline during login; separate-machine remote access, receiver permission
 enforcement, standard-user setup and automatic rollout remain unqualified.
+
+Subsequent separate-machine testing connected the Server 2025 technician to the
+Server 2019 customer through this independent Linux company. The native customer
+received and accepted an attended approval prompt; the technician saw its actual
+desktop. Remote mouse input minimized the customer window, verified separately
+on the receiving console. The receiver claimed the company grant and renewed
+its lease beyond the initial expiry. Customer-local Stop support disconnected
+the technician, removed the support service through the existing native stop
+path and prevented reconnect; the customer showed Resume support. Server-side
+closure of the retained lease record is not claimed.
+[Two-machine session evidence](../deployment/windows/da0c621-linux-company-two-machine-session-evidence.json)
+does not yet distinguish direct from relay transport or qualify public Internet
+operation, hostile native connections, expired-lease termination, keyboard,
+clipboard, transfer, UAC, logon-screen or multi-monitor behavior.
+
+This run also exposed a failed automatic customer service start after the two
+VMs booted together on HDD storage: Windows recorded events 7000/7009 and a
+30-second service connection timeout. A single manual recovery succeeded before
+the session above. The original failure is retained; its cause is unproven and
+reliable cold-boot startup remains a failing acceptance gate. Earlier Server
+2025 administrative reboot evidence does not resolve this Server 2019 failure.

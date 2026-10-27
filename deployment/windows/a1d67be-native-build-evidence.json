@@ -1,0 +1,32 @@
+{
+  "source": "a1d67be97c914377554e946a9e16597b1197e334",
+  "workflow_run": 40415706839,
+  "artifact": 12698162287,
+  "artifact_digest": "sha256:c9b9f0d9f5ee48e391e77cd83a13724ad1e60c2ba670ed2cb3b374aff954f473",
+  "verified_sdk_identity": {
+    "archive_url": "https://storage.googleapis.com/flutter_infra_release/releases/stable/windows/flutter_windows_3.24.5-stable.zip",
+    "version": "3.24.5",
+    "archive_sha256": "b8a7485acd3c6fb23a76b7ac09f89e8d93d62fbff7147c6f5f8c5686d949eeac",
+    "engine_revision": "a18df97ca57a249df5d8d68cd0820600223ce262",
+    "framework_revision": "dec2ee5c1f98f8e84a7d5380c05eb8a3d0a81668"
+  },
+  "all_manifest_hashes_match": true,
+  "shipping_file_count": 54,
+  "native_managed_updater_regression_passed": true,
+  "required_steps": {
+    "Build branded client": "success",
+    "Reject unsigned legacy management policy in managed editions": "success",
+    "Reject upstream updater entry points in managed editions": "success",
+    "Reject system-control packets from view-only managed sessions": "success",
+    "Build unsigned customer and technician MSIs with pinned WiX": "success",
+    "Verify unsigned technician MSI installation repair and uninstall": "success",
+    "Build unsigned company server setup with pinned components": "success"
+  },
+  "public_tracked_source_files_verified": 1192,
+  "generated_bridge_files_verified": 6,
+  "independent_rebuild_passed": false,
+  "runtime_upgrade_qualified": false,
+  "production_signed_release": false,
+  "complete_archive_bytes": 254658035,
+  "source_verification_receipt_sha256": "b9088cba32ef527c8982b8f6628c0140909a7f71a5b4eb6d84ad77535d8ef817"
+}
