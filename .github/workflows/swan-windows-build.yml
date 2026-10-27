@@ -23,7 +23,7 @@ env:
   FLUTTER_ENGINE_SHA256: "ec8cabf36ee4ff24c8d98de25b00e70781eb03876265aee84d0fe554a110036e"
   VCPKG_COMMIT_ID: "120deac3062162151622ca4860575a33844ba10b"
   VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
-  VERSION: "1.5.4"
+  VERSION: "1.5.5"
 
 jobs:
   generate-bridge:
@@ -265,6 +265,13 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Managed view-only control regression failed.' }
           if ((Get-Content artifacts/native-managed-control-tests.log -Raw) -notmatch 'test result: ok\. 1 passed; 0 failed;') { throw 'Expected managed control test did not run.' }
 
+      - name: Reject paused support and authorization reuse after resume
+        shell: pwsh
+        run: |
+          cargo test --release --lib --features "flutter,swan_custom,hwcodec,vram" managed::pause_tests::pause_denies_claims_and_resume_cannot_revive_old_authorization -- --exact 2>&1 | Tee-Object -FilePath artifacts/native-managed-pause-tests.log
+          if ($LASTEXITCODE -ne 0) { throw 'Managed support pause regression failed.' }
+          if ((Get-Content artifacts/native-managed-pause-tests.log -Raw) -notmatch 'test result: ok\. 1 passed; 0 failed;') { throw 'Expected managed support pause test did not run.' }
+
       - name: Add pinned topmost-window helper
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
@@ -410,6 +417,7 @@ jobs:
             artifacts/native-msvc-toolchain.json
             artifacts/flutter-sdk-identity.json
             artifacts/native-managed-updater-tests.log
+            artifacts/native-managed-pause-tests.log
             artifacts/Install-Company.ps1
             artifacts/Install-Worker.ps1
             artifacts/Uninstall-Worker.ps1

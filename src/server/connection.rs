@@ -318,6 +318,8 @@ pub struct Connection {
     authorized: bool,
     #[cfg(feature = "swan_custom")]
     managed_lease: Option<swan_agent::Lease>,
+    #[cfg(feature = "swan_custom")]
+    managed_pause_generation: u64,
     require_2fa: Option<totp_rs::TOTP>,
     keyboard: bool,
     clipboard: bool,
@@ -452,9 +454,13 @@ const SESSION_TIMEOUT: Duration = Duration::from_secs(30);
 
 impl Connection {
     #[cfg(feature = "swan_custom")]
+    fn managed_authorization_current(&self)->bool {
+        crate::managed::authorization_current(self.managed_lease.as_ref().map(|lease|lease.expires_at),self.managed_pause_generation)
+    }
+    #[cfg(feature = "swan_custom")]
     fn managed_permission_cap(&self,name:&str)->bool {
+        if !self.managed_authorization_current(){return false;}
         let Some(lease)=self.managed_lease.as_ref() else {return false};
-        if swan_agent::protocol::now()>=lease.expires_at {return false;}
         let p=&lease.permissions;
         match name {"keyboard"=>p.keyboard,"clipboard"=>p.clipboard,"audio"=>p.audio,"file"=>p.file,"restart"=>p.restart,"recording"=>p.recording,"block_input"=>p.block_input,"privacy_mode"=>p.privacy_mode,_=>false}
     }
@@ -528,6 +534,8 @@ impl Connection {
             authorized: false,
             #[cfg(feature = "swan_custom")]
             managed_lease: None,
+            #[cfg(feature = "swan_custom")]
+            managed_pause_generation: 0,
             keyboard: Self::permission(keys::OPTION_ENABLE_KEYBOARD, &control_permissions),
             clipboard: Self::permission(keys::OPTION_ENABLE_CLIPBOARD, &control_permissions),
             audio: Self::permission(keys::OPTION_ENABLE_AUDIO, &control_permissions),
@@ -1080,11 +1088,11 @@ impl Connection {
                 _ = second_timer.tick() => {
                     #[cfg(feature = "swan_custom")]
                     if let Some(lease) = conn.managed_lease.as_mut() {
-                        let expired = swan_agent::protocol::now() >= lease.expires_at;
-                        let renewal_failed = !expired
+                        let invalid = !crate::managed::authorization_current(Some(lease.expires_at),conn.managed_pause_generation);
+                        let renewal_failed = !invalid
                             && swan_agent::protocol::now().saturating_sub(lease.last_renewed) >= 60
-                            && crate::managed::renew(lease).await.is_err();
-                        if expired || renewal_failed {
+                            && crate::managed::renew(lease,conn.managed_pause_generation).await.is_err();
+                        if invalid || renewal_failed {
                             conn.send_close_reason_no_retry("Company session authorization expired or revoked").await;
                             conn.on_close("Managed authorization unavailable", true).await;
                             break;
@@ -1639,7 +1647,7 @@ impl Connection {
     // `true` does not necessarily mean authorization succeeded (e.g. REQUIRE_2FA case).
     async fn send_logon_response_and_keep_alive(&mut self) -> bool {
         #[cfg(feature = "swan_custom")]
-        if self.managed_lease.as_ref().map(|lease| swan_agent::protocol::now() < lease.expires_at) != Some(true) {
+        if !self.managed_authorization_current() {
             self.send_login_error("A valid company session grant is required").await;
             return false;
         }
@@ -2545,7 +2553,7 @@ impl Connection {
         }
         if self.authorized {
             #[cfg(feature = "swan_custom")]
-            if self.managed_lease.as_ref().map(|lease| swan_agent::protocol::now() < lease.expires_at) != Some(true) {
+            if !self.managed_authorization_current() {
                 // Reject input immediately at expiry instead of relying on the
                 // next timer tick while packets continue to arrive.
                 self.send_close_reason_no_retry("Company session authorization expired or revoked").await;
@@ -2564,7 +2572,8 @@ impl Connection {
             #[cfg(feature = "swan_custom")]
             if self.managed_lease.is_none() {
                 match crate::managed::claim(&lr.password, &self.hash.challenge, &Config::get_id()).await {
-                    Ok(lease) => {
+                    Ok((lease,generation)) => {
+                        self.managed_pause_generation=generation;
                         let p=&lease.permissions;
                         self.keyboard &= p.keyboard;self.clipboard &= p.clipboard;
                         self.audio &= p.audio;self.file &= p.file;self.restart &= p.restart;

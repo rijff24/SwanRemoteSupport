@@ -64,6 +64,8 @@ class CustomerMsiTests(unittest.TestCase):
             paths = {file["path"] for file in files}
             self.assertEqual(paths, {"Swan Remote Support.exe", "librustdesk.dll", "flutter_windows.dll", "data/flutter_assets/test.txt", "LICENSE.txt"})
             ns = {"w": msi.NAMESPACE}
+            shortcut_policy = tree.find("w:Package/w:Property[@Id='DISABLEADVTSHORTCUTS']", ns)
+            self.assertEqual(shortcut_policy.attrib["Value"], "1")
             self.assertEqual(tree.find("w:Package", ns).attrib["ProductCode"],
                              str(uuid.uuid5(msi.UPGRADE, "windows-x64|1.5.0")).upper())
             service = tree.find(".//w:ServiceInstall", ns)

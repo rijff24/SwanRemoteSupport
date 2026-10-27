@@ -19,6 +19,7 @@ struct TechnicianMemory {
 }
 hbb_common::lazy_static::lazy_static! {
     static ref TECHNICIAN:std::sync::Mutex<TechnicianMemory>=Default::default();
+    static ref SUPPORT_PAUSE_SIGNAL:hbb_common::tokio::sync::watch::Sender<u64>=hbb_common::tokio::sync::watch::channel(0).0;
 }
 
 pub async fn technician_request(request:&str)->String {
@@ -39,6 +40,10 @@ async fn technician_request_inner(request:&str)->ResultType<serde_json::Value> {
     if action=="customer-consent" {
         let enabled=input["enabled"].as_bool().ok_or_else(||anyhow!("Missing consent choice"))?;
         return crate::ipc::set_company_consent(enabled).await;
+    }
+    if action=="customer-support" {
+        let paused=input["paused"].as_bool().ok_or_else(||anyhow!("Missing support choice"))?;
+        return crate::ipc::set_company_support_paused(paused).await;
     }
     let directory=swan_agent::state_directory();
     let state=AgentState::load_for_refresh(&directory)?;
@@ -186,6 +191,9 @@ pub fn apply_defaults() {
     for key in [keys::OPTION_HIDE_NETWORK_SETTINGS,keys::OPTION_HIDE_SERVER_SETTINGS,keys::OPTION_HIDE_PROXY_SETTINGS,keys::OPTION_DISABLE_CHANGE_ID] {builtin.insert(key.into(),"Y".into());}
     // Consent and signed grants, rather than Windows-lock-screen password fallback, authorize sessions.
     builtin.insert(keys::OPTION_ALLOW_LOGON_SCREEN_PASSWORD.into(),"N".into());
+    // The managed customer UI supplies an acknowledged pause control. The
+    // upstream tray's stop command uninstalls the Windows service instead.
+    builtin.insert(keys::OPTION_HIDE_STOP_SERVICE.into(),"Y".into());
 }
 
 pub fn refresh_defaults()->bool {
@@ -200,15 +208,103 @@ pub fn refresh_defaults()->bool {
     before!=(config::Config::get_option(keys::OPTION_CUSTOM_RENDEZVOUS_SERVER),config::Config::get_option(keys::OPTION_RELAY_SERVER),config::Config::get_option(keys::OPTION_KEY))
 }
 
-pub async fn claim(password:&[u8],challenge:&str,peer:&str)->ResultType<Lease> {
-    let login=ManagedLogin::from_wire(password)?;
-    let state=AgentState::load(&swan_agent::state_directory())?;
-    Ok(state.claim(&login,challenge,peer).await?)
+static SUPPORT_PAUSE_GENERATION:std::sync::atomic::AtomicU64=std::sync::atomic::AtomicU64::new(0);
+static SUPPORT_PAUSING:std::sync::atomic::AtomicBool=std::sync::atomic::AtomicBool::new(false);
+
+pub fn pause_generation()->u64 {
+    SUPPORT_PAUSE_GENERATION.load(std::sync::atomic::Ordering::SeqCst)
 }
 
-pub async fn renew(lease:&mut Lease)->ResultType<()> {
+pub fn update_support_pause(paused:bool) {
+    SUPPORT_PAUSING.store(paused,std::sync::atomic::Ordering::SeqCst);
+    if !paused{return;}
+    // Local generations are process-scoped; old connections never survive a
+    // process restart. Increment before accepting the stop option so even an
+    // immediate resume cannot revive a connection from before the pause.
+    let generation=SUPPORT_PAUSE_GENERATION.fetch_add(1,std::sync::atomic::Ordering::SeqCst).wrapping_add(1);
+    SUPPORT_PAUSE_SIGNAL.send_replace(generation);
+}
+
+fn support_paused()->bool {
+    SUPPORT_PAUSING.load(std::sync::atomic::Ordering::SeqCst)
+        || config::option2bool("stop-service",&config::Config::get_option("stop-service"))
+}
+
+pub fn authorization_current(expires_at:Option<u64>,generation:u64)->bool {
+    !support_paused() && generation==pause_generation()
+        && expires_at.map(|expiry|protocol::now()<expiry)==Some(true)
+}
+
+pub async fn claim(password:&[u8],challenge:&str,peer:&str)->ResultType<(Lease,u64)> {
+    let generation=pause_generation();
+    hbb_common::anyhow::ensure!(!support_paused() && generation==pause_generation(),"Customer paused support");
+    let login=ManagedLogin::from_wire(password)?;
     let state=AgentState::load(&swan_agent::state_directory())?;
-    state.renew(lease).await?;Ok(())
+    let lease=state.claim(&login,challenge,peer).await?;
+    if !authorization_current(Some(lease.expires_at),generation) {
+        if state.close(&lease.grant_id).await.is_err(){log::warn!("Paused company session cleanup could not reach the server");}
+        hbb_common::bail!("Customer paused support during authorization");
+    }
+    Ok((lease,generation))
+}
+
+pub async fn renew(lease:&mut Lease,generation:u64)->ResultType<()> {
+    hbb_common::anyhow::ensure!(authorization_current(Some(lease.expires_at),generation),"Customer paused support or authorization expired");
+    let state=AgentState::load(&swan_agent::state_directory())?;
+    interrupt_on_pause(generation,state.renew(lease)).await?;
+    hbb_common::anyhow::ensure!(authorization_current(Some(lease.expires_at),generation),"Customer paused support during renewal");
+    Ok(())
+}
+
+async fn interrupt_on_pause<T>(generation:u64,operation:impl std::future::Future<Output=ResultType<T>>)->ResultType<T> {
+    let mut pause=SUPPORT_PAUSE_SIGNAL.subscribe();
+    hbb_common::anyhow::ensure!(!support_paused() && generation==pause_generation(),"Customer paused support");
+    let result;
+    hbb_common::tokio::select! {
+        value=operation=>result=value?,
+        _=pause.changed()=>hbb_common::bail!("Customer paused support during renewal"),
+    }
+    hbb_common::anyhow::ensure!(!support_paused() && generation==pause_generation(),"Customer paused support during renewal");
+    Ok(result)
+}
+
+#[cfg(test)]
+mod pause_tests {
+    use super::*;
+    use hbb_common::tokio;
+    #[tokio::test]
+    async fn pause_denies_claims_and_resume_cannot_revive_old_authorization() {
+        struct Restore(String);
+        impl Drop for Restore {fn drop(&mut self){config::Config::set_option("stop-service".into(),self.0.clone());update_support_pause(false);}}
+        let _restore=Restore(config::Config::get_option("stop-service"));
+        config::Config::set_option("stop-service".into(),String::new());
+        update_support_pause(false);
+        let generation=pause_generation();let expiry=Some(protocol::now()+120);
+        assert!(authorization_current(expiry,generation));
+        let (entered,waiting)=tokio::sync::oneshot::channel();
+        let renewal=tokio::spawn(interrupt_on_pause(generation,async move {
+            entered.send(()).unwrap();
+            std::future::pending::<ResultType<()>>().await
+        }));
+        waiting.await.unwrap();
+        update_support_pause(true);
+        // Stop blocks authorization before its persistent option is written.
+        assert!(!authorization_current(expiry,pause_generation()));
+        assert!(tokio::time::timeout(std::time::Duration::from_secs(5),renewal).await.unwrap().unwrap().is_err());
+        config::Config::set_option("stop-service".into(),"Y".into());
+        assert!(!authorization_current(expiry,generation));
+        assert!(!authorization_current(expiry,pause_generation()));
+        let error=claim(b"invalid-wire","challenge","peer").await.err().unwrap();
+        assert!(error.to_string().contains("Customer paused support"));
+        update_support_pause(false);
+        // Resume cannot admit a session until the persisted stop is cleared.
+        assert!(!authorization_current(expiry,pause_generation()));
+        config::Config::set_option("stop-service".into(),String::new());
+        assert!(!authorization_current(expiry,generation));
+        assert!(authorization_current(expiry,pause_generation()));
+        assert!(!authorization_current(None,pause_generation()));
+        assert!(!authorization_current(Some(protocol::now()),pause_generation()));
+    }
 }
 
 pub async fn login(challenge:&str,target:&str,local_ticket:&str)->ResultType<Vec<u8>> {

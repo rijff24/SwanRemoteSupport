@@ -4,7 +4,35 @@ Evidence through 27 October 2026. **The product is not complete or approved for
 production publication.** A passing component test is not evidence of a working
 native support session or a clean-machine installation.
 
-## Latest source checks, 27 October
+## Latest source checks, 28 October
+
+The Server2022 endpoint installed the actual generated 1.5.4 customer bundle
+again after its prior uninstall. The original zero-byte cancellation marker was
+retained for shipping setup to resolve. Enrollment, all 96 signed files, service
+and watcher passed; pending-device, unassigned-technician and unattended-without-
+consent grants were denied. Its installed verifier accepted the exact repair MSI
+and rejected changed bytes, invalid metadata signatures, wrong publishers,
+wrong certificates and replayed release metadata without an installation handoff.
+A standard user then opened the actual customer interface, saw company branding,
+and enabled/revoked unattended consent; independent server checks matched and a
+new unattended grant was denied after revocation. This is a reinstall checkpoint,
+not a new pristine-OS or complete remote-feature qualification. See
+[the Server2022 evidence](../deployment/windows/a6670d6-server2022-reinstall-and-standard-user-findings.json).
+
+That standard-user test also found two release blockers. The advertised shortcut
+started MSI repair because detection could not inspect the deliberately private
+configuration-agent keypath (MsiInstaller event1004). The UI eventually opened,
+but ordinary startup must not invoke that uncoordinated repair. “Stop support”
+also requested administrator credentials through the inherited service-uninstall
+path; the prompt was canceled. The next 1.5.5 source disables advertised shortcut
+generation and changes managed Windows stop/resume to service IPC with receiver-
+enforced pause, generation-bound authorization and cancellation of in-flight
+renewal. A native regression and installed-shortcut check were added. Its consent
+dialog also becomes scrollable after long policy text was visibly clipped.
+These source changes still require native build, reproduction and real installed
+ordinary-user/active-session verification; they are not qualified fixes yet.
+
+## Earlier source checks, 27 October
 
 The staged customer update exposed another real compatibility failure: Windows
 servicing replaced System32's RuntimeBroker, leaving the endpoint's generated

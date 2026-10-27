@@ -55,6 +55,29 @@ class _DesktopHomePageState extends State<DesktopHomePage>
   Timer? _updateTimer;
   Timer? _companyRefreshTimer;
   bool _companyConsentBusy = false;
+  bool _companySupportBusy = false;
+
+  Future<void> _changeCompanySupport(bool paused) async {
+    if (_companySupportBusy) return;
+    setState(() { _companySupportBusy = true; });
+    String message;
+    try {
+      final text = await bind.mainCompanyRequest(request: jsonEncode({
+        'action': 'customer-support', 'paused': paused,
+      })).first.timeout(const Duration(seconds: 8));
+      final response = jsonDecode(text) as Map<String, dynamic>;
+      if (response['ok'] != true || response['data']['paused'] != paused) {
+        throw StateError('Support change not confirmed');
+      }
+      svcStopped.value = paused;
+      message = paused ? 'Support paused on this computer.' : 'Support resumed.';
+    } catch (_) {
+      message = 'The support change was not confirmed. Check the support status before relying on it.';
+    } finally {
+      if (mounted) setState(() { _companySupportBusy = false; });
+    }
+    if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+  }
 
   Future<void> _changeCompanyConsent(bool enabled) async {
     if (_companyConsentBusy) return;
@@ -297,7 +320,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
               ),
               const SizedBox(height: 12),
               Obx(() => TextButton.icon(
-                onPressed: () async { await start_service(svcStopped.value); },
+                onPressed: _companySupportBusy ? null : () => _changeCompanySupport(!svcStopped.value),
                 icon: Icon(svcStopped.value ? Icons.play_arrow : Icons.stop_circle_outlined),
                 label: Text(svcStopped.value ? 'Resume support' : 'Stop support'),
               )),
@@ -315,6 +338,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
                       context: context,
                       builder: (dialogContext) => AlertDialog(
                         title: const Text('Allow unattended support?'),
+                        scrollable: true,
                         content: Text('Approved technicians from ${company['display_name']} can connect while you are absent, including at the Windows sign-in screen. You can revoke this permission here at any time.\n\nCompany server: ${company['domain']}\n\n${company['consent_text'] ?? ''}'),
                         actions: [
                           TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: const Text('Cancel')),

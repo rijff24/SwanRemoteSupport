@@ -885,6 +885,20 @@ async fn handle(data: Data, stream: &mut Connection) {
             }
             Some(value) => {
                 #[cfg(feature = "swan_custom")]
+                if (name=="company-pause-support" && value=="Y") || (name=="company-resume-support" && value=="N") {
+                    let paused=name=="company-pause-support";
+                    let response=if config::is_outgoing_only() {
+                        serde_json::json!({"ok":false})
+                    }else{
+                        let _chk=CheckIfRestart::new();
+                        crate::managed::update_support_pause(paused);
+                        Config::set_option("stop-service".into(),if paused{"Y"}else{""}.into());
+                        serde_json::json!({"ok":Config::get_option("stop-service")==if paused{"Y"}else{""},"paused":paused})
+                    };
+                    allow_err!(stream.send(&Data::Config((name,Some(response.to_string())))).await);
+                    return;
+                }
+                #[cfg(feature = "swan_custom")]
                 if (name == "company-allow-unattended" && value == "Y") || (name == "company-revoke-unattended" && value == "N") {
                     let enabled=name=="company-allow-unattended";
                     let result=async {
@@ -944,6 +958,8 @@ async fn handle(data: Data, stream: &mut Connection) {
                 allow_err!(stream.send(&Data::Options(Some(v))).await);
             }
             Some(value) => {
+                #[cfg(feature = "swan_custom")]
+                crate::managed::update_support_pause(value.get("stop-service").map(String::as_str)==Some("Y"));
                 let _chk = CheckIfRestart::new();
                 let _nat = CheckTestNatType::new();
                 if let Some(v) = value.get("privacy-mode-impl-key") {
@@ -1533,6 +1549,20 @@ async fn get_config_async(name: &str, ms_timeout: u64) -> ResultType<Option<Stri
         }
     }
     return Ok(None);
+}
+
+#[cfg(feature = "swan_custom")]
+pub async fn set_company_support_paused(paused:bool)->ResultType<serde_json::Value> {
+    let name=if paused{"company-pause-support"}else{"company-resume-support"};
+    let mut connection=connect(1000, "").await?;
+    connection.send(&Data::Config((name.into(),Some(if paused{"Y"}else{"N"}.into())))).await?;
+    if let Some(Data::Config((returned,Some(value))))=connection.next_timeout(5000).await? {
+        if returned==name {
+            let response:serde_json::Value=serde_json::from_str(&value)?;
+            if response["ok"]==true && response["paused"]==paused{return Ok(response);}
+        }
+    }
+    bail!("Support pause change was not confirmed")
 }
 
 #[cfg(feature = "swan_custom")]

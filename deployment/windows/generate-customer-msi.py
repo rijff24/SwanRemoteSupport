@@ -42,6 +42,10 @@ def author(source, agent, version):
     element(package, "MajorUpgrade", DowngradeErrorMessage="A newer Swan Remote Support version is already installed.", Schedule="afterInstallInitialize")
     element(package, "MediaTemplate", EmbedCab="yes")
     element(package, "Property", Id="ARPNOMODIFY", Value="1")
+    # Standard users cannot inspect the private agent keypath. An advertised
+    # shortcut mistakes that access denial for damage and starts MSI repair,
+    # bypassing the company setup wrapper's session and watcher coordination.
+    element(package, "Property", Id="DISABLEADVTSHORTCUTS", Value="1")
     element(package, "SetProperty", Id="ARPINSTALLLOCATION", Value="[INSTALLFOLDER]", After="CostFinalize", Sequence="execute")
     for prop, name, key in [("WINDOWSBUILD", "CurrentBuildNumber", "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion"),
                             ("INSTALLATIONTYPE", "InstallationType", "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion"),

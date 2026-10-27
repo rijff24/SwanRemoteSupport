@@ -437,7 +437,11 @@ pub fn set_option(key: String, value: String) {
         }
         #[cfg(any(target_os = "windows", target_os = "linux"))]
         {
-            if crate::platform::is_installed() {
+            // Managed Windows support pauses through the existing service IPC;
+            // stopping support must not uninstall it or require elevation.
+            if crate::platform::is_installed()
+                && !cfg!(all(target_os = "windows", feature = "swan_custom"))
+            {
                 if value == "Y" {
                     if crate::platform::uninstall_service(true, false) {
                         return;
