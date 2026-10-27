@@ -64,5 +64,7 @@
     "Envelope tamper rejection here is independent bundle verification; native client rejection remains a separate test.",
     "The original exact-envelope equality assertion failed because signed profile lifetimes renew on reads. Both signatures and all policy fields were subsequently verified without repeating imports or jobs.",
     "Automatic installation, session coordination, interruption recovery and full Windows compatibility remain separate acceptance gates."
-  ]
+  ],
+  "subsequently_withdrawn_due_to_native_startup_failure": true,
+  "withdrawal_and_runtime_evidence": "9ba592c-technician-startup-failure.json"
 }

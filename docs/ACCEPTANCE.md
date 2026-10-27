@@ -6,6 +6,28 @@ native support session or a clean-machine installation.
 
 ## Latest source checks, 27 October
 
+**1.5.2 failed native technician startup and both sequence-5 lab releases were
+withdrawn.** The generated installer upgraded the existing Server2019 technician
+from 1.5.1 to 1.5.2, with registered MSI state 5, matching new hashes/signatures,
+and preserved bootstrap, branding and customer identity/consent. A wrapper
+postcheck path error and a later property-helper check were retained; direct
+inspection verified the installation without repeating it. However, the actual
+GUI then crashed with application events 1000/1001 and exception `0xc06d007e`.
+The unpacked executable and required DLLs matched the reproduced build. The
+outer portable launcher returned success despite the native child crash; that
+exit status is not accepted as a startup pass.
+
+Startup's hardened DLL search omitted the executable directory, so the newly
+delayed desktop DLLs could not resolve after bootstrap. An actual isolated
+Windows loader fixture reproduced error 126 with the old flags and loaded the
+application-directory probe with corrected flags, while continuing to reject
+CWD and PATH probes. The source now adds only application-directory search,
+retains delay loading, and adds a real child-process native Windows regression.
+Unreleased binaries advance to 1.5.3; their build and GUI retest remain pending.
+See [the failed runtime and withdrawal evidence](../deployment/windows/9ba592c-technician-startup-failure.json).
+Both generated 1.5.2 downloads now return 404. Updates remain paused; existing
+baseline customer services and release evidence were preserved.
+
 Native source `9ba592ca0431ce734a1edf7391aec183f5c100fa` built successfully in
 run 40435586938. Its full corresponding source archive matched 1,203 pinned public
 Git files and all six generated bridge files matched that run's retained bridge

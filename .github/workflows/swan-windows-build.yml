@@ -23,7 +23,7 @@ env:
   FLUTTER_ENGINE_SHA256: "ec8cabf36ee4ff24c8d98de25b00e70781eb03876265aee84d0fe554a110036e"
   VCPKG_COMMIT_ID: "120deac3062162151622ca4860575a33844ba10b"
   VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
-  VERSION: "1.5.2"
+  VERSION: "1.5.3"
 
 jobs:
   generate-bridge:
@@ -220,6 +220,13 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Technician incoming-helper isolation regression failed.' }
           if ((Get-Content artifacts/native-technician-helper-tests.log -Raw) -notmatch 'test result: ok\. 1 passed; 0 failed;') { throw 'Expected technician helper test did not run.' }
 
+      - name: Verify hardened DLL search supports delayed application libraries
+        shell: pwsh
+        run: |
+          cargo test --release --lib --features "flutter,swan_custom,hwcodec,vram" platform::windows::dll_search_tests::hardened_search_loads_application_dlls_but_rejects_cwd_and_path -- --exact 2>&1 | Tee-Object -FilePath artifacts/native-dll-search-tests.log
+          if ($LASTEXITCODE -ne 0) { throw 'Hardened application DLL search regression failed.' }
+          if ((Get-Content artifacts/native-dll-search-tests.log -Raw) -notmatch 'test result: ok\. 1 passed; 0 failed;') { throw 'Expected real Windows DLL-search test did not run.' }
+
       - name: Verify desktop launcher and plugin reproducibility metadata
         shell: pwsh
         run: |
@@ -399,6 +406,7 @@ jobs:
             artifacts/engine-selection.json
             artifacts/native-desktop-pe-metadata.json
             artifacts/native-service-imports.json
+            artifacts/native-dll-search-tests.log
             artifacts/native-msvc-toolchain.json
             artifacts/flutter-sdk-identity.json
             artifacts/native-managed-updater-tests.log
@@ -461,6 +469,7 @@ jobs:
             artifacts/engine-selection.json
             artifacts/native-desktop-pe-metadata.json
             artifacts/native-service-imports.json
+            artifacts/native-dll-search-tests.log
             artifacts/native-msvc-toolchain.json
             artifacts/*.msi.build.json
             artifacts/flutter-sdk-identity.json

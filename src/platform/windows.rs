@@ -33,8 +33,10 @@ use std::{
     time::{Duration, Instant},
 };
 use wallpaper;
-#[cfg(not(debug_assertions))]
-use winapi::um::libloaderapi::{LoadLibraryExW, LOAD_LIBRARY_SEARCH_USER_DIRS};
+#[cfg(any(not(debug_assertions), test))]
+use winapi::um::libloaderapi::{
+    LoadLibraryExW, LOAD_LIBRARY_SEARCH_APPLICATION_DIR, LOAD_LIBRARY_SEARCH_USER_DIRS,
+};
 use winapi::{
     ctypes::c_void,
     shared::{minwindef::*, ntdef::NULL, windef::*, winerror::*},
@@ -2262,7 +2264,7 @@ pub fn bootstrap() -> bool {
     }
 }
 
-#[cfg(not(debug_assertions))]
+#[cfg(any(not(debug_assertions), test))]
 fn set_safe_load_dll() -> bool {
     if !unsafe { set_default_dll_directories() } {
         return false;
@@ -2279,7 +2281,7 @@ fn set_safe_load_dll() -> bool {
 }
 
 // https://docs.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-setdefaultdlldirectories
-#[cfg(not(debug_assertions))]
+#[cfg(any(not(debug_assertions), test))]
 unsafe fn set_default_dll_directories() -> bool {
     let module = LoadLibraryExW(
         wide_string("Kernel32.dll").as_ptr(),
@@ -2303,7 +2305,9 @@ unsafe fn set_default_dll_directories() -> bool {
             }
             type SetDefaultDllDirectories = unsafe extern "system" fn(DWORD) -> BOOL;
             let func: SetDefaultDllDirectories = std::mem::transmute(func);
-            if func(LOAD_LIBRARY_SEARCH_SYSTEM32 | LOAD_LIBRARY_SEARCH_USER_DIRS) == FALSE {
+            // Desktop DLLs are delay loaded after bootstrap. Keep their executable
+            // directory available without restoring current-directory or PATH search.
+            if func(LOAD_LIBRARY_SEARCH_APPLICATION_DIR | LOAD_LIBRARY_SEARCH_SYSTEM32 | LOAD_LIBRARY_SEARCH_USER_DIRS) == FALSE {
                 eprintln!(
                     "SetDefaultDllDirectories failed: {}",
                     io::Error::last_os_error()
@@ -2313,6 +2317,79 @@ unsafe fn set_default_dll_directories() -> bool {
         }
     }
     true
+}
+
+#[cfg(test)]
+mod dll_search_tests {
+    use super::*;
+    use std::process::{Command, Stdio};
+    use winapi::um::libloaderapi::{FreeLibrary, LoadLibraryW};
+
+    #[test]
+    fn loader_child() {
+        let Ok(application) = std::env::var("SWAN_DLL_SEARCH_APP_PROBE") else { return; };
+        let cwd = std::env::var("SWAN_DLL_SEARCH_CWD_PROBE").unwrap();
+        let path = std::env::var("SWAN_DLL_SEARCH_PATH_PROBE").unwrap();
+        for name in [&application, &cwd, &path] {
+            assert!(name.starts_with("swan-dll-search-") && name.ends_with(".dll"));
+            assert!(!name.contains(['\\', '/', ':']));
+        }
+        // Only the child changes this process-wide loader policy.
+        assert!(set_safe_load_dll());
+        for name in [application.as_str(), "version.dll"] {
+            let module = unsafe { LoadLibraryW(wide_string(name).as_ptr()) };
+            assert!(!module.is_null(), "Expected DLL unavailable: {name}: {}", io::Error::last_os_error());
+            unsafe { FreeLibrary(module); }
+        }
+        for name in [cwd, path] {
+            let module = unsafe { LoadLibraryW(wide_string(&name).as_ptr()) };
+            if !module.is_null() { unsafe { FreeLibrary(module); } }
+            assert!(module.is_null(), "Untrusted CWD or PATH DLL was loaded");
+        }
+    }
+
+    #[test]
+    fn hardened_search_loads_application_dlls_but_rejects_cwd_and_path() {
+        let executable = std::env::current_exe().unwrap();
+        let application_dir = executable.parent().unwrap().canonicalize().unwrap();
+        let nonce = format!("{}-{}", std::process::id(), std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos());
+        let root = std::env::temp_dir().join(format!("swan-dll-search-{nonce}"));
+        fs::create_dir(&root).unwrap();
+        let cwd_dir = root.join("cwd");
+        let path_dir = root.join("path");
+        fs::create_dir(&cwd_dir).unwrap();
+        fs::create_dir(&path_dir).unwrap();
+        let names = [format!("swan-dll-search-app-{nonce}.dll"), format!("swan-dll-search-cwd-{nonce}.dll"), format!("swan-dll-search-path-{nonce}.dll")];
+        let files = [application_dir.join(&names[0]), cwd_dir.join(&names[1]), path_dir.join(&names[2])];
+        let source = PathBuf::from(std::env::var_os("SystemRoot").unwrap()).join("System32/version.dll");
+        for destination in &files {
+            let mut input = fs::File::open(&source).unwrap();
+            let mut output = fs::OpenOptions::new().write(true).create_new(true).open(destination).unwrap();
+            io::copy(&mut input, &mut output).unwrap();
+        }
+        let mut child = Command::new(executable)
+            .args(["--exact", "platform::windows::dll_search_tests::loader_child", "--nocapture"])
+            .current_dir(&cwd_dir).env("PATH", &path_dir)
+            .env("SWAN_DLL_SEARCH_APP_PROBE", &names[0])
+            .env("SWAN_DLL_SEARCH_CWD_PROBE", &names[1])
+            .env("SWAN_DLL_SEARCH_PATH_PROBE", &names[2])
+            .stdin(Stdio::null()).spawn().unwrap();
+        let started = Instant::now();
+        let status = loop {
+            if let Some(status) = child.try_wait().unwrap() { break status; }
+            if started.elapsed() > Duration::from_secs(30) {
+                child.kill().unwrap(); child.wait().unwrap();
+                panic!("DLL-search child did not finish; fixture retained");
+            }
+            std::thread::sleep(Duration::from_millis(20));
+        };
+        assert!(status.success(), "DLL-search child failed; fixture retained");
+        // Remove only the exact created files and empty fixture directories.
+        for file in files { fs::remove_file(file).unwrap(); }
+        fs::remove_dir(cwd_dir).unwrap();
+        fs::remove_dir(path_dir).unwrap();
+        fs::remove_dir(root).unwrap();
+    }
 }
 
 fn get_custom_icon(install_dir: &str, exe: &str) -> Option<String> {
