@@ -9,9 +9,10 @@
     "libs/hbb_common/": "7e1c392c62d39c364127307cd408421dd5f8cfb0"
   },
   "source_date_epoch": 1793065678,
-  "independent_rebuild_pending": true,
+  "independent_rebuild_pending": false,
   "runtime_qualified": false,
   "declared_text_checkout_conversion_count": 1061,
   "original_receipt_sha256": "0290c8747730cc331250de9b9f22d2a07af69402eb3bcb0cfc2c6405106f77e9",
-  "full_source_archive_verified": true
+  "full_source_archive_verified": true,
+  "independent_comparison_evidence": "9ba592c-native-independent-comparison.json"
 }

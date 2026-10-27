@@ -90,7 +90,7 @@
   },
   "limitations": [
     "Customer MSI was unsigned on a disposable administrative CI runner.",
-    "No cold reboot, enrolled native session, publisher acceptance or full Windows compatibility qualification is established by this evidence.",
-    "The independent reproducibility comparison for this exact source is still pending."
-  ]
+    "No cold reboot, enrolled native session, publisher acceptance or full Windows compatibility qualification is established by this evidence."
+  ],
+  "independent_comparison_evidence": "9ba592c-native-independent-comparison.json"
 }

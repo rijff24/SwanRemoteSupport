@@ -12,11 +12,27 @@ Git files and all six generated bridge files matched that run's retained bridge
 artifact. See [exact-source evidence](../deployment/windows/9ba592c-native-source-evidence.json).
 The technician helper rejection and actual unsigned customer MSI service-start
 checks also passed; [their evidence](../deployment/windows/9ba592c-native-startup-ci-evidence.json)
-states the limits. Independent run 40442895972 built successfully, but comparison
-of its original shipping bytes remains pending. These results do not qualify
+states the limits. Independent runs 40435586938 and 40442895972 now produced
+identical original bytes for all eight shipping EXE/MSI outputs and identical
+618-file MSVC input proofs. Each source archive matched all 1,203 public Git files
+and its own six retained generated bridge files. No shipping bytes were
+normalized or executed for this comparison. See
+[the independent comparison](../deployment/windows/9ba592c-native-independent-comparison.json).
+These results do not qualify
 installed technician startup, customer cold-boot recovery, automatic upgrades,
 the complete Windows matrix or production signing. The source-specific runtime
 and historical sections below retain the earlier results and failures.
+
+The same verified source subsequently produced new lab-signed 1.5.2 customer
+and technician MSIs, with signed application, agent, management and worker
+executables. Both MSI builds used the pinned default recipes and 219 verified
+inputs. All seven output signatures and transferred original hashes were
+independently checked, including timestamp receipts and the new machine-local
+key's nonexportable policy. The existing customer service remained running.
+[Lab signing evidence](../deployment/windows/9ba592c-lab-signed-msi-evidence.json)
+does not establish installation or update acceptance. The preserved Windows
+company VM and its signing identity were untouched; these signatures do not
+represent production signing approval.
 
 On a newly created standard Windows10 Pro 22H2 x64 VM, build 19045.3803, the
 existing lab-signed da0c621 technician MSI passed administrative installation,
