@@ -890,10 +890,15 @@ async fn handle(data: Data, stream: &mut Connection) {
                     let response=if config::is_outgoing_only() {
                         serde_json::json!({"ok":false})
                     }else{
-                        let _chk=CheckIfRestart::new();
-                        crate::managed::update_support_pause(paused);
-                        Config::set_option("stop-service".into(),if paused{"Y"}else{""}.into());
-                        serde_json::json!({"ok":Config::get_option("stop-service")==if paused{"Y"}else{""},"paused":paused})
+                        match tokio::task::spawn_blocking(move || {
+                            let _chk=CheckIfRestart::new();
+                            crate::managed::update_support_pause(paused);
+                            Config::set_option("stop-service".into(),if paused{"Y"}else{""}.into());
+                            serde_json::json!({"ok":Config::get_option("stop-service")==if paused{"Y"}else{""},"paused":paused})
+                        }).await {
+                            Ok(response)=>response,
+                            Err(error)=>{log::error!("Support pause task failed: {}",error);serde_json::json!({"ok":false})}
+                        }
                     };
                     allow_err!(stream.send(&Data::Config((name,Some(response.to_string())))).await);
                     return;
