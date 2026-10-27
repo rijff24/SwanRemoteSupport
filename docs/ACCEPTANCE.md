@@ -6,6 +6,18 @@ native support session or a clean-machine installation.
 
 ## Latest source checks, 27 October
 
+The first 1.5.3 workflow, run 40468079337 from pinned source `7bfce49`, now
+passed its native DLL-search regression and headless service installation gates.
+Archive verification, independent rebuild 40489196703, installed GUI startup
+and real reboot qualification remain pending. Both installed Server2019 agents
+also honored paused updates: no installation was handed off, executable hashes
+were unchanged, and enrollment, consent and trust were preserved. Separately,
+the existing 1.5.1 Windows10 customer failed service auto-start after a full
+restart and needed one manual service start. Its identity and lab signing key
+survived. Windows10 was two hours behind externally checked host time; its clock
+was corrected forward before further expiry-sensitive tests. No application
+expiry checks were changed. See [the bounded pause and restart evidence](../deployment/windows/lab-restart-and-paused-updates-20261027.json).
+
 A fresh encrypted Linux company backup and separate restore now preserve both
 current enrolled devices, their approvals and revoked unattended consent,
 administrator MFA, the active profile signing key, original HTTPS trust, and
@@ -40,7 +52,8 @@ Windows loader fixture reproduced error 126 with the old flags and loaded the
 application-directory probe with corrected flags, while continuing to reject
 CWD and PATH probes. The source now adds only application-directory search,
 retains delay loading, and adds a real child-process native Windows regression.
-Unreleased binaries advance to 1.5.3; their build and GUI retest remain pending.
+Unreleased binaries advance to 1.5.3; the first CI run passed, but installed GUI
+and reboot retests remain pending.
 See [the failed runtime and withdrawal evidence](../deployment/windows/9ba592c-technician-startup-failure.json).
 Both generated 1.5.2 downloads now return 404. Updates remain paused; existing
 baseline customer services and release evidence were preserved.
