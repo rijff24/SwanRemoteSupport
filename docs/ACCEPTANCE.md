@@ -6,6 +6,15 @@ native support session or a clean-machine installation.
 
 ## Latest source checks, 27 October
 
+A fresh encrypted Linux company backup and separate restore now preserve both
+current enrolled devices, their approvals and revoked unattended consent,
+administrator MFA, the active profile signing key, original HTTPS trust, and
+release approvals including the withdrawn 1.5.2 downloads. The recovery
+management and HTTPS containers were stopped, and the original company
+remained healthy with signed profile revision 5 and updates paused. This does
+not qualify Windows company restore or a native session against the restored
+copy. See [the current recovery checkpoint](../deployment/linux/pre-153-company-backup-restore-evidence.json).
+
 **1.5.2 failed native technician startup and both sequence-5 lab releases were
 withdrawn.** The generated installer upgraded the existing Server2019 technician
 from 1.5.1 to 1.5.2, with registered MSI state 5, matching new hashes/signatures,

@@ -1,0 +1,75 @@
+{
+  "schema": 1,
+  "observed_utc": "2026-10-27T07:55:08.505526+00:00",
+  "management_source": "761b5c56cca8cd7eecb65d3438de0d6f0075bd4e",
+  "purpose": "Fresh Linux company recovery checkpoint before 1.5.3 runtime qualification",
+  "backup": {
+    "bytes": 251256558,
+    "sha256": "3bb8ebefd8d1e838dcafed89383414e27d5ec2366515cba127c1e26000ff09ae",
+    "encrypted": true,
+    "passphrase_stored_separately": true,
+    "includes": [
+      "management database and configuration",
+      "company trust keys",
+      "transport keys",
+      "HTTPS storage",
+      "deployment environment",
+      "generated installer artifacts"
+    ]
+  },
+  "preconditions": {
+    "no_claimed_live_session": true,
+    "no_queued_or_running_installer_job": true,
+    "failed_152_releases_unapproved": true
+  },
+  "restore": {
+    "utc": "2026-10-27T07:53:57.615325+00:00",
+    "restored_https_original_ca_and_hostname": true,
+    "restored_active_signing_key_from_database": true,
+    "legacy_seed_unchanged": true,
+    "profile_revision": 5,
+    "administrator_mfa": true,
+    "device_approval_identity_and_revoked_consent_preserved": true,
+    "withdrawn_downloads": [
+      {
+        "edition": "customer",
+        "withdrawn_download_status": 404
+      },
+      {
+        "edition": "technician",
+        "withdrawn_download_status": 404
+      }
+    ],
+    "both_device_records_preserved": true,
+    "release_approvals_match_backup": true,
+    "failed_152_downloads_still_withdrawn": true,
+    "no_native_transport_started": true,
+    "native_session_qualified": false
+  },
+  "after": {
+    "utc": "2026-10-27T07:55:08.505526+00:00",
+    "recovery_containers": {
+      "management": "exited",
+      "https": "exited"
+    },
+    "original_https_healthy": true,
+    "original_signed_profile_current": true,
+    "profile_revision": 5,
+    "updates_paused": true,
+    "original_company_volumes_not_replaced": true
+  },
+  "source_receipts": {
+    "pre-loaderfix153-backup-start.json": "9570b70a86c68b85f7a2b9441bd9ef75be0104e612c7314611d8aadbbb1a70a0",
+    "pre-loaderfix153-backup-completed.json": "273771adfb5f96ffd14e686375739fc998fbeaa5775d9b8855712233e2fe5650",
+    "loaderfix153-restore-verified.json": "ecce3beff8d0eb9967fd20bca81162adc32057b8b53afe48dd859efd13b05b36",
+    "loaderfix153-restore-stopped.json": "9b8cb17e7e861bb3ae7857ef8ba17532f5c1e0d1b7a1b4d9607e090250c06417",
+    "loaderfix153-restore-independent-stop-health.json": "baf298f6840770067250820cc7e31f6dfbd9be1dc37a38b7b35cbd5b0ef7bfc0"
+  },
+  "limits": [
+    "Isolated Linux company restore only; does not qualify the separate Windows server restore path.",
+    "Restored transport was not started; no native connection to the clone was attempted.",
+    "No 1.5.3 binaries installed or automatic-update recovery exercised by this test.",
+    "Lab signing and private HTTPS trust do not establish production signing or public Internet reachability."
+  ],
+  "production_publication": false
+}
