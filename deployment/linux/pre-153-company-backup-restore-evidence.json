@@ -64,7 +64,9 @@
     "loaderfix153-restore-verified.json": "ecce3beff8d0eb9967fd20bca81162adc32057b8b53afe48dd859efd13b05b36",
     "loaderfix153-restore-stopped.json": "9b8cb17e7e861bb3ae7857ef8ba17532f5c1e0d1b7a1b4d9607e090250c06417",
     "loaderfix153-restore-independent-stop-health.json": "baf298f6840770067250820cc7e31f6dfbd9be1dc37a38b7b35cbd5b0ef7bfc0",
-    "pre153-restored-customer-credential-bounded-result.json": "38448d1398e347e695c3833dc622f0aac2adfbb4ace666597f35411c90b11683"
+    "pre153-restored-customer-credential-bounded-result.json": "38448d1398e347e695c3833dc622f0aac2adfbb4ace666597f35411c90b11683",
+    "post-recovery-win10-restored-native-token-verified.json": "556b438e0424c1c0c489e5737b70ff3b6689ffd6c401b1498e4f5677e96454fb",
+    "post-recovery-win10-restored-native-token-clone-stopped.json": "5215e28a5f5677dbac844ce4880f0025c9c79f7e7a012d5a66d2d4ac3c7edc0b"
   },
   "limits": [
     "Isolated Linux company restore only; does not qualify the separate Windows server restore path.",
@@ -91,5 +93,17 @@
     "private_credentials_exported": false,
     "both_customer_credentials_verified": false,
     "native_session_tested": false
-  }
+  },
+  "windows10_credential_after_normal_recovery": {
+    "company_and_device_identity_match": true,
+    "approval_state": "approved",
+    "existing_customer_credential_authenticated_to_restored_server": true,
+    "utc": "2026-10-27T08:17:30.6749819Z",
+    "original_https_trust_used": true,
+    "credential_value_disclosed": false,
+    "native_session_tested": false,
+    "customer_bootstrap_and_credential_unchanged": true
+  },
+  "both_installed_customer_credentials_authenticated_after_restore": true,
+  "normal_power_cycle_not_full_kernel_restart": true
 }

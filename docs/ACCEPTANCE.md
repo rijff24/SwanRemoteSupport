@@ -15,8 +15,12 @@ remained healthy with signed profile revision 5 and updates paused. This does
 not qualify Windows company restore or a native session against the restored
 copy. The installed Server2019 customer also authenticated to the restored
 company with its unchanged credential, which stayed inside the original guest.
-The corresponding Windows10 credential check remains unverified because SSH
-command startup stalled; no forced reset or reenrollment was performed.
+Windows10 initially stalled at SSH command startup; after normal shutdown and
+boot of the same disk, its unchanged credential also authenticated to the
+restored company. The original failure is retained. No credentials left their
+guests, and neither customer was reenrolled. The customer service was running
+automatically after this recovery, but Windows retained its earlier kernel boot
+time, so a full restart remains a separate test.
 See [the current recovery checkpoint](../deployment/linux/pre-153-company-backup-restore-evidence.json).
 
 **1.5.2 failed native technician startup and both sequence-5 lab releases were
