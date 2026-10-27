@@ -18,6 +18,20 @@ installed technician startup, customer cold-boot recovery, automatic upgrades,
 the complete Windows matrix or production signing. The source-specific runtime
 and historical sections below retain the earlier results and failures.
 
+On a newly created standard Windows10 Pro 22H2 x64 VM, build 19045.3803, the
+existing lab-signed da0c621 technician MSI passed administrative installation,
+repair after retaining and removing its verified executable, and uninstall.
+All three phases returned 0, installed executable and agent signatures matched
+the explicit lab publisher, and 14 original records matched their guest hashes.
+See [the bounded fresh Windows10 evidence](../deployment/windows/da0c621-win10-fresh-technician-msi-evidence.json).
+The initial certificate-cmdlet and script-policy failures occurred before MSI;
+the full administrator token was independently confirmed, exact public lab
+trust was verified, and the successful test used a dedicated child process
+without changing persistent execution policies. A timed-out evidence-helper
+transfer was also retained; direct collection subsequently succeeded. These
+results do not qualify standard-user installation, native technician login,
+sessions, customer behavior, software upgrades or full Windows10 acceptance.
+
 ## Lab continuation, 26 October
 
 The current da0c621 customer and technician lab-signed MSIs passed bounded
