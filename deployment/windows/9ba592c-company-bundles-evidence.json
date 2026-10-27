@@ -1,0 +1,68 @@
+{
+  "application_source": "9ba592ca0431ce734a1edf7391aec183f5c100fa",
+  "management_source": "761b5c56cca8cd7eecb65d3438de0d6f0075bd4e",
+  "worker_application_source": "da0c621845057bed321a98a1886ef15891e431a9",
+  "worker_and_bundled_recipe_paths_unchanged_in_new_source": true,
+  "version": "1.5.2",
+  "sequence": 5,
+  "channel": "test",
+  "lab_signed_only": true,
+  "production_publication": false,
+  "asset_hashes": {
+    "customer.msi": "ad6731f999b2706522a3e1d9a48f930c88417c1b80b1d091edd632223ddbf630",
+    "technician.msi": "aa4572f8a7a714367743d9fe54cb8aa5a6fff29ecff1d7715914a26e8ce7a3ff",
+    "agent.exe": "fba21e0fd6d59a56a0a14979f95896e621a85eaf24a63c08da87b1f84d13885b",
+    "lab-publisher-public.cer": "c797e22798a8afa94496ea0e8668b6e5ee4a4fc9f639b8200d5e1071e6925ec3",
+    "source.zip": "fa40f77f318b79e69182282aea7e1029ebe1f2a3bb64fb108ca319fb39b2dadf"
+  },
+  "full_corresponding_source_https_verified": true,
+  "public_https_payload_hashes_verified": true,
+  "operator_release_key_override_status": 403,
+  "bad_signature_import_status": 403,
+  "unapproved_build_status": 409,
+  "unapproved_requests_created_no_jobs": true,
+  "both_releases_explicitly_approved": true,
+  "both_worker_jobs_completed": true,
+  "bundles": [
+    {
+      "edition": "customer",
+      "bundle_sha256": "6578f766e93f1be70a2d10a6909d5f8c9317cad16e12bb4398d16a703f1811a2",
+      "bytes": 32498623,
+      "public_bootstrap_only": true,
+      "profile_and_release_signatures_verified": true,
+      "seven_source_texts_exact": true,
+      "signed_payload_hashes_verified": true,
+      "anonymous_status": 200,
+      "download_status": 200
+    },
+    {
+      "edition": "technician",
+      "bundle_sha256": "14606398f6d287fd519c7c34c9c661092abb1d2108609a023581b6268bf6845b",
+      "bytes": 30286567,
+      "public_bootstrap_only": true,
+      "profile_and_release_signatures_verified": true,
+      "seven_source_texts_exact": true,
+      "signed_payload_hashes_verified": true,
+      "anonymous_status": 401,
+      "download_status": 200
+    }
+  ],
+  "independent_signed_envelope_verification": true,
+  "public_bootstrap_only": true,
+  "profile_revision": 5,
+  "signed_policy_unchanged_excluding_renewed_lifetime": true,
+  "automatic_updates_paused": true,
+  "exact_public_publisher_certificate_trusted_on_worker": true,
+  "new_agent_hash_and_publisher_verified_on_worker": true,
+  "new_agent_executed_during_worker_trust_check": false,
+  "private_key_transferred": false,
+  "existing_worker_and_customer_services_preserved": true,
+  "software_upgrade_executed": false,
+  "limitations": [
+    "These are private-lab test releases with a disposable publisher, not production publication.",
+    "The worker and bundled script paths are unchanged between its deployed source and the new application source; this does not claim that the new worker binary was deployed.",
+    "Envelope tamper rejection here is independent bundle verification; native client rejection remains a separate test.",
+    "The original exact-envelope equality assertion failed because signed profile lifetimes renew on reads. Both signatures and all policy fields were subsequently verified without repeating imports or jobs.",
+    "Automatic installation, session coordination, interruption recovery and full Windows compatibility remain separate acceptance gates."
+  ]
+}

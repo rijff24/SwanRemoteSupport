@@ -34,6 +34,21 @@ does not establish installation or update acceptance. The preserved Windows
 company VM and its signing identity were untouched; these signatures do not
 represent production signing approval.
 
+The company then served the exact 1.5.2 MSI payloads, agent and full corresponding
+source archive over HTTPS with matching hashes. Its existing worker verified the
+new public lab publisher; identity, credential, consent and both running services
+were preserved. Bad signatures and request-supplied trust overrides returned 403;
+unapproved build requests returned 409 without creating jobs. Explicit approval
+produced both company bundles: anonymous customer download returned 200,
+anonymous technician download returned 401, and authenticated technician download
+returned 200. Both envelopes, payload hashes and seven bundled source texts
+verified. The deployed worker and installer recipe paths are unchanged in the
+new source; the new worker binary has not been deployed. Signed policy fields
+remain at revision 5 with updates paused; only normal signature lifetime renewal
+changed the envelopes. See [distribution evidence](../deployment/windows/9ba592c-company-bundles-evidence.json).
+No 1.5.2 installation, automatic rollout, session coordination or interruption
+recovery is established by these distribution checks.
+
 On a newly created standard Windows10 Pro 22H2 x64 VM, build 19045.3803, the
 existing lab-signed da0c621 technician MSI passed administrative installation,
 repair after retaining and removing its verified executable, and uninstall.
