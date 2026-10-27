@@ -6,6 +6,22 @@ native support session or a clean-machine installation.
 
 ## Latest source checks, 27 October
 
+The staged customer update exposed another real compatibility failure: Windows
+servicing replaced System32's RuntimeBroker, leaving the endpoint's generated
+privacy-helper copy stale. All 96 signed project files remained unchanged, but
+strict installed-payload verification correctly rejected that stale OS copy.
+A guarded lab-only refresh from the current Windows file allowed the unchanged
+installed verifier to pass and the automatic update to reach its helper. The
+temporary diagnostic watcher action then triggered the helper's task-ownership
+guard; its original native action was restored without launching another
+installer. The existing recovery and final customer upgrade remain pending.
+
+The 1.5.4 source adds narrowly scoped OS-cache maintenance under installation
+and session exclusion. It retains project signature/hash checks, rejects links,
+defers locked files and active recovery, and never takes its source from company
+configuration. Linux/Windows regression tests and a real stale-cache Windows
+test are still required; this source change is not yet a qualified release.
+
 **1.5.3 now passes installed native technician startup and MFA login on the
 Server2019 lab endpoint.** The generated company bundle upgraded 1.5.2/sequence5
 to 1.5.3/sequence6, preserving bootstrap, branding and the separate customer
@@ -25,8 +41,10 @@ source and six bridge files per build, and matching recorded compiler inputs.
 The first full archive and source were also verified locally; the runner-side
 comparison avoided a second large host download. All seven new lab signatures
 and original receipts were checked against the existing nonexportable guest key.
-Public customer and protected technician bundle downloads passed; updates remain
-paused and failed 1.5.2 downloads remain withdrawn. See
+Public customer and protected technician bundle downloads passed. The lab now
+has an open maintenance window and a 20% rollout for the eligible Windows 10
+customer; Server 2019 is excluded. Closed-window checks passed on both installed
+agents. Failed 1.5.2 downloads remain withdrawn. See
 [the original-byte comparison](../deployment/windows/7bfce49-native-independent-comparison.json).
 
 The first 1.5.3 workflow, run 40468079337 from pinned source `7bfce49`, now

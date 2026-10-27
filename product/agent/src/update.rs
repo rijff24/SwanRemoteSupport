@@ -492,6 +492,46 @@ pub fn verify_installed_metadata(state:&AgentState,directory:&Path)->Result<()> 
     verify_installed(directory,&release)
 }
 
+/// A Windows update can replace the system RuntimeBroker while leaving its
+/// generated privacy-helper copy behind. Keep verification strict, but refresh
+/// that one OS-owned cache under the same exclusion used for installation.
+/// This never repairs or accepts a changed project release file.
+#[cfg(windows)]
+pub fn refresh_windows_runtime_cache(directory:&Path)->Result<bool> {
+    let state=AgentState::load_for_refresh(directory)?;
+    if state.bootstrap.edition!=Edition::Customer {return Ok(false);}
+    let target=installed_target(directory,&state.bootstrap.edition)?;
+    require_existing_application(&target)?;
+    let root=target.parent().context("Missing installed directory")?;
+    let source=system_directory()?.join("RuntimeBroker.exe");
+    if crate::payload::windows_cache_current(root,&source)? {return Ok(false);}
+
+    let activity=activity_file(directory)?;
+    fs2::FileExt::try_lock_exclusive(&activity).context("Windows cache refresh requires all sessions and installations to finish")?;
+    for marker in ["pending-uninstall","pending-install.json","pending-update.json","configuration-restart.json"] {
+        ensure!(!directory.join(marker).exists(),"Installation or recovery takes precedence over Windows cache refresh");
+    }
+    let latest=AgentState::load_for_refresh(directory)?;
+    ensure!(latest.bootstrap.edition==Edition::Customer,"Customer configuration changed during cache maintenance");
+    let envelope:SignedEnvelope=serde_json::from_slice(&std::fs::read(directory.join("installed-release.json"))?)?;
+    let release=validate_previous_release(&latest,&envelope,latest.last_release_sequence)?;
+    let mut files=release.installed_files.clone();
+    ensure!(!files.iter().any(|f|f.path.eq_ignore_ascii_case(crate::payload::WINDOWS_BROKER_CACHE)),"OS cache cannot be a project release artifact");
+    // Account for the existing cache only while checking that every signed
+    // project file and the native file set are untouched. It is not trusted for
+    // execution: refresh_windows_cache replaces it from System32, and the final
+    // verification still requires the exact current Windows bytes.
+    let cache=root.join(crate::payload::WINDOWS_BROKER_CACHE);
+    if cache.exists() {
+        crate::payload::windows_cache_current(root,&source)?;
+        files.push(InstalledFile{path:crate::payload::WINDOWS_BROKER_CACHE.into(),sha256:digest(std::fs::read(&cache)?)});
+    }
+    crate::payload::verify(root,&files)?;
+    let changed=crate::payload::refresh_windows_cache(root,&source)?;
+    verify_installed(directory,&release)?;
+    Ok(changed)
+}
+
 #[cfg(windows)]
 fn save_installed_metadata(directory:&Path,envelope:&SignedEnvelope)->Result<()> {
     use std::io::Write;

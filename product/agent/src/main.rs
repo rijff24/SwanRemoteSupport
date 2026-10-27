@@ -6,6 +6,13 @@ use std::path::PathBuf;
 use swan_agent::*;
 use swan_protocol::*;
 
+#[cfg(windows)]
+async fn refresh_runtime_cache(directory:&std::path::Path)->Result<bool> {
+    let directory=directory.to_owned();
+    tokio::task::spawn_blocking(move ||swan_agent::update::refresh_windows_runtime_cache(&directory))
+        .await.context("Windows component cache maintenance task failed")?
+}
+
 #[tokio::main]
 async fn main()->Result<()> {
     let args:Vec<String>=std::env::args().collect();
@@ -83,6 +90,8 @@ async fn main()->Result<()> {
         "sync"=>{let mut state=AgentState::load_for_refresh(&directory)?;state.sync().await?;state.save(&directory)?;println!("Profile synchronized.");}
         "watch"=>{loop {match AgentState::load_for_refresh(&directory){Ok(mut state)=>{
             match state.sync().await{Ok(())=>state.save(&directory)?,Err(error)=>eprintln!("Profile refresh failed: {error}")};
+            #[cfg(windows)]
+            if let Err(error)=refresh_runtime_cache(&directory).await {eprintln!("Windows component cache maintenance deferred: {error}");}
             // Reload after refresh: another process may have changed consent.
             // Server revisions reject delayed requests from an older choice.
             let mut current=AgentState::load_for_refresh(&directory)?;
@@ -93,9 +102,13 @@ async fn main()->Result<()> {
         },Err(error)=>eprintln!("Configuration unavailable: {error}")};tokio::time::sleep(std::time::Duration::from_secs(300)).await;}}
         "update"=>{
             let mut state=AgentState::load_for_refresh(&directory)?;state.sync().await?;state.save(&directory)?;
+            #[cfg(windows)]
+            refresh_runtime_cache(&directory).await?;
             let token=std::env::var("SWAN_TECHNICIAN_TOKEN").ok();
             println!("Update handed off: {}",state.update(&directory,token.as_deref()).await?);
         }
+        #[cfg(windows)]
+        "refresh-os-cache"=>{println!("Windows component cache refreshed: {}",refresh_runtime_cache(&directory).await?);}
         #[cfg(windows)]
         "resume-update"=>{
             let state=AgentState::load_for_refresh(&directory)?;
