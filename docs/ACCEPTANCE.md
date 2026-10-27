@@ -6,10 +6,33 @@ native support session or a clean-machine installation.
 
 ## Latest source checks, 27 October
 
+**1.5.3 now passes installed native technician startup and MFA login on the
+Server2019 lab endpoint.** The generated company bundle upgraded 1.5.2/sequence5
+to 1.5.3/sequence6, preserving bootstrap, branding and the separate customer
+identity/consent. Actual MSI registration, installed signatures and hashes were
+verified independently. The visible native app showed both approved lab devices
+and history, and its MFA login matched the server audit. Its running child and
+loaded Rust/Flutter libraries matched the reproduced payload, with no new
+application crash event. A path-only verifier initially rejected the native
+launcher's equivalent `/./` path; canonical inspection passed while retaining
+exact-byte and process-creation checks. A native remote session and customer
+upgrade/reboot qualification remain pending. See
+[the bounded startup and distribution evidence](../deployment/windows/7bfce49-lab-distribution-and-technician-startup.json).
+
+Both native runs 40468079337 and 40489196703 passed. Comparison run 40499642535
+verified identical original bytes for all eight shipping outputs, exact public
+source and six bridge files per build, and matching recorded compiler inputs.
+The first full archive and source were also verified locally; the runner-side
+comparison avoided a second large host download. All seven new lab signatures
+and original receipts were checked against the existing nonexportable guest key.
+Public customer and protected technician bundle downloads passed; updates remain
+paused and failed 1.5.2 downloads remain withdrawn. See
+[the original-byte comparison](../deployment/windows/7bfce49-native-independent-comparison.json).
+
 The first 1.5.3 workflow, run 40468079337 from pinned source `7bfce49`, now
 passed its native DLL-search regression and headless service installation gates.
-Archive verification, independent rebuild 40489196703, installed GUI startup
-and real reboot qualification remain pending. Both installed Server2019 agents
+The later evidence above supersedes its then-pending archive, reproduction and
+GUI checks; real customer reboot qualification remains pending. Both installed Server2019 agents
 also honored paused updates: no installation was handed off, executable hashes
 were unchanged, and enrollment, consent and trust were preserved. Separately,
 the existing 1.5.1 Windows10 customer failed service auto-start after a full
@@ -52,8 +75,8 @@ Windows loader fixture reproduced error 126 with the old flags and loaded the
 application-directory probe with corrected flags, while continuing to reject
 CWD and PATH probes. The source now adds only application-directory search,
 retains delay loading, and adds a real child-process native Windows regression.
-Unreleased binaries advance to 1.5.3; the first CI run passed, but installed GUI
-and reboot retests remain pending.
+Unreleased binaries advance to 1.5.3; its installed technician GUI retest now
+passes as described above, while customer upgrade and reboot tests remain open.
 See [the failed runtime and withdrawal evidence](../deployment/windows/9ba592c-technician-startup-failure.json).
 Both generated 1.5.2 downloads now return 404. Updates remain paused; existing
 baseline customer services and release evidence were preserved.
