@@ -81,6 +81,21 @@ add_subdirectory("runner")
 # them to the application.
 include(flutter/generated_plugins.cmake)
 
+# --service returns from the Rust core before creating a Flutter window. Avoid
+# loading the engine and every GUI plugin before the service can register with
+# Windows, especially during a cold boot on slower storage.
+if(MSVC)
+  target_link_libraries(${BINARY_NAME} PRIVATE delayimp)
+  target_link_options(${BINARY_NAME} PRIVATE "/DELAYLOAD:flutter_windows.dll")
+  foreach(plugin ${FLUTTER_PLUGIN_LIST})
+    get_target_property(plugin_type ${plugin}_plugin TYPE)
+    if(plugin_type STREQUAL "SHARED_LIBRARY")
+      target_link_options(${BINARY_NAME} PRIVATE
+        "/DELAYLOAD:$<TARGET_FILE_NAME:${plugin}_plugin>")
+    endif()
+  endforeach()
+endif()
+
 
 # === Installation ===
 # Support files are copied into place next to the executable, so that it can

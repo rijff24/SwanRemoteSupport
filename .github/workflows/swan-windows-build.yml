@@ -228,6 +228,15 @@ jobs:
           }
           $records | ConvertTo-Json -Depth 5 | Set-Content artifacts/native-desktop-pe-metadata.json
 
+      - name: Verify service launcher defers desktop DLL loading
+        shell: pwsh
+        run: |
+          python3 -m unittest discover -s deployment/windows -p test_service_imports.py
+          if ($LASTEXITCODE -ne 0) { throw 'Service import verifier tests failed.' }
+          $record = python3 deployment/windows/verify-service-imports.py swan-client/rustdesk.exe --bundle swan-client
+          if ($LASTEXITCODE -ne 0) { throw 'Service launcher eagerly loads desktop DLLs.' }
+          $record | Set-Content artifacts/native-service-imports.json
+
       - name: Verify deterministic managed application build metadata
         shell: pwsh
         run: |
@@ -376,6 +385,7 @@ jobs:
             artifacts/engine-source/**
             artifacts/engine-selection.json
             artifacts/native-desktop-pe-metadata.json
+            artifacts/native-service-imports.json
             artifacts/native-msvc-toolchain.json
             artifacts/flutter-sdk-identity.json
             artifacts/native-managed-updater-tests.log
@@ -437,6 +447,7 @@ jobs:
             artifacts/engine-source/**
             artifacts/engine-selection.json
             artifacts/native-desktop-pe-metadata.json
+            artifacts/native-service-imports.json
             artifacts/native-msvc-toolchain.json
             artifacts/*.msi.build.json
             artifacts/flutter-sdk-identity.json

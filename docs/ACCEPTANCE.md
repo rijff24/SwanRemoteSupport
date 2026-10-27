@@ -6807,3 +6807,13 @@ VMs booted together on HDD storage: Windows recorded events 7000/7009 and a
 the session above. The original failure is retained; its cause is unproven and
 reliable cold-boot startup remains a failing acceptance gate. Earlier Server
 2025 administrative reboot evidence does not resolve this Server 2019 failure.
+
+Investigation confirmed that this headless service had loaded the Flutter engine
+and desktop plugins. The original da0c621 launcher normally imports the engine
+and eleven plugin DLLs, while its Rust core has no Flutter DLL import. The Windows
+build now delay-loads the engine and generated shared plugin targets, using
+[MSVC's supported delay-load mechanism](https://learn.microsoft.com/en-us/cpp/build/reference/linker-support-for-delay-loaded-dlls).
+A new CI verifier rejects an eager bundled DLL import or a missing delayed
+engine, and rejects malformed import descriptors; its local regression tests
+pass. A fresh native build, module inspection and repeated cold-boot tests are
+still required. This change is not yet proof that the startup timeout is fixed.
