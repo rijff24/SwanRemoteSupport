@@ -138,11 +138,15 @@ pub fn core_main() -> Option<Vec<String>> {
     }
     #[cfg(windows)]
     {
-        _is_quick_support |= !crate::platform::is_installed()
-            && args.is_empty()
-            && (is_quick_support_exe(&arg_exe)
-                || config::LocalConfig::get_option("pre-elevate-service") == "Y"
-                || (!click_setup && crate::platform::is_elevated(None).unwrap_or(false)));
+        if config::is_outgoing_only() {
+            _is_quick_support = false;
+        } else {
+            _is_quick_support |= !crate::platform::is_installed()
+                && args.is_empty()
+                && (is_quick_support_exe(&arg_exe)
+                    || config::LocalConfig::get_option("pre-elevate-service") == "Y"
+                    || (!click_setup && crate::platform::is_elevated(None).unwrap_or(false)));
+        }
         crate::portable_service::client::set_quick_support(_is_quick_support);
     }
     let mut log_name = "".to_owned();
@@ -302,6 +306,10 @@ pub fn core_main() -> Option<Vec<String>> {
                 }
                 return None;
             } else if args[0] == "--portable-service" {
+                if config::is_outgoing_only() {
+                    log::warn!("Outgoing-only editions cannot run an incoming portable service");
+                    return None;
+                }
                 crate::platform::elevate_or_run_as_system(
                     click_setup,
                     _is_elevate,

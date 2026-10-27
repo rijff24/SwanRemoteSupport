@@ -213,6 +213,13 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Managed updater isolation regression failed.' }
           if ((Get-Content artifacts/native-managed-updater-tests.log -Raw) -notmatch 'test result: ok\. 1 passed; 0 failed;') { throw 'Expected managed updater isolation test did not run.' }
 
+      - name: Reject incoming capture helpers in the technician edition
+        shell: pwsh
+        run: |
+          cargo test --release --lib --features "flutter,swan_custom,hwcodec,vram" server::portable_service::client::edition_tests::outgoing_only_refuses_capture_helper_before_runtime_initialization -- --exact 2>&1 | Tee-Object -FilePath artifacts/native-technician-helper-tests.log
+          if ($LASTEXITCODE -ne 0) { throw 'Technician incoming-helper isolation regression failed.' }
+          if ((Get-Content artifacts/native-technician-helper-tests.log -Raw) -notmatch 'test result: ok\. 1 passed; 0 failed;') { throw 'Expected technician helper test did not run.' }
+
       - name: Verify desktop launcher and plugin reproducibility metadata
         shell: pwsh
         run: |
@@ -354,6 +361,11 @@ jobs:
         run: |
           ./deployment/windows/test_technician_msi_lifecycle.ps1 -Package 'artifacts/SwanRemoteSupport-${{ env.VERSION }}-technician-x64-unsigned.msi' -TechnicianExecutable 'artifacts/SwanRemoteSupport-${{ env.VERSION }}-technician-x64-unsigned.exe' -AgentExecutable artifacts/swan-agent.exe
 
+      - name: Verify customer MSI starts a headless native service
+        shell: pwsh
+        run: |
+          ./deployment/windows/test_customer_service_startup.ps1 -Package 'artifacts/SwanRemoteSupport-${{ env.VERSION }}-customer-x64-unsigned.msi' -CustomerExecutable swan-client/rustdesk.exe
+
       - name: Preserve technician MSI lifecycle evidence
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -362,6 +374,7 @@ jobs:
           if-no-files-found: ignore
           path: |
             ${{ runner.temp }}/swan-msi-lifecycle-*/**
+            ${{ runner.temp }}/swan-customer-service-*/**
             ${{ runner.temp }}/swan-msi-staging-check/result.json
             ${{ runner.temp }}/swan-msi-metadata-check/result.json
 

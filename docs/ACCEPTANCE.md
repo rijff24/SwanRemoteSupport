@@ -6823,8 +6823,10 @@ its publisher-verification child was pending. The agent now bounds that child to
 120 seconds, terminates and reaps it on timeout, and returns an error without
 authorizing launch or installation. It still requires the original signature,
 publisher, certificate and hash checks. New process tests cover actual successful
-and rejected child exits plus timeout cleanup; Windows/Linux CI execution and
-installed-app testing are pending. The prior unbounded lab process is retained
+and rejected child exits plus timeout cleanup. Windows and Linux component CI
+passed for 7407fa1, including the actual Windows child-process tests;
+[CI evidence](../deployment/windows/7407fa1-publisher-timeout-ci-evidence.json)
+does not yet qualify installed-app timeout behavior. The prior unbounded lab process is retained
 for diagnosis rather than counted as a successful relaunch.
 
 For source a1d67be, independent native runs 40415706839 and 40423647265 now pass
@@ -6837,4 +6839,24 @@ normalized or executed for this check.
 does not qualify runtime upgrades, the newer startup changes, signing or release
 publication. The first Docker-context test for 06de236 failed because the new
 verifier source was missing from the source allowlist; both context allowlists
-now include that exact file. The failed run remains retained pending a new pass.
+now include that exact file. Run 40432863268 subsequently passed the Linux
+deployment check: 46 required public files were exported and all configuration,
+key and cache canaries excluded. The original failed run remains retained.
+
+The outgoing-only technician startup path also previously allowed automatic
+quick-support detection under an elevated account. That could enter the incoming
+portable helper's display discovery and shared-memory allocation. Outgoing-only
+editions now disable quick-support mode, reject direct helper CLI invocation and
+reject both direct and logon helper requests before runtime initialization. The
+native regression invokes the real helper entry point with outgoing-only policy
+and checks that startup state and shared memory remain unchanged. It has not yet
+been compiled or exercised in the installed technician app.
+
+The native workflow now includes an unsigned customer MSI smoke test on a
+disposable Windows runner: install, require automatic LocalSystem service startup
+without a manual start, inspect the service process for absence of Flutter engine
+and plugin DLLs, then uninstall. It refuses existing customer state and retains
+logs/results even when cleanup fails. Its PowerShell syntax was checked locally;
+execution remains pending and does not substitute for cold-boot qualification.
+Windows PowerShell 5 also rejected the fixture on this host before resolving
+its nonexistent test package, confirming the disposable-runner guard.
