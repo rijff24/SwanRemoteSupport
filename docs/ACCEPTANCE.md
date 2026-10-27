@@ -6794,8 +6794,11 @@ the technician, removed the support service through the existing native stop
 path and prevented reconnect; the customer showed Resume support. Server-side
 closure of the retained lease record is not claimed.
 [Two-machine session evidence](../deployment/windows/da0c621-linux-company-two-machine-session-evidence.json)
-does not yet distinguish direct from relay transport or qualify public Internet
-operation, hostile native connections, expired-lease termination, keyboard,
+was subsequently correlated with the receiver and company relay logs using the
+same connection UUID: this successful session used the company relay. An earlier
+relay handshake failed to receive a public key before the second paired request
+succeeded. This does not qualify direct NAT traversal, separately forced-relay
+coverage, public Internet operation, hostile native connections, expired-lease termination, keyboard,
 clipboard, transfer, UAC, logon-screen or multi-monitor behavior.
 
 This run also exposed a failed automatic customer service start after the two

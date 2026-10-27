@@ -12,7 +12,7 @@
   ],
   "technician_os": "Server 2025 26100.32230",
   "customer_os": "Server 2019 17763.3650",
-  "transport_classification": "Direct versus relay not yet verified; private NAT lab only",
+  "transport_classification": "Successful private NAT lab session used company relay; matching receiver and relay UUID verified",
   "customer_automatic_start_failed": true,
   "automatic_start_failure": {
     "events": [
@@ -26,7 +26,7 @@
   "session_server_closure_verified": false,
   "unqualified": [
     "Public Internet connectivity",
-    "Explicit direct and forced-relay coverage",
+    "Direct NAT traversal and separately forced relay coverage",
     "Native unauthorized or wrong-company connection rejection",
     "Active-session permission revocation and expired-lease termination",
     "Keyboard clipboard transfer UAC logon screen and multiple monitors",
@@ -38,5 +38,20 @@
     "native-two-machine-customer-stop.json": "8837876c3a4face09ee11b8ed4f344677c01b04f0a48deeff2afee05ad81945e",
     "customer19-boot-timeout-record.json": "edec1845f1376f40eef0de225d2fe84640be44b5607f57fae201118352e73abe"
   },
-  "full_product_acceptance": false
+  "full_product_acceptance": false,
+  "relay_evidence": {
+    "utc": "2026-10-27T00:53:44.328248+00:00",
+    "successful_session_used_relay": true,
+    "matching_receiver_and_relay_connection_id_verified": true,
+    "receiver_relay_time": "2026-10-27T00:43:22.379423Z",
+    "relay_pair_time": "2026-10-27T00:43:22.160426Z",
+    "native_video_service_time": "2026-10-27T00:43:37.906121Z",
+    "earlier_relay_handshake_failed_to_receive_public_key": true,
+    "direct_transport_qualified": false,
+    "public_internet_qualified": false,
+    "original_log_sha256": {
+      "customer19-native-session-server.private.log": "c61bdea45c8b25e86d461c66af128c09528c6f8f2617c08945fbd5a287a13546",
+      "native-session-hbbr.private.log": "30d78b79d0e94937b984750a7a11114dfc9107b532b3b1938fdd201267eab8c9"
+    }
+  }
 }
