@@ -6815,8 +6815,9 @@ build now delay-loads the engine and generated shared plugin targets, using
 [MSVC's supported delay-load mechanism](https://learn.microsoft.com/en-us/cpp/build/reference/linker-support-for-delay-loaded-dlls).
 A new CI verifier rejects an eager bundled DLL import or a missing delayed
 engine, and rejects malformed import descriptors; its local regression tests
-pass. A fresh native build, module inspection and repeated cold-boot tests are
-still required. This change is not yet proof that the startup timeout is fixed.
+pass. Native run 40435586938 also passed the import gate and actual service module
+inspection described below. Repeated cold-boot tests are still required; this
+change is not yet proof that the startup timeout is fixed.
 
 A later technician relaunch remained inside `swan-agent verify-installed` while
 its publisher-verification child was pending. The agent now bounds that child to
@@ -6849,14 +6850,21 @@ portable helper's display discovery and shared-memory allocation. Outgoing-only
 editions now disable quick-support mode, reject direct helper CLI invocation and
 reject both direct and logon helper requests before runtime initialization. The
 native regression invokes the real helper entry point with outgoing-only policy
-and checks that startup state and shared memory remain unchanged. It has not yet
-been compiled or exercised in the installed technician app.
+and checks that startup state and shared memory remain unchanged. That exact
+test compiled and passed in native run 40435586938 for source 9ba592c. Installed
+technician startup and reconnection remain unqualified.
 
 The native workflow now includes an unsigned customer MSI smoke test on a
 disposable Windows runner: install, require automatic LocalSystem service startup
 without a manual start, inspect the service process for absence of Flutter engine
 and plugin DLLs, then uninstall. It refuses existing customer state and retains
-logs/results even when cleanup fails. Its PowerShell syntax was checked locally;
-execution remains pending and does not substitute for cold-boot qualification.
+logs/results even when cleanup fails. Run 40435586938 passed this actual test:
+the MSI install completed in 4.65 seconds, its automatic service loaded the Rust
+core without the Flutter engine or plugin DLLs, and uninstall was verified.
+The retained original result and logs were independently hash-verified against
+artifact 12706347182; [evidence](../deployment/windows/9ba592c-native-startup-ci-evidence.json)
+records the exact source, package and artifact identities. This administrative,
+unsigned CI test does not qualify cold reboot, enrolled sessions, publisher
+acceptance or the complete Windows compatibility matrix.
 Windows PowerShell 5 also rejected the fixture on this host before resolving
 its nonexistent test package, confirming the disposable-runner guard.
