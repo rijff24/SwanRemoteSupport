@@ -23,6 +23,7 @@ product/agent/src/**
 !product/agent/src/payload.rs
 !product/agent/src/technician.rs
 !product/agent/src/update.rs
+!product/agent/src/verifier_process.rs
 !product/management/
 product/management/**
 !product/management/Cargo.toml

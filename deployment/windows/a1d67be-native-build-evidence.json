@@ -24,9 +24,10 @@
   },
   "public_tracked_source_files_verified": 1192,
   "generated_bridge_files_verified": 6,
-  "independent_rebuild_passed": false,
+  "independent_rebuild_passed": true,
   "runtime_upgrade_qualified": false,
   "production_signed_release": false,
   "complete_archive_bytes": 254658035,
-  "source_verification_receipt_sha256": "b9088cba32ef527c8982b8f6628c0140909a7f71a5b4eb6d84ad77535d8ef817"
+  "source_verification_receipt_sha256": "b9088cba32ef527c8982b8f6628c0140909a7f71a5b4eb6d84ad77535d8ef817",
+  "independent_comparison": "a1d67be-native-independent-comparison.json"
 }

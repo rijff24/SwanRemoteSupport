@@ -6826,3 +6826,15 @@ publisher, certificate and hash checks. New process tests cover actual successfu
 and rejected child exits plus timeout cleanup; Windows/Linux CI execution and
 installed-app testing are pending. The prior unbounded lab process is retained
 for diagnosis rather than counted as a successful relaunch.
+
+For source a1d67be, independent native runs 40415706839 and 40423647265 now pass
+the original-byte comparison: all eight shipping EXE/MSI outputs are identical,
+all 618 recorded MSVC inputs match, and each archive's 1,192 tracked source files
+match pinned public Git objects. Six generated bridge files in each archive
+also match that run's retained bridge artifact. Shipping binaries were not
+normalized or executed for this check.
+[Independent comparison](../deployment/windows/a1d67be-native-independent-comparison.json)
+does not qualify runtime upgrades, the newer startup changes, signing or release
+publication. The first Docker-context test for 06de236 failed because the new
+verifier source was missing from the source allowlist; both context allowlists
+now include that exact file. The failed run remains retained pending a new pass.
