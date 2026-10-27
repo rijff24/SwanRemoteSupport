@@ -13,7 +13,11 @@ release approvals including the withdrawn 1.5.2 downloads. The recovery
 management and HTTPS containers were stopped, and the original company
 remained healthy with signed profile revision 5 and updates paused. This does
 not qualify Windows company restore or a native session against the restored
-copy. See [the current recovery checkpoint](../deployment/linux/pre-153-company-backup-restore-evidence.json).
+copy. The installed Server2019 customer also authenticated to the restored
+company with its unchanged credential, which stayed inside the original guest.
+The corresponding Windows10 credential check remains unverified because SSH
+command startup stalled; no forced reset or reenrollment was performed.
+See [the current recovery checkpoint](../deployment/linux/pre-153-company-backup-restore-evidence.json).
 
 **1.5.2 failed native technician startup and both sequence-5 lab releases were
 withdrawn.** The generated installer upgraded the existing Server2019 technician

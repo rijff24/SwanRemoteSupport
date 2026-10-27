@@ -63,7 +63,8 @@
     "pre-loaderfix153-backup-completed.json": "273771adfb5f96ffd14e686375739fc998fbeaa5775d9b8855712233e2fe5650",
     "loaderfix153-restore-verified.json": "ecce3beff8d0eb9967fd20bca81162adc32057b8b53afe48dd859efd13b05b36",
     "loaderfix153-restore-stopped.json": "9b8cb17e7e861bb3ae7857ef8ba17532f5c1e0d1b7a1b4d9607e090250c06417",
-    "loaderfix153-restore-independent-stop-health.json": "baf298f6840770067250820cc7e31f6dfbd9be1dc37a38b7b35cbd5b0ef7bfc0"
+    "loaderfix153-restore-independent-stop-health.json": "baf298f6840770067250820cc7e31f6dfbd9be1dc37a38b7b35cbd5b0ef7bfc0",
+    "pre153-restored-customer-credential-bounded-result.json": "38448d1398e347e695c3833dc622f0aac2adfbb4ace666597f35411c90b11683"
   },
   "limits": [
     "Isolated Linux company restore only; does not qualify the separate Windows server restore path.",
@@ -71,5 +72,24 @@
     "No 1.5.3 binaries installed or automatic-update recovery exercised by this test.",
     "Lab signing and private HTTPS trust do not establish production signing or public Internet reachability."
   ],
-  "production_publication": false
+  "production_publication": false,
+  "installed_customer_credential_reuse": {
+    "utc": "2026-10-27T08:12:54.478715+00:00",
+    "server2019_existing_customer_credential_restore": {
+      "company_and_device_identity_match": true,
+      "approval_state": "approved",
+      "existing_customer_credential_authenticated_to_restored_server": true,
+      "utc": "2026-10-27T07:59:07.0361530Z",
+      "original_https_trust_used": true,
+      "credential_value_disclosed": false,
+      "native_session_tested": false,
+      "customer_bootstrap_and_credential_unchanged": true,
+      "endpoint_os": "Windows Server 2019"
+    },
+    "windows10_result": "Not tested: SSH timed out; subsequent trace authenticated but session command startup stalled. Guest normal shutdown requested, not forced.",
+    "recovery_containers_independently_confirmed_stopped": true,
+    "private_credentials_exported": false,
+    "both_customer_credentials_verified": false,
+    "native_session_tested": false
+  }
 }
