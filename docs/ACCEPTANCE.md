@@ -19,6 +19,9 @@ to 1.5.3/sequence6 upgrade. Independent checks verified all 96 project files,
 publisher signatures, MSI registration, original enrollment credential, trust
 and consent, restored native watcher/service, and recovery cleanup. The excluded
 Server 2019 customer stayed on 1.5.1. Further lab rollout is paused.
+The upgraded Windows 10 VM then passed one normal kernel reboot: its automatic
+LocalSystem service and native watcher started without intervention, and all
+96 signed files, MSI registration, trust, identity and consent verified again.
 
 The 1.5.4 source adds narrowly scoped OS-cache maintenance under installation
 and session exclusion. It retains project signature/hash checks, rejects links,
@@ -45,9 +48,8 @@ and history, and its MFA login matched the server audit. Its running child and
 loaded Rust/Flutter libraries matched the reproduced payload, with no new
 application crash event. A path-only verifier initially rejected the native
 launcher's equivalent `/./` path; canonical inspection passed while retaining
-exact-byte and process-creation checks. A native remote session and customer
-reboot qualification remain pending. The later Windows 10 session is recorded
-above. See
+exact-byte and process-creation checks. The later Windows 10 session and normal
+reboot are recorded above; other OS qualification remains pending. See
 [the bounded startup and distribution evidence](../deployment/windows/7bfce49-lab-distribution-and-technician-startup.json).
 
 Both native runs 40468079337 and 40489196703 passed. Comparison run 40499642535
@@ -56,7 +58,7 @@ source and six bridge files per build, and matching recorded compiler inputs.
 The first full archive and source were also verified locally; the runner-side
 comparison avoided a second large host download. All seven new lab signatures
 and original receipts were checked against the existing nonexportable guest key.
-Public customer and protected technician bundle downloads passed. The lab now
+Public customer and protected technician bundle downloads passed. The lab
 completed a 20% staged rollout to the eligible Windows 10 customer while Server
 2019 was excluded, and is now paused. Closed-window checks passed on both
 installed agents. Failed 1.5.2 downloads remain withdrawn. See

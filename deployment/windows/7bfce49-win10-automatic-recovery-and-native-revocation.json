@@ -36,7 +36,9 @@
     "unattended_consent_remained_off": true,
     "clipboard_transfer_uac_reboot_multimonitor_not_tested_in_this_session": true,
     "public_internet_or_relay_path_not_qualified_by_this_session": true,
-    "production_publication": false
+    "production_publication": false,
+    "original_group_access_restored": true,
+    "revoked_grant_not_revived": true
   },
   "rollout": {
     "closed_maintenance_both_installed_agents_deferred": true,
@@ -50,6 +52,29 @@
     "A lab-only refresh of the stale Windows-owned privacy helper was required before update handoff.",
     "The diagnostic watcher action initially triggered the ownership guard; restoring its original native action allowed existing durable recovery to complete.",
     "This does not qualify a fully unattended upgrade across Windows servicing changes; 1.5.4 cache maintenance still requires native testing.",
-    "Reboot, other support capabilities and public transport require separate qualification."
-  ]
+    "Clipboard, transfer, UAC, logon-screen remote access, multiple monitors, other OS versions and public transport require separate qualification."
+  ],
+  "normal_reboot": {
+    "msi_registered_installed": true,
+    "unattended_consent": false,
+    "all_signed_files_verified": 96,
+    "prior_boot_utc": "2026-10-27T09:12:32.2746290Z",
+    "shipping_verifier_passed": true,
+    "reboot_qualified": true,
+    "service_started_without_manual_intervention": true,
+    "new_boot_utc": "2026-10-27T14:30:51.5000000Z",
+    "utc": "2026-10-27T14:46:43.9834116Z",
+    "after_sequence": 6,
+    "consent_revision": 0,
+    "manual_installer_not_started": true,
+    "after_version": "1.5.3",
+    "service_running_auto_system": true,
+    "native_watch_running": true,
+    "recovery_markers_and_task_cleaned": true,
+    "lab_cache_refresh_was_required": true,
+    "kernel_reboot_observed": true,
+    "identity_credential_consent_and_trust_preserved": true,
+    "source": "7bfce49aba857e035663f19cb25353828204e9c0",
+    "production_publication": false
+  }
 }
