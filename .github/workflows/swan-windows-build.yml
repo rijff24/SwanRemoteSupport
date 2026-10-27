@@ -272,6 +272,13 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Managed support pause regression failed.' }
           if ((Get-Content artifacts/native-managed-pause-tests.log -Raw) -notmatch 'test result: ok\. 1 passed; 0 failed;') { throw 'Expected managed support pause test did not run.' }
 
+      - name: Reject cross-target and stale-login file-transfer handles
+        shell: pwsh
+        run: |
+          cargo test --release --lib --features "flutter,swan_custom,hwcodec,vram" managed::subsession_tests::file_transfer_handle_is_bound_to_target_company_and_current_login -- --exact 2>&1 | Tee-Object -FilePath artifacts/native-managed-subsession-tests.log
+          if ($LASTEXITCODE -ne 0) { throw 'Managed file-transfer handle regression failed.' }
+          if ((Get-Content artifacts/native-managed-subsession-tests.log -Raw) -notmatch 'test result: ok\. 1 passed; 0 failed;') { throw 'Expected managed file-transfer handle test did not run.' }
+
       - name: Add pinned topmost-window helper
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
@@ -418,6 +425,7 @@ jobs:
             artifacts/flutter-sdk-identity.json
             artifacts/native-managed-updater-tests.log
             artifacts/native-managed-pause-tests.log
+            artifacts/native-managed-subsession-tests.log
             artifacts/Install-Company.ps1
             artifacts/Install-Worker.ps1
             artifacts/Uninstall-Worker.ps1

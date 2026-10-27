@@ -29,6 +29,13 @@ generation and changes managed Windows stop/resume to service IPC with receiver-
 enforced pause, generation-bound authorization and cancellation of in-flight
 renewal. A native regression and installed-shortcut check were added. Its consent
 dialog also becomes scrollable after long policy text was visibly clipped.
+A subsequent source audit found the remote toolbar still handing file-transfer
+windows a legacy password token. Managed windows now return only a current,
+target/company/login-bound opaque request handle, which the toolbar passes as
+the managed preset so native authorization obtains a fresh grant and proof for
+each file-transfer connection. A native regression checks stale login, wrong
+company, wrong target and expiry; no signing proof or reusable credential is
+returned to Dart. Real file-transfer operation remains unverified.
 These source changes still require native build, reproduction and real installed
 ordinary-user/active-session verification; they are not qualified fixes yet.
 

@@ -235,6 +235,17 @@ pub fn authorization_current(expires_at:Option<u64>,generation:u64)->bool {
         && expires_at.map(|expiry|protocol::now()<expiry)==Some(true)
 }
 
+pub fn subsession_handle(handle:&str,peer:&str)->Option<String> {
+    if !handle.starts_with("SWT1."){return None;}
+    let memory=TECHNICIAN.lock().unwrap();
+    let login=memory.login.as_ref()?;
+    let request=memory.reconnects.get(handle)?;
+    if request.peer!=peer || request.company!=login.company || request.generation!=memory.generation || request.expires_at<=protocol::now(){return None;}
+    // This is an opaque lookup key only. Every new connection must obtain a
+    // fresh server grant and prove its own challenge in login().
+    Some(handle.to_owned())
+}
+
 pub async fn claim(password:&[u8],challenge:&str,peer:&str)->ResultType<(Lease,u64)> {
     let generation=pause_generation();
     hbb_common::anyhow::ensure!(!support_paused() && generation==pause_generation(),"Customer paused support");
@@ -304,6 +315,41 @@ mod pause_tests {
         assert!(authorization_current(expiry,pause_generation()));
         assert!(!authorization_current(None,pause_generation()));
         assert!(!authorization_current(Some(protocol::now()),pause_generation()));
+    }
+}
+
+#[cfg(test)]
+mod subsession_tests {
+    use super::*;
+    #[test]
+    fn file_transfer_handle_is_bound_to_target_company_and_current_login() {
+        struct Restore(Option<TechnicianMemory>);
+        impl Drop for Restore {fn drop(&mut self){*TECHNICIAN.lock().unwrap()=self.0.take().unwrap();}}
+        let original=std::mem::take(&mut *TECHNICIAN.lock().unwrap());let _restore=Restore(Some(original));
+        let handle=format!("SWT1.{}",protocol::random_token());
+        {
+            let mut memory=TECHNICIAN.lock().unwrap();
+            memory.generation=7;
+            memory.login=Some(TechnicianLogin{token:"not-a-real-credential".into(),company:"lab".into(),username:"tech".into()});
+            memory.reconnects.insert(handle.clone(),ReconnectRequest{device:"device".into(),unattended:false,company:"lab".into(),peer:"123456789".into(),generation:7,expires_at:protocol::now()+120});
+        }
+        assert_eq!(subsession_handle(&handle,"123456789"),Some(handle.clone()));
+        assert!(subsession_handle(&handle,"987654321").is_none());
+        assert!(subsession_handle("legacy-password","123456789").is_none());
+        TECHNICIAN.lock().unwrap().generation=8;
+        assert!(subsession_handle(&handle,"123456789").is_none());
+        {
+            let mut memory=TECHNICIAN.lock().unwrap();memory.generation=7;
+            memory.login.as_mut().unwrap().company="other-company".into();
+        }
+        assert!(subsession_handle(&handle,"123456789").is_none());
+        {
+            let mut memory=TECHNICIAN.lock().unwrap();memory.login.as_mut().unwrap().company="lab".into();
+            memory.reconnects.get_mut(&handle).unwrap().expires_at=protocol::now();
+        }
+        assert!(subsession_handle(&handle,"123456789").is_none());
+        TECHNICIAN.lock().unwrap().login=None;
+        assert!(subsession_handle(&handle,"123456789").is_none());
     }
 }
 
