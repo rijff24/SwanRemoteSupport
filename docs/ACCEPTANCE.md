@@ -32,6 +32,28 @@ transfer was also retained; direct collection subsequently succeeded. These
 results do not qualify standard-user installation, native technician login,
 sessions, customer behavior, software upgrades or full Windows10 acceptance.
 
+The independent Linux company subsequently generated a Windows10 customer bundle
+from its existing signed 1.5.1 baseline. Anonymous download returned 200; both
+signed envelopes, public-only bootstrap fields, payload hashes and seven bundled
+source texts were verified. On the fresh Windows10 VM, that generated installer
+created a unique enrolled identity, accepted profile revision 5 and release
+sequence 4, retained unattended consent off, and started its automatic LocalSystem
+service. Installed executable and agent hashes and publishers matched, no setup
+recovery marker remained, and five original setup records matched their guest
+hashes. No Tailscale service was present. The private laboratory DNS mapping and
+public CA were provisioned separately, with HTTPS verification retained; this
+does not prove public Internet hosting.
+
+Before company approval, the new device was absent from authorized technician
+inventory and its grant request returned 403. Explicit approval added it to the
+authorized group inventory; unassigned access and unattended access without
+consent remained denied. The original Server2019 device record was unchanged.
+See [the bounded installation and enrollment evidence](../deployment/windows/da0c621-win10-company-customer-evidence.json).
+The idle-MSI guard and its subsequent path-regex error were retained as preflight
+failures before setup. No installer or service was terminated to proceed. These
+results do not qualify a Windows10 native session, cold reboot, customer repair
+or uninstall, desktop features, 1.5.2 upgrades or full Windows10 acceptance.
+
 ## Lab continuation, 26 October
 
 The current da0c621 customer and technician lab-signed MSIs passed bounded
