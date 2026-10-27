@@ -9,6 +9,8 @@ pub use swan_protocol as protocol;
 pub mod update;
 pub mod payload;
 pub mod technician;
+#[cfg(any(windows,test))]
+mod verifier_process;
 
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]

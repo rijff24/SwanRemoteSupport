@@ -277,10 +277,11 @@ pub fn powershell_command()->Result<std::process::Command> {
 fn verify_publisher(path:&Path,release:&Release)->Result<()> {
     // Packages may reside in a read-only deployment share. Execute the embedded
     // verifier without writing beside the package or trusting a mutable helper.
-    let status=embedded_powershell_command(include_str!("../../../deployment/windows/Verify-Package.ps1"),&[
+    let mut verifier=embedded_powershell_command(include_str!("../../../deployment/windows/Verify-Package.ps1"),&[
         ("Path",path.to_str().context("Package path is not valid Unicode")?),
         ("Publisher",&release.publisher),("CertificateSha256",&release.publisher_certificate_sha256),("Sha256",&release.sha256),
-    ])?.status()?;
+    ])?.stdin(std::process::Stdio::null()).spawn()?;
+    let status=crate::verifier_process::wait(&mut verifier,std::time::Duration::from_secs(120))?;
     ensure!(status.success(),"Package publisher verification failed");Ok(())
 }
 

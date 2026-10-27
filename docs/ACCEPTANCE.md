@@ -6817,3 +6817,12 @@ A new CI verifier rejects an eager bundled DLL import or a missing delayed
 engine, and rejects malformed import descriptors; its local regression tests
 pass. A fresh native build, module inspection and repeated cold-boot tests are
 still required. This change is not yet proof that the startup timeout is fixed.
+
+A later technician relaunch remained inside `swan-agent verify-installed` while
+its publisher-verification child was pending. The agent now bounds that child to
+120 seconds, terminates and reaps it on timeout, and returns an error without
+authorizing launch or installation. It still requires the original signature,
+publisher, certificate and hash checks. New process tests cover actual successful
+and rejected child exits plus timeout cleanup; Windows/Linux CI execution and
+installed-app testing are pending. The prior unbounded lab process is retained
+for diagnosis rather than counted as a successful relaunch.
