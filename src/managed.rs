@@ -1,6 +1,6 @@
 //! Managed edition authorization is enforced on the receiving device, independent
 //! of the ID server, relay, direct transport, or customer approval UI.
-use hbb_common::{config::{self, keys}, ResultType};
+use hbb_common::{config::{self, keys}, log, ResultType};
 use swan_agent::{protocol::{self, Edition, ManagedLogin, SignedEnvelope}, AgentState, Lease};
 
 struct TechnicianLogin {token:String,company:String,username:String}
