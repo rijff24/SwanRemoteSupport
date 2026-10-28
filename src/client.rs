@@ -4010,6 +4010,19 @@ lazy_static::lazy_static! {
 /// * `text` - The text of the message.
 #[inline]
 pub fn check_if_retry(msgtype: &str, title: &str, text: &str, retry_for_relay: bool) -> bool {
+    #[cfg(feature = "swan_custom")]
+    if matches!(text,
+        "Company session authorization expired or revoked" |
+        "Company session authorization denied" |
+        "A valid company session grant is required" |
+        "Customer paused support" |
+        "Customer paused support during authorization")
+        || text.starts_with("Company grant denies ")
+    {
+        // Authorization closure is definitive even when relay retry is enabled.
+        // A new customer-approved request must start a new managed session.
+        return false;
+    }
     msgtype == "error"
         && title == "Connection Error"
         && ((text.contains("10054") || text.contains("104")) && retry_for_relay
@@ -4026,6 +4039,30 @@ pub fn check_if_retry(msgtype: &str, title: &str, text: &str, retry_for_relay: b
                 && !text.to_lowercase().contains("manually")
                 && !text.to_lowercase().contains("restricted")
                 && !text.to_lowercase().contains("not allowed")))
+}
+
+#[cfg(all(test, feature = "swan_custom"))]
+mod managed_retry_tests {
+    use super::check_if_retry;
+
+    #[test]
+    fn authorization_closure_never_retries_but_network_fallback_remains() {
+        for reason in [
+            "Company session authorization expired or revoked",
+            "Company session authorization denied",
+            "A valid company session grant is required",
+            "Customer paused support",
+            "Customer paused support during authorization",
+            "Company grant denies file transfer",
+            "Closed manually by the peer",
+        ] {
+            for retry_for_relay in [false, true] {
+                assert!(!check_if_retry("error", "Connection Error", reason, retry_for_relay));
+            }
+        }
+        assert!(check_if_retry("error", "Connection Error", "Connection reset by peer (10054)", true));
+        assert!(check_if_retry("error", "Connection Error", "Connection timed out", false));
+    }
 }
 
 pub async fn hc_connection(

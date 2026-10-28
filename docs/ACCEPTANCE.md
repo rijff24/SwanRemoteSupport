@@ -1,10 +1,37 @@
 # Configurable product acceptance report
 
-Evidence through 28 October 2026. **The product is not complete or approved for
+Evidence through 29 October 2026. **The product is not complete or approved for
 production publication.** A passing component test is not evidence of a working
 native support session or a clean-machine installation.
 
-## Latest source checks, 28 October
+## Latest source checks, 28–29 October
+
+The installed 1.5.7 technician on Server2019 and customer on Server2016 passed
+real bidirectional file transfer on 29 October local time. The technician opened
+the transfer window from its authorized desktop session; the customer separately
+approved File Transfer. Two different 1 MiB binary fixtures were copied, each
+through the native Send/Receive controls into a previously empty receiving
+folder. Both native interfaces reported completion, and independent reads of
+the actual destination files matched their original source sizes and SHA-256
+hashes. The company showed two independently claimed attended grants with current
+leases. Customer Stop closed both; actual receiving-device renewal requests for
+both old grants returned403. The same service and configuration watcher remained
+running, consent stayed off and shipping verification passed.
+
+This test also found a client retry bug: the authorization-expired/revoked close
+reason was treated as retryable and led to a rejected reconnect attempt. The
+receiver logs confirmed managed authorization closure; access was not restored.
+The new source makes authorization closure/denial and grant permission denial
+non-retryable, while retaining ordinary network fallback. The receiving logs also
+showed failed inherited audit POST attempts to an HTTP address derived from the
+transport host. Managed builds now return no legacy audit destination; company
+claim/close events continue through authenticated HTTPS management. Dedicated
+native regressions were added for both guards. Their execution and real runtime
+recheck are pending; the running identity-only build649682a does not include
+them. No large/interrupted/directory transfer, remote UAC or multi-monitor proof
+is inferred. See the
+[file-transfer and stop receipt](evidence/07bb8d0-native-file-transfer-and-pause.json).
+
 
 Installed 1.5.7 now has a real text-clipboard and keyboard checkpoint between
 the Server2019 technician and Server2016 customer. Both VM viewers were
@@ -28,7 +55,7 @@ probe added bounded clipboard-read retries and error-type records. The first
 post-stop checker also failed because it expected the last technician marker;
 its original hash-only result establishes non-arrival of the newly changed
 customer marker, not that unsupported preservation expectation. These tests use
-owned Administrator desktops and text clipboard only. File/clipboard-file
+owned Administrator desktops and text clipboard only. Large/interrupted and clipboard-file
 transfer, remote UAC, multiple monitors and public connectivity remain open.
 See the [native clipboard and keyboard receipt](evidence/07bb8d0-native-text-clipboard-and-keyboard.json).
 
@@ -122,7 +149,7 @@ target/company/login-bound opaque request handle, which the toolbar passes as
 the managed preset so native authorization obtains a fresh grant and proof for
 each file-transfer connection. A native regression checks stale login, wrong
 company, wrong target and expiry; no signing proof or reusable credential is
-returned to Dart. Real file-transfer operation remains unverified.
+returned to Dart. Real file-transfer operation was unverified at that source checkpoint; installed 1.5.7 has now passed the bounded bidirectional test recorded above.
 Both 1.5.5 native builds passed. Comparison run 40616863517 verified identical
 original bytes for all eight shipping outputs, matching compiler inputs and exact
 public source/bridges. The native pause and transfer-handle regressions passed.
@@ -150,7 +177,7 @@ all installed files and zero new MSI events verified. The consent dialog scrolle
 to the complete policy with both buttons available; cancel preserved consent-off
 and a fresh unattended grant was denied. See the
 [ordinary-user controls evidence](../deployment/windows/e95010e-server2022-upgrade-and-standard-user-pause.json).
-Ordinary-account active-session termination and real file transfer remain pending qualifications. This test also exposed an inherited
+Ordinary-account active-session termination and broader/interrupted transfer qualification remain pending. This test also exposed an inherited
 footer that incorrectly calls paused support a stopped Windows service and
 offers a duplicate legacy start link. The next 1.5.6 source labels managed pause
 correctly and leaves resume to the acknowledged company control. Its first

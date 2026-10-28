@@ -272,6 +272,16 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Managed support pause regression failed.' }
           if ((Get-Content artifacts/native-managed-pause-tests.log -Raw) -notmatch 'test result: ok\. 1 passed; 0 failed;') { throw 'Expected managed support pause test did not run.' }
 
+      - name: Reject authorization retries and inherited audit destinations
+        shell: pwsh
+        run: |
+          cargo test --release --lib --features "flutter,swan_custom,hwcodec,vram" client::managed_retry_tests::authorization_closure_never_retries_but_network_fallback_remains -- --exact 2>&1 | Tee-Object -FilePath artifacts/native-managed-retry-tests.log
+          if ($LASTEXITCODE -ne 0) { throw 'Managed authorization retry regression failed.' }
+          if ((Get-Content artifacts/native-managed-retry-tests.log -Raw) -notmatch 'test result: ok\. 1 passed; 0 failed;') { throw 'Expected managed authorization retry test did not run.' }
+          cargo test --release --lib --features "flutter,swan_custom,hwcodec,vram" common::tests::managed_edition_never_derives_legacy_audit_targets -- --exact 2>&1 | Tee-Object -FilePath artifacts/native-managed-audit-tests.log
+          if ($LASTEXITCODE -ne 0) { throw 'Managed legacy audit regression failed.' }
+          if ((Get-Content artifacts/native-managed-audit-tests.log -Raw) -notmatch 'test result: ok\. 1 passed; 0 failed;') { throw 'Expected managed legacy audit test did not run.' }
+
       - name: Reject cross-target and stale-login file-transfer handles
         shell: pwsh
         run: |

@@ -1122,11 +1122,21 @@ pub fn get_local_option(key: &str) -> String {
 }
 
 pub fn get_audit_server(api: String, custom: String, typ: String) -> String {
-    let url = get_api_server(api, custom);
-    if url.is_empty() || is_public(&url) {
-        return "".to_owned();
+    #[cfg(feature = "swan_custom")]
+    {
+        // Company session events use the authenticated HTTPS management API.
+        // Never derive legacy OSS/Pro audit targets from rendezvous addresses.
+        let _ = (api, custom, typ);
+        String::new()
     }
-    format!("{}/api/audit/{}", url, typ)
+    #[cfg(not(feature = "swan_custom"))]
+    {
+        let url = get_api_server(api, custom);
+        if url.is_empty() || is_public(&url) {
+            return "".to_owned();
+        }
+        format!("{}/api/audit/{}", url, typ)
+    }
 }
 
 /// Check if we should use raw TCP proxy for API calls.
@@ -2645,6 +2655,17 @@ pub fn is_direct_ip_access(peer: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[cfg(feature = "swan_custom")]
+    #[test]
+    fn managed_edition_never_derives_legacy_audit_targets() {
+        for api in ["", "http://legacy.example:21114", "https://company.example"] {
+            for custom in ["", "support.example:21116"] {
+                for typ in ["conn", "file", "alarm"] {
+                    assert!(get_audit_server(api.into(), custom.into(), typ.into()).is_empty());
+                }
+            }
+        }
+    }
     use hbb_common::tokio::{
         self,
         time::{interval, interval_at, sleep, Duration, Instant, Interval},
