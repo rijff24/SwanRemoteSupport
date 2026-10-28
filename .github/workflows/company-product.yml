@@ -47,6 +47,7 @@ jobs:
       - name: Test security and management
         run: cargo +1.90.0 test --manifest-path product/Cargo.toml --workspace --locked
       - name: Restore an incompressible backup above the former 512 MiB limit
+        if: runner.os == 'Windows'
         shell: bash
         run: |
           set -o pipefail
@@ -62,6 +63,9 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Pinned download retry and integrity checks failed.' }
       - name: Build components
         run: cargo +1.90.0 build --manifest-path product/Cargo.toml --workspace --release --locked
+      - name: Verify the real backup CLI above 512 MiB with bounded address space
+        if: runner.os == 'Linux'
+        run: python3 deployment/linux/test_backup_memory.py product/target/release/swan-management component-artifacts/large-backup-cli.json
       - name: Verify compiled management creates fresh private server state
         if: runner.os == 'Windows'
         shell: pwsh
