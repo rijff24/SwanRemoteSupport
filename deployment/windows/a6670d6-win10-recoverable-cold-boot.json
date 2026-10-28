@@ -31,5 +31,12 @@
   },
   "full_normal_reboot_acceptance_claimed": false,
   "new_1_5_5_runtime_qualification_claimed": false,
-  "production_qualified": false
+  "production_qualified": false,
+  "subsequent_normal_shutdown": {
+    "after_lab_signing_completed": true,
+    "qemu_exit_utc": "2026-10-28T02:18:17.781311+00:00",
+    "qemu_exit_code": 0,
+    "forced_app_close": false,
+    "subsequent_boot_verified": false
+  }
 }

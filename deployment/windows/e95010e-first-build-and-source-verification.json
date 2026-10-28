@@ -28,10 +28,19 @@
   "generated_bridge_files_verified": 6,
   "source_date_epoch": 1793143064,
   "independent_rebuild_run": 40608282560,
-  "independent_rebuild_verified": false,
-  "lab_signing_started": false,
+  "independent_rebuild_verified": true,
+  "lab_signing_started": true,
   "standard_user_pause_runtime_verified": false,
   "file_transfer_runtime_verified": false,
   "full_windows_matrix_verified": false,
-  "production_qualified": false
+  "production_qualified": false,
+  "comparison_run": 40616863517,
+  "comparison_url": "https://github.com/rijff24/SwanRemoteSupport/actions/runs/40616863517",
+  "shipping_outputs_identical": 8,
+  "normalization_applied_to_shipping_files": false,
+  "lab_signed_outputs_verified": 7,
+  "lab_signing_key_remains_nonexportable": true,
+  "private_signing_key_exported": false,
+  "lab_publisher_certificate_sha256": "c797e22798a8afa94496ea0e8668b6e5ee4a4fc9f639b8200d5e1071e6925ec3",
+  "production_publication": false
 }
