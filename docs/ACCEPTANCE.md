@@ -91,6 +91,27 @@ technician installation is qualified yet. The original timeout and guarded pre-M
 customer identity, credential and consent remained unchanged. See the
 [Windows 11 findings](../deployment/windows/e95010e-win11-fresh-customer-and-technician-trust-findings.json).
 
+The maintained Linux transport now has two-run binary reproduction evidence:
+independent successful CI jobs produced identical original `hbbs` and `hbbr`
+bytes from identical project trees and all 140 matching archived source entries.
+The tracked upstream/shared inputs, reviewed UDP patch and six public recipe
+files were independently checked; OCI images and ZIP timestamps are outside
+this comparison. A separate private runtime used those verified binaries,
+checked embedded source, private-key permissions and TCP startup, then stopped
+without changing the company. Before moving the owned company lab to that
+runtime, a current 439,647,643-byte encrypted backup retained all 14 installers.
+Its independent restore verified HTTPS/profile trust, administrator MFA, all
+four devices and consent, release approvals, the complete TLS/configuration
+files, service-account readability of all artifacts, matching current customer
+and technician downloads, anonymous-technician rejection and withdrawn-package
+denial. Only the two transport image references were then changed in the owned
+Linux lab. Private/public keys, transport pin, management/HTTPS container IDs,
+devices, consent and release approvals verified unchanged. Normal production
+Compose pins are unchanged. This is not proof of native direct/relay sessions,
+UDP traversal or public Internet operation through the new runtime; those
+qualifications remain pending. See the
+[maintained transport and current restore receipt](../deployment/linux/maintained-transport-and-current-restore-20261028.json).
+
 ## Earlier source checks, 27 October
 
 The staged customer update exposed another real compatibility failure: Windows
