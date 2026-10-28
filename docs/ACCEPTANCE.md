@@ -85,9 +85,19 @@ bounded verification budget to five minutes; all trust checks and timeout
 cleanup remain. The new 1.5.7 candidate also includes the prior footer fix.
 Windows/Linux component workflow 40647664923 passed for fix source
 `07bb8d0b99e2be002a30e5d97eebe67a9c2794ad`; five local source-archive and six
-installer-metadata tests also passed. Native build 40647688419 is still in
-progress at the recorded checkpoint. Neither the installed change nor the
-technician installation is qualified yet. The original timeout and guarded pre-MSI continuation are preserved separately;
+installer-metadata tests also passed. Native builds 40647688419 and 40655578504
+both passed; comparison 40663413228 verified identical original bytes for all
+eight shipping outputs, 618 matching MSVC inputs per build, and exact source
+plus six generated bridge files in each archive. The existing nonexportable lab
+key signed seven outputs. The Windows worker then generated both 1.5.7 company
+bundles (test sequence9); source texts, signed profiles/releases, installer and
+agent hashes, public customer download and protected technician download all
+verified. Tampered metadata and request-supplied trust overrides were denied;
+unapproved builds created no jobs. Company policy is unchanged and automatic
+rollout remains paused. This proves build and lab distribution, not installation,
+the footer fix or native remote operation. The Windows 11 ordinary-user retest
+is still pending. See the
+[1.5.7 reproduction/distribution receipt](../deployment/windows/07bb8d0-reproduction-and-lab-distribution.json). The original timeout and guarded pre-MSI continuation are preserved separately;
 customer identity, credential and consent remained unchanged. See the
 [Windows 11 findings](../deployment/windows/e95010e-win11-fresh-customer-and-technician-trust-findings.json).
 

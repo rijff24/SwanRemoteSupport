@@ -1,0 +1,107 @@
+{
+  "recorded_utc": "2026-10-28T10:12:08.377174+00:00",
+  "application_source": "07bb8d0b99e2be002a30e5d97eebe67a9c2794ad",
+  "version": "1.5.7",
+  "sequence": 9,
+  "native_comparison": {
+    "utc": "2026-10-28T09:24:03.021428+00:00",
+    "source": "07bb8d0b99e2be002a30e5d97eebe67a9c2794ad",
+    "comparison_run": 40663413228,
+    "comparison_artifact": 12804453216,
+    "comparison_artifact_digest": "sha256:b42a71875a4bf9cc66c46b5b8cdc45b2341b4c5be0948ad09c4030acc886adc7",
+    "report_sha256": "ac262d4829fde2f5ccb322e14995146c09bdee2b53c835ba7e7590d315d2180f",
+    "shipping_outputs_identical": 8,
+    "source_files_per_build": 1226,
+    "bridge_files_per_build": 6,
+    "msvc_files_per_build": [
+      618,
+      618
+    ],
+    "first_archive_matches_locally_verified_original": true,
+    "second_large_local_download_started": false,
+    "runtime_qualified": false,
+    "production_publication": false
+  },
+  "lab_signing": {
+    "all_seven_signatures_valid": true,
+    "key_nonexportable_verified": true,
+    "private_key_exported": false,
+    "publisher_certificate_sha256": "c797e22798a8afa94496ea0e8668b6e5ee4a4fc9f639b8200d5e1071e6925ec3",
+    "lab_signed_only": true
+  },
+  "signed_shipping_outputs": [
+    {
+      "sha256": "aa2409b3cf923a6d13dd4a741b0a2a8971ba56b01f13643932a3300a99c6eab6",
+      "name": "agent-signed.exe",
+      "bytes": 5531440
+    },
+    {
+      "sha256": "5db646723587a5ac1e20636c66585635a04512dfe9c249e07cccfb3097f18402",
+      "name": "management-signed.exe",
+      "bytes": 8828720
+    },
+    {
+      "sha256": "128593c99f29b005f6c5713d2be6c3a2db2087702d9c7128cdbdb489c891436d",
+      "name": "worker-signed.exe",
+      "bytes": 4842288
+    },
+    {
+      "sha256": "0e3b8bbdaafdce97e0f96de81ca239189557ed0ca1921ebb78db3bcf81184c1b",
+      "name": "customer-main-signed.exe",
+      "bytes": 383792
+    },
+    {
+      "sha256": "ce64e0e76b8a8fe99574fa111a3a917c42ecddbde2d91ee8e46660c2da1e6071",
+      "name": "technician-signed.exe",
+      "bytes": 24266032
+    },
+    {
+      "sha256": "2f1aa66c652592c9cc721cca0cb3c796825c395a37062af45e3db1960cc4061a",
+      "name": "customer-1.5.7-signed.msi",
+      "bytes": 33640448
+    },
+    {
+      "sha256": "4e88c706f2b1bb2e93695d7dfac845585881ce66b732d992c37ab2b64f6ed1e9",
+      "name": "technician-1.5.7-signed.msi",
+      "bytes": 31391744
+    }
+  ],
+  "release_import_rejections": {
+    "invalid_signatures_rejected": true,
+    "request_cannot_override_operator_release_key": true,
+    "unapproved_builds_rejected_without_job_creation": true
+  },
+  "worker_and_bundle_recipes_unchanged": true,
+  "generated_bundles": [
+    {
+      "edition": "customer",
+      "bundle_sha256": "ba53b90779b6f09299ab4ee35fa511a57268e38d80c9df0753b3be1926055d1b",
+      "bytes": 32503058,
+      "public_bootstrap_only": true,
+      "profile_and_release_signatures_verified": true,
+      "tamper_rejection_verified": true,
+      "seven_source_texts_exact": true,
+      "signed_payload_hashes_verified": true,
+      "anonymous_status": 200,
+      "download_status": 200
+    },
+    {
+      "edition": "technician",
+      "bundle_sha256": "e047c8ec397c2726401fb6be249511c68c81fa35300059bc3379c7dee517f18f",
+      "bytes": 30303193,
+      "public_bootstrap_only": true,
+      "profile_and_release_signatures_verified": true,
+      "tamper_rejection_verified": true,
+      "seven_source_texts_exact": true,
+      "signed_payload_hashes_verified": true,
+      "anonymous_status": 401,
+      "download_status": 200
+    }
+  ],
+  "management_source": "761b5c56cca8cd7eecb65d3438de0d6f0075bd4e",
+  "signed_profile_policy_unchanged": true,
+  "automatic_updates_paused": true,
+  "installer_runtime_qualified": false,
+  "native_session_through_maintained_transport_qualified": false,
+  "production_publication": false
+}
