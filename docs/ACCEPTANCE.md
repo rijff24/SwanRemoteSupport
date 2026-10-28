@@ -66,8 +66,9 @@ and a fresh unattended grant was denied. See the
 Active-session termination and real file transfer remain pending qualifications. This test also exposed an inherited
 footer that incorrectly calls paused support a stopped Windows service and
 offers a duplicate legacy start link. The next 1.5.6 source labels managed pause
-correctly and leaves resume to the acknowledged company control. That UI change
-still requires a new build and installed visual verification. No complete
+correctly and leaves resume to the acknowledged company control. Its first
+[native build passed](https://github.com/rijff24/SwanRemoteSupport/actions/runs/40628082360),
+but installed visual verification is still pending. No complete
 ordinary-user/remote-feature or clean Windows compatibility matrix is claimed.
 
 The fresh Windows 11 Enterprise Evaluation 26300.9457 installed the actual
@@ -82,8 +83,11 @@ cold PowerShell startup and hashing together exceeded two minutes, while the
 actual signature query returned Valid promptly. The source increases only that
 bounded verification budget to five minutes; all trust checks and timeout
 cleanup remain. The new 1.5.7 candidate also includes the prior footer fix.
-Neither this change nor the technician installation is qualified yet. The
-original timeout and guarded pre-MSI continuation are preserved separately;
+Windows/Linux component workflow 40647664923 passed for fix source
+`07bb8d0b99e2be002a30e5d97eebe67a9c2794ad`; five local source-archive and six
+installer-metadata tests also passed. Native build 40647688419 is still in
+progress at the recorded checkpoint. Neither the installed change nor the
+technician installation is qualified yet. The original timeout and guarded pre-MSI continuation are preserved separately;
 customer identity, credential and consent remained unchanged. See the
 [Windows 11 findings](../deployment/windows/e95010e-win11-fresh-customer-and-technician-trust-findings.json).
 

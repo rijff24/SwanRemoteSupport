@@ -110,7 +110,22 @@
     "package_publisher_verification_budget_seconds": 300,
     "signature_hash_publisher_and_certificate_checks_retained": true,
     "timeout_still_fails_closed_and_reaps_verifier": true,
-    "installed_fix_tested": false
+    "installed_fix_tested": false,
+    "application_source": "07bb8d0b99e2be002a30e5d97eebe67a9c2794ad",
+    "candidate_version": "1.5.7",
+    "component_checks": {
+      "windows_and_linux_workflow": 40647664923,
+      "conclusion": "success",
+      "push_workflow": 40647659405,
+      "local_source_archive_tests": 5,
+      "local_installer_metadata_tests": 6
+    },
+    "native_build": {
+      "run_id": 40647688419,
+      "last_observed_status": "in_progress",
+      "observed_utc": "2026-10-28T07:23:22.875992+00:00",
+      "independent_reproduction_not_yet_run": true
+    }
   },
   "production_qualified": false,
   "remaining": [
@@ -118,5 +133,10 @@
     "Sign test packages using retained nonexportable lab key.",
     "Install actual generated technician bundle as ordinary Windows11 user.",
     "Complete native GUI, reboot, lifecycle and remote-feature qualification."
-  ]
+  ],
+  "lab_cleanup": {
+    "normal_guest_shutdown_exit": 0,
+    "normal_guest_shutdown_utc": "2026-10-28T07:07:55.464867+00:00",
+    "original_clean_os_and_current_partial_technician_state_preserved": true
+  }
 }
