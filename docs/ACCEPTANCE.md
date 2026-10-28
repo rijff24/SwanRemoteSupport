@@ -29,6 +29,32 @@ or complete Server2016 compatibility. See the
 [clean Server2016 installation and enrollment receipt](../deployment/windows/07bb8d0-server2016-clean-customer-and-enrollment.json).
 
 
+The maintained Linux transport now has a real two-machine native relay
+checkpoint: installed 1.5.7 technician on Server2019 passed native MFA, showed
+five approved devices and requested the new Server2016 customer. The customer
+received and accepted the actual prompt; the technician displayed its live
+desktop and pointer input changed the customer's Server Manager page, separately
+confirmed on the receiving VM. Receiver and relay logs have the same connection
+ID and matching times; both running transport container image IDs match the
+independently built maintained image. The receiver's new video service and a
+subsequently renewed, claimed attended authorization lease were verified.
+
+The customer's actual Stop support control then disconnected the live technician
+with "Closed manually by the peer." Independent checks found persisted pause,
+the same running service and watcher, no new Swan MSI events, and passing shipping
+verification. The company marked the original grant closed and denied actual
+renewal (403). Resume preserved identity, credential, trust and consent-off and
+still denied renewal of that old grant. The initial checker incorrectly expected
+a zero historical lease timestamp; that failed check is retained, and the corrected
+check uses the closed flag and actual denial. These controls used owned
+Administrator desktops, so ordinary-account active-session termination remains
+unqualified. The incoming customer prompt also displayed the legacy peer name
+"Administrator" rather than an authenticated company technician identity; that
+UI finding remains to be fixed. Clipboard, file transfer, remote UAC, multiple
+monitors, direct/public connectivity and authorization-outage expiry are not
+proved by this checkpoint. See the
+[maintained transport and live customer pause receipt](../deployment/linux/07bb8d0-maintained-transport-native-relay-and-customer-pause.json).
+
 The Server2022 endpoint installed the actual generated 1.5.4 customer bundle
 again after its prior uninstall. The original zero-byte cancellation marker was
 retained for shipping setup to resolve. Enrollment, all 96 signed files, service
@@ -86,7 +112,7 @@ all installed files and zero new MSI events verified. The consent dialog scrolle
 to the complete policy with both buttons available; cancel preserved consent-off
 and a fresh unattended grant was denied. See the
 [ordinary-user controls evidence](../deployment/windows/e95010e-server2022-upgrade-and-standard-user-pause.json).
-Active-session termination and real file transfer remain pending qualifications. This test also exposed an inherited
+Ordinary-account active-session termination and real file transfer remain pending qualifications. This test also exposed an inherited
 footer that incorrectly calls paused support a stopped Windows service and
 offers a duplicate legacy start link. The next 1.5.6 source labels managed pause
 correctly and leaves resume to the acknowledged company control. Its first
