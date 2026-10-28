@@ -9,10 +9,12 @@ from pathlib import Path
 import resource
 import secrets
 import shutil
+import signal
 import sqlite3
 import subprocess
 import sys
 import tempfile
+import time
 import uuid
 
 
@@ -26,6 +28,13 @@ def main():
 
     def bound_memory():
         resource.setrlimit(resource.RLIMIT_AS, (memory_limit, memory_limit))
+
+    def bound_file_size():
+        bound_memory()
+        # Exercise a real write error without exhausting the runner's disk.
+        # Keep SIGXFSZ ignored across exec so the CLI can run its error cleanup.
+        signal.signal(signal.SIGXFSZ, signal.SIG_IGN)
+        resource.setrlimit(resource.RLIMIT_FSIZE, (2 * chunk_size, 2 * chunk_size))
 
     with tempfile.TemporaryDirectory(prefix="swan-backup-memory-") as temporary:
         root = Path(temporary)
@@ -78,6 +87,65 @@ def main():
         assert (target / "profile-key.hex").stat().st_mode & 0o777 == 0o600
         assert not list(root.glob(".swan-backup-*"))
         assert not list(data.glob(".swan-backup-*"))
+
+        environment["SWAN_DATA_DIR"] = str(data)
+        failed_export = root / "write-failure.swan-backup"
+        failed = subprocess.run([str(binary), "backup", str(failed_export),
+                                 "--installer-artifacts-directory", str(artifacts)],
+                                env=environment, capture_output=True, timeout=60,
+                                preexec_fn=bound_file_size, restore_signals=False)
+        assert failed.returncode > 0, "Write-limit failure must return an ordinary CLI error"
+        assert not failed_export.exists()
+        assert not list(data.glob(".swan-backup-*"))
+        assert not list(data.glob("backup-*.sqlite3"))
+
+        interrupted_target = root / "interrupted-restore"
+        environment["SWAN_DATA_DIR"] = str(interrupted_target)
+        child = subprocess.Popen([str(binary), "restore", str(backup)], env=environment,
+                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                 preexec_fn=bound_memory)
+        # Wait for authenticated plaintext to reach private staging, rather than
+        # killing an arbitrary startup phase or claiming a simulated interruption.
+        try:
+            deadline = time.monotonic() + 60
+            while True:
+                staged = list(root.glob(".swan-backup-*/archive.zip"))
+                if any(path.stat().st_size >= chunk_size for path in staged):
+                    assert child.poll() is None, "Restore finished before the interruption"
+                    child.kill()
+                    break
+                assert child.poll() is None, "Restore exited before a staged block was observed"
+                assert time.monotonic() < deadline, "No authenticated restore block observed"
+                time.sleep(0.01)
+            child.communicate(timeout=30)
+            assert child.returncode == -signal.SIGKILL
+        finally:
+            if child.poll() is None:
+                child.kill()
+                child.communicate(timeout=30)
+        assert not interrupted_target.exists(), "Interrupted contents must not be published"
+        remnants = list(root.glob(".swan-backup-*"))
+        assert remnants, "A forced stop must actually leave the observed private staging"
+        for directory in remnants:
+            assert directory.is_dir() and not directory.is_symlink()
+            assert directory.stat().st_mode & 0o777 == 0o700
+            for file in directory.rglob("*"):
+                assert not file.is_symlink()
+                if file.is_file():
+                    assert file.stat().st_mode & 0o777 == 0o600
+        run(["restore", str(backup)])
+        retried = hashlib.sha256()
+        with (interrupted_target / "artifacts" / name).open("rb") as file:
+            while chunk := file.read(chunk_size):
+                retried.update(chunk)
+        assert retried.digest() == expected.digest()
+        assert (interrupted_target / "profile-key.hex").read_text(encoding="ascii") == key.hex()
+        assert set(root.glob(".swan-backup-*")) == set(remnants), "Retry must not erase other operations' private staging"
+        # Only this test's observed remnants, under its own private disposable root.
+        for directory in remnants:
+            assert directory.resolve().parent == root.resolve()
+            assert directory.name.startswith(".swan-backup-") and not directory.is_symlink()
+            shutil.rmtree(directory)
         receipt = {"actual_management_cli": True, "format": "SWANBK2",
                    "maximum_virtual_address_space_bytes_per_cli_process": memory_limit,
                    "incompressible_artifact_bytes": received.stat().st_size,
@@ -85,11 +153,17 @@ def main():
                    "artifact_sha256_preserved": actual.hexdigest(),
                    "identity_keys_and_setup_token_preserved": True,
                    "sqlite_integrity_passed": True, "private_unix_permissions_passed": True,
+                   "write_size_failure_rejected_and_cleaned": True,
+                   "restore_sigkill_after_authenticated_staging": True,
+                   "interrupted_restore_target_unpublished": True,
+                   "retry_preserved_artifact_hash_and_identity": True,
+                   "forced_stop_remnants_private_and_preserved_until_explicit_fixture_cleanup": True,
                    "temporary_archive_cleanup_passed": True, "production_qualification": False}
     output.parent.mkdir(parents=True, exist_ok=True)
     with output.open("x", encoding="utf-8") as file:
         json.dump(receipt, file, indent=2)
     print("Real backup and restore passed above 512 MiB under a 512 MiB address-space cap.")
+    print("Write-error cleanup and forced restore interruption/retry passed on generated fixture data.")
 
 
 if __name__ == "__main__":
