@@ -115,7 +115,7 @@ def restore_management(image, original, source_volume, status, administrator, en
                         shell + "backup /var/lib/swan/rehearsal.swanbackup"], passphrase)
         docker("exec", original, "sh", "-ec",
                'test "$(stat -c %a /var/lib/swan/rehearsal.swanbackup)" = 600; '
-               'test "$(head -c 7 /var/lib/swan/rehearsal.swanbackup)" = SWANBK1')
+               'test "$(head -c 7 /var/lib/swan/rehearsal.swanbackup)" = SWANBK2')
         docker("volume", "create", volume)
         created_volume = True
         restore = ["run", "--rm", "--name", helper, "-i", "--read-only", "--network", "none",
