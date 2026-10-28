@@ -1,0 +1,55 @@
+{
+  "recorded_utc": "2026-10-28T23:06:32.662165+00:00",
+  "source": "67b5c69ca62feadf7ecf57d835a79c3d2da19dd2",
+  "format": "SWANBK2",
+  "component_push_run": 40782624233,
+  "component_pull_request_run": 40782630003,
+  "verify_jobs": {
+    "push_linux": 123147878188,
+    "push_windows": 123147878499,
+    "pull_request_linux": 123147893099,
+    "pull_request_windows": 123147893293
+  },
+  "all_four_component_verification_jobs_successful": true,
+  "new_regressions": [
+    "stream_authenticates_order_finality_header_and_chunk_boundaries",
+    "legacy_backup_restores_and_new_export_never_overwrites",
+    "authenticated_but_invalid_zip_never_publishes_or_leaves_plaintext_staging",
+    "crc_failure_during_extraction_preserves_target_and_failed_export_cleans_up"
+  ],
+  "windows_explicit_large_roundtrip": {
+    "test": "backup_above_previous_limit_preserves_incompressible_artifact",
+    "input_bytes": 537919488,
+    "incompressible_fixture": true,
+    "encrypted_archive_above_512MiB": true,
+    "restored_size_sha256_and_key_verified": true,
+    "passed": true
+  },
+  "linux_actual_cli_qualification": {
+    "script": "deployment/linux/test_backup_memory.py",
+    "job": 123147878188,
+    "input_bytes": 537919488,
+    "maximum_virtual_address_space_bytes_per_cli_process": 536870912,
+    "actual_backup_and_restore_commands_passed": true,
+    "encrypted_archive_above_512MiB": true,
+    "artifact_hash_identity_keys_setup_token_sqlite_integrity_and_private_permissions_checked": true
+  },
+  "local_deployment_image": {
+    "pinned_public_source": true,
+    "isolated_build_exit_zero": true,
+    "existing_company_not_upgraded": true,
+    "current_company_restore_rehearsal_pending": true
+  },
+  "deployment_gate": {
+    "runs_failed_on_old_format_header_assertion": true,
+    "assertion_updated_in_source": "eaa30b611e86f1ae9e7f33ab55bc6b87d62129dd",
+    "corrected_deployment_rehearsal_pending": true
+  },
+  "limits": [
+    "These are component and isolated CLI checks, not completed production qualification.",
+    "Actual current-company recovery, guarded upgrade and new-format deployment restore remain separate.",
+    "Forced interruption, disk-full recovery and Windows full-company deployment restore remain open.",
+    "Native reconnect/audit guards and trusted technician labels still require installed runtime rechecks."
+  ],
+  "production_publication": false
+}

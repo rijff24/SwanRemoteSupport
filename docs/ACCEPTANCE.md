@@ -6,6 +6,32 @@ native support session or a clean-machine installation.
 
 ## Latest source checks, 28–29 October
 
+The streamed backup implementation at `67b5c69` passed both Windows and Linux
+component verification on push and PR jobs. Windows explicitly exported and
+restored a 513 MiB incompressible artifact with matching size/hash and retained
+identity material. Linux ran the actual release management CLI for both commands
+with a 512 MiB virtual-address-space limit; its encrypted backup exceeded 512 MiB,
+and restored artifact, keys, setup token, SQLite integrity and private file modes
+passed. Reordering, truncation, altered headers, wrong passwords, legacy archive
+compatibility, invalid paths, CRC failure and ordinary failure cleanup are also
+covered. The original image context check caught the new source missing from the
+Docker allowlist; that is fixed. The corrected image built locally. A deployment
+rehearsal then stopped at its obsolete SWANBK1-header assertion, updated at
+`eaa30b6`; rerun results remain pending. See the
+[streamed backup component receipt](evidence/67b5c69-streamed-backup-component-checks.json).
+These checks do not establish full-company recovery or an interrupted restore.
+
+The current company was backed up before any management upgrade, retaining all
+16 installer bundles (502,388,268 bytes). Its encrypted legacy archive is
+502,458,804 bytes, SHA-256
+`06c5ba80a5d15b9037e0f81d76e199c4200ef1424d6d54f547eaaa4f65203e0c`.
+Its passphrase remains separate and private. The original company was restarted
+and passed health checks. Both previously active endpoint VMs shut down normally;
+their test files and disks remain available. A separate candidate restore is
+queued without upgrading the original company or starting cloned transport.
+The identity-only native build `649682a` succeeded; the newer `67b5c69` native
+build, including the retry/audit guards, remains in progress.
+
 The installed 1.5.7 technician on Server2019 and customer on Server2016 passed
 real bidirectional file transfer on 29 October local time. The technician opened
 the transfer window from its authorized desktop session; the customer separately
@@ -27,7 +53,7 @@ showed failed inherited audit POST attempts to an HTTP address derived from the
 transport host. Managed builds now return no legacy audit destination; company
 claim/close events continue through authenticated HTTPS management. Dedicated
 native regressions were added for both guards. Their execution and real runtime
-recheck are pending; the running identity-only build649682a does not include
+recheck are pending; the completed identity-only build649682a does not include
 them. No large/interrupted/directory transfer, remote UAC or multi-monitor proof
 is inferred. See the
 [file-transfer and stop receipt](evidence/07bb8d0-native-file-transfer-and-pause.json).
