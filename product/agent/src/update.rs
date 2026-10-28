@@ -281,7 +281,10 @@ fn verify_publisher(path:&Path,release:&Release)->Result<()> {
         ("Path",path.to_str().context("Package path is not valid Unicode")?),
         ("Publisher",&release.publisher),("CertificateSha256",&release.publisher_certificate_sha256),("Sha256",&release.sha256),
     ])?.stdin(std::process::Stdio::null()).spawn()?;
-    let status=crate::verifier_process::wait(&mut verifier,std::time::Duration::from_secs(120))?;
+    // Include cold Windows PowerShell/module startup and hashing in this budget.
+    // A clean standard-user Windows 11 test took over two minutes with a valid
+    // package. Keep verification bounded and fail closed on timeout.
+    let status=crate::verifier_process::wait(&mut verifier,std::time::Duration::from_secs(300))?;
     ensure!(status.success(),"Package publisher verification failed");Ok(())
 }
 

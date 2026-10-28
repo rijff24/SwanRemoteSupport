@@ -70,6 +70,23 @@ correctly and leaves resume to the acknowledged company control. That UI change
 still requires a new build and installed visual verification. No complete
 ordinary-user/remote-feature or clean Windows compatibility matrix is claimed.
 
+The fresh Windows 11 Enterprise Evaluation 26300.9457 installed the actual
+1.5.5 customer company bundle. All 96 signed files, company profile, enrollment,
+automatic service/watcher startup, default consent-off and absence of Tailscale
+verified. Company approval and negative pending-device, unassigned-technician
+and unattended-without-consent checks passed. No native session is claimed.
+The genuine ordinary-user technician setup failed closed before MSI launch:
+publisher verification exceeded its 120-second budget. A separate read-only
+ordinary-user diagnostic accepted the same MSI hash and Authenticode certificate;
+cold PowerShell startup and hashing together exceeded two minutes, while the
+actual signature query returned Valid promptly. The source increases only that
+bounded verification budget to five minutes; all trust checks and timeout
+cleanup remain. The new 1.5.7 candidate also includes the prior footer fix.
+Neither this change nor the technician installation is qualified yet. The
+original timeout and guarded pre-MSI continuation are preserved separately;
+customer identity, credential and consent remained unchanged. See the
+[Windows 11 findings](../deployment/windows/e95010e-win11-fresh-customer-and-technician-trust-findings.json).
+
 ## Earlier source checks, 27 October
 
 The staged customer update exposed another real compatibility failure: Windows
