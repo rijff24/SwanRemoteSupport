@@ -2,7 +2,7 @@
 
 Production publication requires provider approval, valid signatures and completed release checks. Project signing through an open-source program is an intended integration, not an approved service or a guarantee of free signing. Company signing is optional and requires its own publisher policy and keys.
 
-## Provider preparation, checked 22 October 2026
+## Provider preparation, checked 28 October 2026
 
 [SignPath Foundation's current conditions](https://signpath.org/terms) require
 an existing documented release, verifiable public builds, participant MFA,
@@ -25,6 +25,18 @@ support-session exposure; the hosting company supplies its operational policy.
 Publish provider attribution only after service activation. Official project
 releases and separately company-signed custom builds retain distinct trust
 policies; no company worker receives a project signing private key.
+
+The [official GitHub integration](https://docs.signpath.io/trusted-build-systems/github)
+requires a previously uploaded workflow artifact and, for OSS signing, hosted
+GitHub runners for the preceding build jobs. Provider organization/project/policy
+configuration, an authorized submitter credential and manual release approval
+are still prerequisites. Company-controlled installer workers are downstream
+packagers; they must not become a route to project signing keys or arbitrary
+company-build signing. Preserve existing upstream signatures or include permitted
+unsigned dependencies according to the provider's rules; our lab certificate
+exercise does not establish provider acceptance of the payload inventory.
+No application was submitted and no provider credentials or account permissions
+were changed during this review.
 
 ## Project releases
 

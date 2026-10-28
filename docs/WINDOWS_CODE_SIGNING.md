@@ -8,7 +8,7 @@ The current GitHub Actions workflow intentionally produces an **unsigned build a
 
 Current primary references: [Microsoft SmartScreen reputation guidance](https://learn.microsoft.com/en-us/windows/apps/package-and-deploy/smartscreen-reputation), [Microsoft Artifact Signing eligibility and setup](https://learn.microsoft.com/en-us/azure/artifact-signing/quickstart), [SignPath Foundation conditions](https://signpath.org/terms.html), and the [Microsoft Security Intelligence file-submission portal](https://www.microsoft.com/en-us/wdsi/filesubmission).
 
-The repository's release rules are in the public [Swan code-signing policy](CODE_SIGNING_POLICY.md). Free code signing provided by SignPath.io, certificate by SignPath Foundation.
+The repository's release rules are in the public [Swan code-signing policy](CODE_SIGNING_POLICY.md). SignPath is a proposed provider; no application acceptance or active production signing service is claimed.
 
 ## What signing can and cannot do
 
@@ -39,7 +39,7 @@ The Tailscale download/signature boundary belongs to the preserved single-compan
 baseline only. Provider review must cover the actual configurable release,
 including upstream components, consent and uninstall behavior. Current provider
 preparation and unfulfilled prerequisites are recorded in the
-[code signing policy](CODE_SIGNING_POLICY.md#provider-preparation-checked-22-october-2026).
+[code signing policy](CODE_SIGNING_POLICY.md#provider-preparation-checked-28-october-2026).
 
 ### 2. Buy an organization-validated code-signing certificate
 

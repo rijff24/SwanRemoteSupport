@@ -112,6 +112,15 @@ UDP traversal or public Internet operation through the new runtime; those
 qualifications remain pending. See the
 [maintained transport and current restore receipt](../deployment/linux/maintained-transport-and-current-restore-20261028.json).
 
+The current Linux management, configuration agent and worker also matched
+byte-for-byte across independent CI runs 40647659405 and 40647664923. Both
+component source archives verified all 221 expected public files, with identical
+Rust 1.90.0 compiler identities and no shipping-file normalization. The PR merge
+and push commits have identical project trees; their distinct source labels are
+retained. This comparison does not qualify endpoint runtime behavior or claim
+identical ZIP metadata. See the
+[Linux component comparison](../deployment/linux/07bb8d0-component-reproduction.json).
+
 ## Earlier source checks, 27 October
 
 The staged customer update exposed another real compatibility failure: Windows
