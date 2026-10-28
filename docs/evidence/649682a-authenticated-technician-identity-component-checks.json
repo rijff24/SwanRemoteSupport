@@ -1,0 +1,71 @@
+{
+  "recorded_utc": "2026-10-28T21:48:56.384528+00:00",
+  "application_source": "649682af806e8cdf148399ed397cad2429ad8b5f",
+  "candidate_version": "1.5.8",
+  "workflow": "company-product.yml",
+  "push_run": 40772301701,
+  "pull_request_run": 40772312125,
+  "push_verified_jobs": [
+    {
+      "id": 123112564049,
+      "name": "verify (windows-2022)",
+      "conclusion": "success"
+    },
+    {
+      "id": 123112564166,
+      "name": "verify (ubuntu-24.04)",
+      "conclusion": "success"
+    },
+    {
+      "id": 123112563892,
+      "name": "linux-deployment",
+      "conclusion": "success"
+    }
+  ],
+  "pull_request_verified_jobs": [
+    {
+      "id": 123112591278,
+      "name": "verify (windows-2022)",
+      "conclusion": "success"
+    },
+    {
+      "id": 123112590802,
+      "name": "verify (ubuntu-24.04)",
+      "conclusion": "success"
+    },
+    {
+      "id": 123112591249,
+      "name": "linux-deployment",
+      "conclusion": "success"
+    }
+  ],
+  "named_tests_observed_passing_in_both_push_platform_logs": [
+    "tests::claimed_technician_identity_is_company_bound_and_legacy_safe",
+    "service::session_identity_tests::claimed_identity_comes_from_the_authorized_company_account"
+  ],
+  "coverage": [
+    "Real Axum claim handler returns the database account username despite spoofed identity fields in the request.",
+    "Wrong signed technician identity, wrong device, unauthenticated request and replay are denied.",
+    "Agent accepts the matching company identity, uses signed technician ID with older claim responses, and rejects mismatched or malformed identity."
+  ],
+  "local_source_packaging_tests": {
+    "test_build_source": 5,
+    "test_customer_msi": 6,
+    "all_passed": true
+  },
+  "signed_grant_schema_unchanged": true,
+  "database_schema_unchanged": true,
+  "native_build": {
+    "run": 40772456579,
+    "status_observed": "in_progress",
+    "step_observed": "Install native dependencies",
+    "engine": "source-candidate-05d5369"
+  },
+  "limits": [
+    "New native prompt not installed or visually qualified.",
+    "No independent native 1.5.8 reproduction, signing, company packages or automatic rollout yet.",
+    "Technician MSI lifecycle job was intentionally skipped in these component runs; no 1.5.8 MSI lifecycle qualification.",
+    "Existing ignored component integration fixtures are not counted as passed end-to-end acceptance.",
+    "The 512 MiB expanded company backup limit remains unresolved before adding more retained release artifacts."
+  ]
+}

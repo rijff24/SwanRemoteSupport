@@ -6,6 +6,33 @@ native support session or a clean-machine installation.
 
 ## Latest source checks, 28 October
 
+Installed 1.5.7 now has a real text-clipboard and keyboard checkpoint between
+the Server2019 technician and Server2016 customer. Both VM viewers were
+reconnected with clipboard acceptance and sending disabled; their running
+arguments were checked before and after. With no Swan session open, independent
+interactive probes kept different clipboard markers after both setters finished.
+A new customer-approved Swan session then copied exact multiline Unicode text in
+both directions, verified by matching UTF-8 hashes in the two desktop sessions.
+The technician typed a separate marker through Swan into a new, initially empty
+customer Notepad file and saved it with remote Ctrl+S. An independent read matched
+the file exactly; the customer viewer also showed it. No marker text was written
+to that file through the management connection.
+
+The customer stopped the session and its claimed grant closed. A new customer
+clipboard marker did not reach the technician after closure. The technician
+sample instead matched an earlier marker; preservation of the last clipboard
+value across disconnection is not claimed. An initial customer Set probe exited1
+before recording its result; the failure was preserved, and a separate read-only
+source check confirmed the same value already seen on the technician. A later
+probe added bounded clipboard-read retries and error-type records. The first
+post-stop checker also failed because it expected the last technician marker;
+its original hash-only result establishes non-arrival of the newly changed
+customer marker, not that unsupported preservation expectation. These tests use
+owned Administrator desktops and text clipboard only. File/clipboard-file
+transfer, remote UAC, multiple monitors and public connectivity remain open.
+See the [native clipboard and keyboard receipt](evidence/07bb8d0-native-text-clipboard-and-keyboard.json).
+
+
 A new blank-disk Windows Server 2016 Standard Evaluation Desktop Experience
 10.0.14393 x64 fixture installed the actual generated 1.5.7 customer bundle
 (sequence9). Windows setup initially skipped a failed lab-access bootstrap;
@@ -56,7 +83,11 @@ bound to the technician ID in the signed grant. Older servers fall back to that
 signed ID. Wrong-account and malformed identities are rejected. The signed grant
 format and database schema are unchanged. New handler and agent regressions cover
 spoofed names, account mismatch, replay, wrong-device access and compatibility;
-their execution and the rebuilt native prompt still require verification.
+the named tests passed in the Windows2022 and Ubuntu24.04 component jobs.
+Both push40772301701 and PR40772312125 also completed the Linux deployment job.
+The new native build40772456579 is running; the rebuilt prompt still requires
+installation and visual verification. See the
+[identity component-check receipt](evidence/649682a-authenticated-technician-identity-component-checks.json).
 Clipboard, file transfer, remote UAC, multiple
 monitors, direct/public connectivity and authorization-outage expiry are not
 proved by this checkpoint. See the
