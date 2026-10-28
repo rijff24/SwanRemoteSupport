@@ -50,7 +50,14 @@ check uses the closed flag and actual denial. These controls used owned
 Administrator desktops, so ordinary-account active-session termination remains
 unqualified. The incoming customer prompt also displayed the legacy peer name
 "Administrator" rather than an authenticated company technician identity; that
-UI finding remains to be fixed. Clipboard, file transfer, remote UAC, multiple
+UI finding is addressed in the new 1.5.8 source: the receiving app replaces the
+peer label with the account identity returned by its authenticated company claim,
+bound to the technician ID in the signed grant. Older servers fall back to that
+signed ID. Wrong-account and malformed identities are rejected. The signed grant
+format and database schema are unchanged. New handler and agent regressions cover
+spoofed names, account mismatch, replay, wrong-device access and compatibility;
+their execution and the rebuilt native prompt still require verification.
+Clipboard, file transfer, remote UAC, multiple
 monitors, direct/public connectivity and authorization-outage expiry are not
 proved by this checkpoint. See the
 [maintained transport and live customer pause receipt](../deployment/linux/07bb8d0-maintained-transport-native-relay-and-customer-pause.json).

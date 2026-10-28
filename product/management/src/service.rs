@@ -443,9 +443,11 @@ async fn claim(State(s):State<Shared>,headers:HeaderMap,Json(input):Json<Claim>)
     if !device_permissions(&tx,&device)?.allows(&grant.permissions) {return Err(denied());}
     let consent:bool=tx.query_row("SELECT unattended FROM devices WHERE id=?1",[&device],|r|r.get(0))?;
     if grant.unattended && !(consent && profile.allow_unattended) {return Err(denied());}
+    let (technician_id,technician_name):(String,String)=tx.query_row("SELECT u.id,u.username FROM grants g JOIN users u ON u.id=g.user_id WHERE g.id=?1 AND g.device_id=?2",params![grant.grant_id,device],|row|Ok((row.get(0)?,row.get(1)?)))?;
+    if technician_id!=grant.technician_id {return Err(denied());}
     if tx.execute("UPDATE grants SET claimed=1,lease_until=?1 WHERE id=?2 AND claimed=0 AND expires_at>?3",params![now()+300,grant.grant_id,now()])?!=1 {return Err(denied());}
     tx.execute("INSERT INTO audit(at,actor,event,target) VALUES(?1,?2,'session.claimed',?3)",params![now(),device,grant.grant_id])?;tx.commit()?;
-    Ok(Json(json!({"lease_until":now()+300,"unattended":grant.unattended})))
+    Ok(Json(json!({"lease_until":now()+300,"unattended":grant.unattended,"technician":{"id":technician_id,"username":technician_name}})))
 }
 async fn renew(State(s):State<Shared>,headers:HeaderMap,Path(id):Path<String>)->ApiResult {
     let device=s.device(&headers)?;let profile=s.profile()?;
@@ -588,6 +590,58 @@ async fn claim_build(State(s):State<Shared>,headers:HeaderMap)->ApiResult {
 }
 #[derive(Deserialize)]
 struct BuildResult { success:bool, artifact_url:String,sha256:String,log:String }
+
+#[cfg(test)]
+mod session_identity_tests {
+    use super::*;
+    #[tokio::test]
+    async fn claimed_identity_comes_from_the_authorized_company_account() {
+        use tower::ServiceExt;
+        let directory=std::env::temp_dir().join(format!("swan-session-identity-{}",random_token()));
+        let store=Arc::new(Store::open(&directory).unwrap());
+        let technician_token=random_token();let device_token=random_token();let other_device_token=random_token();
+        let public=STANDARD.encode(store.key.verifying_key().as_bytes());
+        let profile=CompanyProfile{schema:1,company_id:"identity-test".into(),revision:1,issued_at:now()-1,expires_at:now()+3600,management_url:"https://support.example.com".into(),rendezvous:"support.example.com".into(),relay:"support.example.com".into(),transport_public_key:public.clone(),customer:Default::default(),technician:Default::default(),allow_unattended:false,updates_paused:true,rollout_percent:0,maintenance_start_utc:0,maintenance_end_utc:0,update_channel:"test".into(),next_profile_public_key:None};
+        {
+            let db=store.db.lock().unwrap();
+            db.execute("INSERT INTO profile VALUES(1,?1)",[serde_json::to_string(&profile).unwrap()]).unwrap();
+            db.execute("INSERT INTO users(id,username,password_hash,totp_secret,role) VALUES('tech-id','company.tech','unused','unused','technician')",[]).unwrap();
+            db.execute("INSERT INTO sessions VALUES(?1,'tech-id',?2)",params![digest(&technician_token),now()+3600]).unwrap();
+            db.execute("INSERT INTO group_access VALUES('customers','tech-id')",[]).unwrap();
+            for (id,peer,token) in [("device","123",&device_token),("other-device","456",&other_device_token)] {
+                db.execute("INSERT INTO devices(id,name,rustdesk_id,token_hash,state,group_id) VALUES(?1,?1,?2,?3,'approved','customers')",params![id,peer,digest(token)]).unwrap();
+            }
+        }
+        let headers=|credential:&str| {let mut h=HeaderMap::new();h.insert(header::AUTHORIZATION,format!("Bearer {credential}").parse().unwrap());h};
+        let envelope:SignedEnvelope=serde_json::from_value(grant(State(store.clone()),headers(&technician_token),Json(GrantRequest{device_id:"device".into(),proof_public_key:public,unattended:false})).await.ok().unwrap().0).unwrap();
+        let original:SessionGrant=envelope.verify(&store.key.verifying_key()).unwrap();
+        let mut altered=original.clone();altered.technician_id="other-tech".into();
+        let wrong_identity=SignedEnvelope::sign(&altered,&store.key).unwrap();
+        let app=router(store.clone());
+        for (credential,envelope,expected) in [
+            (None,&envelope,StatusCode::UNAUTHORIZED),
+            (Some(other_device_token.as_str()),&envelope,StatusCode::FORBIDDEN),
+            (Some(device_token.as_str()),&wrong_identity,StatusCode::FORBIDDEN),
+            (Some(device_token.as_str()),&envelope,StatusCode::OK),
+            (Some(device_token.as_str()),&envelope,StatusCode::FORBIDDEN),
+        ] {
+            let mut request=axum::http::Request::builder().method("POST").uri("/api/v1/grants/claim").header(header::CONTENT_TYPE,"application/json");
+            if let Some(credential)=credential {request=request.header(header::AUTHORIZATION,format!("Bearer {credential}"));}
+            let body=json!({"grant":envelope,"technician":{"id":"tech-id","username":"Administrator"},"peer_name":"Administrator"});
+            let response=app.clone().oneshot(request.body(axum::body::Body::from(serde_json::to_vec(&body).unwrap())).unwrap()).await.unwrap();
+            assert_eq!(response.status(),expected);
+            if expected==StatusCode::OK {
+                let bytes=axum::body::to_bytes(response.into_body(),4096).await.unwrap();
+                let value:Value=serde_json::from_slice(&bytes).unwrap();
+                assert_eq!(value["technician"],json!({"id":"tech-id","username":"company.tech"}));
+                assert!(value["lease_until"].as_u64().unwrap()>now());
+            }
+        }
+        let claims:u64=store.db.lock().unwrap().query_row("SELECT COUNT(*) FROM audit WHERE event='session.claimed'",[],|row|row.get(0)).unwrap();
+        assert_eq!(claims,1);
+        drop(app);drop(store);std::fs::remove_dir_all(directory).unwrap();
+    }
+}
 
 #[cfg(test)]
 mod worker_completion_tests {

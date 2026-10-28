@@ -205,7 +205,8 @@ impl AgentState {
         let result:Value=self.client()?.post(self.endpoint("grants/claim")?).bearer_auth(self.device_token.as_ref().context("Not enrolled")?).json(&json!({"grant":login.grant})).send().await?.error_for_status()?.json().await?;
         let expires=result["lease_until"].as_u64().context("Missing lease expiry")?;
         ensure!(expires>now() && expires<=now()+310,"Invalid session lease");
-        Ok(Lease { grant_id:grant.grant_id,unattended:grant.unattended,permissions:grant.permissions,expires_at:expires,last_renewed:now(),_activity:activity })
+        let technician_name=claimed_technician_name(&result,&grant.technician_id)?;
+        Ok(Lease { grant_id:grant.grant_id,technician_name,unattended:grant.unattended,permissions:grant.permissions,expires_at:expires,last_renewed:now(),_activity:activity })
     }
     pub async fn renew(&self,lease:&mut Lease)->Result<()> {
         let remaining=lease.expires_at.checked_sub(now()).filter(|seconds|*seconds>0).context("Session authorization expired")?;
@@ -219,6 +220,17 @@ impl AgentState {
     pub async fn close(&self,grant_id:&str)->Result<()> {
         self.client()?.post(self.endpoint(&format!("grants/{grant_id}/close"))?).bearer_auth(self.device_token.as_ref().context("Not enrolled")?).send().await?.error_for_status()?;Ok(())
     }
+}
+
+fn claimed_technician_name(response:&Value,technician_id:&str)->Result<String> {
+    ensure!(!technician_id.is_empty() && technician_id.len()<=128 && technician_id.bytes().all(|b|b.is_ascii_alphanumeric() || b"._-@".contains(&b)),"Invalid authenticated technician identity");
+    // Older company servers do not return a username. The signed grant still
+    // identifies the account; never replace it with the peer's untrusted name.
+    let Some(identity)=response.get("technician") else {return Ok(format!("Company technician ({technician_id})"));};
+    ensure!(identity["id"].as_str()==Some(technician_id),"Claim returned a different technician");
+    let username=identity["username"].as_str().context("Missing authenticated technician name")?;
+    ensure!(username.len()>=3 && username.len()<=64 && username.bytes().all(|b|b.is_ascii_alphanumeric() || b"._-@".contains(&b)),"Invalid authenticated technician name");
+    Ok(username.to_owned())
 }
 
 fn validate_lease_renewal(previous_expiry:u64,new_expiry:u64,current:u64)->Result<()> {
@@ -242,7 +254,7 @@ fn replace_state(temporary:&Path,path:&Path)->Result<()> {
     #[cfg(not(windows))] {std::fs::rename(temporary,path)?;Ok(())}
 }
 
-pub struct Lease { pub grant_id:String,pub unattended:bool,pub permissions:SessionPermissions,pub expires_at:u64,pub last_renewed:u64,_activity:std::fs::File }
+pub struct Lease { pub grant_id:String,pub technician_name:String,pub unattended:bool,pub permissions:SessionPermissions,pub expires_at:u64,pub last_renewed:u64,_activity:std::fs::File }
 pub fn activity_file(directory:&Path)->Result<std::fs::File> {
     std::fs::create_dir_all(directory)?;
     Ok(std::fs::OpenOptions::new().create(true).read(true).write(true).open(directory.join("activity.lock"))?)
@@ -281,6 +293,19 @@ pub fn http_client(timeout_seconds:u64,artifact_redirects:bool)->Result<reqwest:
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn claimed_technician_identity_is_company_bound_and_legacy_safe() {
+        assert_eq!(claimed_technician_name(&json!({"technician":{"id":"tech-id","username":"company.tech"}}),"tech-id").unwrap(),"company.tech");
+        assert_eq!(claimed_technician_name(&json!({"peer_name":"Administrator"}),"tech-id").unwrap(),"Company technician (tech-id)");
+        for response in [
+            json!({"technician":{"id":"other-tech","username":"company.tech"}}),
+            json!({"technician":{"id":"tech-id"}}),
+            json!({"technician":{"id":"tech-id","username":"Administrator\nverified"}}),
+            json!({"technician":{"id":"tech-id","username":"\u{202e}company.tech"}}),
+            json!({"technician":null}),
+        ] {assert!(claimed_technician_name(&response,"tech-id").is_err());}
+        assert!(claimed_technician_name(&json!({}),"").is_err());
+    }
     #[test]
     fn delayed_renewal_cannot_resurrect_expired_authorization() {
         assert!(validate_lease_renewal(100,399,99).is_ok());

@@ -2570,6 +2570,8 @@ impl Connection {
         // After handling CloseReason messages, proceed to process other message types
         if let Some(message::Union::LoginRequest(lr)) = msg.union {
             #[cfg(feature = "swan_custom")]
+            let mut lr=lr;
+            #[cfg(feature = "swan_custom")]
             if self.managed_lease.is_none() {
                 match crate::managed::claim(&lr.password, &self.hash.challenge, &Config::get_id()).await {
                     Ok((lease,generation)) => {
@@ -2597,6 +2599,12 @@ impl Connection {
                         return false;
                     }
                 }
+            }
+            #[cfg(feature = "swan_custom")]
+            if let Some(lease)=self.managed_lease.as_ref() {
+                // Approval prompts, connection manager and audit must name the
+                // company-authenticated account, never a peer-supplied label.
+                lr.my_name.clone_from(&lease.technician_name);
             }
             self.handle_login_request_without_validation(&lr).await;
             if self.authorized {
