@@ -94,9 +94,22 @@ bundles (test sequence9); source texts, signed profiles/releases, installer and
 agent hashes, public customer download and protected technician download all
 verified. Tampered metadata and request-supplied trust overrides were denied;
 unapproved builds created no jobs. Company policy is unchanged and automatic
-rollout remains paused. This proves build and lab distribution, not installation,
-the footer fix or native remote operation. The Windows 11 ordinary-user retest
-is still pending. See the
+rollout remains paused. The same Windows 11 ordinary user subsequently installed
+1.5.7 from the preserved pre-MSI bootstrap, with no Administrators SID and no
+AlwaysInstallElevated policy. The signed per-user MSI, installed hashes,
+publishers and shipping verifier passed. Its actual company-branded technician
+UI then passed username/password/TOTP login, displayed four authorized devices
+and session history, and matched the independent server login audit. The native
+process owner and desktop session verified; customer identity, credential and
+consent remained unchanged. After normal sign-out and closure, the exact signed
+MSI restored a deliberately missing executable under that ordinary user; the
+original file was retained outside the installation directory, trust/release
+state survived and no recovery marker remained. This is not a pristine second
+profile, Start menu shortcut, complete remote-feature or full Windows matrix
+qualification. Customer 1.5.7 upgrade and the footer display remain separate
+pending tests. See the
+[Windows 11 installation, repair and native MFA receipt](../deployment/windows/07bb8d0-win11-standard-technician-install-repair-and-mfa.json)
+and the
 [1.5.7 reproduction/distribution receipt](../deployment/windows/07bb8d0-reproduction-and-lab-distribution.json). The original timeout and guarded pre-MSI continuation are preserved separately;
 customer identity, credential and consent remained unchanged. See the
 [Windows 11 findings](../deployment/windows/e95010e-win11-fresh-customer-and-technician-trust-findings.json).
