@@ -46,6 +46,12 @@ jobs:
           python deployment/windows/archive-build-source.py . component-artifacts/CompanyComponents-source.zip --components-only
       - name: Test security and management
         run: cargo +1.90.0 test --manifest-path product/Cargo.toml --workspace --locked
+      - name: Restore an incompressible backup above the former 512 MiB limit
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo +1.90.0 test --manifest-path product/Cargo.toml --locked -p swan-management backup::stream::tests::backup_above_previous_limit_preserves_incompressible_artifact -- --exact --ignored 2>&1 | tee component-artifacts/large-backup-tests.log
+          grep -F 'test result: ok. 1 passed; 0 failed;' component-artifacts/large-backup-tests.log
       - name: Verify first-run branding and policy form contracts
         run: node deployment/web/test-company-setup.js
       - name: Verify bounded pinned archive retries and integrity rejection

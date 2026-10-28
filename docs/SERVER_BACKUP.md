@@ -30,12 +30,12 @@ customer and technician bundles and their existing download links. Pause builds
 and uploads, and keep management configuration changes stopped during this export.
 Only regular files named with canonical build UUIDs and `.zip` are accepted;
 unfinished `.partial` uploads cause export to fail. Installer files share the
-512 MiB plaintext and 4096-file limits with the rest of the archive. If those
+64 GiB expanded-content and 4096-file limits with the rest of the archive. If those
 limits are exceeded, keep the installer directory in a separate protected backup
 and restore it with the matching management database. Management-only export
 omits these files, so its restored build records alone cannot serve old downloads.
 Directory exports reject symbolic links, Windows reparse points, special files,
-unsafe paths, and more than 4096 total files. The 512 MiB total plaintext limit applies.
+unsafe paths, and more than 4096 total files. The 64 GiB total plaintext limit applies.
 When the company data directory contains `Caddyfile`, export also encrypts that
 HTTPS configuration and restore places it back in the replacement data directory.
 Keep configuration edits stopped during export. Older archives without this
@@ -56,11 +56,38 @@ Stop configuration changes during the export when a coordinated snapshot of
 the separately stored environment, TLS identity and transport data is needed.
 The export does not stop or modify running transport services.
 
-All contents are encrypted with AES-256-GCM and an Argon2-derived key. Existing
-backup files are never overwritten. Temporary plaintext database snapshots are
-removed after archive generation, including private transport recovery copies.
-Archives and plaintext contents have size
-limits; this is not a general-purpose filesystem backup tool.
+New exports use the `SWANBK2` format: AES-256-GCM through RustCrypto's
+[STREAM implementation](https://docs.rs/aead/0.5.2/aead/stream/struct.Encryptor.html),
+an Argon2-derived key, a fresh random salt and nonce, and authenticated 1 MiB
+segments. A mandatory authenticated final segment rejects truncation; ordering
+is authenticated by STREAM. The complete format header is associated data.
+Existing backup files are never overwritten. Readers also accept `SWANBK1`
+archives within their original 1 GiB encrypted / 512 MiB expanded limits.
+**Older management binaries cannot restore SWANBK2.** Retain the exact matching
+management binary/source with backups, and retain a tested legacy backup when
+planning a downgrade.
+
+Export creates a private disk-backed plaintext ZIP inside the company data
+directory, then encrypts it in bounded chunks. Restore decrypts to a private
+sibling staging directory and checks every path, expanded size and ZIP CRC
+before renaming the fully extracted directory into the requested target. A
+wrong password, modified/truncated backup, invalid entry or extraction failure
+leaves the target untouched. Its parent directory must already exist.
+Temporary archives, database snapshots and partial encrypted output are removed
+on ordinary failure and success. A power loss or forced process termination can
+leave private `.swan-backup-*` staging or `backup-*.sqlite3` snapshots; inspect and
+remove only those owned remnants after confirming no backup/restore is active.
+Use encrypted storage, restricted directory permissions and adequate free disk
+space (allow the archive plus expanded contents during restore). Restored keys
+remain private to the invoking account, SYSTEM and Administrators on Windows,
+or mode 0700 directories / 0600 files on Unix. This is a company-state backup,
+not a general-purpose filesystem backup tool.
+
+The new format, legacy compatibility and above-limit recovery regressions must
+pass on Linux and Windows before deployment. Large tests explicitly generate
+and restore a 513 MiB incompressible installer fixture; their CI logs are retained.
+Full deployment restore and interrupted-operation rehearsals remain separate
+gates; the new implementation alone does not establish those results.
 
 Restore into an **empty directory** while the replacement management service
 is stopped and its public endpoints are unavailable:
@@ -70,7 +97,7 @@ swan-management restore company.swan-backup
 ```
 
 Set `SWAN_DATA_DIR` to that empty replacement directory before running restore.
-The restorer authenticates and validates the archive before writing contents.
+The restorer authenticates and validates the archive before publishing restored contents.
 It permits fixed management filenames and validated relative paths under
 `tls-storage/` and canonical build ZIPs under `artifacts/`, rejects duplicate or Windows-colliding names, file/directory
 conflicts and incomplete key pairs, and protects restored files with private Unix permissions or Windows

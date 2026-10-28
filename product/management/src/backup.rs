@@ -3,6 +3,8 @@ use anyhow::{ensure,Context,Result};
 use rand::RngCore;
 use std::{io::{Cursor,Read,Write},path::Path};
 
+#[path="backup_stream.rs"]
+mod stream;
 const HEADER:&[u8]=b"SWANBK1";
 fn key(password:&str,salt:&[u8])->Result<[u8;32]> {
     ensure!(password.len()>=16 && password.len()<=1024,"Backup passphrase must contain 16–1024 characters");
@@ -99,8 +101,6 @@ pub fn export_deployment_with_artifacts(data:&Path,destination:&Path,password:&s
     db.backup(rusqlite::DatabaseName::Main,&snapshot,None).context("Snapshot management database for backup")?;
     let mut snapshots=vec![snapshot.clone()];
     let result=(||->Result<()> {
-        let mut archive=zip::ZipWriter::new(Cursor::new(Vec::new()));
-        let options=zip::write::SimpleFileOptions::default().compression_method(zip::CompressionMethod::Deflated);
         let mut files=vec![("management.sqlite3".to_string(),snapshot.clone()),("profile-key.hex".to_string(),data.join("profile-key.hex")),("setup-token.txt".to_string(),data.join("setup-token.txt"))];
         if let Some(directory)=transport {
             files.push(("transport-id_ed25519".into(),directory.join("id_ed25519")));files.push(("transport-id_ed25519.pub".into(),directory.join("id_ed25519.pub")));
@@ -137,25 +137,28 @@ pub fn export_deployment_with_artifacts(data:&Path,destination:&Path,password:&s
             Err(error)=>return Err(error).context("Cannot inspect HTTPS configuration for backup"),
         }
         ensure!(files.len()<=4096,"Too many backup files");
-        let mut total=0u64;
-        for (name,path) in files {
-            let size=std::fs::metadata(&path)?.len();total=total.checked_add(size).context("Backup size overflow")?;
-            ensure!(total<=512*1024*1024,"Backup contents exceed 512 MiB");
-            archive.start_file(name,options)?;archive.write_all(&std::fs::read(path)?)?;
-        }
-        let bytes=archive.finish()?.into_inner();
-        let mut salt=[0u8;16];let mut nonce=[0u8;12];rand::rngs::OsRng.fill_bytes(&mut salt);rand::rngs::OsRng.fill_bytes(&mut nonce);
-        let cipher=Aes256Gcm::new_from_slice(&key(password,&salt)?).map_err(|_|anyhow::anyhow!("Invalid backup encryption key"))?;
-        let encrypted=cipher.encrypt(Nonce::from_slice(&nonce),bytes.as_ref()).map_err(|_|anyhow::anyhow!("Backup encryption failed"))?;
-        let mut options=std::fs::OpenOptions::new();options.create_new(true).write(true);
-        #[cfg(unix)] {use std::os::unix::fs::OpenOptionsExt;options.mode(0o600);}
-        let mut file=options.open(destination)?;file.write_all(HEADER)?;file.write_all(&salt)?;file.write_all(&nonce)?;file.write_all(&encrypted)?;file.sync_all()?;Ok(())
+        stream::export(data,files,destination,password)
     })();
     for snapshot in snapshots {if snapshot.exists(){std::fs::remove_file(&snapshot).context("Remove plaintext database snapshot after backup")?;}}
     result
 }
+fn empty_target(data:&Path)->Result<()> {
+    match std::fs::symlink_metadata(data) {
+        Ok(metadata)=>{
+            ensure!(metadata.is_dir() && !metadata.file_type().is_symlink(),"Restore target must be a regular directory");
+            #[cfg(windows)] {use std::os::windows::fs::MetadataExt;ensure!(metadata.file_attributes()&0x400==0,"Restore target must not be a reparse point");}
+            ensure!(std::fs::read_dir(data)?.next().is_none(),"Restore requires an empty target directory and a stopped management service");
+        },
+        Err(error) if error.kind()==std::io::ErrorKind::NotFound=>{},
+        Err(error)=>return Err(error.into()),
+    }
+    Ok(())
+}
 pub fn restore(data:&Path,source:&Path,password:&str)->Result<()> {
-    ensure!(!data.exists() || std::fs::read_dir(data)?.next().is_none(),"Restore requires an empty target directory and a stopped management service");
+    empty_target(data)?;
+    let mut header=[0u8;7];std::fs::File::open(source)?.read_exact(&mut header)?;
+    if header.as_slice()==stream::HEADER {return stream::restore(data,source,password);}
+    // Legacy archives retain their original bounded-memory reader and limits.
     ensure!(std::fs::metadata(source)?.len()<=1024*1024*1024,"Backup exceeds size limit");
     let bytes=std::fs::read(source)?;
     ensure!(bytes.len()>HEADER.len()+28 && bytes.starts_with(HEADER),"Invalid backup format");
@@ -163,6 +166,9 @@ pub fn restore(data:&Path,source:&Path,password:&str)->Result<()> {
     let cipher=Aes256Gcm::new_from_slice(&key(password,salt)?).map_err(|_|anyhow::anyhow!("Invalid decryption key"))?;
     let plaintext=cipher.decrypt(Nonce::from_slice(nonce),&bytes[offset+28..]).map_err(|_|anyhow::anyhow!("Backup password incorrect or backup modified"))?;
     let mut archive=zip::ZipArchive::new(Cursor::new(plaintext))?;
+    restore_archive(data,&mut archive,512*1024*1024)
+}
+fn restore_archive<R:Read+std::io::Seek>(data:&Path,archive:&mut zip::ZipArchive<R>,limit:u64)->Result<()> {
     ensure!((3..=4096).contains(&archive.len()),"Unexpected backup contents");
     let allowed=["management.sqlite3","profile-key.hex","setup-token.txt","transport-id_ed25519","transport-id_ed25519.pub","transport-db.sqlite3","deployment.env","tls-identity","Caddyfile"];
     let mut names=std::collections::HashSet::new();
@@ -174,31 +180,15 @@ pub fn restore(data:&Path,source:&Path,password:&str)->Result<()> {
     }
     ensure!(names.contains("transport-id_ed25519")==names.contains("transport-id_ed25519.pub"),"Incomplete transport trust key pair");
     for required in &allowed[..3]{ensure!(names.contains(*required),"Missing management backup entry");}
-    // Validate all contents before creating anything. Never extract arbitrary archive paths.
-    let mut files=Vec::new();
+    // Bound all expanded sizes before writing to private staging. ZIP CRC and
+    // exact lengths are checked during extraction, before publishing the target.
     let mut total=0u64;
-    for name in names {
-        let mut entry=archive.by_name(&name)?;total=total.checked_add(entry.size()).context("Backup size overflow")?;ensure!(total<=512*1024*1024,"Backup contents too large");
-        let mut content=Vec::new();entry.read_to_end(&mut content)?;files.push((name,content));
+    for name in &names {
+        let entry=archive.by_name(name)?;
+        total=total.checked_add(entry.size()).context("Backup size overflow")?;
+        ensure!(total<=limit,"Backup contents too large");
     }
-    std::fs::create_dir_all(data)?;
-    #[cfg(unix)] {use std::os::unix::fs::PermissionsExt;std::fs::set_permissions(data,std::fs::Permissions::from_mode(0o700))?;}
-    #[cfg(windows)] {
-        let identity=std::process::Command::new("whoami.exe").args(["/user","/fo","csv","/nh"]).output()?;
-        ensure!(identity.status.success(),"Cannot identify backup restore owner");
-        let identity=String::from_utf8_lossy(&identity.stdout);
-        let sid=identity.trim().rsplit(',').next().context("Missing restore owner SID")?.trim_matches('"');
-        ensure!(sid.starts_with("S-1-") && sid.bytes().all(|byte|byte==b'S' || byte==b'-' || byte.is_ascii_digit()),"Invalid restore owner SID");
-        let status=std::process::Command::new("icacls.exe").arg(data).args(["/inheritance:r","/grant:r"]).arg(format!("*{sid}:(OI)(CI)F")).args(["*S-1-5-18:(OI)(CI)F","*S-1-5-32-544:(OI)(CI)F"]).output()?;
-        ensure!(status.status.success(),"Cannot protect restored company keys");
-    }
-    for (name,content) in files {
-        let mut options=std::fs::OpenOptions::new();options.create_new(true).write(true);
-        #[cfg(unix)] {use std::os::unix::fs::OpenOptionsExt;options.mode(0o600);}
-        let path=data.join(name);if let Some(parent)=path.parent(){std::fs::create_dir_all(parent)?;}
-        let mut file=options.open(path)?;file.write_all(&content)?;file.sync_all()?;
-    }
-    Ok(())
+    stream::extract(data,archive,names)
 }
 
 #[cfg(test)]
