@@ -6,6 +6,29 @@ native support session or a clean-machine installation.
 
 ## Latest source checks, 28 October
 
+A new blank-disk Windows Server 2016 Standard Evaluation Desktop Experience
+10.0.14393 x64 fixture installed the actual generated 1.5.7 customer bundle
+(sequence9). Windows setup initially skipped a failed lab-access bootstrap;
+the installed OS was preserved and the original seed scripts were verified and
+run through its existing management connection. Before any Swan installation,
+absence of a Swan footprint and Tailscale, disabled automatic logon and exact
+restricted SSH-key access were verified. The guest shut down normally and its
+clean disk was preserved read-only with a new writable overlay. The setup media
+was detached. This is separate from the older endpoint with a retained uninstall
+cancellation marker, which was preserved.
+
+On the new fixture, the shipping verifier accepted all 96 signed files, profile14,
+enrollment, service/watcher startup and default unattended-consent-off. A real
+company check hid the pending device from technician inventory and rejected its
+grant (403). After explicit approval, the authorized technician could see it;
+an unassigned technician still could not see it or obtain a grant, and unattended
+access without consent was denied. Other company device records were unchanged.
+These results establish this clean customer installation and enrollment policy,
+not native remote sessions, GUI controls, product reboot/repair/upgrade/uninstall
+or complete Server2016 compatibility. See the
+[clean Server2016 installation and enrollment receipt](../deployment/windows/07bb8d0-server2016-clean-customer-and-enrollment.json).
+
+
 The Server2022 endpoint installed the actual generated 1.5.4 customer bundle
 again after its prior uninstall. The original zero-byte cancellation marker was
 retained for shipping setup to resolve. Enrollment, all 96 signed files, service

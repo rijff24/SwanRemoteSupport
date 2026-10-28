@@ -1,0 +1,64 @@
+{
+  "recorded_utc": "2026-10-28T21:06:29.773867+00:00",
+  "application_source": "07bb8d0b99e2be002a30e5d97eebe67a9c2794ad",
+  "clean_os": {
+    "caption": "Microsoft Windows Server 2016 Standard Evaluation",
+    "version": "10.0.14393",
+    "build": "14393",
+    "architecture": "64-bit",
+    "product_footprint_absent": true,
+    "tailscale_absent": true,
+    "autologon_disabled": true,
+    "ssh_acl_verified": true,
+    "normal_shutdown_verified": true,
+    "readonly_backing_preserved": true,
+    "full_memory_snapshot_used": false
+  },
+  "fixture_setup": {
+    "new_blank_disk_and_existing_official_evaluation_iso": true,
+    "specialize_lab_bootstrap_failed_before_product_install": true,
+    "original_installed_disk_preserved_readonly": true,
+    "original_seed_scripts_verified_and_repaired_through_existing_winrm": true,
+    "clean_os_verified_and_preserved_after_lab_repair_before_product_install": true,
+    "setup_media_detached_before_product_install": true,
+    "older_cancelled_uninstall_fixture_preserved": true
+  },
+  "fresh_customer_install": {
+    "version": "1.5.7",
+    "watch_state": "Running",
+    "profile_revision": 14,
+    "sequence": 9,
+    "shipping_verifier_passed": true,
+    "utc": "2026-10-28T20:50:24.3888057Z",
+    "all_signed_files": 96,
+    "default_unattended_consent_off": true,
+    "service_state": "Running",
+    "production_qualified": false,
+    "enrolled": true,
+    "public_lab_publisher_verified": true,
+    "tailscale_absent": true
+  },
+  "company_enrollment_permissions": {
+    "utc": "2026-10-28T21:05:13.774045+00:00",
+    "version": "1.5.7",
+    "sequence": 9,
+    "actual_enrolled_customer": "WindowsServer2016",
+    "pending_inventory_hidden": true,
+    "pending_grant_status": 403,
+    "explicit_company_approval_verified": true,
+    "authorized_inventory_visible": true,
+    "unassigned_inventory_hidden": true,
+    "unassigned_grant_status": 403,
+    "unattended_without_consent_status": 403,
+    "other_device_records_unchanged": true,
+    "no_successful_grant_or_native_session_created": true,
+    "production_qualified": false
+  },
+  "limits": [
+    "Lab-only publisher and HTTPS trust; no production signing approval.",
+    "No native support session or current maintained-transport runtime qualification from this test.",
+    "No Server2016 GUI, upgrade, repair, uninstall, reboot-after-product-install or remote-feature qualification from this test.",
+    "No real Internet reachability or complete Windows compatibility matrix.",
+    "Automatic update rollout remains paused."
+  ]
+}
