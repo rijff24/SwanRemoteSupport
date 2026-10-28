@@ -176,6 +176,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
       children.addAll([
         Divider(),
         OnlineStatusWidget(
+          managedSupport: isSwanManagedClient,
           onSvcStatusChanged: () {
             if (isInHomePage()) {
               Future.delayed(Duration(milliseconds: 300), () {

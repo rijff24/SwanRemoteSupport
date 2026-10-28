@@ -23,7 +23,7 @@ env:
   FLUTTER_ENGINE_SHA256: "ec8cabf36ee4ff24c8d98de25b00e70781eb03876265aee84d0fe554a110036e"
   VCPKG_COMMIT_ID: "120deac3062162151622ca4860575a33844ba10b"
   VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
-  VERSION: "1.5.5"
+  VERSION: "1.5.6"
 
 jobs:
   generate-bridge:

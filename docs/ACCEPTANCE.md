@@ -1,6 +1,6 @@
 # Configurable product acceptance report
 
-Evidence through 27 October 2026. **The product is not complete or approved for
+Evidence through 28 October 2026. **The product is not complete or approved for
 production publication.** A passing component test is not evidence of a working
 native support session or a clean-machine installation.
 
@@ -24,7 +24,7 @@ started MSI repair because detection could not inspect the deliberately private
 configuration-agent keypath (MsiInstaller event1004). The UI eventually opened,
 but ordinary startup must not invoke that uncoordinated repair. “Stop support”
 also requested administrator credentials through the inherited service-uninstall
-path; the prompt was canceled. The next 1.5.5 source disables advertised shortcut
+path; the prompt was canceled. The 1.5.5 source disables advertised shortcut
 generation and changes managed Windows stop/resume to service IPC with receiver-
 enforced pause, generation-bound authorization and cancellation of in-flight
 renewal. A native regression and installed-shortcut check were added. Its consent
@@ -36,8 +36,31 @@ the managed preset so native authorization obtains a fresh grant and proof for
 each file-transfer connection. A native regression checks stale login, wrong
 company, wrong target and expiry; no signing proof or reusable credential is
 returned to Dart. Real file-transfer operation remains unverified.
-These source changes still require native build, reproduction and real installed
-ordinary-user/active-session verification; they are not qualified fixes yet.
+Both 1.5.5 native builds passed. Comparison run 40616863517 verified identical
+original bytes for all eight shipping outputs, matching compiler inputs and exact
+public source/bridges. The native pause and transfer-handle regressions passed.
+The existing nonexportable lab key signed seven outputs; the Windows worker
+generated both company bundles, whose source texts, signatures, hashes and public
+customer/protected technician downloads verified. Automatic rollout remains
+paused. The actual Server2019 technician upgraded from 1.5.4, opened its native
+UI and passed MFA login with three approved devices and history visible; the
+server audit independently matched that login. See the
+[build/source receipt](../deployment/windows/e95010e-first-build-and-source-verification.json)
+and [distribution/technician receipt](../deployment/windows/e95010e-lab-distribution-and-technician-upgrade.json).
+
+The actual Server2022 customer also upgraded from 1.5.4 with identity, credential,
+trust and revoked consent preserved. Its ordinary-user shortcut directly opens
+the app and is not advertised. The first real ordinary-user stop test persisted
+native pause without elevation; independent checks verified that the GUI token
+has no Administrators SID, the same Windows service process remains running,
+the configuration watcher remains running, and no new Swan MSI event occurred.
+Resume, reboot persistence, active-session termination and real file transfer
+remain separate pending qualifications. This test also exposed an inherited
+footer that incorrectly calls paused support a stopped Windows service and
+offers a duplicate legacy start link. The next 1.5.6 source labels managed pause
+correctly and leaves resume to the acknowledged company control. That UI change
+still requires a new build and installed visual verification. No complete
+ordinary-user/remote-feature or clean Windows compatibility matrix is claimed.
 
 ## Earlier source checks, 27 October
 
