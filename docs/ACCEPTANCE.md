@@ -54,8 +54,16 @@ the app and is not advertised. The first real ordinary-user stop test persisted
 native pause without elevation; independent checks verified that the GUI token
 has no Administrators SID, the same Windows service process remains running,
 the configuration watcher remains running, and no new Swan MSI event occurred.
-Resume, reboot persistence, active-session termination and real file transfer
-remain separate pending qualifications. This test also exposed an inherited
+A normal kernel reboot then preserved pause, identity and revoked consent;
+the service and watcher started automatically and the shipping verifier passed.
+Normal restart/clean event-log shutdown were verified with no new unexpected-
+shutdown event. The ordinary user reopened the actual shortcut and resumed
+support without elevation; persisted state, the same post-boot service process,
+all installed files and zero new MSI events verified. The consent dialog scrolled
+to the complete policy with both buttons available; cancel preserved consent-off
+and a fresh unattended grant was denied. See the
+[ordinary-user controls evidence](../deployment/windows/e95010e-server2022-upgrade-and-standard-user-pause.json).
+Active-session termination and real file transfer remain pending qualifications. This test also exposed an inherited
 footer that incorrectly calls paused support a stopped Windows service and
 offers a duplicate legacy start link. The next 1.5.6 source labels managed pause
 correctly and leaves resume to the acknowledged company control. That UI change
