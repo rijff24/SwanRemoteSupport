@@ -68,7 +68,8 @@ footer that incorrectly calls paused support a stopped Windows service and
 offers a duplicate legacy start link. The next 1.5.6 source labels managed pause
 correctly and leaves resume to the acknowledged company control. Its first
 [native build passed](https://github.com/rijff24/SwanRemoteSupport/actions/runs/40628082360),
-but installed visual verification is still pending. No complete
+and this footer change was subsequently visually verified in installed 1.5.7
+as described below. No complete
 ordinary-user/remote-feature or clean Windows compatibility matrix is claimed.
 
 The fresh Windows 11 Enterprise Evaluation 26300.9457 installed the actual
@@ -106,8 +107,20 @@ MSI restored a deliberately missing executable under that ordinary user; the
 original file was retained outside the installation directory, trust/release
 state survived and no recovery marker remained. This is not a pristine second
 profile, Start menu shortcut, complete remote-feature or full Windows matrix
-qualification. Customer 1.5.7 upgrade and the footer display remain separate
-pending tests. See the
+qualification. The Windows 11 customer then explicitly upgraded from 1.5.5
+sequence8 to 1.5.7 sequence9, preserving identity, credential, bootstrap trust
+and default consent-off revision0. The ordinary user opened its actual common
+shortcut without MSI repair or elevation, paused support and saw the corrected
+“Support paused” footer with one Resume control. The service process and watcher
+continued running. A normal kernel reboot preserved pause and identity; clean
+restart events and no unexpected-power-loss event verified. The service and
+watcher started automatically, no Flutter/desktop plugin module was loaded in
+the service, and the shipping verifier passed. The user reopened the shortcut
+and resumed support without elevation; the same post-boot service process,
+zero new Swan MSI events, trust/consent and shipping verification passed. This
+is not active-session termination or remote-feature qualification. See the
+[Windows 11 customer upgrade and controls receipt](../deployment/windows/07bb8d0-win11-customer-upgrade-pause-and-reboot.json),
+the
 [Windows 11 installation, repair and native MFA receipt](../deployment/windows/07bb8d0-win11-standard-technician-install-repair-and-mfa.json)
 and the
 [1.5.7 reproduction/distribution receipt](../deployment/windows/07bb8d0-reproduction-and-lab-distribution.json). The original timeout and guarded pre-MSI continuation are preserved separately;
