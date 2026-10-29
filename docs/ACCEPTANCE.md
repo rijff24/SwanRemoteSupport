@@ -6,6 +6,31 @@ native support session or a clean-machine installation.
 
 ## Latest source checks, 28–29 October
 
+The Windows company lab now has a real native1.5.9 attended session through the
+maintained Windows relay. A standard-user technician completed MFA and saw only
+its approved customer; the customer accepted the authenticated technician name.
+Matching receiver/relay connection IDs, live video, remote pointer/keyboard input,
+lease renewal and customer disconnect were verified. The original disconnected
+grant rejected renewal with403. Customer MSI setup and standard-user technician
+EXE setup also passed; standard-user MSI remains blocked by OS policy1625. The
+maintained Windows company/worker stack passed a normal reboot, and the existing
+customer identity, approval, consent and installed bytes survived a separate lab
+runtime interruption. These are scoped lab results, not public connectivity or
+complete Windows feature qualification. See the
+[Windows company runtime receipt](evidence/159-windows-company-install-enrollment-20261029.json).
+
+A second native1.5.9 attended session tested management unreachability from the
+customer while leaving relay ports available. A narrow lab-only outbound rule
+had an automatic restore task registered first. The native receiver closed for
+unavailable authorization about seven seconds after the rule took effect; the
+technician showed only an authorization error and OK. Restoring verified HTTPS
+preserved the original device credential, policy and consent and did not revive
+the desktop. After the original lease actually expired, renewal returned403 and
+there was no replacement live lease. The history displayed Ended. During the
+outage, the server could not receive the close report, so its stored closed bit
+remained false until normal lease-based expiry; this test does not establish
+instant server-side close reporting during a network partition.
+
 Installation reporting is now being implemented after the completed recovery
 checkpoint. The new shared report contract, authenticated management endpoints,
 paginated status page and schema3 migration are source changes under verification;
