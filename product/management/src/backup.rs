@@ -136,6 +136,16 @@ pub fn export_deployment_with_artifacts(data:&Path,destination:&Path,password:&s
             Err(error) if error.kind()==std::io::ErrorKind::NotFound=>{},
             Err(error)=>return Err(error).context("Cannot inspect HTTPS configuration for backup"),
         }
+        let receipt=data.join("installation.json");
+        match std::fs::symlink_metadata(&receipt) {
+            Ok(metadata)=>{
+                ensure!(metadata.is_file() && !metadata.file_type().is_symlink() && (1..=64*1024).contains(&metadata.len()),"Windows installation receipt must be a bounded regular file");
+                #[cfg(windows)] {use std::os::windows::fs::MetadataExt;ensure!(metadata.file_attributes()&0x400==0,"Windows installation receipt must not be a reparse point");}
+                files.push(("installation.json".into(),receipt));
+            },
+            Err(error) if error.kind()==std::io::ErrorKind::NotFound=>{},
+            Err(error)=>return Err(error).context("Cannot inspect Windows installation receipt for backup"),
+        }
         ensure!(files.len()<=4096,"Too many backup files");
         stream::export(data,files,destination,password)
     })();
@@ -170,7 +180,7 @@ pub fn restore(data:&Path,source:&Path,password:&str)->Result<()> {
 }
 fn restore_archive<R:Read+std::io::Seek>(data:&Path,archive:&mut zip::ZipArchive<R>,limit:u64)->Result<()> {
     ensure!((3..=4096).contains(&archive.len()),"Unexpected backup contents");
-    let allowed=["management.sqlite3","profile-key.hex","setup-token.txt","transport-id_ed25519","transport-id_ed25519.pub","transport-db.sqlite3","deployment.env","tls-identity","Caddyfile"];
+    let allowed=["management.sqlite3","profile-key.hex","setup-token.txt","transport-id_ed25519","transport-id_ed25519.pub","transport-db.sqlite3","deployment.env","tls-identity","Caddyfile","installation.json"];
     let mut names=std::collections::HashSet::new();
     for index in 0..archive.len(){let entry=archive.by_index(index)?;ensure!((allowed.contains(&entry.name()) || tls_entry(entry.name()) || artifact_entry(entry.name())) && !entry.is_dir() && names.insert(entry.name().to_string()),"Unknown or duplicate backup entry");}
     let mut portable_names=std::collections::HashSet::new();
@@ -185,6 +195,7 @@ fn restore_archive<R:Read+std::io::Seek>(data:&Path,archive:&mut zip::ZipArchive
     let mut total=0u64;
     for name in &names {
         let entry=archive.by_name(name)?;
+        if name=="installation.json" {ensure!((1..=64*1024).contains(&entry.size()),"Invalid Windows installation receipt size");}
         total=total.checked_add(entry.size()).context("Backup size overflow")?;
         ensure!(total<=limit,"Backup contents too large");
     }
@@ -276,6 +287,8 @@ mod tests {
         std::fs::create_dir_all(certificate.parent().unwrap()).unwrap();std::fs::write(&certificate,b"ACME private key fixture").unwrap();
         std::fs::write(tls_storage.join("account.json"),b"ACME account fixture").unwrap();
         std::fs::write(data.join("Caddyfile"),b"company.example { reverse_proxy 127.0.0.1:24440 }").unwrap();
+        let receipt=br#"{"schema":1,"service_name":"SwanCompanyServer","full_stack":true}"#;
+        std::fs::write(data.join("installation.json"),receipt).unwrap();
         let archive=root.join("complete.swan-backup");export_deployment(&data,&archive,"complete backup passphrase",Some(&transport),Some(&configuration),Some(&tls),Some(&tls_storage)).unwrap();
         let destination=root.join("restored");restore(&destination,&archive,"complete backup passphrase").unwrap();
         assert_eq!(std::fs::read(destination.join("transport-id_ed25519")).unwrap(),b"private transport key");assert_eq!(std::fs::read(destination.join("transport-id_ed25519.pub")).unwrap(),b"public transport key");
@@ -283,9 +296,36 @@ mod tests {
         assert_eq!(std::fs::read(destination.join("tls-storage/certificates/acme.example/company.example/company.key")).unwrap(),std::fs::read(certificate).unwrap());
         assert_eq!(std::fs::read(destination.join("tls-storage/account.json")).unwrap(),b"ACME account fixture");
         assert_eq!(std::fs::read(destination.join("Caddyfile")).unwrap(),std::fs::read(data.join("Caddyfile")).unwrap());
+        assert_eq!(std::fs::read(destination.join("installation.json")).unwrap(),receipt);
         let db=rusqlite::Connection::open(destination.join("transport-db.sqlite3")).unwrap();assert_eq!(db.query_row("SELECT id FROM peers",[],|row|row.get::<_,String>(0)).unwrap(),"retained peer");drop(db);
         let mut modified=std::fs::read(&archive).unwrap();let last=modified.len()-1;modified[last]^=1;let tampered=root.join("tampered.swan-backup");std::fs::write(&tampered,modified).unwrap();
         let rejected=root.join("rejected");assert!(restore(&rejected,&tampered,"complete backup passphrase").is_err());assert!(!rejected.exists());
+        std::fs::remove_dir_all(root).unwrap();
+    }
+    #[test]
+    fn installation_receipt_rejects_invalid_file_types_and_sizes_before_export() {
+        for kind in ["directory","empty","oversized"] {
+            let root=std::env::temp_dir().join(format!("swan-receipt-backup-{}",swan_protocol::random_token()));
+            let data=root.join("data");std::fs::create_dir_all(&data).unwrap();
+            let db=rusqlite::Connection::open(data.join("management.sqlite3")).unwrap();db.execute_batch("CREATE TABLE identity(value TEXT);").unwrap();drop(db);
+            std::fs::write(data.join("profile-key.hex"),b"key").unwrap();std::fs::write(data.join("setup-token.txt"),b"token").unwrap();
+            let receipt=data.join("installation.json");
+            if kind=="directory" {std::fs::create_dir(&receipt).unwrap();}else{std::fs::write(&receipt,vec![b'x';if kind=="empty" {0}else{64*1024+1}]).unwrap();}
+            let output=root.join("rejected.backup");assert!(export(&data,&output,"receipt backup test password").is_err());assert!(!output.exists());
+            assert!(!std::fs::read_dir(&data).unwrap().any(|entry|entry.unwrap().file_name().to_string_lossy().starts_with("backup-")));
+            std::fs::remove_dir_all(root).unwrap();
+        }
+    }
+    #[test]
+    fn invalid_receipt_size_in_authenticated_archive_never_publishes_restore() {
+        let root=std::env::temp_dir().join(format!("swan-invalid-receipt-restore-{}",swan_protocol::random_token()));std::fs::create_dir(&root).unwrap();
+        for size in [0,64*1024+1] {
+            let mut archive=zip::ZipWriter::new(Cursor::new(Vec::new()));
+            for name in ["management.sqlite3","profile-key.hex","setup-token.txt"] {archive.start_file(name,zip::write::SimpleFileOptions::default()).unwrap();archive.write_all(b"fixture").unwrap();}
+            archive.start_file("installation.json",zip::write::SimpleFileOptions::default()).unwrap();archive.write_all(&vec![b'x';size]).unwrap();
+            let mut archive=zip::ZipArchive::new(archive.finish().unwrap()).unwrap();let destination=root.join(format!("rejected-{size}"));
+            assert!(restore_archive(&destination,&mut archive,1024*1024).is_err());assert!(!destination.exists());
+        }
         std::fs::remove_dir_all(root).unwrap();
     }
     #[test]

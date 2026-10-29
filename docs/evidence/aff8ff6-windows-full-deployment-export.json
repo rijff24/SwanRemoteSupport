@@ -8,13 +8,15 @@
     "deployment_environment_included": true,
     "utc": "2026-10-29T10:30:16.1563202Z",
     "production_publication": false,
-    "transport_identity_and_database_included": true,
     "management_database_configuration_and_keys_included": true,
     "complete_https_storage_included": true,
     "company_and_worker_services_resumed": true,
     "backup_sha256": "fe8f2b3aa8e75f4c0ccb6fbaf6b1e2ddc2cc90a7075c304fb33ae2c86a7f27a1",
     "management_source": "aff8ff61e3fbd6f34c4cf0bb9de6e330ec6e0521",
-    "installer_artifacts": 3
+    "installer_artifacts": 3,
+    "transport_identity_included": true,
+    "transport_database_present_at_export": false,
+    "windows_installation_receipt_included": false
   },
   "encrypted_file_collection": {
     "utc": "2026-10-29T10:30:20.055191+00:00",
@@ -35,6 +37,7 @@
     "restore_not_yet_tested": true,
     "production_publication": false
   },
-  "scope": "Full encrypted export and resumed original services; actual deployment restore and coordinated maintained transport upgrade remain pending.",
-  "production_publication": false
+  "scope": "Encrypted deployment data export and resumed original services. Isolated restore exposed omission of Windows installation.json; updated export/reader and complete running-stack restore qualification are pending.",
+  "production_publication": false,
+  "evidence_correction": "The transport store had only its key pair and no database; no transport database was expected or restored. Original raw lab records retained privately."
 }

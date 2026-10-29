@@ -7666,8 +7666,8 @@ source build, private-worker checks and deterministic server installer compilati
 above, so the overall integration is not yet green.
 
 The disposable Server 2016 company produced a full SWANBK2 deployment export:
-management database/configuration/keys, transport identity/database, complete
-HTTPS storage, service environment and all three generated installers. Its
+management database/configuration/keys, transport identity (its database had not
+yet been initialized), complete HTTPS storage, service environment and all three generated installers. Its
 95,990,779-byte ciphertext was collected and hash-verified; the strong passphrase
 stays separate and outside Git, and only the backup child received it in memory.
 Both services resumed. Original HTTPS/profile trust, administrator MFA, worker
@@ -7675,3 +7675,36 @@ authentication, approvals/revocations and all three installer hashes remained
 valid; updates stayed paused. This proves export and resumed-service behavior,
 not full Windows deployment restore. See
 [export evidence](evidence/aff8ff6-windows-full-deployment-export.json).
+
+
+### 2026-10-29: isolated Windows recovery and missing ownership receipt fix
+
+The actual lab-signed MSVC `aff8ff6` management CLI rejected a wrong password and
+changed ciphertext without publishing targets or leaving plaintext staging. Its
+successful isolated restore recovered management signing/setup keys, HTTPS
+configuration, transport private/public keys, service environment, 13 HTTPS
+storage files (eight certificate/private-key files matched), and all three
+installer ZIPs with their recorded hashes. Restored state admits only the owning
+administrator, SYSTEM and Administrators. Original services remained running
+without restart and the worker credential was unchanged. The transport database
+had not yet been created, so its absence was correct; a test-harness check was
+corrected without repeating decryption. See
+[isolated recovery evidence](evidence/aff8ff6-windows-isolated-restore-and-receipt-gap.json).
+
+The exercise exposed a real coverage gap: the encrypted archive omitted Windows
+`installation.json`, used for safe service ownership/removal. The restored
+payload was not switched into the live service. Export now includes that receipt
+when present, requiring a nonempty regular file of at most 64 KiB and rejecting
+links/reparse points. The reader accepts it with the same size bound; older
+archives remain supported. An existing complete-backup regression now verifies
+exact receipt recovery, with added invalid-file/size and restore-publication
+boundary checks. Twelve local backup tests passed; the existing large-backup test
+remained explicitly ignored in this targeted run. Windows compilation, a new
+receipt-complete encrypted export and full running deployment restore remain
+required. Earlier SWANBK2 readers cannot restore the added entry; matching
+binary/source retention and rollback compatibility are documented.
+
+The preceding `0a95b2a` component push run 40860193687 passed Linux deployment,
+maintained Windows transport, Windows verification and Ubuntu verification.
+This establishes the transport packaging/provenance fix before the newly added
+receipt coverage; it does not qualify the new receipt reader on Windows yet.

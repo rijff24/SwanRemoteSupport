@@ -41,6 +41,23 @@ HTTPS configuration and restore places it back in the replacement data directory
 Keep configuration edits stopped during export. Older archives without this
 file remain supported; reconstruct and validate their HTTPS recipe before use.
 
+When present, the Windows service ownership receipt `installation.json` is also
+encrypted and restored. It must be a nonempty regular file no larger than 64 KiB;
+links, directories and oversized receipts fail export. Restore applies the same
+size bound before publishing files. This preserves the metadata needed by the
+owned server removal/maintenance checks. Restore does not register services,
+change firewall rules or trust the receipt's paths automatically. Validate its
+install/data paths and rule ownership against the actual replacement service;
+a different machine/layout can require a receipt from its matching installation.
+
+Backups containing this receipt require a management reader with receipt support.
+Earlier SWANBK2 readers reject the additional entry safely. Retain the matching
+management binary/source and an earlier compatible backup when planning rollback.
+Older archives without a receipt still restore, but their Windows service
+ownership metadata must be retained or reconstructed from a matching installation
+before maintenance/removal; they do not establish complete Windows recovery.
+
+
 Stop transport services before exporting their directory, and keep them stopped
 until export completes. The directory must contain both `id_ed25519` and
 `id_ed25519.pub`. When present, `db_v2.sqlite3` and its WAL or rollback journal
@@ -115,6 +132,7 @@ protected directory; restore never overwrites external service files:
 | `tls-identity` | Company HTTPS identity location, or replace through certificate reissuance |
 | `tls-storage/` | Complete HTTPS service data directory; copy while that service is stopped |
 | `Caddyfile` | HTTPS recipe in the replacement company data directory; validate paths and hostnames before starting |
+| `installation.json` | Windows ownership receipt; validate against actual service/install/data paths and owned firewall rules before maintenance/removal |
 | `artifacts/` | Generated installers in the replacement company data directory; verify stored hashes and both public/customer and protected/technician download behavior |
 
 Keep transport services stopped while placing their restored data. Preserve
