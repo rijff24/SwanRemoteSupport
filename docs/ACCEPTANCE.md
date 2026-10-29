@@ -56,6 +56,19 @@ exact original group policy restored. This is native protocol enforcement rather
 than a hidden button. It does not qualify every malicious packet/client variant.
 See the [receiving denial receipt](evidence/159-windows-receiving-file-permission-denial-20261029.json).
 
+Native1.5.9 also passed lock/unlock of the existing customer Administrator desktop
+through its original customer-approved session. The technician's Insert lock
+action reached the actual Windows lock screen, whose video remained visible.
+Swan's Insert Ctrl+Alt+Del action opened the Windows password field; masked input
+of the owned lab password restored the desktop. The same original attended grant
+remained live afterward, with no replacement grant or reconnect. Closing the test
+then closed that grant and left no live lease. This is attended lock/unlock, not
+unattended reboot-to-logon qualification. UAC was inspected but not qualified:
+EnableLUA and secure-desktop prompting are enabled, while the built-in
+Administrator account has no configured token filtering. A standard-user desktop
+is required for the separate meaningful UAC test. See the
+[lock/unlock receipt](evidence/159-windows-attended-lock-unlock-20261029.json).
+
 Installation reporting is now being implemented after the completed recovery
 checkpoint. The new shared report contract, authenticated management endpoints,
 paginated status page and schema3 migration are source changes under verification;
