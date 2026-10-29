@@ -13,7 +13,9 @@ Production signing and clean-machine wizard installation remain incomplete.
 relay builds, with fixed executable hashes and a canonical digest of their
 complete compiler inputs and public recipe. `deployment/transport/source.json`
 pins upstream RustDesk server and its shared submodule, Rust, Cargo.lock and the
-reviewed UDP address normalization. The stock upstream Windows archive is no
+reviewed UDP address normalization. That immutable recipe retains its historical
+candidate scope text; current Windows test-installer qualification is recorded
+separately in `server-components.json` and the acceptance report. The stock upstream Windows archive is no
 longer accepted by this preparation path. Caddy 2.10.2 remains archive- and
 executable-hash pinned.
 

@@ -195,6 +195,8 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - name: Verify bounded pinned image pulls without retrying unknown download state
+        run: python3 -m unittest discover -s deployment/linux -p test_pinned_images.py
       - name: Verify private files cannot enter the Docker build context
         run: python3 deployment/linux/test_build_context.py
       - name: Build the company management image

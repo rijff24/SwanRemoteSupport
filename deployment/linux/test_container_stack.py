@@ -172,6 +172,28 @@ def pinned_images():
     return proxies[0], transport
 
 
+def ensure_pinned_image(image):
+    # Finish public downloads before creating any private company resources.
+    # Retry only a completed pull's explicit temporary HTTP error, never a
+    # timeout whose daemon-side download state has not been established.
+    if re.fullmatch(r"[A-Za-z0-9./:_-]+@sha256:[0-9a-f]{64}", image) is None:
+        raise RuntimeError("An immutable public image digest is required")
+    inspected = subprocess.run(["docker", "image", "inspect", image], capture_output=True, text=True, timeout=30)
+    if inspected.returncode == 0:
+        return
+    temporary = ("500 internal server error", "502 bad gateway", "503 service unavailable",
+                 "504 gateway timeout", "429 too many requests", "toomanyrequests:")
+    for attempt in range(3):
+        result = subprocess.run(["docker", "pull", image], capture_output=True, text=True, timeout=180)
+        if result.returncode == 0:
+            return
+        detail = (result.stdout + result.stderr).lower()
+        if not any(label in detail for label in temporary) or attempt == 2:
+            raise RuntimeError("Pinned public image pull failed; no company resources were created")
+        print("Pinned image pull returned a temporary registry HTTP error; retrying the same digest.")
+        time.sleep(2 * (attempt + 1))
+
+
 def maintained_transport_image():
     # Resolve once, then run the immutable image ID throughout the rehearsal.
     # A mutable tag must not select different transport builds during restore.
@@ -352,6 +374,9 @@ def main():
     proxy_image, transport_image = pinned_images()
     if arguments.maintained_transport:
         transport_image = maintained_transport_image()
+    else:
+        ensure_pinned_image(transport_image)
+    ensure_pinned_image(proxy_image)
     prefix = "swan-stack-test-" + uuid.uuid4().hex
     names = {role: prefix + "-" + role for role in ["management", "https", "hbbs", "hbbr"]}
     volumes = []

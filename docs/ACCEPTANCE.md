@@ -7638,3 +7638,40 @@ uses its previously installed stock transport and original lab-signed management
 its repaired worker and completed package evidence remain valid. Full backup,
 coordinated maintained-stack upgrade/rollback and Windows native relay pairing
 are still pending.
+
+
+The first integration run exposed a provenance regression caused by changing the
+shared recipe's descriptive scope field: the Linux transport Dockerfile fetches
+an immutable public recipe, and full receipt equality correctly rejected the
+changed local description. The shared recipe input has been restored exactly;
+Windows packaging qualification is now a separate manifest field. No provenance
+comparison was removed or weakened. Another run stopped before stack setup on a
+registry HTTP 500. Public pinned-image preflight now retries at most three times
+only after an explicit completed transient HTTP failure; authentication/missing
+manifests fail immediately and timeouts are never retried. Six boundary tests
+passed. Newly compiled maintained Windows transport succeeded in both first
+component runs; full Windows installer packaging and repaired Linux runs remain
+pending.
+
+
+The actual previously source-verified maintained Windows artifact also passed the
+new preparer with pinned Caddy and all 140 corresponding-source entries. Its
+executable bytes were unchanged. Substituting the real stock `hbbs` executable
+or modifying an archived Rust source file was rejected before output creation.
+No supplied executable ran. See
+[preparation evidence](evidence/windows-maintained-component-preparation.json).
+The first integration Windows component job then passed the actual maintained
+source build, private-worker checks and deterministic server installer compilation
+(job 123392802317, run 40856616732); its Linux deployment job failed as described
+above, so the overall integration is not yet green.
+
+The disposable Server 2016 company produced a full SWANBK2 deployment export:
+management database/configuration/keys, transport identity/database, complete
+HTTPS storage, service environment and all three generated installers. Its
+95,990,779-byte ciphertext was collected and hash-verified; the strong passphrase
+stays separate and outside Git, and only the backup child received it in memory.
+Both services resumed. Original HTTPS/profile trust, administrator MFA, worker
+authentication, approvals/revocations and all three installer hashes remained
+valid; updates stayed paused. This proves export and resumed-service behavior,
+not full Windows deployment restore. See
+[export evidence](evidence/aff8ff6-windows-full-deployment-export.json).

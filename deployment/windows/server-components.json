@@ -9,11 +9,12 @@
       "hbbr.exe": "97ead452f1c5484fa78d2d7f6b0954c116f32d00d0a6cdd045806806df124bc0"
     },
     "source_files": 140,
-    "source_tree_sha256": "a10929497f03c5ea34ecbb0ec0617827ef04e60572430a58f173d631a5337b6b",
+    "source_tree_sha256": "c0d40c3b122dfe740fbea5946f3bba9fb67734b57e80c8b7fb4ee3cdcef85541",
     "files": [
       "hbbs.exe",
       "hbbr.exe"
-    ]
+    ],
+    "qualification": "Unsigned test installer integration only; original candidate recipe provenance remains immutable."
   },
   "https": {
     "source": "https://github.com/caddyserver/caddy/tree/v2.10.2",
