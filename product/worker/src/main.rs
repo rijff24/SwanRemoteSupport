@@ -3,6 +3,7 @@ use serde_json::{json,Value};
 use std::{io::Write,path::{Path,PathBuf}};
 use swan_agent::Bootstrap;
 use swan_protocol::*;
+mod configuration;
 
 #[cfg(windows)]
 mod windows;
@@ -10,6 +11,18 @@ mod windows;
 fn main()->Result<()> {
     #[cfg(windows)]
     if std::env::args().any(|argument|argument=="--service") {return windows::dispatch();}
+    let arguments:Vec<String>=std::env::args().collect();
+    #[cfg(windows)]
+    if arguments.get(1).map(String::as_str)==Some("prepare-worker-directory") {
+        ensure!(arguments.len()==3,"Usage: swan-worker prepare-worker-directory PATH");
+        swan_agent::update::prepare_worker_directory(Path::new(&arguments[2]))?;
+        println!("Fresh private worker directory created; no job claimed.");return Ok(());
+    }
+    if arguments.get(1).map(String::as_str)==Some("check-configuration") {
+        ensure!(arguments.len()==2,"Usage: swan-worker check-configuration");configuration::load(true)?;
+        println!("Protected worker configuration verified; no job claimed.");return Ok(());
+    }
+    ensure!(arguments.len()==1,"Unknown worker command; no job claimed");
     // This executable entrypoint owns the foreground runtime; SCM creates its
     // runtime on the separate service entrypoint thread before calling run.
     let (_stop,receiver)=tokio::sync::oneshot::channel();
@@ -25,11 +38,13 @@ async fn run(mut stop:tokio::sync::oneshot::Receiver<()>)->Result<()> {
 
 async fn run_worker()->Result<()> {
     ensure!(cfg!(windows),"Installer worker requires Windows for Authenticode verification");
-    let server=std::env::var("SWAN_MANAGEMENT_URL").context("Set SWAN_MANAGEMENT_URL")?;https_url(&server)?;
-    let token=std::env::var("SWAN_WORKER_TOKEN").context("Set SWAN_WORKER_TOKEN")?;
-    let release_key=std::env::var("SWAN_RELEASE_PUBLIC_KEY").context("Pin SWAN_RELEASE_PUBLIC_KEY on the worker")?;public_key(&release_key)?;
-    let company_key=std::env::var("SWAN_PROFILE_PUBLIC_KEY").context("Pin SWAN_PROFILE_PUBLIC_KEY on the worker")?;public_key(&company_key)?;
-    let output=PathBuf::from(std::env::var("SWAN_ARTIFACT_DIR").context("Set worker artifact output directory")?);
+    let service=std::env::args().any(|argument|argument=="--service");
+    let configuration=tokio::task::spawn_blocking(move ||configuration::load(service)).await.context("Worker configuration task failed")??;
+    let server=configuration.management_url;let token=configuration.worker_token;
+    let release_key=configuration.release_public_key;let company_key=configuration.profile_public_key;
+    let output=if service {
+        PathBuf::from(std::env::var_os("ProgramData").context("Missing worker ProgramData")?).join("SwanInstallerWorker/artifacts")
+    }else{PathBuf::from(std::env::var("SWAN_ARTIFACT_DIR").context("Set worker artifact output directory")?)};
     tokio::fs::create_dir_all(&output).await?;
     let client=swan_agent::http_client(600,false)?;
     let recipe=company_bundle_recipe()?;

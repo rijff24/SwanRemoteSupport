@@ -1,5 +1,5 @@
 [CmdletBinding()]
-param([Parameter(Mandatory=$true)][string]$Directory,[ValidateSet('canonical','custom','server')][string]$Scope='canonical',
+param([Parameter(Mandatory=$true)][string]$Directory,[ValidateSet('canonical','custom','server','worker')][string]$Scope='canonical',
       [ValidateSet('allow','reject')][string]$Existing='allow')
 $ErrorActionPreference='Stop'
 function Assert-CustomerAcl {
@@ -18,7 +18,7 @@ $identity=[Security.Principal.WindowsIdentity]::GetCurrent()
 if (-not ([Security.Principal.WindowsPrincipal]::new($identity)).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) { throw 'Customer state preparation requires administrator rights.' }
 $Directory=[IO.Path]::GetFullPath($Directory).TrimEnd('\')
 if ($Directory -eq [IO.Path]::GetPathRoot($Directory).TrimEnd('\')) { throw 'A volume root is not a customer state directory.' }
-$expected=Join-Path ([Environment]::GetFolderPath('CommonApplicationData')) $(if($Scope -eq 'server'){'SwanCompanyServer'}else{'SwanRemoteSupport'})
+$expected=Join-Path ([Environment]::GetFolderPath('CommonApplicationData')) $(if($Scope -eq 'server'){'SwanCompanyServer'}elseif($Scope -eq 'worker'){'SwanInstallerWorker'}else{'SwanRemoteSupport'})
 if ($Scope -ne 'custom' -and $Directory -ine [IO.Path]::GetFullPath($expected)) { throw 'Setup requires the canonical state directory.' }
 $descriptor=[Security.AccessControl.DirectorySecurity]::new()
 $descriptor.SetOwner([Security.Principal.SecurityIdentifier]::new('S-1-5-32-544'))

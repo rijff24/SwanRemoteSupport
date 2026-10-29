@@ -16,21 +16,19 @@ Store it outside Git, in a local configuration file restricted to the worker
 account, SYSTEM and administrators. Do not put it in command-line arguments,
 public installers, website files, build artifacts or logs.
 
-The worker reads these environment variables at startup:
+Installed services read `C:\ProgramData\SwanInstallerWorker\worker.json`.
+The service registry contains only `SWAN_WORKER_CONFIG`, the public path to that
+file. The directory and file must be owned by Administrators, have protected
+permissions granting only SYSTEM and Administrators access, and contain no
+reparse points. The executable checks these permissions before reading secrets
+or claiming a job. App-container read access is rejected too.
 
-| Variable | Meaning |
-| --- | --- |
-| `SWAN_MANAGEMENT_URL` | Company HTTPS management URL, without credentials. |
-| `SWAN_WORKER_TOKEN` | Registered worker credential. |
-| `SWAN_RELEASE_PUBLIC_KEY` | Independently verified release-signing public key. |
-| `SWAN_PROFILE_PUBLIC_KEY` | Company's verified configuration-signing public key. |
-| `SWAN_ARTIFACT_DIR` | Dedicated protected output directory. |
-
-Load those values into the worker process environment from protected local
-configuration, then launch `swan-worker.exe`. Use the normal Windows certificate
-trust configuration for HTTPS; do not disable certificate validation. Keep
-private TLS and signing keys on their owning server/signing provider. The worker
-needs public trust pins, not the project signing private key.
+Foreground operator processes may still use `SWAN_MANAGEMENT_URL`,
+`SWAN_WORKER_TOKEN`, `SWAN_RELEASE_PUBLIC_KEY`, `SWAN_PROFILE_PUBLIC_KEY` and
+`SWAN_ARTIFACT_DIR` in their process environment. Never persist these secret
+values in service registry settings. Service mode requires the private file and
+cannot fall back to environment credentials. HTTPS certificate validation must
+remain enabled; workers need public trust pins, never project signing keys.
 
 The executable supports foreground operation and a Windows SCM entrypoint
 (`swan-worker.exe --service`, service name `SwanInstallerWorker`). Install it from
@@ -42,20 +40,30 @@ values through company setup and authenticated worker registration; never commit
 this file or share the token.
 
 The installer checks the source and copied executable's publisher, refuses an
-existing installation, protects its directories, and stores the service's secret
-environment in a registry key restricted to SYSTEM and administrators. It uses
-LocalSystem, automatic startup and SCM restart policy. It creates no inbound
-firewall rule. Keep the original configuration file protected too. A manually
-started foreground worker does not survive reboot. Verify authenticated build
-completion, standard-user credential denial, service stop/restart and startup
-after reboot before deployment. Disposable Server 2016 testing verified a signed
-GNU service fixture's startup, stop/restart, reboot persistence and standard-user
-credential denial. Authenticated build completion with the paired current server
-and production MSVC package verification remain pending. Service output is
-appended to protected `C:\ProgramData\SwanInstallerWorker\worker-service.log`;
-runtime capture and standard-user log denial passed. Log rotation remains pending.
-Prevent a foreground worker from running alongside the service against the same
-output directory.
+existing installation, and creates the state directory with private permissions
+atomically. It protects the empty configuration file before writing credentials,
+then asks the compiled worker to validate it before creating the service. Keep
+the input configuration in a private local administrator directory; its parent
+and file must allow only SYSTEM, Administrators and the installing administrator,
+with full access for SYSTEM and Administrators. Ship the matching
+`Read-WorkerConfiguration.ps1` beside `Install-Worker.ps1`.
+
+The service uses LocalSystem, automatic startup and SCM restart policy, with no
+inbound firewall rule. Its artifacts use the canonical private state directory.
+Service output is appended to protected `worker-service.log`; log rotation
+remains pending. Do not run a foreground worker alongside the service.
+
+**Legacy credential storage:** earlier development installers persisted the
+worker token in the service registry. A real Server 2016 test found additional
+app-container read permissions despite a protected registry ACL. Revoke those
+worker registrations before upgrading, keep the old worker stopped, and remove
+its secret environment values. Never merely copy the old token into a new file.
+The source now uses private file storage; compiled Windows permission tests,
+authenticated build completion, reboot and guarded migration must pass before
+this replacement is qualified. Existing installations and retained data are
+refused rather than silently overwritten. Preserve receipts and artifacts while
+planning migration. A restored management backup can resurrect revoked token
+hashes: revoke legacy registrations again before exposing a restored service.
 
 Approve a compatible release on the server, queue a customer or technician build,
 and inspect its terminal status, protected log and artifact hash. Customer bundle

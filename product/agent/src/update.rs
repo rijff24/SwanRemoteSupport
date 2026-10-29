@@ -379,6 +379,31 @@ pub fn prepare_server_directory(directory:&Path)->Result<()> {
 }
 
 #[cfg(windows)]
+pub fn prepare_worker_directory(directory:&Path)->Result<()> {
+    let status=embedded_powershell_command(include_str!("../../../deployment/windows/Prepare-CustomerDirectory.ps1"),
+        &[("Directory",directory.to_str().context("Worker state path is not valid Unicode")?),
+          ("Scope","worker"),("Existing","reject")])?.status()?;
+    ensure!(status.success(),"Fresh worker state directory could not be created privately; preserve existing state");Ok(())
+}
+
+#[cfg(windows)]
+pub fn read_worker_configuration(path:&Path)->Result<Vec<u8>> {
+    use std::io::Read;
+    let mut process=embedded_powershell_command(include_str!("../../../deployment/windows/Read-WorkerConfiguration.ps1"),
+        &[("Path",path.to_str().context("Worker configuration path is not valid Unicode")?)])?
+        .stdin(std::process::Stdio::null()).stdout(std::process::Stdio::piped()).stderr(std::process::Stdio::null()).spawn()?;
+    let pipe=process.stdout.take().context("Worker configuration reader pipe unavailable")?;
+    let reader=std::thread::Builder::new().name("worker-configuration-reader".into()).spawn(move ||->std::io::Result<Vec<u8>> {
+        let mut bytes=Vec::new();pipe.take(16*1024+1).read_to_end(&mut bytes)?;Ok(bytes)
+    })?;
+    let status=crate::verifier_process::wait(&mut process,std::time::Duration::from_secs(300))?;
+    let output=reader.join().map_err(|_|anyhow::anyhow!("Worker configuration reader failed"))??;
+    ensure!(status.success(),"Worker configuration must be a private canonical file owned by SYSTEM or Administrators");
+    ensure!(!output.is_empty() && output.len()<=16*1024,"Invalid worker configuration size");
+    Ok(output)
+}
+
+#[cfg(windows)]
 fn validate_uninstall_directory(directory:&Path,customer:bool)->Result<()> {
     let guard=r#"param([string]$Directory,[string]$Edition)
 $ErrorActionPreference='Stop'

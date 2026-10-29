@@ -12,10 +12,11 @@ Include the affected version/commit, Windows version, reproducible steps, impact
 
 ## Deployment security boundaries
 
-- The server address and Ed25519 public key embedded in the client are public values.
-- The RustDesk server private key, customer unattended passwords, Tailscale enrollment credentials, and signing keys are secrets and must never enter source control.
-- Tailscale tag policy limits network reachability but does not replace the unique Swan password or customer authorization.
-- RustDesk Server OSS does not provide a Swan technician identity/MFA authorization layer. Anyone who obtains a device ID and its password can attempt access from an allowed network device.
+- Company HTTPS addresses and public trust keys are public bootstrap information. Private transport/configuration keys, worker credentials, account secrets, device identities, signing keys and backups must stay outside source control and public downloads.
+- Managed editions require company enrollment, technician authorization and short-lived device-bound grants enforced by the receiving device. UI restrictions or network reachability alone are insufficient. See the acceptance record for verified behavior and outstanding gates.
+- Each company hosts its own infrastructure. The preserved single-company baseline has different historical password and Tailscale boundaries; do not treat its network restrictions as managed authorization.
+- Earlier development Windows worker installers stored credentials in service registry environment settings. Server 2016 testing found additional app-container read permissions. Revoke affected worker registrations, stop legacy workers and remove those registry secrets before replacement. Current development source requires protected private-file configuration for service mode; Windows qualification and guarded upgrade remain release gates.
+- Before restoring a backup, reconcile revoked worker registrations: an old database can restore their credential hashes. Do not expose the restored deployment until legacy registrations have been revoked again.
 - Never ask a customer to disable antivirus, SmartScreen, Windows Firewall, or MFA to install this software.
 
 See [Code-signing policy](docs/CODE_SIGNING_POLICY.md), [Privacy](docs/PRIVACY.md), and [Tailscale deployment](docs/TAILSCALE_DEPLOYMENT.md).

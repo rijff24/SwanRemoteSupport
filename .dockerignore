@@ -52,6 +52,7 @@ product/worker/**
 !product/worker/src/
 product/worker/src/**
 !product/worker/src/main.rs
+!product/worker/src/configuration.rs
 !product/worker/src/windows.rs
 !branding/
 branding/**
@@ -78,3 +79,4 @@ deployment/windows/**
 !deployment/windows/Update-UninstallCancellation.ps1
 !deployment/windows/Commit-Uninstall.ps1
 !deployment/windows/Prepare-CustomerDirectory.ps1
+!deployment/windows/Read-WorkerConfiguration.ps1

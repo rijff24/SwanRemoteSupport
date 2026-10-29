@@ -7488,3 +7488,22 @@ unsigned CI test does not qualify cold reboot, enrolled sessions, publisher
 acceptance or the complete Windows compatibility matrix.
 Windows PowerShell 5 also rejected the fixture on this host before resolving
 its nonexistent test package, confirming the disposable-runner guard.
+
+
+### 2026-10-29: Windows worker credential storage failed qualification
+
+A fresh Server 2016 company installation exposed an unsafe assumption in the
+development worker installer: its protected service registry ACL still acquired
+explicit ALL APPLICATION PACKAGES read permissions. No credential values were
+printed. The affected lab registrations were revoked (old credentials rejected
+with HTTP 401); the fresh worker was stopped, set to manual startup and its
+registry token removed. Older offline lab worker registrations were also revoked.
+
+The replacement source stores service credentials in a canonical private file,
+checks file and directory ownership/permissions before reading, refuses legacy
+service environment fallback, and protects the empty file before writing any
+credential bytes. Local locked agent/worker tests passed. These results do not
+qualify the Windows fix: compiled Windows permission checks, an authenticated
+build, restart/reboot and guarded migration preserving retained artifacts remain
+required. Production publication remains blocked by the outstanding acceptance
+and signing gates. Backup restores must reapply legacy worker revocations.
