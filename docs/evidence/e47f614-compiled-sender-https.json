@@ -1,0 +1,24 @@
+{
+  "date": "2026-10-29",
+  "source": "e47f6141a6a4d6b28891face236f8266c09c975a",
+  "scope": "Compiled Linux debug agents and management, isolated fresh schema3 company, verified TLS with a dedicated fixture CA",
+  "passed": [
+    "32 Linux agent tests; four reporting tests passed again after nonblocking cache-lock refinement",
+    "Persistent customer device identity and technician installation UUID across separate processes",
+    "Monotonic revisions, concurrent reporters and stale asynchronous conflict recovery",
+    "Pending device cannot publish a report; approved device can",
+    "Older report rejected over HTTPS",
+    "Technician MFA sign-in and inventory refresh send authenticated reports",
+    "Unassigned technician sees only its own installation report",
+    "Logout and device revocation reject further access and report updates",
+    "No host trust-store changes; fixture services stopped and original company remains healthy"
+  ],
+  "limits": [
+    "Debug agents with explicit test CA, not installed or shipping Windows endpoint applications",
+    "No recorded installation in this fixture: sequence zero and no installed version",
+    "Linux endpoint updater intentionally returns unsupported-platform failure; this proves reporting, not Windows updates",
+    "Native installation phases, signed upgrades, six Windows families and production signing remain open",
+    "e47f614 Linux deployment CI caught missing reporting.rs in explicit Docker context allowlists; corrected separately"
+  ],
+  "production_qualified": false
+}

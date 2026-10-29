@@ -22,6 +22,7 @@ product/agent/src/**
 !product/agent/src/lib.rs
 !product/agent/src/main.rs
 !product/agent/src/payload.rs
+!product/agent/src/reporting.rs
 !product/agent/src/technician.rs
 !product/agent/src/update.rs
 !product/agent/src/verifier_process.rs

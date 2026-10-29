@@ -21,9 +21,15 @@ Best-effort reporting cannot change support permissions or updater verification.
 All32 Linux agent tests passed; after the nonblocking-cache refinement, the four
 reporter tests passed again, including eight concurrent reporters and a real
 loopback HTTP conflict/retry fixture that cancels stale phase replacement. These
-are component tests; the fixture does not use TLS. Windows and full deployment
-verification of the new senders remain pending. No real HTTPS/native automatic-reporting
-or rollout-progress result is claimed. See
+are component tests; that conflict fixture does not use TLS. Separately, the actual
+compiled debug senders passed against a fresh isolated company over verified HTTPS:
+approval, restart identity/revisions, MFA reporting, group filtering, replay,
+logout and revocation all passed. The fixture has no recorded installed release;
+Linux update attempts intentionally fail as unsupported. Its services were stopped
+and the original company stayed healthy. This proves HTTPS reporting, not native
+Windows installation or rollout progress. See the [HTTPS receipt](evidence/e47f614-compiled-sender-https.json).
+Windows verification and complete deployment checks remain pending; deployment CI
+caught the new module missing from explicit Docker allowlists, corrected separately. See
 [installation reporting](INSTALLATION_STATUS.md).
 
 The current Linux company management service now runs source `67b5c69` after
