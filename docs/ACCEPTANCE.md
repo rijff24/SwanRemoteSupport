@@ -201,6 +201,16 @@ returned to its empty sign-in screen. The earlier stall's cause remains
 unestablished; this successful retest does not retrospectively classify it as
 solely hardware-related. See the
 [active restored-data native receipt](evidence/361d7c3-windows-native-active-restored-data-20261030.json).
+The storage-fix components also passed a byte comparison using existing
+successful push run40930580611 and PR run40930590508; no extra build was
+dispatched. All three original Windows and all three original Linux binaries
+matched without normalization. Each archive's 242 preserved component source
+files matched `361d7c3`, with checkout text conversions verified against Git
+blobs. The PR's actual checkout was public merge `b13de18`, not the head itself;
+that identity and the matching component-source scope are recorded explicitly.
+This comparison does not qualify native Flutter/engine outputs or installation
+packages. See the
+[storage-fix component reproduction receipt](evidence/361d7c3-push-pr-windows-linux-component-reproduction-20261030.json).
 See the [populated running recovery receipt](evidence/361d7c3-windows-populated-running-recovery-20261029.json),
 [actual migration receipt](evidence/361d7c3-windows-populated-transport-migration-20261029.json),
 [component checks](evidence/361d7c3-windows-transport-storage-component-checks.json)
