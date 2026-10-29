@@ -9,6 +9,7 @@ pub use swan_protocol as protocol;
 pub mod update;
 pub mod payload;
 pub mod technician;
+pub mod reporting;
 #[cfg(any(windows,test))]
 mod verifier_process;
 
@@ -314,7 +315,7 @@ mod tests {
         assert!(validate_lease_renewal(100,99,99).is_err());
         assert!(validate_lease_renewal(100,410,99).is_err());
     }
-    fn fixture()->AgentState {
+    pub(super) fn fixture()->AgentState {
         let key=SigningKey::from_bytes(&[7;32]);let public=STANDARD.encode(key.verifying_key().as_bytes());
         let profile=CompanyProfile{schema:1,company_id:"test-company".into(),revision:1,issued_at:now()-1000,expires_at:now()+3600,management_url:"https://support.example.com".into(),rendezvous:"support.example.com".into(),relay:"support.example.com".into(),transport_public_key:public.clone(),customer:Branding::default(),technician:Branding::default(),allow_unattended:true,updates_paused:true,rollout_percent:100,maintenance_start_utc:0,maintenance_end_utc:0,update_channel:"test".into(),next_profile_public_key:None};
         AgentState{bootstrap:Bootstrap{schema:1,edition:Edition::Customer,company_id:profile.company_id.clone(),management_url:profile.management_url.clone(),profile_public_key:public.clone(),release_public_key:public},profile:SignedEnvelope::sign(&profile,&key).unwrap(),accepted_revision:1,device_id:Some("device".into()),device_token:Some(random_token()),unattended_consent:true,consent_revision:0,last_release_sequence:0}

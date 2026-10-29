@@ -10,9 +10,20 @@ Installation reporting is now being implemented after the completed recovery
 checkpoint. The new shared report contract, authenticated management endpoints,
 paginated status page and schema3 migration are source changes under verification;
 the running Linux lab remains on source67/schema2. Browser contract checks passed
-for escaping, progress, pagination and sign-out response isolation. Rust/HTTP and
-migration checks are pending. Customer/technician senders are not yet connected,
-so no real automatic-reporting or rollout-progress result is claimed. See
+for escaping, progress, pagination and sign-out response isolation. The four named
+report/ownership/migration regressions passed on both Windows and Linux, and all
+six component/deployment jobs passed on push and PR at `a96cd4c`. See the
+[component receipt](evidence/a96cd4c-installation-reporting-component-checks.json).
+Customer/technician senders and updater phase hooks are now connected in the
+working source for native1.5.9. Their protected cache retains installation identity
+and report revision; signed installed metadata supplies the reported version.
+Best-effort reporting cannot change support permissions or updater verification.
+All32 Linux agent tests passed; after the nonblocking-cache refinement, the four
+reporter tests passed again, including eight concurrent reporters and a real
+loopback HTTP conflict/retry fixture that cancels stale phase replacement. These
+are component tests; the fixture does not use TLS. Windows and full deployment
+verification of the new senders remain pending. No real HTTPS/native automatic-reporting
+or rollout-progress result is claimed. See
 [installation reporting](INSTALLATION_STATUS.md).
 
 The current Linux company management service now runs source `67b5c69` after
@@ -55,8 +66,12 @@ builds; shipping binaries were never normalized. The source67 deployment workflo
 had a test-header assertion failure, fixed separately before the later deployment
 checks passed. Binary reproducibility is scoped separately from deployment and
 runtime acceptance. See the [component comparison](evidence/67b5c69-component-reproduction.json).
-The native Windows67 build and its installed identity/reconnect/audit checks
-remain outstanding. Automatic approval review blocked preparing/running the
+The native Windows67 build passed. Its254,845,617-byte archive was verified
+against SHA-256 `51e0dea72204ff3d21ced7fc2c03db514d4b3b05732b6ec02fbb60ea0d4aede6`;
+all1238 tracked source files and six generated bridges matched pinned inputs.
+The95-file customer payload matched its unsigned MSI manifest. Lab signing inputs
+and a parsed recipe are prepared, with no signing or VM execution yet. Installed
+identity/reconnect/audit checks and independent native reproduction remain open. Automatic approval review blocked preparing/running the
 background independent-rebuild controller with “blocked by policy”; fresh approval
 for one independent build is pending. No controller or duplicate build was started.
 

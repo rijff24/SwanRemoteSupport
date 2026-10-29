@@ -98,7 +98,10 @@ async fn main()->Result<()> {
             if current.bootstrap.edition==Edition::Customer && current.device_id.is_some() && !current.unattended_consent {
                 if let Err(error)=current.consent(false).await {eprintln!("Consent revocation synchronization deferred: {error}");}
             }
-            if state.bootstrap.edition==Edition::Customer {match state.update(&directory,None).await {Ok(true)=>return Ok(()),Ok(false)=>{},Err(error)=>eprintln!("Update deferred: {error}")}}
+            if state.bootstrap.edition==Edition::Customer {
+                reporting::heartbeat(&directory,None).await;
+                match state.update(&directory,None).await {Ok(true)=>return Ok(()),Ok(false)=>{},Err(error)=>eprintln!("Update deferred: {error}")}
+            }
         },Err(error)=>eprintln!("Configuration unavailable: {error}")};tokio::time::sleep(std::time::Duration::from_secs(300)).await;}}
         "update"=>{
             let mut state=AgentState::load_for_refresh(&directory)?;state.sync().await?;state.save(&directory)?;
@@ -205,6 +208,7 @@ async fn main()->Result<()> {
             let password=std::env::var("SWAN_LOGIN_PASSWORD").context("Set SWAN_LOGIN_PASSWORD for this process only")?;
             let code=std::env::var("SWAN_LOGIN_TOTP").context("Set SWAN_LOGIN_TOTP for this process only")?;
             let token=state.technician_login(username,&password,&code).await?;
+            reporting::heartbeat(&directory,Some(&token)).await;
             // Explicit CLI exchange for automation. Never write tokens to logs or persistent profile files.
             println!("{}",json!({"token":token}));
         }
@@ -212,6 +216,7 @@ async fn main()->Result<()> {
             let state=AgentState::load(&directory)?;
             let token=std::env::var("SWAN_TECHNICIAN_TOKEN").context("Set authenticated technician token")?;
             let devices=state.technician_inventory(&token).await?;
+            reporting::heartbeat(&directory,Some(&token)).await;
             println!("{}",serde_json::to_string_pretty(&devices)?);
         }
         "history"=>{

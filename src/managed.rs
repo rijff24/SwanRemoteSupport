@@ -94,6 +94,7 @@ async fn technician_request_inner(request:&str)->ResultType<serde_json::Value> {
             if memory.generation==generation {memory.login=Some(TechnicianLogin{token:token.clone(),company:state.bootstrap.company_id.clone(),username:username.into()});true}else{false}
         };
         if !accepted {state.technician_logout(&token).await?;bail!("Login superseded");}
+        swan_agent::reporting::heartbeat(&directory,Some(&token)).await;
         return Ok(json!({"username":username}));
     }
     let (token,generation)={let memory=TECHNICIAN.lock().unwrap();
@@ -107,7 +108,12 @@ async fn technician_request_inner(request:&str)->ResultType<serde_json::Value> {
         state.technician_logout(&token).await?;
         return Ok(json!({"logged_in":false}));
     }
-    if action=="devices" {return Ok(state.technician_inventory(&token).await?);}
+    if action=="devices" {
+        let devices=state.technician_inventory(&token).await?;
+        let updating={let memory=TECHNICIAN.lock().unwrap();memory.update_running || memory.update_handed_off};
+        if !updating {swan_agent::reporting::heartbeat(&directory,Some(&token)).await;}
+        return Ok(devices);
+    }
     if action=="history" {return Ok(state.technician_history(&token).await?);}
     #[cfg(all(windows,feature="flutter"))]
     if action=="update" {

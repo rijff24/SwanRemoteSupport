@@ -48,7 +48,6 @@ pub fn validate_repair_release(state:&AgentState,envelope:&SignedEnvelope,instal
     Ok(release)
 }
 
-#[cfg(any(windows,test))]
 pub(crate) fn validate_recovery_release(state:&AgentState,envelope:&SignedEnvelope,previous_sequence:u64,phase:&str)->Result<Release> {
     ensure!(matches!(phase,"installing"|"rolling_back"),"Unknown update recovery phase");
     let release:Release=envelope.verify(&public_key(&state.bootstrap.release_public_key)?)?;
@@ -145,7 +144,6 @@ fn replace_failed_installation_marker(state:&AgentState,directory:&Path,envelope
     result
 }
 
-#[cfg(any(windows,test))]
 fn validate_pending_receipt(state:&AgentState,receipt:&Receipt)->Result<Release> {
     ensure!(receipt.rollback_protocol<=1,"Unsupported pending rollback protocol");
     let release=validate_recovery_release(state,&receipt.release,receipt.previous_sequence,&receipt.phase)?;
@@ -159,6 +157,16 @@ fn validate_pending_receipt(state:&AgentState,receipt:&Receipt)->Result<Release>
         ensure!(receipt.rollback_protocol==1 && validate_previous_release(state,previous,receipt.previous_sequence)?.rollback_protocol==1,"Previous release cannot enforce rollback quarantine");
     }
     Ok(release)
+}
+
+pub(crate) fn pending_report_target(state:&AgentState,directory:&Path)->Result<Option<u64>> {
+    let bytes=match std::fs::read(directory.join("pending-update.json")) {
+        Ok(bytes)=>bytes,
+        Err(error) if error.kind()==std::io::ErrorKind::NotFound=>return Ok(None),
+        Err(error)=>return Err(error.into()),
+    };
+    let receipt:Receipt=serde_json::from_slice(&bytes)?;
+    Ok(Some(validate_pending_receipt(state,&receipt)?.sequence))
 }
 
 #[cfg(any(windows,test))]
@@ -184,6 +192,10 @@ fn failed_release_sequence(state:&AgentState,directory:&Path)->Result<u64> {
 }
 
 async fn download(url:&str,hash:&str,path:&Path)->Result<()> {
+    download_reporting(url,hash,path,None).await
+}
+
+async fn download_reporting(url:&str,hash:&str,path:&Path,reporter:Option<(&Path,Option<&str>,u64)>)->Result<()> {
     https_url(url)?;
     // Artifact endpoints may redirect to HTTPS object storage. No credentials
     // are attached, and reqwest rejects any redirect to plain HTTP.
@@ -191,8 +203,18 @@ async fn download(url:&str,hash:&str,path:&Path)->Result<()> {
     let mut response=client.get(url).send().await?.error_for_status()?;
     ensure!(response.content_length().unwrap_or(0)<=512*1024*1024,"Package too large");
     let mut bytes=Vec::new();
-    while let Some(chunk)=response.chunk().await? {ensure!(bytes.len()+chunk.len()<=512*1024*1024,"Package too large");bytes.extend_from_slice(&chunk);}
+    let total=response.content_length();
+    let mut last_report=std::time::Instant::now();
+    if let Some((directory,token,sequence))=reporter {reporting::progress(directory,token,UpdatePhase::Downloading,Some(sequence),0,total).await;}
+    while let Some(chunk)=response.chunk().await? {
+        ensure!(bytes.len()+chunk.len()<=512*1024*1024,"Package too large");bytes.extend_from_slice(&chunk);
+        if last_report.elapsed()>=std::time::Duration::from_secs(5) {
+            if let Some((directory,token,sequence))=reporter {reporting::progress(directory,token,UpdatePhase::Downloading,Some(sequence),bytes.len() as u64,total).await;}
+            last_report=std::time::Instant::now();
+        }
+    }
     ensure!(digest(&bytes).eq_ignore_ascii_case(hash),"Package hash mismatch");
+    if let Some((directory,token,sequence))=reporter {reporting::progress(directory,token,UpdatePhase::Preparing,Some(sequence),bytes.len() as u64,Some(bytes.len() as u64)).await;}
     let path=path.to_owned();
     tokio::task::spawn_blocking(move ||publish_download(&path,&bytes)).await.context("Download publication task failed")?
 }
@@ -1032,12 +1054,31 @@ impl AgentState {
         std::fs::remove_file(receipt_path)?;*self=latest;Ok(true)
     }
     pub async fn update(&mut self,directory:&Path,technician_token:Option<&str>)->Result<bool> {
+        reporting::progress(directory,technician_token,UpdatePhase::Checking,None,0,None).await;
+        let result=self.update_inner(directory,technician_token).await;
+        match &result {
+            Ok(false)=>{
+                if update_policy_open(self).unwrap_or(false) {reporting::heartbeat(directory,technician_token).await;}
+                else {reporting::progress(directory,technician_token,UpdatePhase::Deferred,None,0,None).await;}
+            },
+            Err(_)=>reporting::progress(directory,technician_token,UpdatePhase::Failed,None,0,None).await,
+            Ok(true)=>{},
+        }
+        result
+    }
+    async fn update_inner(&mut self,directory:&Path,technician_token:Option<&str>)->Result<bool> {
         #[cfg(not(windows))] {let _=(directory,technician_token);anyhow::bail!("Endpoint updates require Windows");}
         #[cfg(windows)] {
             ensure!(!directory.join("pending-uninstall").exists(),"Explicit uninstall cancels automatic updates");
             ensure!(!directory.join("pending-install.json").exists(),"Company setup recovery is required before automatic updates");
             ensure!(!directory.join("configuration-restart.json").exists(),"Committed update requires configuration restart recovery before another update");
             if directory.join("pending-update.json").exists(){
+                let check_directory=directory.to_owned();let state=self.clone();
+                let target=tokio::task::spawn_blocking(move ||->Result<u64> {
+                    let receipt:Receipt=serde_json::from_slice(&std::fs::read(check_directory.join("pending-update.json"))?)?;
+                    Ok(validate_pending_receipt(&state,&receipt)?.sequence)
+                }).await.context("Recovery report inspection failed")??;
+                reporting::progress(directory,technician_token,UpdatePhase::Recovering,Some(target),0,None).await;
                 return self.resume_pending_update_online(directory,false).await;
             }
             require_existing_application(&installed_target(directory,&self.bootstrap.edition)?)?;
@@ -1053,10 +1094,10 @@ impl AgentState {
             let check_folder=folder.clone();let check_release=release.clone();
             tokio::task::spawn_blocking(move ||verify_compatibility(&check_folder,&check_release)).await.context("Compatibility verification task failed")??;
             let package=folder.join(format!("SwanRemoteSupport-install.{}",release.format));
-            download(&release.artifact_url,&release.sha256,&package).await?;
+            download_reporting(&release.artifact_url,&release.sha256,&package,Some((directory,technician_token,release.sequence))).await?;
             verify_downloaded_publisher(&package,&release).await?;
             let replacement_agent=folder.join("swan-agent.exe");
-            download(&release.agent_url,&release.agent_sha256,&replacement_agent).await?;
+            download_reporting(&release.agent_url,&release.agent_sha256,&replacement_agent,Some((directory,technician_token,release.sequence))).await?;
             let mut agent_release=release.clone();agent_release.sha256=release.agent_sha256.clone();
             verify_downloaded_publisher(&replacement_agent,&agent_release).await?;
             ensure_previous_installer(self,directory).await?;
@@ -1065,6 +1106,8 @@ impl AgentState {
             self.sync().await?;self.save(directory)?;
             let Some(current)=self.approved_update(directory,technician_token).await? else{return Ok(false);};
             if current.payload!=envelope.payload || current.signature!=envelope.signature{return Ok(false);}
+            reporting::progress(directory,technician_token,UpdatePhase::Preparing,Some(release.sequence),0,None).await;
+            let reporting_directory=directory.to_owned();let reporting_target=release.sequence;
             let directory=directory.to_owned();
             let prepared=tokio::task::spawn_blocking(move ||->Result<Option<AgentState>> {
             let activity=activity_file(&directory)?;
@@ -1090,7 +1133,11 @@ impl AgentState {
             launch_update_helper(&directory,&release)?;
             Ok(Some(latest))
             }).await.context("Update handoff task failed")??;
-            if let Some(latest)=prepared {*self=latest;Ok(true)}else{Ok(false)}
+            if let Some(latest)=prepared {
+                *self=latest;
+                reporting::progress(&reporting_directory,technician_token,UpdatePhase::Installing,Some(reporting_target),0,None).await;
+                Ok(true)
+            }else{Ok(false)}
         }
     }
 }

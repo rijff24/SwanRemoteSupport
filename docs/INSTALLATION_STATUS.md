@@ -1,9 +1,33 @@
 # Installation versions and update reports
 
-Work in progress: the management API, shared message contract and administration
-page are implemented. Automatic customer/technician senders and update-engine
-integration are not yet connected. Older installed apps therefore produce no
-reports. This is not completed rollout or native update acceptance.
+Work in progress: the management API, shared message contract, administration
+page and endpoint sender integration are implemented in source. Existing installed
+apps do not acquire reporting until upgraded. Real HTTPS reporting and native
+update-phase qualification remain pending; this is not completed rollout acceptance.
+
+The customer watcher reports at its five-minute refresh. Technician sign-in and
+inventory refresh report using the current in-memory login. The Windows updater
+reports checking, download progress (at most once per five seconds), preparation,
+installation handoff, deferral and failure. A retained signed recovery receipt
+causes a heartbeat to report recovery rather than claim a completed installation.
+Progress for the package and replacement agent is reported separately.
+
+The protected installed-state directory holds `installation-report.json` and its
+separate lock file. These preserve the technician UUID and increasing revision
+across process restarts and upgrades, without storing authentication credentials.
+Customer identity remains the enrolled device UUID. An unreadable or conflicting
+cache defers reporting rather than silently creating another identity. Installed
+version comes from the signed recorded release matching the stored sequence;
+previously installed metadata may expire without changing that historical version.
+Missing or invalid metadata is never replaced by a guess from the agent version.
+
+Each report request has a three-second HTTP timeout. Reporting is best effort:
+failure does not stop login, inventory, updates or support. A revision conflict
+allows one bounded recovery attempt using the authenticated owner's previous
+report. The recovery checks that its local report has not already been superseded
+before persisting a higher revision. No disk lock is held during a network request.
+A busy cache lock defers the report immediately rather than waiting behind another
+process and delaying login or the updater.
 
 Reports go only to the configured company management server over its existing
 authenticated HTTPS connection. They contain installation identity, a monotonically
