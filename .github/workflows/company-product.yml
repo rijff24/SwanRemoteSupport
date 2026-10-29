@@ -75,7 +75,7 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          ./deployment/windows/test_worker_configuration.ps1 -WorkerExecutable ./product/target/release/swan-worker.exe -ResultPath ./component-artifacts/worker-private-configuration.json
+            powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File ./deployment/windows/test_worker_configuration.ps1 -WorkerExecutable ./product/target/release/swan-worker.exe -ResultPath ./component-artifacts/worker-private-configuration.json
       - name: Verify the real backup CLI above 512 MiB with bounded address space
         if: runner.os == 'Linux'
         run: python3 deployment/linux/test_backup_memory.py product/target/release/swan-management component-artifacts/large-backup-cli.json

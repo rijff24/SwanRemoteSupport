@@ -18,7 +18,7 @@ if($Scope -eq 'installed') {
 foreach($item in @((Split-Path -Parent $root),$root,$expected)){
  if((Get-Item -LiteralPath $item -Force).Attributes -band [IO.FileAttributes]::ReparsePoint){throw 'Worker configuration paths must not be reparse points.'}
 }
-Add-Type -TypeDefinition @'
+if(-not ('SwanWorkerConfigurationHandle' -as [type])){Add-Type -TypeDefinition @'
 using System;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
@@ -30,6 +30,7 @@ public static class SwanWorkerConfigurationHandle {
     }
 }
 '@
+}
 $directory=[SwanWorkerConfigurationHandle]::Open($root,$true)
 if($directory.IsInvalid){$directory.Dispose();throw 'Private worker directory is unavailable or in use.'}
 $fileHandle=$null;$stream=$null;$reader=$null

@@ -65,6 +65,20 @@ refused rather than silently overwritten. Preserve receipts and artifacts while
 planning migration. A restored management backup can resurrect revoked token
 hashes: revoke legacy registrations again before exposing a restored service.
 
+For a stopped schema-1 installation, `Migrate-WorkerCredential.ps1 -Executable
+<new-signed-worker> -PreviousConfigurationPath <private-original-json>
+-ConfigurationPath <private-new-json> -PublisherThumbprint <trusted-thumbprint>`
+provides an explicit migration path. First revoke the old registration and set
+the service to manual startup. The script requires the same company and public
+trust keys, a different credential, and a real HTTPS 401 response for the old
+credential. It preserves the old executable and receipt under a unique private
+directory, retains artifacts, and records a migration journal. On failure it
+keeps the service stopped/manual; it never reactivates the revoked legacy
+credential. Inspect `-WhatIf` first. A retained journal/configuration requires
+explicit recovery rather than repeating migration. This path is awaiting actual
+signed-worker lab qualification; do not treat the script's existence as evidence
+of a successful upgrade.
+
 Approve a compatible release on the server, queue a customer or technician build,
 and inspect its terminal status, protected log and artifact hash. Customer bundle
 downloads are public; technician bundle downloads require authentication. Test

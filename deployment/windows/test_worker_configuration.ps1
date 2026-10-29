@@ -37,6 +37,13 @@ try {
  $configuration=Join-Path $root 'worker.json'
  $json=@{management_url='https://example.invalid';worker_token=$fixtureToken;release_public_key=$key;profile_public_key=$key}|ConvertTo-Json -Compress
  [IO.File]::WriteAllText($configuration,($json+(' '*8192)),[Text.UTF8Encoding]::new($false));Set-PrivateFileAcl $configuration
+ # The migration reads old and new input files in one Windows PowerShell 5
+ # process. Reusing the reader must not fail on its embedded helper type.
+ foreach($attempt in 1..2){
+  $privateRead=& (Join-Path $PSScriptRoot 'Read-WorkerConfiguration.ps1') -Path $configuration -Scope input -Output pipeline
+  if($privateRead -cne ($json+(' '*8192))){throw 'Private input reader changed fixture bytes.'}
+ }
+ $privateRead=$null;$checks.Add('private input reader can validate both migration inputs in one PowerShell process')
  Invoke-Fixture 'check-configuration' '' $true $true|Out-Null;$checks.Add('compiled worker accepts protected configuration larger than the Windows pipe buffer without revealing credentials')
  $acl=Get-Acl -LiteralPath $configuration
  $acl.AddAccessRule([Security.AccessControl.FileSystemAccessRule]::new([Security.Principal.SecurityIdentifier]::new('S-1-15-2-1'),'Read','Allow'))
