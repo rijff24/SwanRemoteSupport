@@ -146,8 +146,18 @@ The component workflow at `361d7c3` subsequently passed Windows/Linux checks,
 maintained transport and Linux deployment. Its Windows job explicitly passed the
 four named migration/storage regressions, including refusal of a source still
 open for writing; the downloaded archive verified all 242 public source files.
-Actual Windows migration, a new populated backup and recovery remain release
-gates. See the [component checks](evidence/361d7c3-windows-transport-storage-component-checks.json)
+The actual Server 2016 company then passed an encrypted backup and isolated
+restore of its populated legacy database/WAL. SQLite integrity, schema and every
+committed row matched, including the real peer record. Its lab-signed `361d7c3`
+manager subsequently migrated that database while the owned services were
+stopped, preserved the original files and trust keys, and restarted rendezvous
+with the canonical company database reported in its log. External HTTPS and
+administrator MFA, approved device, revoked unattended consent, signed profile,
+release approvals and worker identity remained valid. Corresponding source was
+retained with the installation. A full backup from the new canonical location,
+running-stack recovery, rollback and a fresh native connection still require
+qualification. See the [actual migration receipt](evidence/361d7c3-windows-populated-transport-migration-20261029.json),
+[component checks](evidence/361d7c3-windows-transport-storage-component-checks.json)
 and the
 [Windows transport storage finding](evidence/windows-transport-database-storage-finding-20261029.json).
 
