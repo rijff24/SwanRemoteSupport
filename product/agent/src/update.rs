@@ -435,15 +435,23 @@ pub(crate) fn update_policy_open(state:&AgentState)->Result<bool> {
 
 #[cfg(any(windows,test))]
 fn replace_verified_file(source:&Path,target:&Path,expected_hash:&str)->Result<()> {
-    use std::io::Write;
+    use std::io::{Read,Write};
+    use sha2::{Digest,Sha256};
     // Stage on the destination volume so replacement never streams bytes into
     // the currently installed executable. Verify the exact bytes being staged.
-    let bytes=std::fs::read(source)?;
-    ensure!(digest(&bytes).eq_ignore_ascii_case(expected_hash),"Replacement executable hash mismatch");
+    let mut input=std::fs::File::open(source)?;
     let temporary=target.parent().context("Missing replacement directory")?.join(format!("swan-replacement-{}.tmp",random_token()));
     let mut file=std::fs::OpenOptions::new().create_new(true).write(true).open(&temporary)?;
     let result=(||->Result<()> {
-        file.write_all(&bytes)?;file.sync_all()?;drop(file);
+        let mut digest=Sha256::new();let mut buffer=[0u8;64*1024];let mut size=0u64;
+        loop {
+            let count=input.read(&mut buffer)?;if count==0 {break;}
+            size+=count as u64;ensure!(size<=512*1024*1024,"Replacement exceeds package size limit");
+            file.write_all(&buffer[..count])?;digest.update(&buffer[..count]);
+        }
+        drop(input);
+        ensure!(hex::encode(digest.finalize()).eq_ignore_ascii_case(expected_hash),"Replacement executable hash mismatch");
+        file.sync_all()?;drop(file);
         let deadline=std::time::Instant::now()+std::time::Duration::from_secs(30);
         loop {
             match crate::replace_state(&temporary,target) {
@@ -526,7 +534,7 @@ fn msi_install_command(package:&Path,release:&Release)->Result<std::process::Com
 pub fn verify_package(state:&AgentState,directory:&Path,envelope:&SignedEnvelope,path:&Path)->Result<()> {
     let release=installation_release(state,directory,envelope,false)?;
     verify_compatibility(path.parent().context("Missing package directory")?,&release)?;
-    ensure!(digest(std::fs::read(path)?).eq_ignore_ascii_case(&release.sha256),"Installer hash differs from signed metadata");
+    ensure!(staged_hash_matches(path,&release.sha256)?,"Installer hash differs from signed metadata");
     verify_publisher(path,&release)?;
     if release.format=="msi" {verify_msi_identity(path,&release)?;}
     Ok(())
@@ -536,7 +544,7 @@ pub fn verify_package(state:&AgentState,directory:&Path,envelope:&SignedEnvelope
 pub fn verify_repair_package(state:&AgentState,directory:&Path,envelope:&SignedEnvelope,path:&Path)->Result<()> {
     let release=installation_release(state,directory,envelope,true)?;
     verify_compatibility(path.parent().context("Missing package directory")?,&release)?;
-    ensure!(digest(std::fs::read(path)?).eq_ignore_ascii_case(&release.sha256),"Repair installer hash differs from signed metadata");
+    ensure!(staged_hash_matches(path,&release.sha256)?,"Repair installer hash differs from signed metadata");
     verify_publisher(path,&release)?;
     if release.format=="msi" {verify_msi_identity(path,&release)?;}
     Ok(())
@@ -1039,7 +1047,7 @@ impl AgentState {
             *self=latest;return Ok(true);
         }
         let package=folder.join(format!("SwanRemoteSupport-install.{}",release.format));
-        ensure!(digest(std::fs::read(&package)?).eq_ignore_ascii_case(&release.sha256),"Staged installer hash mismatch");
+        ensure!(staged_hash_matches(&package,&release.sha256)?,"Staged installer hash mismatch");
         verify_publisher(&package,&release)?;
         if release.edition==Edition::Customer {
             let script=folder.join("Stop-Configuration.ps1");
