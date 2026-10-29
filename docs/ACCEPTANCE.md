@@ -7551,3 +7551,55 @@ This supersedes the pending compiled-check status above. It does not yet prove
 successful migration of an installed service, authenticated package generation,
 standard-user file denial or reboot of the repaired worker. Those runtime gates
 and production signing remain outstanding.
+
+
+### 2026-10-29: repaired worker migrated, generated company packages and survived reboot
+
+The fresh Windows company retained its own HTTPS/profile/transport identity,
+branding, administrator MFA and technician accounts. The real shipped migration
+script from `f9322e5` migrated its stopped legacy worker to the lab-signed
+`1c43a38` executable, after the old credential returned 401 and the replacement
+returned 200 from the actual company HTTPS endpoint. The installed credential
+file is protected, Administrators-owned and readable only by SYSTEM and
+Administrators. The registry stores only its public path. The old executable,
+receipt and a clearly marked retention fixture survived migration.
+
+A temporary standard local account, using an actual Windows logon token, could
+read the public control file but received access denial for the worker credential
+file. The fixture account was removed; its password was neither persisted nor
+printed. The new worker generated customer and technician 1.5.9 bundles for this
+company. Anonymous customer download returned 200; anonymous technician download
+returned 401, and authenticated download succeeded. All twelve ZIP entries,
+seven fixed source texts, artifact hashes, signed bootstrap/profile/release
+content and visible company names matched their pinned inputs. Both old and new
+worker credentials were absent from both bundles. Tampered signatures and
+request-supplied release trust overrides were rejected, and unapproved releases
+could not create builds. Automatic updates remained paused.
+
+A normal Windows reboot preserved worker/server automatic startup, credential
+ACLs, the path-only registry, transport/profile/HTTPS trust, MFA, approvals,
+revocation state and the hashes of both completed installer files. The worker
+then authenticated and completed a third customer build; its public download
+passed hash verification and eleven payload entries matched the pre-reboot
+bundle. The newly signed company profile retained the same policy. A real
+technician MFA account could access the protected download but not worker,
+release or build administration; its logged-out token and anonymous access were
+rejected. HEAD checks transferred no existing bundle bytes again. See
+[runtime evidence](evidence/1c43a38-private-worker-server2016-runtime.json).
+
+This closes the specific Server 2016 worker credential-storage failure for the
+tested migration path. It does not establish fresh installation of the revised
+worker installer, other Windows worker versions, endpoint installation or native
+sessions with these new packages, automatic rollout, full Windows deployment
+restore, maintained Windows transport distribution or production signing.
+The five endpoint packages/signatures and repaired worker used only the existing
+nonexportable disposable lab key; no private signing key left its owning VM.
+The original Linux company and frozen older company VM were not changed.
+
+The three original unsigned Windows component executables also matched byte for
+byte across the existing push and pull-request CI jobs. The PR merge tree equals
+public `1c43a38`; both corresponding-source archives verified all 239 public files.
+Shipping bytes were not normalized and no extra build was dispatched for this
+comparison. This is reproducibility evidence for these three components under
+those two jobs, not completion of the independent 1.5.9 native rebuild gate. See
+[component comparison](evidence/1c43a38-windows-components-independent.json).

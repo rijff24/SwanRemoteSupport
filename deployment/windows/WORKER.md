@@ -58,10 +58,12 @@ worker token in the service registry. A real Server 2016 test found additional
 app-container read permissions despite a protected registry ACL. Revoke those
 worker registrations before upgrading, keep the old worker stopped, and remove
 its secret environment values. Never merely copy the old token into a new file.
-The source now uses private file storage; compiled Windows permission tests,
-authenticated build completion, reboot and guarded migration must pass before
-this replacement is qualified. Existing installations and retained data are
-refused rather than silently overwritten. Preserve receipts and artifacts while
+The source now uses private file storage. Compiled Windows permission checks
+and a Server 2016 lab migration, actual standard-user read denial, both edition
+builds and authenticated build completion after reboot passed; see the dated
+acceptance evidence. Fresh installation with this installer, the complete Windows
+matrix and production signing remain separate gates. Existing installations and
+retained data are refused rather than silently overwritten by fresh setup. Preserve receipts and artifacts while
 planning migration. A restored management backup can resurrect revoked token
 hashes: revoke legacy registrations again before exposing a restored service.
 
@@ -70,14 +72,16 @@ For a stopped schema-1 installation, `Migrate-WorkerCredential.ps1 -Executable
 -ConfigurationPath <private-new-json> -PublisherThumbprint <trusted-thumbprint>`
 provides an explicit migration path. First revoke the old registration and set
 the service to manual startup. The script requires the same company and public
-trust keys, a different credential, and a real HTTPS 401 response for the old
-credential. It preserves the old executable and receipt under a unique private
+trust keys, a different credential, a real HTTPS 401 response for the old
+credential, and HTTP 200 for the replacement worker credential. It preserves the old executable and receipt under a unique private
 directory, retains artifacts, and records a migration journal. On failure it
 keeps the service stopped/manual; it never reactivates the revoked legacy
 credential. Inspect `-WhatIf` first. A retained journal/configuration requires
-explicit recovery rather than repeating migration. This path is awaiting actual
-signed-worker lab qualification; do not treat the script's existence as evidence
-of a successful upgrade.
+explicit recovery rather than repeating migration. The actual lab-signed worker
+migration passed on Server 2016, preserving the legacy executable/receipt and a
+retention fixture. Both branded packages were generated afterward; private file
+permissions and authentication survived reboot. This does not qualify every
+Windows version or a production publisher.
 
 Approve a compatible release on the server, queue a customer or technician build,
 and inspect its terminal status, protected log and artifact hash. Customer bundle
