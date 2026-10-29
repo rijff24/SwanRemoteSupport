@@ -1,0 +1,24 @@
+{
+  "utc": "2026-10-29T16:38:01.430607+00:00",
+  "application_source": "aff8ff61e3fbd6f34c4cf0bb9de6e330ec6e0521",
+  "version": "1.5.9",
+  "standard_user_technician": true,
+  "separate_customer_vm": true,
+  "customer_approved_desktop_and_separate_transfer_sessions": true,
+  "both_vnc_viewers_host_clipboard_receive_and_send_disabled_verified": true,
+  "active_session_text_clipboard_both_directions_verified_by_saved_file_hashes": true,
+  "clipboard_forward_sha256": "3450882943a7b06c8955429d08057bc3184b7af76fedf7cfd498f6180784abd7",
+  "clipboard_return_sha256": "58cbd1e21319f0344d89f2c54eedacd185f2f613ac7e835fa903d7f5b62e12ce",
+  "file_send_and_receive_finished_in_native_ui": true,
+  "file_roundtrip_sha256": "72e209f31e81da3088bf7d8324e55ef67fae2ae39b2bfad1fed90606b93eec7b",
+  "file_bytes_each_direction": 1343488,
+  "all_saved_files_hashes_checked_independently_over_ssh": true,
+  "initial_pre_session_clipboard_paste_empty": true,
+  "source_initial_clipboard_sync_is_opt_in": true,
+  "source_reference": "src/client/io_loop.rs:1423 and libs/hbb_common/src/config.rs:171,2120",
+  "production_publication": false,
+  "limits": [
+    "ASCII text and one 1343488-byte file; Unicode, image clipboard, large files, interruption and denied-permission transfer require separate tests.",
+    "No production signing, public Internet, UAC, logon-screen or multi-monitor qualification."
+  ]
+}

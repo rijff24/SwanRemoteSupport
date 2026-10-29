@@ -91,7 +91,8 @@
     "limit": "The server could not receive the close report during the outage. Its stored closed bit stayed false; the unchanged lease expired normally. The inventory labels it Ended after expiry. This is receiver-side management unreachability, not a full infrastructure outage."
   },
   "limits": {
-    "current_candidate_clipboard_transfer_uac_logon_and_multimonitor_need_separate_tests": true,
+    "current_candidate_uac_logon_and_multimonitor_need_separate_tests": true,
+    "clipboard_and_transfer_scope_in_separate_159_windows_native_receipt": true,
     "no_public_internet_connectivity_claim": true,
     "standard_user_msi_install_did_not_pass": true,
     "no_new_clean_iso_install_or_six_os_matrix_claim": true,

@@ -31,6 +31,20 @@ outage, the server could not receive the close report, so its stored closed bit
 remained false until normal lease-based expiry; this test does not establish
 instant server-side close reporting during a network partition.
 
+The same native1.5.9 Windows lab then passed ASCII clipboard transfer in both
+directions and a 1,343,488-byte file roundtrip through the native file manager.
+Both host VNC clipboard directions were disabled on both viewers. The technician
+copied a known text fixture inside its standard-user desktop; the customer saved
+the received text, added a return marker, and copied it back. Independent saved
+file hashes matched both expected values. File transfer required its own customer
+approval, and the destination/returned file hashes matched the original fixture.
+Both sessions were closed afterward and no live authorization lease remained.
+The first pre-session clipboard paste was empty; source explicitly makes initial
+clipboard synchronization opt-in. Copy events during the active session passed.
+This does not qualify Unicode/image clipboard, large/interrupted transfers,
+denied file permissions, UAC, logon-screen access or multiple monitors. See the
+[native clipboard/transfer receipt](evidence/159-windows-native-clipboard-transfer-20261029.json).
+
 Installation reporting is now being implemented after the completed recovery
 checkpoint. The new shared report contract, authenticated management endpoints,
 paginated status page and schema3 migration are source changes under verification;
