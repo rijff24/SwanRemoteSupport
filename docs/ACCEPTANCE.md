@@ -162,8 +162,17 @@ a public customer download and rejection of an anonymous technician download.
 The peer database actually used by the restored running stack also passed
 integrity, schema and all-row comparison after it was stopped for rollback.
 The original company data is active again and the recovered copy is retained.
-A fresh native connection after migration/recovery remains unqualified. These
-checks use the same disposable company VM, not recovery onto a different host.
+A fresh native connection subsequently passed after rollback to the retained
+original company data: technician MFA matched the independent audit, the same
+enrolled standard customer explicitly accepted, video and remote mouse/keyboard
+worked, and a new 52-byte saved fixture matched its expected hash. One new
+claimed attended grant correlated with the receiving device and maintained
+Windows relay. Customer Disconnect closed that grant, original device-credential
+renewal returned403, and the shipping installed verifier still passed. No
+re-enrollment or unattended consent change was needed. This connection does not
+qualify a native session while the restored data copy is active. These checks
+use the same disposable company VM, not recovery onto a different host. See the
+[post-recovery native connection receipt](evidence/361d7c3-windows-native-after-populated-recovery-20261029.json).
 See the [populated running recovery receipt](evidence/361d7c3-windows-populated-running-recovery-20261029.json),
 [actual migration receipt](evidence/361d7c3-windows-populated-transport-migration-20261029.json),
 [component checks](evidence/361d7c3-windows-transport-storage-component-checks.json)
