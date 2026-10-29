@@ -173,6 +173,17 @@ re-enrollment or unattended consent change was needed. This connection does not
 qualify a native session while the restored data copy is active. These checks
 use the same disposable company VM, not recovery onto a different host. See the
 [post-recovery native connection receipt](evidence/361d7c3-windows-native-after-populated-recovery-20261029.json).
+The restored populated copy was subsequently activated again for that missing
+native test. HTTPS/MFA, unchanged company state and all five download hashes
+passed again, with the newer original data retained. The native technician then
+showed an unresponsive window before fresh MFA could be completed. The lab also
+had substantial disk waits and intermittent SSH/HTTPS timeouts; these observations
+do not establish the hang's cause. The idle customer exited normally, verified
+HTTPS responded again, and only the owned limited technician launcher was
+restarted after checking its account SID. At the last check that launcher was
+running without a native GUI. No new support request was issued and this native
+retest has not passed. See the
+[incomplete restored-data retest](evidence/361d7c3-restored-data-native-retest-pending-20261030.json).
 See the [populated running recovery receipt](evidence/361d7c3-windows-populated-running-recovery-20261029.json),
 [actual migration receipt](evidence/361d7c3-windows-populated-transport-migration-20261029.json),
 [component checks](evidence/361d7c3-windows-transport-storage-component-checks.json)
