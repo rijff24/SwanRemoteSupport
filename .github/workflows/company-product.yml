@@ -46,6 +46,10 @@ jobs:
           python deployment/windows/archive-build-source.py . component-artifacts/CompanyComponents-source.zip --components-only
       - name: Test security and management
         run: cargo +1.90.0 test --manifest-path product/Cargo.toml --workspace --locked
+      - name: Verify real HTTPS update streaming and interrupted download recovery
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./deployment/windows/test_update_download.ps1 -OutputDirectory "${{ runner.temp }}/swan-update-download-test"
       - name: Restore an incompressible backup above the former 512 MiB limit
         if: runner.os == 'Windows'
         shell: bash

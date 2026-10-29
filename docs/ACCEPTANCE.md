@@ -28,8 +28,12 @@ logout and revocation all passed. The fixture has no recorded installed release;
 Linux update attempts intentionally fail as unsupported. Its services were stopped
 and the original company stayed healthy. This proves HTTPS reporting, not native
 Windows installation or rollout progress. See the [HTTPS receipt](evidence/e47f614-compiled-sender-https.json).
-Windows verification and complete deployment checks remain pending; deployment CI
-caught the new module missing from explicit Docker allowlists, corrected separately. See
+All six Windows/Linux verification and deployment jobs passed on push and PR at
+`3bcc884`. The explicit Docker allowlist omission caught at `e47f614` is corrected;
+the actual Docker context exports all50 required public files and excludes private
+canaries. The current Windows component archive and all234 public source inputs
+were independently checked against Git without running its executables. See the
+[component receipt](evidence/3bcc884-reporting-component-checks.json). See
 [installation reporting](INSTALLATION_STATUS.md).
 
 The current Linux company management service now runs source `67b5c69` after
@@ -43,6 +47,18 @@ unchanged. A preflight guard caught a stale local Compose copy referring to stoc
 transport; it stopped before mutation. Both originals were preserved, and the
 active Linux recipe became the baseline for both upgrade and rollback. Endpoint
 VMs stayed off and their installed software was not changed by this maintenance.
+
+A separate copy of the restored company subsequently passed an actual schema2-to3
+upgrade and encrypted pre-upgrade rollback. Missing backup configuration stopped
+the upgrade before schema change. The configured upgrade created one SWANBK2
+archive and accepted a schema3 report. The previous server refused schema3; the
+new restorer recovered schema2 into different storage, and the previous server
+served it through the original HTTPS trust. Profile identity, branding, policy,
+five approved devices, consent, group permissions, release approvals and fresh MFA
+were verified against the original. A login created after the backup correctly
+returned401 after restore; an initial test assumption was corrected accordingly.
+All copied services are stopped. The original lab remains on schema2. See the
+[migration receipt](evidence/e47f614-schema3-upgrade-and-rollback.json).
 
 Both the preceding legacy full-company backup and a new SWANBK2 full-company
 backup restored independently through the new image. Each recovered the active
@@ -75,11 +91,25 @@ runtime acceptance. See the [component comparison](evidence/67b5c69-component-re
 The native Windows67 build passed. Its254,845,617-byte archive was verified
 against SHA-256 `51e0dea72204ff3d21ced7fc2c03db514d4b3b05732b6ec02fbb60ea0d4aede6`;
 all1238 tracked source files and six generated bridges matched pinned inputs.
-The95-file customer payload matched its unsigned MSI manifest. Lab signing inputs
-and a parsed recipe are prepared, with no signing or VM execution yet. Installed
-identity/reconnect/audit checks and independent native reproduction remain open. Automatic approval review blocked preparing/running the
-background independent-rebuild controller with “blocked by policy”; fresh approval
-for one independent build is pending. No controller or duplicate build was started.
+The95-file customer payload matched its unsigned MSI manifest. The existing Win10
+signing guest booted normally with identity, consent, services, shipped-file
+verification and its nonexportable key preserved. Seven outputs, including both
+default1.5.8 MSIs, received verified timestamped lab signatures; all original inputs
+and collected outputs matched their receipts. The private key stayed in that guest,
+which then shut down normally. Test payloads, agent, public certificate and exact
+source were staged and HTTPS hash-verified with automatic updates paused. Actual
+server-generated customer and technician bundles upgraded the Server2016 and
+Server2019 lab endpoints from1.5.7 to1.5.8, preserving identity, trust and consent.
+A live attended session used the maintained relay and showed the authenticated
+company technician name. Authorization renewed beyond its initial300 seconds.
+Customer Stop closed the grant, renewal returned403, and the technician received
+an OK-only closure dialog. Resume preserved identity without reviving that grant.
+This does not qualify ordinary-user control, UAC, multiple monitors or public
+Internet connectivity. A stale sign-in frame after a long idle interval remains
+unattributed. See [native1.5.8 runtime evidence](evidence/67b5c69-native158-runtime.json).
+The user approved one independent native build, run40819351377; it is in progress.
+No recurring controller or duplicate build was started. Native reproduction and
+runtime audit-network tracing remain open.
 
 The streamed backup implementation at `67b5c69` passed both Windows and Linux
 component verification on push and PR jobs. Windows explicitly exported and

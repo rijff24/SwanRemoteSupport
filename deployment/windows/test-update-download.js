@@ -21,6 +21,13 @@ const server = https.createServer({pfx: fs.readFileSync(settings.SWAN_TEST_TLS_P
   if (request.url === '/artifact') { response.writeHead(302, {location: '/payload'}); response.end(); }
   else if (request.url === '/payload') { response.end(payload); }
   else if (request.url === '/tampered') { response.end('tampered download'); }
+  else if (request.url === '/oversized') { response.writeHead(200, {'content-length': 512 * 1024 * 1024 + 1}); response.flushHeaders(); response.end(); }
+  else if (request.url === '/large') {
+    response.writeHead(200, {'content-length': 16 * 1024 * 1024});
+    const chunk = Buffer.alloc(64 * 1024, 0x5a); let remaining = 256;
+    const send = () => { while (remaining) { --remaining; if (!response.write(chunk)) { response.once('drain', send); return; } } response.end(); };
+    send();
+  }
   else if (request.url === '/partial') {
     response.writeHead(200, {'content-length': payload.length});
     response.flushHeaders(); response.write(payload.subarray(0, 8));
@@ -41,14 +48,14 @@ async function main() {
   const code = await new Promise((resolve, reject) => { child.once('error', reject); child.once('exit', resolve); });
   assert.equal(code, 0, 'HTTPS download test failed');
   assert.match(output, /1 passed; 0 failed/);
-  for (const route of ['/artifact', '/payload', '/tampered', '/partial']) assert(requests.some(request => request.path === route), `Missing ${route} request`);
+  for (const route of ['/artifact', '/payload', '/tampered', '/partial', '/oversized', '/large']) assert(requests.some(request => request.path === route), `Missing ${route} request`);
   assert(requests.every(request => !request.authorization && !request.cookie), 'Artifact requests carried credentials');
   const hash = file => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
   const root = path.resolve(__dirname, '../..');
   const commit = spawnSync('git', ['rev-parse', 'HEAD'], {cwd: root, encoding: 'utf8'});
   const dirty = spawnSync('git', ['status', '--porcelain'], {cwd: root, encoding: 'utf8'});
   assert.equal(commit.status, 0); assert.equal(dirty.status, 0);
-  fs.writeFileSync(resultPath, JSON.stringify({passed: true, at: new Date().toISOString(), source_commit: commit.stdout.trim(), source_dirty: dirty.stdout.trim().length > 0, agent_test_sha256: hash(executable), tls_identity_sha256: hash(settings.SWAN_TEST_CA_FILE), checks: ['real HTTPS redirect', 'exact artifact hash', 'tamper rejection retains staging', 'interrupted response retains staging', 'no artifact credentials', 'temporary staging cleaned'], requests, native_installer_executed: false}, null, 2), {flag: 'wx'});
+  fs.writeFileSync(resultPath, JSON.stringify({passed: true, at: new Date().toISOString(), source_commit: commit.stdout.trim(), source_dirty: dirty.stdout.trim().length > 0, agent_test_sha256: hash(executable), tls_identity_sha256: hash(settings.SWAN_TEST_CA_FILE), checks: ['real HTTPS redirect', 'exact artifact hash', 'tamper rejection retains staging', 'interrupted response retains staging', 'oversized response rejected', '16 MiB streamed response verified', 'no artifact credentials', 'temporary staging cleaned'], requests, native_installer_executed: false}, null, 2), {flag: 'wx'});
   console.log('PASS: HTTPS redirect, tamper/interruption rejection, complete staging retained, no artifact credentials.');
 }
 main().catch(error => { console.error(error.message); process.exitCode = 1; }).finally(async () => {

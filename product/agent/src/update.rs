@@ -202,21 +202,61 @@ async fn download_reporting(url:&str,hash:&str,path:&Path,reporter:Option<(&Path
     let client=http_client(600,true)?;
     let mut response=client.get(url).send().await?.error_for_status()?;
     ensure!(response.content_length().unwrap_or(0)<=512*1024*1024,"Package too large");
-    let mut bytes=Vec::new();
+    // A bounded queue keeps large installers off the endpoint's working set.
+    // Only the blocking writer owns staging; a dropped/failed download closes
+    // its channel without Complete and therefore cannot publish partial bytes.
+    let (sender,receiver)=tokio::sync::mpsc::channel(2);
+    let path=path.to_owned();let hash=hash.to_owned();
+    let writer=tokio::task::spawn_blocking(move ||write_download(&path,&hash,receiver,512*1024*1024));
+    let mut downloaded=0u64;
     let total=response.content_length();
     let mut last_report=std::time::Instant::now();
     if let Some((directory,token,sequence))=reporter {reporting::progress(directory,token,UpdatePhase::Downloading,Some(sequence),0,total).await;}
+    let transfer=async {
     while let Some(chunk)=response.chunk().await? {
-        ensure!(bytes.len()+chunk.len()<=512*1024*1024,"Package too large");bytes.extend_from_slice(&chunk);
+        downloaded=downloaded.checked_add(chunk.len() as u64).context("Package size overflow")?;
+        ensure!(downloaded<=512*1024*1024,"Package too large");
+        sender.send(DownloadPart::Bytes(chunk.to_vec())).await.context("Download staging writer stopped")?;
         if last_report.elapsed()>=std::time::Duration::from_secs(5) {
-            if let Some((directory,token,sequence))=reporter {reporting::progress(directory,token,UpdatePhase::Downloading,Some(sequence),bytes.len() as u64,total).await;}
+            if let Some((directory,token,sequence))=reporter {reporting::progress(directory,token,UpdatePhase::Downloading,Some(sequence),downloaded,total).await;}
             last_report=std::time::Instant::now();
         }
     }
-    ensure!(digest(&bytes).eq_ignore_ascii_case(hash),"Package hash mismatch");
-    if let Some((directory,token,sequence))=reporter {reporting::progress(directory,token,UpdatePhase::Preparing,Some(sequence),bytes.len() as u64,Some(bytes.len() as u64)).await;}
-    let path=path.to_owned();
-    tokio::task::spawn_blocking(move ||publish_download(&path,&bytes)).await.context("Download publication task failed")?
+    sender.send(DownloadPart::Complete).await.context("Download staging writer stopped")?;
+    Ok::<(),anyhow::Error>(())
+    }.await;
+    drop(sender);
+    let publication=writer.await.context("Download publication task failed")?;
+    transfer?;publication?;
+    if let Some((directory,token,sequence))=reporter {reporting::progress(directory,token,UpdatePhase::Preparing,Some(sequence),downloaded,Some(downloaded)).await;}
+    Ok(())
+}
+
+enum DownloadPart {Bytes(Vec<u8>),Complete}
+
+fn write_download(path:&Path,hash:&str,mut receiver:tokio::sync::mpsc::Receiver<DownloadPart>,limit:u64)->Result<()> {
+    use std::io::Write;
+    use sha2::{Digest,Sha256};
+    let temporary=path.parent().context("Missing download directory")?.join(format!("swan-download-{}.tmp",random_token()));
+    let mut file=std::fs::OpenOptions::new().create_new(true).write(true).open(&temporary)?;
+    let result=(||->Result<()> {
+        let mut digest=Sha256::new();let mut size=0u64;
+        loop {
+            match receiver.blocking_recv().context("Download interrupted before completion")? {
+                DownloadPart::Bytes(bytes)=>{
+                    size=size.checked_add(bytes.len() as u64).context("Package size overflow")?;
+                    ensure!(size<=limit,"Package too large");
+                    file.write_all(&bytes)?;digest.update(&bytes);
+                },
+                DownloadPart::Complete=>break,
+            }
+        }
+        ensure!(hex::encode(digest.finalize()).eq_ignore_ascii_case(hash),"Package hash mismatch");
+        file.sync_all()?;drop(file);
+        crate::replace_state(&temporary,path).context("Cannot publish complete download")
+    })();
+    if result.is_err(){std::fs::remove_file(&temporary).context("Cannot remove failed download staging file")?;}
+    result
 }
 
 fn publish_download(path:&Path,bytes:&[u8])->Result<()> {
@@ -261,11 +301,16 @@ fn publish_initial_bytes(path:&Path,bytes:&[u8])->Result<()> {
 }
 
 fn staged_hash_matches(path:&Path,hash:&str)->Result<bool> {
-    match std::fs::read(path) {
-        Ok(bytes)=>Ok(digest(bytes).eq_ignore_ascii_case(hash)),
-        Err(error) if error.kind()==std::io::ErrorKind::NotFound=>Ok(false),
-        Err(error)=>Err(error).context("Cannot inspect staged download"),
-    }
+    use std::io::Read;
+    use sha2::{Digest,Sha256};
+    let mut file=match std::fs::File::open(path) {
+        Ok(file)=>file,
+        Err(error) if error.kind()==std::io::ErrorKind::NotFound=>return Ok(false),
+        Err(error)=>return Err(error).context("Cannot inspect staged download"),
+    };
+    let mut digest=Sha256::new();let mut buffer=[0u8;64*1024];
+    loop {let count=file.read(&mut buffer)?;if count==0 {break;}digest.update(&buffer[..count]);}
+    Ok(hex::encode(digest.finalize()).eq_ignore_ascii_case(hash))
 }
 
 #[cfg(windows)]
@@ -1360,6 +1405,27 @@ pub(crate) fn test_failed_release_quarantine(state:&AgentState,release:&Release,
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[tokio::test]
+    async fn streamed_download_requires_completion_hash_and_limit_before_replacement(){
+        let folder=std::env::temp_dir().join(format!("swan-stream-test-{}",random_token()));
+        std::fs::create_dir(&folder).unwrap();let target=folder.join("installer.exe");
+        std::fs::write(&target,b"previous complete package").unwrap();
+        for (parts,hash,limit,succeeds) in [
+            (vec![DownloadPart::Bytes(b"new ".to_vec()),DownloadPart::Bytes(b"package".to_vec()),DownloadPart::Complete],digest(b"new package"),11,true),
+            (vec![DownloadPart::Bytes(b"tampered".to_vec()),DownloadPart::Complete],digest(b"new package"),11,false),
+            (vec![DownloadPart::Bytes(b"partial".to_vec())],digest(b"partial"),11,false),
+            (vec![DownloadPart::Bytes(b"oversize".to_vec()),DownloadPart::Complete],digest(b"oversize"),7,false),
+        ] {
+            let before=std::fs::read(&target).unwrap();
+            let (sender,receiver)=tokio::sync::mpsc::channel(2);let path=target.clone();
+            let task=tokio::task::spawn_blocking(move ||write_download(&path,&hash,receiver,limit));
+            for part in parts {if sender.send(part).await.is_err(){break;}}
+            drop(sender);assert_eq!(task.await.unwrap().is_ok(),succeeds);
+            assert_eq!(std::fs::read(&target).unwrap(),if succeeds {b"new package".to_vec()}else{before});
+            assert_eq!(std::fs::read_dir(&folder).unwrap().count(),1,"Failed or cancelled staging must be removed");
+        }
+        std::fs::remove_dir_all(folder).unwrap();
+    }
     #[cfg(windows)]
     #[test]
     #[ignore="Requires an explicitly selected isolated MSI artifact; reads its database without installation"]
@@ -1402,6 +1468,11 @@ mod tests {
         assert_eq!(std::fs::read(&artifact).unwrap(),payload);
         assert!(download(&format!("{base}/partial"),&hash,&artifact).await.is_err());
         assert_eq!(std::fs::read(&artifact).unwrap(),payload);
+        assert!(download(&format!("{base}/oversized"),&hash,&artifact).await.is_err());
+        assert_eq!(std::fs::read(&artifact).unwrap(),payload);
+        let large=vec![0x5a;16*1024*1024];
+        download(&format!("{base}/large"),&digest(&large),&artifact).await.unwrap();
+        assert!(staged_hash_matches(&artifact,&digest(&large)).unwrap());
         assert!(!std::fs::read_dir(&folder).unwrap().any(|entry|entry.unwrap().file_name().to_string_lossy().starts_with("swan-download-")));
         std::fs::remove_dir_all(folder).unwrap();
     }

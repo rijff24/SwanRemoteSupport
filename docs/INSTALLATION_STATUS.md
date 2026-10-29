@@ -69,8 +69,9 @@ coordinated full deployment backup, including installer/TLS/transport data.
 
 To roll back to a schema2 server, stop management, use the retained new management
 binary to restore the pre-upgrade archive into an empty replacement directory,
-and only then run the older binary against that restored schema2 data. Older
-binaries cannot consume the SWANBK2 envelope or safely open a schema3 database.
+and only then run the older binary against that restored schema2 data. Releases
+before streamed backup support cannot consume SWANBK2; even a previous release
+that understands that envelope must refuse a newer unsupported database schema.
 Preserve the original upgraded data separately, keep public endpoints unavailable
 and reconcile revocations/consent changes made after the backup before exposure.
 The pre-upgrade archive preserves the original schema; it does not merge later
