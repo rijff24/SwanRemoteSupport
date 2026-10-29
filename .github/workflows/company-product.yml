@@ -49,7 +49,9 @@ jobs:
       - name: Verify real HTTPS update streaming and interrupted download recovery
         if: runner.os == 'Windows'
         shell: pwsh
-        run: ./deployment/windows/test_update_download.ps1 -OutputDirectory "${{ runner.temp }}/swan-update-download-test"
+        run: |
+          ./deployment/windows/test_update_download.ps1 -OutputDirectory "${{ runner.temp }}/swan-update-download-test"
+          Copy-Item -LiteralPath "${{ runner.temp }}/swan-update-download-test/verified.json" -Destination component-artifacts/update-download-https.json
       - name: Restore an incompressible backup above the former 512 MiB limit
         if: runner.os == 'Windows'
         shell: bash

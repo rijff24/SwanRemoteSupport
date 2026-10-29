@@ -46,7 +46,7 @@ async function main() {
   child.stdout.on('data', data => { output += data; });
   child.stderr.on('data', data => { output += data; });
   const code = await new Promise((resolve, reject) => { child.once('error', reject); child.once('exit', resolve); });
-  assert.equal(code, 0, 'HTTPS download test failed');
+  assert.equal(code, 0, 'HTTPS download test failed\n' + output);
   assert.match(output, /1 passed; 0 failed/);
   for (const route of ['/artifact', '/payload', '/tampered', '/partial', '/oversized', '/large']) assert(requests.some(request => request.path === route), `Missing ${route} request`);
   assert(requests.every(request => !request.authorization && !request.cookie), 'Artifact requests carried credentials');

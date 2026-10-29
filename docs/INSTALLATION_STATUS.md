@@ -2,8 +2,10 @@
 
 Work in progress: the management API, shared message contract, administration
 page and endpoint sender integration are implemented in source. Existing installed
-apps do not acquire reporting until upgraded. Real HTTPS reporting and native
-update-phase qualification remain pending; this is not completed rollout acceptance.
+apps do not acquire reporting until upgraded. Compiled Linux agents passed real
+HTTPS reporting with approval, MFA, restart, revision and revocation checks; see
+[sender evidence](evidence/e47f614-compiled-sender-https.json). Native Windows
+update-phase qualification remains pending; this is not completed rollout acceptance.
 
 The customer watcher reports at its five-minute refresh. Technician sign-in and
 inventory refresh report using the current in-memory login. The Windows updater
