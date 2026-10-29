@@ -60,8 +60,8 @@
   },
   "limits": {
     "lab_signing_only": true,
-    "native_desktop_session_through_windows_relay_pending": true,
-    "post_upgrade_windows_reboot_test_pending": true,
+    "native_desktop_session_through_windows_relay_pending": false,
+    "post_upgrade_windows_reboot_test_pending": false,
     "fresh_full_maintained_windows_setup_installer_runtime_pending": true,
     "public_internet_connectivity_pending": true,
     "database_migration_rollback_not_established_by_same_schema_binary_switch": true,

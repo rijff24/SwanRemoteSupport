@@ -12,6 +12,15 @@ tests succeeded. Company IT must arrange an approved deployment in the intended
 user context when policy blocks unmanaged per-user packages. Setup does not
 change [Windows Installer policy](https://learn.microsoft.com/en-us/windows/win32/msi/disablemsi).
 
+The 1.5.9 disposable Server 2016 test also exercised the company-generated
+technician EXE bundle under an actual standard token. After the MSI returned
+`1625`, a newer signed EXE bundle installed through the shipping
+`-ReplaceFailedSetup` path, preserving bootstrap trust and archiving the exact
+failed setup marker. The installed verifier and native MFA login passed without
+changing Windows Installer policy. This qualifies that EXE recovery path on the
+tested OS; it does not qualify standard-user MSI deployment. See the
+[scoped runtime evidence](evidence/159-windows-company-install-enrollment-20261029.json).
+
 Repair requires a previously recorded installation and its signed
 `installed-release.json`. The supplied release envelope must exactly match that
 record, and its sequence must equal the durable installed sequence. The agent
