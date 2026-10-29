@@ -154,9 +154,18 @@ stopped, preserved the original files and trust keys, and restarted rendezvous
 with the canonical company database reported in its log. External HTTPS and
 administrator MFA, approved device, revoked unattended consent, signed profile,
 release approvals and worker identity remained valid. Corresponding source was
-retained with the installation. A full backup from the new canonical location,
-running-stack recovery, rollback and a fresh native connection still require
-qualification. See the [actual migration receipt](evidence/361d7c3-windows-populated-transport-migration-20261029.json),
+retained with the installation. A second full encrypted backup from the canonical
+location then passed isolated restore and actual running-company data replacement.
+The restored server and subsequent rollback both passed HTTPS/MFA, unchanged
+profile/device/consent/release/worker checks, all five installer download hashes,
+a public customer download and rejection of an anonymous technician download.
+The peer database actually used by the restored running stack also passed
+integrity, schema and all-row comparison after it was stopped for rollback.
+The original company data is active again and the recovered copy is retained.
+A fresh native connection after migration/recovery remains unqualified. These
+checks use the same disposable company VM, not recovery onto a different host.
+See the [populated running recovery receipt](evidence/361d7c3-windows-populated-running-recovery-20261029.json),
+[actual migration receipt](evidence/361d7c3-windows-populated-transport-migration-20261029.json),
 [component checks](evidence/361d7c3-windows-transport-storage-component-checks.json)
 and the
 [Windows transport storage finding](evidence/windows-transport-database-storage-finding-20261029.json).
