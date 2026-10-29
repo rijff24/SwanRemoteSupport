@@ -89,6 +89,27 @@ without repeating elevation. This qualifies this credential-prompt scenario on
 Server 2016, not all UAC scenarios or Windows versions. See the
 [standard-customer UAC receipt](evidence/159-windows-standard-customer-uac-20261029.json).
 
+Native1.5.9 unattended support then passed a planned Windows reboot and actual
+sign-in-screen connection. The standard customer explicitly enabled ongoing
+support in the company consent dialog; the existing signed company profile
+already allowed it, so no server policy change was needed. Before consent, an
+unattended request returned403. The automatic System service came back after a
+normal Windows reboot with user apps forcibly closed, preserving the original
+identity, credential, bootstrap, consent and binaries. Windows autologon and saved
+passwords were absent. After fresh native technician MFA, one new unattended
+grant reached the real Windows sign-in screen through the maintained Windows
+relay before any user desktop was logged on. Remote secure-attention and masked
+lab password input then logged on the standard customer through that session.
+The standard customer revoked ongoing support in its own app. The receiver
+closed about30seconds later and the technician showed an authorization error
+with only OK. The server closed the original grant and cleared its lease; renewal
+and a new unattended request returned403, while replaying consent revision1
+returned409. Consent revision2 persisted off, the service remained running, and
+identity, trust and binaries were preserved. This qualifies this Server2016 lab
+scenario, not every Windows version, public connectivity, power-loss recovery or
+multiple monitors. See the
+[unattended reboot/logon/revocation receipt](evidence/159-windows-unattended-reboot-logon-revocation-20261029.json).
+
 Installation reporting is now being implemented after the completed recovery
 checkpoint. The new shared report contract, authenticated management endpoints,
 paginated status page and schema3 migration are source changes under verification;
