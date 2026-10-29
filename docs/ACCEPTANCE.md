@@ -110,6 +110,26 @@ scenario, not every Windows version, public connectivity, power-loss recovery or
 multiple monitors. See the
 [unattended reboot/logon/revocation receipt](evidence/159-windows-unattended-reboot-logon-revocation-20261029.json).
 
+Native1.5.9 then passed two-monitor switching and remote mouse/keyboard input.
+The same installed Server2016 customer booted normally with two signed QXL
+adapters and two active 1024x768 displays; device identity, credential, trust,
+binaries and consent-off revision2 were independently preserved. After fresh
+technician MFA and explicit standard-customer approval, the native monitor
+selector showed distinct blue/green test windows on DISPLAY7 and DISPLAY5.
+Input through the technician app produced two 35-byte files whose independent
+hashes matched the exact expected markers. Returning to the first monitor showed
+its original saved marker, with no replacement grant. Closing the session closed
+its original authorization; renewal returned403 and no live authorization
+remained. The history retains its last lease timestamp on a closed row, so this
+is not a claim that close clears that stored timestamp. Only the owned test
+windows were stopped; support remained running and unattended consent stayed
+off. An initial unaccepted request was canceled while the customer display was
+asleep; waking the display restored its console, without bypassing consent.
+This qualifies two equal-resolution displays on this Server2016 lab, not mixed
+DPI, hot-plug, additional monitors, combined/individual-window modes, other
+Windows versions or public connectivity. See the
+[two-monitor native receipt](evidence/159-windows-native-two-monitor-20261029.json).
+
 A further Windows recovery check found that the maintained rendezvous build's
 Windows default stores its peer database in the RustDesk LocalService profile,
 outside company transport storage. The populated-database backup preflight
@@ -122,9 +142,22 @@ migration command preserves source files and keys, recovers committed WAL data
 in private staging, checks integrity and refuses an existing destination or
 running management process. Six Linux transport/storage regressions passed
 after a clean package rebuild; an earlier cached test run was not counted.
-Windows writer-exclusion checks, compiled migration, new populated backup and
-actual recovery remain release gates. See the
+The component workflow at `361d7c3` subsequently passed Windows/Linux checks,
+maintained transport and Linux deployment. Its Windows job explicitly passed the
+four named migration/storage regressions, including refusal of a source still
+open for writing; the downloaded archive verified all 242 public source files.
+Actual Windows migration, a new populated backup and recovery remain release
+gates. See the [component checks](evidence/361d7c3-windows-transport-storage-component-checks.json)
+and the
 [Windows transport storage finding](evidence/windows-transport-database-storage-finding-20261029.json).
+
+Independent builds 40865719332 and 40925349725 of source `9fa5e8a` also completed.
+All three original Windows and all three Linux component binaries matched
+byte-for-byte, with both source archives checked against the pinned public tree
+and matching Rust 1.90.0 compiler identities. No shipping bytes were normalized
+and no downloaded executable was run for the comparison. This qualifies that
+baseline build, not the later storage fix, native application matrix or production
+signing. See the [component reproduction receipt](evidence/9fa5e8a-independent-windows-linux-component-reproduction-20261029.json).
 
 Installation reporting is now being implemented after the completed recovery
 checkpoint. The new shared report contract, authenticated management endpoints,

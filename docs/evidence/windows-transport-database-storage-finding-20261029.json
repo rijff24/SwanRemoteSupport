@@ -28,10 +28,11 @@
     "live_company_containers_changed": false
   },
   "pending": [
-    "Windows compiled regressions including running source-writer rejection.",
     "Actual Windows legacy database migration with source/key/identity preservation.",
     "Full backup and recovery of populated transport and current management records."
   ],
   "production_publication": false,
-  "full_product_acceptance_complete": false
+  "full_product_acceptance_complete": false,
+  "windows_compiled_regressions_passed_source": "361d7c362de7f67b7b7456d33bf0191736eec7d5",
+  "windows_component_evidence": "361d7c3-windows-transport-storage-component-checks.json"
 }

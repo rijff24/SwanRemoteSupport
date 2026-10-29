@@ -98,7 +98,7 @@
     "no_new_clean_iso_install_or_six_os_matrix_claim": true,
     "production_publication": false,
     "full_product_acceptance_complete": false,
-    "multimonitor_needs_separate_test": true,
-    "unattended_reboot_logon_revocation_scope_in_separate_159_receipt": true
+    "unattended_reboot_logon_revocation_scope_in_separate_159_receipt": true,
+    "two_monitor_switching_and_input_scope_in_separate_159_receipt": true
   }
 }
