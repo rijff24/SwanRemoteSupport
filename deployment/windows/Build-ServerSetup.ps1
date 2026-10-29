@@ -26,10 +26,10 @@ $resources = [ordered]@{
     'swan-management.exe'=$management
     'LICENCE'=(Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '../../LICENCE')).Path
 }
-foreach ($name in @('hbbs.exe','hbbr.exe','caddy.exe','Caddy-LICENSE.txt','RustDesk-LICENSE.txt','THIRD-PARTY.txt','server-components.json')) {
+foreach ($name in @('hbbs.exe','hbbr.exe','caddy.exe','Caddy-LICENSE.txt','RustDesk-LICENSE.txt','THIRD-PARTY.txt','server-components.json','transport-build-source.zip')) {
     $resources['components/'+$name] = Join-Path $components $name
 }
-$pins=@{'hbbs.exe'='2102e17d32af3ab313a4096d4a4db307984630eccf4f9ed03ef3dfbd4fdb8f83';'hbbr.exe'='5b5fe62f5b5f1fa7df521a243cbfadbeca67bd9df80d5017f23cf62aca59257e';'caddy.exe'='586d4a4cd74bdfd2951b6b81766a32904ffa69c4f1c3d521da3870a2120f1d31'}
+$pins=@{'hbbs.exe'='2f3b865dea3e2439f732829e19562533044e7b83a050530e0c11341786b047be';'hbbr.exe'='97ead452f1c5484fa78d2d7f6b0954c116f32d00d0a6cdd045806806df124bc0';'caddy.exe'='586d4a4cd74bdfd2951b6b81766a32904ffa69c4f1c3d521da3870a2120f1d31'}
 $hashes=[ordered]@{}
 foreach ($name in $resources.Keys) {
     if ($resources[$name].Contains(',')) { throw 'Compiler resource input paths must not contain commas.' }

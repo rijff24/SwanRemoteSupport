@@ -29,8 +29,8 @@ pub(crate) fn installed_specs() -> Result<Vec<Component>> {
     let config = data.join("Caddyfile");
     anyhow::ensure!(config.is_file(), "Company HTTPS configuration missing");
     let pins = [
-        ("hbbs", "2102e17d32af3ab313a4096d4a4db307984630eccf4f9ed03ef3dfbd4fdb8f83"),
-        ("hbbr", "5b5fe62f5b5f1fa7df521a243cbfadbeca67bd9df80d5017f23cf62aca59257e"),
+        ("hbbs", "2f3b865dea3e2439f732829e19562533044e7b83a050530e0c11341786b047be"),
+        ("hbbr", "97ead452f1c5484fa78d2d7f6b0954c116f32d00d0a6cdd045806806df124bc0"),
         ("caddy", "586d4a4cd74bdfd2951b6b81766a32904ffa69c4f1c3d521da3870a2120f1d31"),
     ];
     let mut result = Vec::new();

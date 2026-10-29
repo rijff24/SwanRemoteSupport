@@ -13,7 +13,7 @@ internal static class ServerSetupLauncher
     private static readonly string[] PayloadFiles = {
         "swan-management.exe", "components/hbbs.exe", "components/hbbr.exe", "components/caddy.exe",
         "components/Caddy-LICENSE.txt", "components/RustDesk-LICENSE.txt", "components/THIRD-PARTY.txt",
-        "components/server-components.json", "SOURCE.json", "LICENCE"
+        "components/server-components.json", "components/transport-build-source.zip", "SOURCE.json", "LICENCE"
     };
 
     private static Stream Resource(string name)

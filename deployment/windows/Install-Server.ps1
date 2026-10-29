@@ -12,8 +12,8 @@ if ($signature.Status -ne 'Valid') { throw 'The company server executable requir
 if ($signature.SignerCertificate.Thumbprint -ne $PublisherThumbprint) { throw 'Company server signature publisher does not match the configured certificate.' }
 if ([Convert]::FromBase64String($ReleasePublicKey).Length -ne 32) { throw 'Expected a 32-byte project release public key.' }
 $componentPins = @{
-    'hbbs.exe'='2102e17d32af3ab313a4096d4a4db307984630eccf4f9ed03ef3dfbd4fdb8f83'
-    'hbbr.exe'='5b5fe62f5b5f1fa7df521a243cbfadbeca67bd9df80d5017f23cf62aca59257e'
+    'hbbs.exe'='2f3b865dea3e2439f732829e19562533044e7b83a050530e0c11341786b047be'
+    'hbbr.exe'='97ead452f1c5484fa78d2d7f6b0954c116f32d00d0a6cdd045806806df124bc0'
     'caddy.exe'='586d4a4cd74bdfd2951b6b81766a32904ffa69c4f1c3d521da3870a2120f1d31'
 }
 $fullStack = -not [string]::IsNullOrEmpty($ComponentsDirectory)
@@ -27,7 +27,7 @@ if ($fullStack) {
         if ((Get-Item -LiteralPath $component).Attributes -band [IO.FileAttributes]::ReparsePoint) { throw 'Component must be a regular file.' }
         if ((Get-FileHash -LiteralPath $component -Algorithm SHA256).Hash -ne $componentPins[$name]) { throw 'Packaged server component hash mismatch.' }
     }
-    foreach ($name in @('Caddy-LICENSE.txt','RustDesk-LICENSE.txt','THIRD-PARTY.txt','server-components.json')) {
+    foreach ($name in @('Caddy-LICENSE.txt','RustDesk-LICENSE.txt','THIRD-PARTY.txt','server-components.json','transport-build-source.zip')) {
         if (-not (Test-Path -LiteralPath (Join-Path $ComponentsDirectory $name) -PathType Leaf)) { throw 'Prepared component license or source notice missing.' }
     }
 }
@@ -65,7 +65,7 @@ if ($fullStack) {
     $packaged = Join-Path $installDirectory 'components'
     New-Item -ItemType Directory -Path $packaged | Out-Null
     foreach ($name in $componentPins.Keys) { Copy-Item -LiteralPath (Join-Path $ComponentsDirectory $name) -Destination (Join-Path $packaged $name) }
-    foreach ($name in @('Caddy-LICENSE.txt','RustDesk-LICENSE.txt','THIRD-PARTY.txt','server-components.json')) { Copy-Item -LiteralPath (Join-Path $ComponentsDirectory $name) -Destination (Join-Path $packaged $name) }
+    foreach ($name in @('Caddy-LICENSE.txt','RustDesk-LICENSE.txt','THIRD-PARTY.txt','server-components.json','transport-build-source.zip')) { Copy-Item -LiteralPath (Join-Path $ComponentsDirectory $name) -Destination (Join-Path $packaged $name) }
     $configuration = "{`n    admin off`n}`n$PublicHostname {`n    reverse_proxy 127.0.0.1:$Port`n    header Strict-Transport-Security max-age=31536000`n    request_body {`n        max_size 512MB`n    }`n}`n"
     [IO.File]::WriteAllText((Join-Path $dataDirectory 'Caddyfile'),$configuration,[Text.UTF8Encoding]::new($false))
     $serviceEnvironment += @('SWAN_COMPONENTS=1',"SWAN_PUBLIC_HOST=$PublicHostname")

@@ -24,7 +24,7 @@ if ($receipt.full_stack) { $expectedRules = @('SwanCompanyServer-TCP','SwanCompa
 if ($rules.Count -ne $expectedRules.Count -or @(Compare-Object $rules $expectedRules).Count) { throw 'Unexpected company firewall ownership.' }
 $files = @(Join-Path $install 'swan-management.exe')
 if ($receipt.full_stack) {
-    foreach ($name in @('hbbs.exe','hbbr.exe','caddy.exe','Caddy-LICENSE.txt','RustDesk-LICENSE.txt','THIRD-PARTY.txt','server-components.json')) { $files += Join-Path (Join-Path $install 'components') $name }
+    foreach ($name in @('hbbs.exe','hbbr.exe','caddy.exe','Caddy-LICENSE.txt','RustDesk-LICENSE.txt','THIRD-PARTY.txt','server-components.json','transport-build-source.zip')) { $files += Join-Path (Join-Path $install 'components') $name }
 }
 foreach ($file in $files) {
     if (Test-Path -LiteralPath $file) {

@@ -19,5 +19,5 @@
       "after_sha256": "c881d983b3b1cb77be30cf557be84e65064c72f69b414792cd62230fa99811f4"
     }
   ],
-  "scope": "Candidate transport patch; not approved for production or substituted into current installers"
+  "scope": "Maintained transport candidate for unsigned Swan server test installers; production and complete Windows native relay qualification remain pending."
 }

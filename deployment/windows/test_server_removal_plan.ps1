@@ -14,7 +14,7 @@ try {
     [IO.File]::WriteAllText($database,'identity preservation fixture')
     Save-Receipt
     $plan = Plan
-    if ($plan.Files.Count -ne 8 -or @($plan.Files | Where-Object {$_ -like ($data+'*')}).Count) {throw 'Removal includes company data or omits expected binaries'}
+    if ($plan.Files.Count -ne 9 -or @($plan.Files | Where-Object {$_ -like ($data+'*')}).Count) {throw 'Removal includes company data or omits expected binaries'}
     $saved=$binary; $binary='"C:\Windows\System32\svchost.exe" --service'; Reject-Plan; $binary=$saved
     $binary=$saved+' --unexpected'; Reject-Plan; $binary=$saved
     $receipt.firewall_rules=@('Unrelated-Firewall-Rule'); Save-Receipt; Reject-Plan

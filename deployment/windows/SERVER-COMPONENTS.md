@@ -9,32 +9,56 @@ unverified. `Setup-Server.ps1` supplies the graphical setup flow, and an
 unsigned test EXE bundles it with management and pinned transport/HTTPS inputs.
 Production signing and clean-machine wizard installation remain incomplete.
 
-`server-components.json` pins the Windows x64 RustDesk server 1.1.15 and Caddy
-2.10.2 archives by SHA-256, with upstream source references. Download each exact
-URL in that manifest to local storage, then prepare their executables:
+`server-components.json` now requires the maintained Windows rendezvous and
+relay builds, with fixed executable hashes and a canonical digest of their
+complete compiler inputs and public recipe. `deployment/transport/source.json`
+pins upstream RustDesk server and its shared submodule, Rust, Cargo.lock and the
+reviewed UDP address normalization. The stock upstream Windows archive is no
+longer accepted by this preparation path. Caddy 2.10.2 remains archive- and
+executable-hash pinned.
+
+Native and component workflows build the maintained Windows transport in the
+same workflow run, archive its source before compilation, and consume that run's
+artifact. Download the `swan-transport-candidate-windows-2022` artifact ZIP and
+the exact HTTPS archive named in the manifest, then prepare them with Python
+available as a build tool:
 
 ```powershell
 ./deployment/windows/Prepare-ServerComponents.ps1 `
-  -TransportPackage ./rustdesk-server-windows-x86_64-unsigned.zip `
+  -TransportPackage ./swan-transport-candidate-windows-2022.zip `
   -HttpsPackage ./caddy_2.10.2_windows_amd64.zip `
   -OutputDirectory ./prepared-server-components
 ```
 
-The destination must be new. Both archive hashes are checked before any output
-is created. Only fixed `hbbs.exe`, `hbbr.exe` and `caddy.exe` basenames are
-extracted; missing, duplicate or oversized executables are rejected. The output
-also retains Caddy's archive license, the AGPL license and public source notices.
-This does
-not execute the supplier setup program, register services, open ports, change
-DNS, or replace an existing transport deployment. An interrupted preparation
-can leave partial output; use a new destination when retrying.
+For an artifact already extracted by the CI download action, use
+`-TransportDirectory` instead of `-TransportPackage`. The four expected inputs
+retain their artifact paths (`transport-source/target/release/`,
+`transport-source/SWAN-SOURCE.json` and `transport-artifacts/`). Use
+`-PythonExecutable` for an explicit Python path. Python is a build requirement;
+the installed server and setup wizard do not require it.
 
-Archive hash verification establishes the pinned download identity. It does
-not establish a trusted Authenticode publisher or production signing approval.
-Production packaging must retain RustDesk AGPL source/license notices and
-Caddy Apache-2.0 license/notices, publish exact corresponding project and
-transport source, and pass the server lifecycle and Windows compatibility
-checks. These prepared files are build inputs, not a complete server installer.
+The destination must be new. All inputs are verified before output creation.
+The verifier rejects altered executables, changed/extra/missing source files,
+forged receipts, duplicate/unsafe archive entries, and a wrong HTTPS archive.
+Only fixed filenames are written; supplier executables are not run. The prepared
+set includes both licenses, attribution, the manifest and the complete
+`transport-build-source.zip`. That source archive is embedded in the server
+setup, retained in the installed components directory and included in removal
+ownership checks. Its ZIP metadata and text checkout line endings are normalized
+for reproducible packaging; executable bytes remain unchanged. Public build
+receipt revisions remain in the archive, separate from the digest of invariant
+compiler/recipe inputs. `component-verification.json` records preparation hashes
+outside the embedded installer payload.
+
+This is the unsigned test packaging path. The maintained Windows transport has
+separate source, binary reproducibility and IPv4/IPv6 registration evidence;
+new installer compilation, installation, full native relay sessions, the Windows
+matrix and production signing remain release gates. A new management binary
+requires its matching transport pins: do not replace an existing management
+executable alone. Preserve company data and keys, stop builds/sessions, create
+an encrypted full deployment backup and perform a coordinated administrator
+upgrade with tested rollback. Existing lab services are not changed by source
+or packaging preparation.
 
 Open the graphical wizard from an administrator Windows PowerShell session:
 

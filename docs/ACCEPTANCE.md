@@ -7612,3 +7612,29 @@ and removal scripts in both retained artifact sets. The earlier 1.5.9 archive
 predates this addition and must not be used as a repaired worker distribution.
 This packaging correction is source-reviewed; the next complete native artifact
 must verify the shipped helper files before fresh-worker installation acceptance.
+
+
+### 2026-10-29: maintained Windows transport packaging integration in progress
+
+The development server component manifest now pins the twice-reproduced
+maintained Windows `hbbs`/`hbbr` executables instead of the stock upstream
+archive. Native/component workflows depend on a maintained Windows source build
+in the same run. The preparer validates the executable hashes, all 140 source
+archive entries (139 compiler/recipe files plus a separately checked build
+receipt), pinned HTTPS input and licenses before creating output. The complete
+corresponding transport source is retained through server setup and installation.
+The management supervisor, installer and package builder agree on the new
+executable pins. Source-only ZIP metadata/text endings are normalized; executable
+bytes are not modified.
+
+Ten inert-fixture verifier tests passed, including tampered binaries/source,
+forged/mismatched receipts, unsafe/duplicate names, wrong HTTPS input, existing
+output preservation and deterministic preparation across source ZIP timestamps
+and checkout endings. YAML and PowerShell syntax checks passed locally. These
+are packaging boundary tests, not a new transport compilation or Windows server
+upgrade. The next CI run must exercise newly compiled maintained inputs and the
+actual deterministic Windows server builder. The live Server 2016 company still
+uses its previously installed stock transport and original lab-signed management;
+its repaired worker and completed package evidence remain valid. Full backup,
+coordinated maintained-stack upgrade/rollback and Windows native relay pairing
+are still pending.
