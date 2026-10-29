@@ -150,6 +150,25 @@ These restore rehearsals and migration rollback checks remain release gates.
 
 ## Isolated restore rehearsal
 
+The Server 2016 MSVC CLI from `9fa5e8a` now has a separate
+[full Windows recovery receipt](evidence/9fa5e8a-windows-full-backup-running-restore-rollback.json).
+It covers the Windows ownership receipt, management and transport keys, complete
+HTTPS storage, service environment and four installers. The authenticated restore
+was started at the existing canonical data path, verified over HTTPS with MFA and
+original public/protected downloads, then rolled back to the preserved original
+directory and verified again. No transport database existed in that source;
+this test does not prove recovery of a populated Windows transport database.
+It also does not establish different-machine recovery or schema migration rollback.
+
+The subsequent
+[maintained Windows stack upgrade](evidence/9fa5e8a-windows-maintained-stack-upgrade.json)
+retained that tested backup and switched management and pinned transport together.
+Normal binary/transport rollback and roll-forward preserved company trust and
+authorization. The database remained at schema 3; this was not a database downgrade.
+The final company stack runs the maintained transport, whose real IPv4/IPv6 UDP
+registration passes. Native relay sessions and public Internet reachability remain
+separate acceptance requirements.
+
 On29October local time, the actual Linux company at schema2 passed a management
 image upgrade, rollback and roll-forward. Its legacy archive and a new SWANBK2
 archive were each restored separately using the new binary, preserving trust,
