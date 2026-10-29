@@ -14,11 +14,16 @@ Device identity, credential hash, bootstrap trust, consent, installation identit
 release sequence and executable hashes matched the pre-test baseline throughout.
 No manual synchronization, reinstallation or enrollment was used for these changes.
 
-Both original limited-user launchers restarted while narrowly scoped management
-blocks were enabled. However, the recorded cached customer display observation
-came after the five-minute automatic unblock, so this run does **not** qualify
-full offline UI behavior. Both owned blocks were subsequently verified disabled.
-Software upgrades, key rotation and other Windows versions remain separate gates.
+The initial offline display check came after automatic recovery and did not
+qualify offline behavior. A separate revision 3 repeat restarted both original
+shipping apps under narrowly scoped management blocks, observed their cached
+native branding, then verified both blocks remained enabled and HTTPS requests
+still failed. Both blocks were disabled afterward; signed cache, identity,
+consent and executable invariants passed again. The customer restart helper hit
+a stale process-path race after stopping Home; read-only inspection and a guarded
+launch of the same original limited task completed the fixture, without product
+changes. Software upgrades, key rotation and other Windows versions remain
+separate gates.
 See the [native branding receipt](evidence/159-windows-native-branding-sync-20261030.json).
 
 ## Latest source checks, 28–29 October

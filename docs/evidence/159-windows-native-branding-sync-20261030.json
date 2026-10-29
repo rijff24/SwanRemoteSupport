@@ -25,12 +25,17 @@
   "transport_keys_policy_release_approvals_unchanged": true,
   "both_original_limited_launchers_restarted_while_management_rule_enabled": true,
   "both_temporary_management_rules_verified_disabled_after_test": true,
-  "offline_cached_ui_acceptance_complete": false,
+  "offline_cached_ui_acceptance_complete": true,
   "limits": [
-    "The five-minute automatic outage recovery preceded the recorded cached customer UI observation. Neither edition receives full offline UI acceptance from this run.",
+    "The initial revision2 outage did not qualify offline UI timing. A separate revision3 repeat verified both restarted cached displays before subsequent enabled-rule and failed-HTTPS checks; both blocks were then disabled.",
     "Software upgrade, embedded resources, key rotation, negative profile tests and other Windows versions are outside this specific test.",
     "Lab signing and same-host VM networking do not establish production signing or public Internet connectivity."
   ],
   "production_publication": false,
-  "full_product_acceptance_complete": false
+  "full_product_acceptance_complete": false,
+  "offline_repeat_revision": 3,
+  "offline_repeat_both_original_shipping_apps_restarted": true,
+  "offline_repeat_native_cached_ui_observed_before_followup_rule_and_https_failure_checks": true,
+  "offline_repeat_rules_disabled_and_signed_cache_identity_consent_binaries_reverified": true,
+  "offline_test_fixture_limitation": "The second customer restart helper stopped Home then hit a stale process-path race before relaunch. Read-only inspection confirmed only service/server/tray remained; a guarded launch of the same original limited Home task completed the restart. No product change."
 }
