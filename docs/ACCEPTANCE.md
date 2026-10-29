@@ -63,11 +63,31 @@ Swan's Insert Ctrl+Alt+Del action opened the Windows password field; masked inpu
 of the owned lab password restored the desktop. The same original attended grant
 remained live afterward, with no replacement grant or reconnect. Closing the test
 then closed that grant and left no live lease. This is attended lock/unlock, not
-unattended reboot-to-logon qualification. UAC was inspected but not qualified:
+unattended reboot-to-logon qualification. At that checkpoint, UAC was inspected:
 EnableLUA and secure-desktop prompting are enabled, while the built-in
 Administrator account has no configured token filtering. A standard-user desktop
 is required for the separate meaningful UAC test. See the
 [lock/unlock receipt](evidence/159-windows-attended-lock-unlock-20261029.json).
+
+The subsequent native1.5.9 UAC test passed on a newly created standard customer
+account, with the technician also running under its standard account. The
+customer approved the session on its current desktop after a normal user switch;
+the prior Administrator desktop remained available. A limited interactive probe
+verified that its actual customer token had no Administrators SID, then requested
+RunAs for Microsoft Notepad. The genuine credential UAC prompt was visible on the
+secure desktop through Swan. Masked input of the owned lab Administrator password
+and approval launched Notepad in the same customer session. Independent token
+queries verified elevation and high integrity (`S-1-16-12288`). Remote input into
+that elevated app produced a saved 33-byte marker with the expected hash. The
+original attended grant stayed live across elevation and input. The standard
+customer then disconnected successfully; the original grant closed, no live
+lease remained, and the elevated probe was closed. UAC settings, device
+credential/approval, release/profile revisions and consent were preserved.
+An initial test-helper token query used an oversized buffer and failed with
+Windows error24; the corrected four-byte query verified the existing process
+without repeating elevation. This qualifies this credential-prompt scenario on
+Server 2016, not all UAC scenarios or Windows versions. See the
+[standard-customer UAC receipt](evidence/159-windows-standard-customer-uac-20261029.json).
 
 Installation reporting is now being implemented after the completed recovery
 checkpoint. The new shared report contract, authenticated management endpoints,
