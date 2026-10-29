@@ -7594,7 +7594,8 @@ sessions with these new packages, automatic rollout, full Windows deployment
 restore, maintained Windows transport distribution or production signing.
 The five endpoint packages/signatures and repaired worker used only the existing
 nonexportable disposable lab key; no private signing key left its owning VM.
-The original Linux company and frozen older company VM were not changed.
+The original Linux company configuration, device state and release approvals
+were retained; the frozen older company VM was not touched.
 
 The three original unsigned Windows component executables also matched byte for
 byte across the existing push and pull-request CI jobs. The PR merge tree equals
@@ -7603,3 +7604,11 @@ Shipping bytes were not normalized and no extra build was dispatched for this
 comparison. This is reproducibility evidence for these three components under
 those two jobs, not completion of the independent 1.5.9 native rebuild gate. See
 [component comparison](evidence/1c43a38-windows-components-independent.json).
+
+
+The next native artifact recipe now includes the private configuration reader,
+explicit worker migration script and directory helper beside the worker install
+and removal scripts in both retained artifact sets. The earlier 1.5.9 archive
+predates this addition and must not be used as a repaired worker distribution.
+This packaging correction is source-reviewed; the next complete native artifact
+must verify the shipped helper files before fresh-worker installation acceptance.
