@@ -132,6 +132,21 @@ These restore rehearsals and migration rollback checks remain release gates.
 
 ## Isolated restore rehearsal
 
+On29October local time, the actual Linux company at schema2 passed a management
+image upgrade, rollback and roll-forward. Its legacy archive and a new SWANBK2
+archive were each restored separately using the new binary, preserving trust,
+MFA, five devices, consent, all16 installers and actual public/protected download
+behavior. Restore copies were stopped without cloned transport. See the
+[scoped receipt](evidence/67b5c69-company-backup-and-rollback.json).
+
+The generated513MiB CLI fixture additionally passed a512MiB address-space cap,
+ordinary write-error cleanup, a real SIGKILL during authenticated restore staging,
+and successful retry. Interrupted contents were not published; leftover plaintext
+staging retained private permissions and was not silently deleted by the retry.
+The fixture explicitly cleaned its own remnants afterward. A file-size limit
+injected the write error; this was not a full-filesystem or host-power-loss test.
+Windows full-company restore and future schema-downgrade recovery remain separate.
+
 `node deployment/windows/test-server-restore.js ORIGINAL_PRIVATE_ENV
 RESTORED_PRIVATE_ENV` checks two separately running local HTTPS test servers.
 Use only the isolated fixture created by `test-company-lifecycle.js`; its private

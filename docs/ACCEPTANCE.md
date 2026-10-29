@@ -6,6 +6,60 @@ native support session or a clean-machine installation.
 
 ## Latest source checks, 28–29 October
 
+Installation reporting is now being implemented after the completed recovery
+checkpoint. The new shared report contract, authenticated management endpoints,
+paginated status page and schema3 migration are source changes under verification;
+the running Linux lab remains on source67/schema2. Browser contract checks passed
+for escaping, progress, pagination and sign-out response isolation. Rust/HTTP and
+migration checks are pending. Customer/technician senders are not yet connected,
+so no real automatic-reporting or rollout-progress result is claimed. See
+[installation reporting](INSTALLATION_STATUS.md).
+
+The current Linux company management service now runs source `67b5c69` after
+an actual upgrade, rollback and roll-forward with its unchanged schema2 database.
+Each phase preserved the signed company profile/trust, all five device records,
+consent, authorized technician inventory, release approvals and group capabilities.
+An unassigned technician saw no devices and received403 for a session request in
+every phase. Existing MFA sessions survived; a fresh administrator MFA login passed
+after the final upgrade. HTTPS and maintained rendezvous/relay containers stayed
+unchanged. A preflight guard caught a stale local Compose copy referring to stock
+transport; it stopped before mutation. Both originals were preserved, and the
+active Linux recipe became the baseline for both upgrade and rollback. Endpoint
+VMs stayed off and their installed software was not changed by this maintenance.
+
+Both the preceding legacy full-company backup and a new SWANBK2 full-company
+backup restored independently through the new image. Each recovered the active
+signing key, original HTTPS trust/configuration, MFA, five devices, consent,
+approvals and all16 service-readable installers. Actual customer downloads were
+public200, technician downloads401 without login and200 with login, matching the
+original bundle hashes; withdrawn downloads remained404. Both recovery copies
+were stopped and retained without cloned transport. The new encrypted backup is
+502,466,702 bytes, SHA-256
+`7863932fc3d4b9cebdb6e4d1ee4e07892b680adf191bdc8de951246ff7cb826d`;
+its passphrase remains separate and private. The original company is healthy.
+
+The real management CLI also passed a generated513MiB incompressible backup and
+restore under a512MiB address-space cap. A real per-file-size write failure left
+no completed archive or ordinary staging. SIGKILL after authenticated plaintext
+reached private restore staging left the destination unpublished; a retry preserved
+the file hash and identity. Forced-stop remnants stayed private until the fixture
+explicitly removed them. This is process-interruption and write-limit evidence,
+not host power-loss or filesystem-exhaustion qualification. Corrected Windows,
+Linux and complete Linux deployment checks at `26aea83` all passed on push and
+PR runs. See the [backup/rollback receipt](evidence/67b5c69-company-backup-and-rollback.json).
+
+Two independent CI builds at `67b5c69` produced byte-identical management, agent
+and worker executables on each of Ubuntu24.04 and Windows2022. All230 archived
+public source files per build were verified against Git objects across the four
+builds; shipping binaries were never normalized. The source67 deployment workflow
+had a test-header assertion failure, fixed separately before the later deployment
+checks passed. Binary reproducibility is scoped separately from deployment and
+runtime acceptance. See the [component comparison](evidence/67b5c69-component-reproduction.json).
+The native Windows67 build and its installed identity/reconnect/audit checks
+remain outstanding. Automatic approval review blocked preparing/running the
+background independent-rebuild controller with “blocked by policy”; fresh approval
+for one independent build is pending. No controller or duplicate build was started.
+
 The streamed backup implementation at `67b5c69` passed both Windows and Linux
 component verification on push and PR jobs. Windows explicitly exported and
 restored a 513 MiB incompressible artifact with matching size/hash and retained
@@ -17,9 +71,9 @@ compatibility, invalid paths, CRC failure and ordinary failure cleanup are also
 covered. The original image context check caught the new source missing from the
 Docker allowlist; that is fixed. The corrected image built locally. A deployment
 rehearsal then stopped at its obsolete SWANBK1-header assertion, updated at
-`eaa30b6`; rerun results remain pending. See the
+`eaa30b6`; the corrected deployment rehearsals passed at `26aea83`. See the
 [streamed backup component receipt](evidence/67b5c69-streamed-backup-component-checks.json).
-These checks do not establish full-company recovery or an interrupted restore.
+The component checks alone did not establish full-company recovery or an interrupted restore; the subsequent bounded runtime results are recorded above.
 
 The current company was backed up before any management upgrade, retaining all
 16 installer bundles (502,388,268 bytes). Its encrypted legacy archive is
@@ -27,8 +81,8 @@ The current company was backed up before any management upgrade, retaining all
 `06c5ba80a5d15b9037e0f81d76e199c4200ef1424d6d54f547eaaa4f65203e0c`.
 Its passphrase remains separate and private. The original company was restarted
 and passed health checks. Both previously active endpoint VMs shut down normally;
-their test files and disks remain available. A separate candidate restore is
-queued without upgrading the original company or starting cloned transport.
+their test files and disks remain available. The subsequent isolated restores and guarded management upgrade are recorded
+above; no cloned native transport was started.
 The identity-only native build `649682a` succeeded; the newer `67b5c69` native
 build, including the retry/audit guards, remains in progress.
 

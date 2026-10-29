@@ -6,6 +6,9 @@ use ed25519_dalek::{Signature, Signer, SigningKey, VerifyingKey};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
+pub mod installation;
+pub use installation::{InstallationIdentity,InstallationReport,UpdatePhase};
+
 pub const SCHEMA: u32 = 1;
 pub const PRODUCT: &str = "Swan Remote Support";
 pub const WIRE_PREFIX: &[u8] = b"SWAN1:";

@@ -12,6 +12,9 @@ use swan_protocol::*;
 use totp_rs::{Algorithm, Secret, TOTP};
 use uuid::Uuid;
 
+#[path="installation_reporting.rs"]
+mod installation_reporting;
+
 pub struct Store {
     _process_lock: std::fs::File,
     db: Mutex<Connection>,
@@ -79,13 +82,15 @@ impl Store {
         db.pragma_update(None,"foreign_keys","ON")?;
         db.busy_timeout(std::time::Duration::from_secs(5))?;
         let version:u32=db.pragma_query_value(None,"user_version",|r|r.get(0))?;
-        ensure!(version<=2,"Database was created by a newer server; restore the pre-upgrade backup rather than downgrading it");
-        if version==1 {
+        ensure!(version<=3,"Database was created by a newer server; restore the pre-upgrade backup rather than downgrading it");
+        if version==1 || version==2 {
             let password=backup_password.ok_or_else(||anyhow::anyhow!("Schema upgrade requires SWAN_BACKUP_PASSPHRASE in private environment configuration for an encrypted pre-upgrade backup"))?;
-            crate::backup::export(directory,&directory.join(format!("pre-upgrade-v1-{}.swan-backup",random_token())),password)?;
+            crate::backup::export(directory,&directory.join(format!("pre-upgrade-v{version}-{}.swan-backup",random_token())),password)?;
         }
-        db.execute_batch(include_str!("schema.sql"))?;
-        db.execute("INSERT OR IGNORE INTO profile_signing_keys(id,active_hex) VALUES(1,?1)",[hex::encode(key_bytes)])?;
+        let migration=db.unchecked_transaction()?;
+        migration.execute_batch(include_str!("schema.sql"))?;
+        migration.execute("INSERT OR IGNORE INTO profile_signing_keys(id,active_hex) VALUES(1,?1)",[hex::encode(key_bytes)])?;
+        migration.commit()?;
         let active_hex:String=db.query_row("SELECT active_hex FROM profile_signing_keys WHERE id=1",[],|row|row.get(0))?;
         let key=signing_key_from_hex(&active_hex)?;
         let artifact_dir=directory.join("artifacts");std::fs::create_dir_all(&artifact_dir)?;
@@ -176,6 +181,8 @@ pub fn router(store:Shared)->Router {
         .route("/api/v1/users",get(users).post(create_user))
         .route("/api/v1/users/{id}/disable",post(disable_user))
         .route("/api/v1/enroll",post(enroll))
+        .route("/api/v1/installations",get(installation_reporting::reports))
+        .route("/api/v1/installations/report",get(installation_reporting::own_report).post(installation_reporting::report))
         .route("/api/v1/devices",get(devices))
         .route("/api/v1/devices/{id}/state",put(device_state))
         .route("/api/v1/device/consent",put(consent))

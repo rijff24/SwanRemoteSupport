@@ -1,5 +1,7 @@
 'use strict';
 let accessToken='';
+let viewGeneration=0,installationTimer=null;
+function stopInstallationRefresh(){if(installationTimer!==null){clearTimeout(installationTimer);installationTimer=null;}}
 const content=document.querySelector('#content');
 const notice=document.querySelector('#notice');
 const escapeText=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -25,10 +27,11 @@ function readShortcuts(values,edition) {
   return labels.flatMap((label,index)=>{const url=urls[index];if(!label.trim()&&!url.trim())return [];if(!label.trim()||!url.trim())throw new Error('Each website shortcut needs a name and an HTTPS address.');return [{label,url}];});
 }
 async function api(path,method='GET',body,token=accessToken){
-  const response=await fetch('/api/v1/'+path,{method,headers:{'Content-Type':'application/json',...(token?{Authorization:'Bearer '+token}:{})},body:body===undefined?undefined:JSON.stringify(body),redirect:'error'});
-  const result=await response.json();if(!response.ok)throw new Error(result.error||'Request failed');return result;
+  const generation=viewGeneration;
+  const response=await fetch('/api/v1/'+path,{method,headers:{'Content-Type':'application/json',...(token?{Authorization:'Bearer '+token}:{})},body:body===undefined?undefined:JSON.stringify(body),redirect:'error',cache:'no-store'});
+  const result=await response.json();if(generation!==viewGeneration)throw Object.assign(new Error('The page changed before this request finished.'),{superseded:true});if(!response.ok)throw new Error(result.error||'Request failed');return result;
 }
-function showError(error){notice.textContent=error.message;}
+function showError(error){if(!error.superseded)notice.textContent=error.message;}
 function bindForm(id,callback){document.querySelector('#'+id).addEventListener('submit',async event=>{event.preventDefault();notice.textContent='';const button=event.target.querySelector('button[type=submit]');if(button)button.disabled=true;try{await callback(new FormData(event.target));}catch(error){showError(error);}finally{if(button)button.disabled=false;}});}
 function field(name,label,type='text',value=''){return `<label for="${name}">${label}</label><input id="${name}" name="${name}" type="${type}" value="${escapeText(value)}" required>`;}
 function title(text,description=''){document.querySelector('#title').textContent=text;document.querySelector('#description').textContent=description;}
@@ -46,9 +49,37 @@ function setupScreen(brand){
   bindProfileFields();
   bindForm('setup',async values=>{readProfileFields(profile,values);profile.management_url=values.get('url').replace(/\/$/,'');profile.rendezvous=values.get('rendezvous');profile.relay=values.get('relay');profile.transport_public_key=values.get('key');await api('setup','POST',{profile,username:values.get('username'),password:values.get('password'),totp_secret:secret,totp_code:values.get('code')},values.get('setup_token'));loginScreen();notice.textContent='Server configured. Wait for the next authenticator code, then sign in.';});
 }
-function loginScreen(){title('Sign in to your company server','Administrator and technician accounts require an authenticator code.');document.querySelector('#nav').hidden=true;content.innerHTML=`<form class="card" id="login">${field('username','Username')}${field('password','Password','password')}${field('code','Authenticator code')}<button type="submit">Sign in</button><p class="muted">Your session stays in this page’s memory and expires after one hour.</p></form>`;bindForm('login',async values=>{const login=await api('login','POST',{username:values.get('username'),password:values.get('password'),totp_code:values.get('code')});accessToken=login.token;document.querySelector('#nav').hidden=false;await view('devices');});}
-async function view(name){notice.textContent='';for(const button of document.querySelectorAll('[data-view]'))button.classList.toggle('active',button.dataset.view===name);try{await screens[name]();}catch(error){showError(error);}}
+function loginScreen(){viewGeneration++;stopInstallationRefresh();title('Sign in to your company server','Administrator and technician accounts require an authenticator code.');document.querySelector('#nav').hidden=true;content.innerHTML=`<form class="card" id="login">${field('username','Username')}${field('password','Password','password')}${field('code','Authenticator code')}<button type="submit">Sign in</button><p class="muted">Your session stays in this page’s memory and expires after one hour.</p></form>`;bindForm('login',async values=>{const login=await api('login','POST',{username:values.get('username'),password:values.get('password'),totp_code:values.get('code')});accessToken=login.token;document.querySelector('#nav').hidden=false;await view('devices');});}
+async function view(name){const generation=++viewGeneration;stopInstallationRefresh();notice.textContent='';for(const button of document.querySelectorAll('[data-view]'))button.classList.toggle('active',button.dataset.view===name);try{await screens[name](generation);}catch(error){if(generation===viewGeneration)showError(error);}}
+const installationPhases={current:'Installed',checking:'Checking for updates',downloading:'Downloading update',preparing:'Preparing update',installing:'Installing update',recovering:'Recovering update',deferred:'Update deferred',failed:'Update needs attention'};
+function installationRows(rows){
+  return rows.map(row=>{
+    const report=row.report||{},received=Number(row.received_at),date=new Date(received*1000);
+    const stamp=Number.isFinite(received)&&!Number.isNaN(date.getTime())?date.toLocaleString():'Unknown';
+    const old=Number.isFinite(received)&&Date.now()/1000-received>900;
+    const total=report.total_bytes,done=report.downloaded_bytes;
+    const progress=['downloading','preparing'].includes(report.phase)&&Number.isSafeInteger(total)&&total>0&&total<=4294967296&&Number.isSafeInteger(done)&&done>=0&&done<=total?`<progress max="${total}" value="${done}"></progress><small>${Math.floor(done*100/total)}%</small>`:'';
+    return `<tr><td>${escapeText(row.owner_name)}<small>${row.edition==='technician'?'Technician app':'Customer app'} · ${escapeText(row.owner_state)}</small></td><td>${escapeText(report.installed_version||'Not yet recorded')}</td><td>${escapeText(installationPhases[report.phase]||'Unknown update status')}${progress}</td><td>${escapeText(stamp)}${old?'<small>Report is over 15 minutes old</small>':''}</td></tr>`;
+  }).join('');
+}
 const screens={
+  async installations(generation){
+    title('Installed versions and updates','Versions and progress reported by your company’s apps. This page refreshes every 10 seconds.');
+    let requestNumber=0;
+    const load=async offset=>{
+      if(generation!==viewGeneration||!accessToken)return;
+      const number=++requestNumber;stopInstallationRefresh();
+      const page=await api('installations?offset='+encodeURIComponent(offset));
+      if(generation!==viewGeneration||number!==requestNumber||!accessToken)return;
+      const next=Number.isSafeInteger(page.next_offset)&&page.next_offset>=0?page.next_offset:null;
+      content.innerHTML=`<div class="card"><div class="actions"><button id="installation-refresh" class="secondary">Refresh latest</button><button id="installation-next" class="secondary" ${next===null?'disabled':''}>Next page</button></div><table><thead><tr><th>Installation</th><th>Reported version</th><th>Update status</th><th>Last report</th></tr></thead><tbody>${installationRows(page.reports)}</tbody></table>${page.reports.length?'':'<p>No installation reports yet. Apps report after enrollment or technician sign-in.</p>'}</div>`;
+      const failed=error=>{if(generation===viewGeneration&&accessToken)showError(error);};
+      document.querySelector('#installation-refresh').onclick=()=>load(0).catch(failed);
+      document.querySelector('#installation-next').onclick=()=>{if(next!==null)return load(next).catch(failed);};
+      installationTimer=setTimeout(()=>{installationTimer=null;load(offset).catch(failed);},10000);
+    };
+    await load(0);
+  },
   async network(){
     title('Company network','Configure company-owned public endpoints and check them from this server. External access needs a separate test.');
     const envelope=await api('profile');
@@ -100,5 +131,5 @@ const screens={
   async audit(){title('Audit history','Account, enrollment, permission, release and session events.');const rows=await api('audit');content.innerHTML=`<div class="card"><table><thead><tr><th>Time</th><th>Event</th><th>Actor</th><th>Target</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${escapeText(new Date(r.at*1000).toISOString())}</td><td>${escapeText(r.event)}</td><td>${escapeText(r.actor)}</td><td>${escapeText(r.target)}</td></tr>`).join('')}</tbody></table></div>`;}
 };
 for(const button of document.querySelectorAll('[data-view]'))button.onclick=()=>view(button.dataset.view);
-document.querySelector('#logout').onclick=async()=>{try{await api('logout','POST');}catch{}accessToken='';loginScreen();};
+document.querySelector('#logout').onclick=async()=>{const token=accessToken;accessToken='';loginScreen();try{await api('logout','POST',undefined,token);}catch{}};
 initialize();

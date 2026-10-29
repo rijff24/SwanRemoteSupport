@@ -1,0 +1,241 @@
+{
+  "recorded_utc": "2026-10-28T23:41:16.160472+00:00",
+  "application_source": "67b5c69ca62feadf7ecf57d835a79c3d2da19dd2",
+  "recovery_test_source": "26aea8396a69dfec84504acc8323114b4a29aea7",
+  "schema_version": 2,
+  "local_image": "sha256:ab620feb37fc26b8066799dd19508803752431d353a7c0ae06c1218f5f7982ab",
+  "generated_fixture_recovery": {
+    "actual_management_cli": true,
+    "format": "SWANBK2",
+    "maximum_virtual_address_space_bytes_per_cli_process": 536870912,
+    "incompressible_artifact_bytes": 537919488,
+    "encrypted_backup_bytes": 538013267,
+    "artifact_sha256_preserved": "970b25894496dad79f41dd988eccf43d80f30febecd900b6a8b08ff800372f6d",
+    "identity_keys_and_setup_token_preserved": true,
+    "sqlite_integrity_passed": true,
+    "private_unix_permissions_passed": true,
+    "write_size_failure_rejected_and_cleaned": true,
+    "restore_sigkill_after_authenticated_staging": true,
+    "interrupted_restore_target_unpublished": true,
+    "retry_preserved_artifact_hash_and_identity": true,
+    "forced_stop_remnants_private_and_preserved_until_explicit_fixture_cleanup": true,
+    "temporary_archive_cleanup_passed": true,
+    "production_qualification": false,
+    "candidate_source": "67b5c69ca62feadf7ecf57d835a79c3d2da19dd2",
+    "candidate_image": "sha256:ab620feb37fc26b8066799dd19508803752431d353a7c0ae06c1218f5f7982ab",
+    "test_source": "26aea8396a69dfec84504acc8323114b4a29aea7"
+  },
+  "actual_company_legacy_restore": {
+    "utc": "2026-10-28T23:14:10.372971+00:00",
+    "candidate_source": "67b5c69ca62feadf7ecf57d835a79c3d2da19dd2",
+    "candidate_image": "sha256:ab620feb37fc26b8066799dd19508803752431d353a7c0ae06c1218f5f7982ab",
+    "legacy_v1_backup_read_by_new_v2_capable_binary": true,
+    "restored_https_original_ca_and_hostname": true,
+    "restored_active_signing_key_from_database": true,
+    "legacy_seed_unchanged": true,
+    "profile_revision": 14,
+    "administrator_mfa": true,
+    "device_approval_identity_and_revoked_consent_preserved": true,
+    "withdrawn_downloads": [
+      {
+        "edition": "customer",
+        "withdrawn_download_status": 404
+      },
+      {
+        "edition": "technician",
+        "withdrawn_download_status": 404
+      }
+    ],
+    "all_five_device_records_preserved": true,
+    "all_sixteen_installer_artifacts_readable_by_service_uid": true,
+    "current_proxy_configuration_and_complete_tls_match": true,
+    "current_bundle_downloads": [
+      {
+        "edition": "customer",
+        "authenticated": false,
+        "status": 200,
+        "hash_matched": true
+      },
+      {
+        "edition": "customer",
+        "authenticated": true,
+        "status": 200,
+        "hash_matched": true
+      },
+      {
+        "edition": "technician",
+        "authenticated": false,
+        "status": 401,
+        "hash_matched": false
+      },
+      {
+        "edition": "technician",
+        "authenticated": true,
+        "status": 200,
+        "hash_matched": true
+      }
+    ],
+    "release_approvals_match_backup": true,
+    "failed_152_downloads_still_withdrawn": true,
+    "no_native_transport_started": true,
+    "native_session_qualified": false
+  },
+  "actual_management_upgrade_rollback_and_rollforward": {
+    "utc": "2026-10-28T23:29:00.959500+00:00",
+    "old_source": "761b5c56cca8cd7eecb65d3438de0d6f0075bd4e",
+    "new_source": "67b5c69ca62feadf7ecf57d835a79c3d2da19dd2",
+    "old_image": "sha256:72defbd524e10f0b4b08e53234c04ce9a6d3b7d54dbcee41943b5baca7666871",
+    "new_image": "sha256:ab620feb37fc26b8066799dd19508803752431d353a7c0ae06c1218f5f7982ab",
+    "database_schema_unchanged": true,
+    "actual_upgrade_rollback_and_rollforward": true,
+    "new_admin_mfa_login_after_final_upgrade": true,
+    "phases": [
+      {
+        "phase": "baseline",
+        "image": "sha256:72defbd524e10f0b4b08e53234c04ce9a6d3b7d54dbcee41943b5baca7666871",
+        "utc": "2026-10-28T23:28:47.845640+00:00",
+        "https_and_transport_containers_unchanged": true,
+        "signed_profile_trust_and_revision_preserved": true,
+        "all_five_device_records_and_consent_preserved": true,
+        "authorized_and_unassigned_technician_permissions_preserved": true,
+        "unassigned_session_request_status": 403,
+        "existing_mfa_sessions_survived": true,
+        "release_approvals_and_group_capabilities_preserved": true
+      },
+      {
+        "phase": "upgraded",
+        "image": "sha256:ab620feb37fc26b8066799dd19508803752431d353a7c0ae06c1218f5f7982ab",
+        "utc": "2026-10-28T23:28:54.346527+00:00",
+        "https_and_transport_containers_unchanged": true,
+        "signed_profile_trust_and_revision_preserved": true,
+        "all_five_device_records_and_consent_preserved": true,
+        "authorized_and_unassigned_technician_permissions_preserved": true,
+        "unassigned_session_request_status": 403,
+        "existing_mfa_sessions_survived": true,
+        "release_approvals_and_group_capabilities_preserved": true
+      },
+      {
+        "phase": "rolled-back",
+        "image": "sha256:72defbd524e10f0b4b08e53234c04ce9a6d3b7d54dbcee41943b5baca7666871",
+        "utc": "2026-10-28T23:28:57.178009+00:00",
+        "https_and_transport_containers_unchanged": true,
+        "signed_profile_trust_and_revision_preserved": true,
+        "all_five_device_records_and_consent_preserved": true,
+        "authorized_and_unassigned_technician_permissions_preserved": true,
+        "unassigned_session_request_status": 403,
+        "existing_mfa_sessions_survived": true,
+        "release_approvals_and_group_capabilities_preserved": true
+      },
+      {
+        "phase": "rolled-forward",
+        "image": "sha256:ab620feb37fc26b8066799dd19508803752431d353a7c0ae06c1218f5f7982ab",
+        "utc": "2026-10-28T23:28:59.687333+00:00",
+        "https_and_transport_containers_unchanged": true,
+        "signed_profile_trust_and_revision_preserved": true,
+        "all_five_device_records_and_consent_preserved": true,
+        "authorized_and_unassigned_technician_permissions_preserved": true,
+        "unassigned_session_request_status": 403,
+        "existing_mfa_sessions_survived": true,
+        "release_approvals_and_group_capabilities_preserved": true
+      }
+    ],
+    "pre_upgrade_backup_sha256": "06c5ba80a5d15b9037e0f81d76e199c4200ef1424d6d54f547eaaa4f65203e0c",
+    "independent_backup_restore_passed_before_upgrade": true,
+    "native_clients_not_upgraded": true,
+    "windows_company_server_not_touched": true,
+    "no_production_publication": true
+  },
+  "actual_company_new_backup": {
+    "utc": "2026-10-28T23:31:28.563719+00:00",
+    "format": "SWANBK2",
+    "source": "67b5c69ca62feadf7ecf57d835a79c3d2da19dd2",
+    "bytes": 502466702,
+    "sha256": "7863932fc3d4b9cebdb6e4d1ee4e07892b680adf191bdc8de951246ff7cb826d",
+    "separate_passphrase": true,
+    "installer_artifact_count": 16,
+    "installer_artifact_bytes": 502388268,
+    "profile_revision": 14,
+    "no_additional_management_upgrade_executed": true,
+    "restore_validation_pending": false
+  },
+  "actual_company_new_restore": {
+    "utc": "2026-10-28T23:33:28.282941+00:00",
+    "backup_format": "SWANBK2",
+    "candidate_source": "67b5c69ca62feadf7ecf57d835a79c3d2da19dd2",
+    "candidate_image": "sha256:ab620feb37fc26b8066799dd19508803752431d353a7c0ae06c1218f5f7982ab",
+    "new_v2_full_company_backup_authenticated_and_restored": true,
+    "restored_https_original_ca_and_hostname": true,
+    "restored_active_signing_key_from_database": true,
+    "legacy_seed_unchanged": true,
+    "profile_revision": 14,
+    "administrator_mfa": true,
+    "device_approval_identity_and_revoked_consent_preserved": true,
+    "withdrawn_downloads": [
+      {
+        "edition": "customer",
+        "withdrawn_download_status": 404
+      },
+      {
+        "edition": "technician",
+        "withdrawn_download_status": 404
+      }
+    ],
+    "all_five_device_records_preserved": true,
+    "all_sixteen_installer_artifacts_readable_by_service_uid": true,
+    "current_proxy_configuration_and_complete_tls_match": true,
+    "current_bundle_downloads": [
+      {
+        "edition": "customer",
+        "authenticated": false,
+        "status": 200,
+        "hash_matched": true
+      },
+      {
+        "edition": "customer",
+        "authenticated": true,
+        "status": 200,
+        "hash_matched": true
+      },
+      {
+        "edition": "technician",
+        "authenticated": false,
+        "status": 401,
+        "hash_matched": false
+      },
+      {
+        "edition": "technician",
+        "authenticated": true,
+        "status": 200,
+        "hash_matched": true
+      }
+    ],
+    "release_approvals_match_backup": true,
+    "failed_152_downloads_still_withdrawn": true,
+    "no_native_transport_started": true,
+    "native_session_qualified": false
+  },
+  "both_restore_copies_stopped_and_storage_retained": true,
+  "original_company_healthy_after_new_format_export": true,
+  "corrected_deployment_ci": {
+    "source": "26aea8396a69dfec84504acc8323114b4a29aea7",
+    "push_run": 40785509496,
+    "pull_request_run": 40785514273,
+    "all_six_windows_linux_component_and_linux_deployment_jobs_succeeded": true,
+    "jobs": [
+      123157680332,
+      123157680607,
+      123157680933,
+      123157690681,
+      123157691089,
+      123157691218
+    ]
+  },
+  "limits": [
+    "Management image rollback used the unchanged schema2 database; it does not qualify a future schema downgrade.",
+    "Forced interruption used SIGKILL during actual authenticated restore staging on generated fixture data; it is not a host power-loss test.",
+    "Write-failure injection used a per-file size limit, not exhaustion of the host filesystem.",
+    "Current-company restores verified HTTPS, management state, consent and actual installer access/hashes without starting cloned transport or native sessions.",
+    "Windows full-company restore and final native session/install/update qualification remain open.",
+    "No production signing or publication."
+  ]
+}

@@ -13,6 +13,7 @@ product/protocol/**
 !product/protocol/src/
 product/protocol/src/**
 !product/protocol/src/lib.rs
+!product/protocol/src/installation.rs
 !product/agent/
 product/agent/**
 !product/agent/Cargo.toml
@@ -31,6 +32,7 @@ product/management/**
 product/management/src/**
 !product/management/src/main.rs
 !product/management/src/service.rs
+!product/management/src/installation_reporting.rs
 !product/management/src/network.rs
 !product/management/src/backup.rs
 !product/management/src/backup_stream.rs

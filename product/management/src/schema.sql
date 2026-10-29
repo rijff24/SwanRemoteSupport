@@ -11,4 +11,6 @@ CREATE TABLE IF NOT EXISTS builds(id TEXT PRIMARY KEY,body TEXT NOT NULL,state T
 CREATE TABLE IF NOT EXISTS group_permissions(group_id TEXT PRIMARY KEY,body TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS device_consent_revisions(device_id TEXT PRIMARY KEY REFERENCES devices(id),revision INTEGER NOT NULL);
 CREATE TABLE IF NOT EXISTS profile_signing_keys(id INTEGER PRIMARY KEY CHECK(id=1),active_hex TEXT NOT NULL,pending_hex TEXT);
-PRAGMA user_version=2;
+CREATE TABLE IF NOT EXISTS installation_reports(owner_kind TEXT NOT NULL CHECK(owner_kind IN ('customer','technician')),owner_id TEXT NOT NULL,installation_id TEXT NOT NULL,revision INTEGER NOT NULL CHECK(revision>0),received_at INTEGER NOT NULL,body TEXT NOT NULL,PRIMARY KEY(owner_kind,owner_id,installation_id));
+CREATE INDEX IF NOT EXISTS installation_reports_received ON installation_reports(received_at DESC);
+PRAGMA user_version=3;

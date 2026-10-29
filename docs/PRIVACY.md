@@ -4,6 +4,8 @@ This is the configurable product's technical privacy description. Each hosting c
 
 The company server stores administrator/technician accounts, password hashes, TOTP authentication secrets, device enrollment records, group permissions, authorization/session history, audit events and update/build metadata. Devices keep their unique enrollment credentials and signed cached company configuration. Installer bootstrap files contain public company endpoint and trust information only.
 
+Installed apps that support update reporting send their installation identity, reported version, update phase and bounded progress to their configured company server. The server records receipt time; administrators and authorized technicians can view status within their permissions. These reports are informational, contain no screen content, passwords or local file paths, and do not grant support access. See [installation reporting](INSTALLATION_STATUS.md) for the current implementation boundary.
+
 Customer approval is the default session mode. Unattended support requires separate explicit consent and company policy permission. Revocation is saved locally before server synchronization; the receiver must deny subsequent unattended access when consent is absent. Customer-visible support status, stop controls and uninstall remain acceptance requirements. Session recording is disabled by default.
 
 An authorized remote session may expose screen content, input, clipboard contents, transferred files, audio and system information according to its permissions. Companies must explain the support scope to their customers. Technician authorization is verified by signed grants and receiving devices; a company download is not itself permission to access a device.

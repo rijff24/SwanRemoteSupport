@@ -194,6 +194,15 @@ required for this candidate.
 
 ### Company component comparisons
 
+The `67b5c69` management, agent and worker binaries also matched byte-for-byte
+between independent push/PR jobs on each of Ubuntu24.04 and Windows2022. All230
+public component source files in each of the four input archives matched Git
+objects; only declared source checkout line endings were handled, and executable
+bytes were never normalized. See the [comparison receipt](evidence/67b5c69-component-reproduction.json).
+The source67 deployment job's obsolete backup-header assertion failed separately;
+corrected deployment checks later passed at `26aea83`. Neither component equality
+nor source verification qualifies final native packages or production signing.
+
 Two independent Ubuntu 24.04 CI jobs for the component inputs reviewed at
 `9f97ef0` produced identical management, agent and worker binaries. Their full
 component input archives were checked against the public source, and all 130
