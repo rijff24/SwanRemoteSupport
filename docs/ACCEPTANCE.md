@@ -110,6 +110,22 @@ scenario, not every Windows version, public connectivity, power-loss recovery or
 multiple monitors. See the
 [unattended reboot/logon/revocation receipt](evidence/159-windows-unattended-reboot-logon-revocation-20261029.json).
 
+A further Windows recovery check found that the maintained rendezvous build's
+Windows default stores its peer database in the RustDesk LocalService profile,
+outside company transport storage. The populated-database backup preflight
+stopped without producing an archive, and both company/worker services resumed.
+Earlier backup receipts correctly recorded the database as absent; they qualify
+key/configuration recovery, not recovery of the actual external peer records.
+The candidate launcher now supplies an explicit company `DB_URL`; startup and
+full transport export refuse an unmigrated legacy database. An explicit offline
+migration command preserves source files and keys, recovers committed WAL data
+in private staging, checks integrity and refuses an existing destination or
+running management process. Six Linux transport/storage regressions passed
+after a clean package rebuild; an earlier cached test run was not counted.
+Windows writer-exclusion checks, compiled migration, new populated backup and
+actual recovery remain release gates. See the
+[Windows transport storage finding](evidence/windows-transport-database-storage-finding-20261029.json).
+
 Installation reporting is now being implemented after the completed recovery
 checkpoint. The new shared report contract, authenticated management endpoints,
 paginated status page and schema3 migration are source changes under verification;

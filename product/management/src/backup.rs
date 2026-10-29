@@ -94,6 +94,54 @@ fn snapshot_transport(directory:&Path,data:&Path,destination:&Path)->Result<()> 
     std::fs::remove_dir(&staging).context("Remove private transport backup staging directory")?;
     result
 }
+
+pub fn migrate_transport_database(data:&Path,source:&Path)->Result<()> {
+    ensure!(data.is_absolute() && source.is_absolute(),"Company and source directories must be absolute");
+    let transport=data.join("transport");
+    for directory in [data,source,transport.as_path()] {
+        for parent in directory.ancestors() {
+            let metadata=std::fs::symlink_metadata(parent)?;
+            ensure!(metadata.is_dir() && !metadata.file_type().is_symlink(),"Migration directories must not contain links");
+            #[cfg(windows)] {use std::os::windows::fs::MetadataExt;ensure!(metadata.file_attributes()&0x400==0,"Migration directories must not contain reparse points");}
+        }
+    }
+    for path in [data.join("management.sqlite3"),data.join("management.lock"),transport.join("id_ed25519"),transport.join("id_ed25519.pub")] {
+        let metadata=std::fs::symlink_metadata(path)?;
+        ensure!(metadata.is_file() && !metadata.file_type().is_symlink(),"Existing company database, lock and transport keys are required");
+        #[cfg(windows)] {use std::os::windows::fs::MetadataExt;ensure!(metadata.file_attributes()&0x400==0,"Migration inputs must not be reparse points");}
+    }
+    let lock=std::fs::OpenOptions::new().read(true).write(true).open(data.join("management.lock"))?;
+    fs2::FileExt::try_lock_exclusive(&lock).context("Stop company management before transport database migration")?;
+    let target=transport.join("db_v2.sqlite3");
+    ensure!(matches!(std::fs::symlink_metadata(&target),Err(error) if error.kind()==std::io::ErrorKind::NotFound),"Refusing to overwrite an existing managed transport database");
+    let mut sources=Vec::new();
+    for name in ["db_v2.sqlite3","db_v2.sqlite3-wal","db_v2.sqlite3-journal"] {
+        let path=source.join(name);
+        let metadata=match std::fs::symlink_metadata(&path) {
+            Ok(metadata)=>metadata,
+            Err(error) if error.kind()==std::io::ErrorKind::NotFound && name!="db_v2.sqlite3"=>continue,
+            Err(error)=>return Err(error).context("Inspect stopped source transport database"),
+        };
+        ensure!(metadata.is_file() && !metadata.file_type().is_symlink(),"Migration source must be a regular database file");
+        #[cfg(windows)] {use std::os::windows::fs::MetadataExt;ensure!(metadata.file_attributes()&0x400==0,"Migration source must not be a reparse point");}
+        let mut options=std::fs::OpenOptions::new();options.read(true);
+        // Deny an existing or new Windows writer while copying the stopped DB/WAL.
+        #[cfg(windows)] {use std::os::windows::fs::OpenOptionsExt;options.share_mode(1);}
+        sources.push(options.open(path).context("Stop rendezvous before migrating its database")?);
+    }
+    let staging=stream::Staging::new(data)?;
+    let snapshot=staging.0.join("transport.sqlite3");
+    snapshot_transport(source,data,&snapshot)?;
+    let database=rusqlite::Connection::open_with_flags(&snapshot,rusqlite::OpenFlags::SQLITE_OPEN_READ_ONLY)?;
+    let integrity:String=database.query_row("PRAGMA quick_check",[],|row|row.get(0))?;
+    ensure!(integrity=="ok","Migrated transport database integrity check failed");
+    drop(database);
+    std::fs::OpenOptions::new().read(true).write(true).open(&snapshot)?.sync_all()?;
+    // Publish atomically without replacing another migration's destination.
+    std::fs::hard_link(&snapshot,&target).context("Publish managed transport database without overwriting existing state")?;
+    drop(sources);
+    Ok(())
+}
 pub fn export_deployment_with_artifacts(data:&Path,destination:&Path,password:&str,transport:Option<&Path>,configuration:Option<&Path>,tls_identity:Option<&Path>,tls_directory:Option<&Path>,artifacts:Option<&Path>)->Result<()> {
     ensure!(!destination.exists(),"Refusing to overwrite an existing backup");
     let db=rusqlite::Connection::open_with_flags(data.join("management.sqlite3"),rusqlite::OpenFlags::SQLITE_OPEN_READ_ONLY).context("Open management database for backup")?;
@@ -103,6 +151,7 @@ pub fn export_deployment_with_artifacts(data:&Path,destination:&Path,password:&s
     let result=(||->Result<()> {
         let mut files=vec![("management.sqlite3".to_string(),snapshot.clone()),("profile-key.hex".to_string(),data.join("profile-key.hex")),("setup-token.txt".to_string(),data.join("setup-token.txt"))];
         if let Some(directory)=transport {
+            #[cfg(windows)] {crate::components::transport_database_path(directory,&crate::components::legacy_transport_database()?)?;}
             files.push(("transport-id_ed25519".into(),directory.join("id_ed25519")));files.push(("transport-id_ed25519.pub".into(),directory.join("id_ed25519.pub")));
             if directory.join("db_v2.sqlite3").exists(){
                 let transport_snapshot=data.join(format!("backup-transport-{}.sqlite3",swan_protocol::random_token()));snapshots.push(transport_snapshot.clone());
@@ -205,6 +254,49 @@ fn restore_archive<R:Read+std::io::Seek>(data:&Path,archive:&mut zip::ZipArchive
 #[cfg(test)]
 mod tests {
     use super::*;
+    fn migration_fixture()->(std::path::PathBuf,std::path::PathBuf,std::path::PathBuf) {
+        let root=std::env::temp_dir().join(format!("swan-transport-migrate-{}",swan_protocol::random_token()));
+        let data=root.join("company");let source=root.join("stopped-source");
+        std::fs::create_dir_all(data.join("transport")).unwrap();std::fs::create_dir(&source).unwrap();
+        for name in ["management.sqlite3","management.lock","transport/id_ed25519","transport/id_ed25519.pub"] {std::fs::write(data.join(name),b"owned company fixture").unwrap();}
+        (root,data,source)
+    }
+    #[test]
+    fn transport_migration_recovers_stopped_wal_without_changing_source_or_keys() {
+        let (root,data,source)=migration_fixture();
+        let original=root.join("writer.sqlite3");let writer=rusqlite::Connection::open(&original).unwrap();
+        writer.execute_batch("PRAGMA journal_mode=WAL; PRAGMA wal_autocheckpoint=0; CREATE TABLE peer(id TEXT PRIMARY KEY); INSERT INTO peer VALUES ('preserved-fixture');").unwrap();
+        std::fs::copy(&original,source.join("db_v2.sqlite3")).unwrap();std::fs::copy(root.join("writer.sqlite3-wal"),source.join("db_v2.sqlite3-wal")).unwrap();
+        let source_db=std::fs::read(source.join("db_v2.sqlite3")).unwrap();let source_wal=std::fs::read(source.join("db_v2.sqlite3-wal")).unwrap();
+        migrate_transport_database(&data,&source).unwrap();
+        let migrated=rusqlite::Connection::open(data.join("transport/db_v2.sqlite3")).unwrap();
+        assert_eq!(migrated.query_row("SELECT id FROM peer",[],|row|row.get::<_,String>(0)).unwrap(),"preserved-fixture");
+        assert_eq!(std::fs::read(source.join("db_v2.sqlite3")).unwrap(),source_db);assert_eq!(std::fs::read(source.join("db_v2.sqlite3-wal")).unwrap(),source_wal);
+        assert!(!source.join("db_v2.sqlite3-shm").exists());
+        for name in ["id_ed25519","id_ed25519.pub"] {assert_eq!(std::fs::read(data.join("transport").join(name)).unwrap(),b"owned company fixture");}
+        assert!(std::fs::read_dir(&data).unwrap().all(|entry|{let entry=entry.unwrap();let name=entry.file_name();let name=name.to_string_lossy();!name.starts_with(".swan-backup-") && !name.starts_with("backup-transport-source-")}));
+        drop(migrated);drop(writer);std::fs::remove_dir_all(root).unwrap();
+    }
+    #[test]
+    fn transport_migration_refuses_existing_target_active_management_and_corrupt_source() {
+        let (root,data,source)=migration_fixture();let target=data.join("transport/db_v2.sqlite3");
+        std::fs::write(&target,b"retained original target").unwrap();
+        assert!(migrate_transport_database(&data,&source).is_err());assert_eq!(std::fs::read(&target).unwrap(),b"retained original target");std::fs::remove_file(&target).unwrap();
+        let lock=std::fs::OpenOptions::new().read(true).write(true).open(data.join("management.lock")).unwrap();fs2::FileExt::try_lock_exclusive(&lock).unwrap();
+        assert!(migrate_transport_database(&data,&source).is_err());assert!(!target.exists());drop(lock);
+        std::fs::write(source.join("db_v2.sqlite3"),b"corrupt source fixture").unwrap();
+        assert!(migrate_transport_database(&data,&source).is_err());assert!(!target.exists());assert_eq!(std::fs::read(source.join("db_v2.sqlite3")).unwrap(),b"corrupt source fixture");
+        assert!(!std::fs::read_dir(&data).unwrap().any(|entry|entry.unwrap().file_name().to_string_lossy().starts_with(".swan-backup-")));
+        std::fs::remove_dir_all(root).unwrap();
+    }
+    #[cfg(windows)]
+    #[test]
+    fn transport_migration_refuses_a_running_windows_database_writer() {
+        let (root,data,source)=migration_fixture();let writer=rusqlite::Connection::open(source.join("db_v2.sqlite3")).unwrap();
+        writer.execute_batch("CREATE TABLE peer(id TEXT);").unwrap();
+        assert!(migrate_transport_database(&data,&source).is_err());assert!(!data.join("transport/db_v2.sqlite3").exists());
+        drop(writer);std::fs::remove_dir_all(root).unwrap();
+    }
     #[test]
     fn failed_transport_snapshot_removes_private_staging_without_changing_source() {
         let root=std::env::temp_dir().join(format!("swan-failed-transport-backup-{}",swan_protocol::random_token()));

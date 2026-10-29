@@ -73,6 +73,15 @@ Stop configuration changes during the export when a coordinated snapshot of
 the separately stored environment, TLS identity and transport data is needed.
 The export does not stop or modify running transport services.
 
+Earlier Windows managed deployments could leave the rendezvous database in
+the RustDesk LocalService profile rather than this transport directory. Such an
+archive can preserve transport keys while omitting peer records. The corrected
+Windows launcher pins `DB_URL` inside company storage; startup and full transport
+export reject an unmigrated legacy database. Follow the stopped-service
+[Windows database migration procedure](../deployment/windows/SERVER-COMPONENTS.md)
+before upgrading an affected deployment, then create and restore-test a new
+backup. This correction does not add missing records to an older archive.
+
 New exports use the `SWANBK2` format: AES-256-GCM through RustCrypto's
 [STREAM implementation](https://docs.rs/aead/0.5.2/aead/stream/struct.Encryptor.html),
 an Argon2-derived key, a fresh random salt and nonce, and authenticated 1 MiB

@@ -23,6 +23,7 @@ pub(crate) fn installed_specs() -> Result<Vec<Component>> {
     let data = PathBuf::from(std::env::var("SWAN_DATA_DIR").context("Set company data directory")?);
     anyhow::ensure!(data.is_absolute(), "Company data directory must be absolute");
     let transport = data.join("transport");
+    let database = transport_database_path(&transport, &legacy_transport_database()?)?;
     let tls = data.join("tls");
     let logs = data.join("logs");
     for directory in [&transport, &tls, &logs] {std::fs::create_dir_all(directory)?;}
@@ -43,7 +44,7 @@ pub(crate) fn installed_specs() -> Result<Vec<Component>> {
         loop {let count=input.read(&mut buffer)?;if count==0 {break;}hash.update(&buffer[..count]);}
         anyhow::ensure!(hex::encode(hash.finalize())==expected, "Packaged {name} hash mismatch");
         let (arguments, directory, environment, ready_key) = match name {
-            "hbbs" => (vec!["-r".into(), format!("{host}:21117").into(), "-k".into(), "_".into()], transport.clone(), vec![], Some(transport.join("id_ed25519.pub"))),
+            "hbbs" => (vec!["-r".into(), format!("{host}:21117").into(), "-k".into(), "_".into()], transport.clone(), vec![("DB_URL".into(), database.clone().into_os_string())], Some(transport.join("id_ed25519.pub"))),
             "hbbr" => (vec!["-k".into(), "_".into()], transport.clone(), vec![], None),
             _ => (vec!["run".into(), "--config".into(), config.as_os_str().to_owned(), "--adapter".into(), "caddyfile".into()], data.clone(),
                   vec![("XDG_DATA_HOME".into(), tls.clone().into_os_string()), ("XDG_CONFIG_HOME".into(), data.join("proxy-config").into_os_string())], None),
@@ -52,6 +53,32 @@ pub(crate) fn installed_specs() -> Result<Vec<Component>> {
         result.push(Component{name, executable:binary, arguments, directory, environment, log:Some(log), ready_key});
     }
     Ok(result)
+}
+
+#[cfg(windows)]
+pub(crate) fn legacy_transport_database() -> Result<PathBuf> {
+    let root=PathBuf::from(std::env::var_os("SystemRoot").context("Windows system root is unavailable")?);
+    anyhow::ensure!(root.is_absolute(),"Windows system root must be absolute");
+    Ok(root.join("ServiceProfiles/LocalService/AppData/Roaming/RustDesk/config/db_v2.sqlite3"))
+}
+
+pub(crate) fn transport_database_path(directory:&std::path::Path,legacy:&std::path::Path)->Result<PathBuf> {
+    let target=directory.join("db_v2.sqlite3");
+    match std::fs::symlink_metadata(&target) {
+        Ok(metadata)=>{
+            anyhow::ensure!(metadata.is_file() && !metadata.file_type().is_symlink(),"Managed transport database must be a regular file");
+            #[cfg(windows)] {use std::os::windows::fs::MetadataExt;anyhow::ensure!(metadata.file_attributes()&0x400==0,"Managed transport database must not be a reparse point");}
+        },
+        Err(error) if error.kind()==std::io::ErrorKind::NotFound=>{
+            match std::fs::symlink_metadata(legacy) {
+                Err(error) if error.kind()==std::io::ErrorKind::NotFound=>{},
+                Err(error)=>return Err(error).context("Inspect legacy transport database before startup or backup"),
+                Ok(_)=>anyhow::bail!("Legacy Windows transport database is outside company storage. Stop the company and rendezvous services, back up the original database and keys, then run swan-management migrate-transport-database SOURCE_DIRECTORY with SWAN_DATA_DIR set to this company. No empty replacement database will be started or backed up."),
+            }
+        },
+        Err(error)=>return Err(error).context("Inspect managed transport database"),
+    }
+    Ok(target)
 }
 
 fn valid_hostname(host: &str) -> bool {
@@ -168,6 +195,21 @@ where F: FnOnce(oneshot::Receiver<()>) -> Fut, Fut: Future<Output=Result<()>> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn legacy_transport_database_requires_explicit_migration() {
+        let root=std::env::temp_dir().join(format!("swan-transport-path-{}",uuid::Uuid::new_v4()));
+        std::fs::create_dir(&root).unwrap();
+        let managed=root.join("company");std::fs::create_dir(&managed).unwrap();let legacy=root.join("legacy.sqlite3");
+        assert_eq!(transport_database_path(&managed,&legacy).unwrap(),managed.join("db_v2.sqlite3"));
+        std::fs::write(&legacy,b"original database").unwrap();
+        assert!(transport_database_path(&managed,&legacy).is_err());
+        std::fs::write(managed.join("db_v2.sqlite3"),b"migrated database").unwrap();
+        assert_eq!(transport_database_path(&managed,&legacy).unwrap(),managed.join("db_v2.sqlite3"));
+        assert_eq!(std::fs::read(&legacy).unwrap(),b"original database");
+        std::fs::remove_file(managed.join("db_v2.sqlite3")).unwrap();std::fs::create_dir(managed.join("db_v2.sqlite3")).unwrap();
+        assert!(transport_database_path(&managed,&legacy).is_err());
+        std::fs::remove_dir_all(root).unwrap();
+    }
     #[test]
     fn rejects_host_configuration_injection() {
         for host in ["localhost", "example.com\n}", "example.com:443", "example.com/path", "-bad.example", "a..example", "example.com;cmd"] {assert!(!valid_hostname(host));}

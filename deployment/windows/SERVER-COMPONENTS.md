@@ -9,6 +9,37 @@ unverified. `Setup-Server.ps1` supplies the graphical setup flow, and an
 unsigned test EXE bundles it with management and pinned transport/HTTPS inputs.
 Production signing and clean-machine wizard installation remain incomplete.
 
+The managed rendezvous process now receives an explicit `DB_URL` pointing to
+`transport/db_v2.sqlite3` inside the company data directory. Its Windows upstream
+default instead uses a RustDesk service-profile folder, even when its working
+directory is the company transport directory. Earlier Windows deployments can
+therefore have a working peer database outside their full backup. The presence
+of transport keys in a backup alone does not establish database recovery.
+
+If that legacy database exists and the managed database is absent, startup,
+component checks and full transport export refuse to silently create or omit a
+replacement. Before upgrading, stop builds and sessions, stop the company worker,
+company service and any separate rendezvous process, and preserve the original
+company data, transport keys and legacy database with its WAL/journal. From an
+administrator shell, select the existing company and the verified source folder:
+
+```powershell
+$env:SWAN_DATA_DIR = 'C:\ProgramData\SwanCompanyServer'
+& '.\swan-management.exe' migrate-transport-database `
+  'C:\Windows\ServiceProfiles\LocalService\AppData\Roaming\RustDesk\config'
+```
+
+Use the actual source reported by the previous rendezvous log, not a database
+belonging to another installation. The command requires existing company state
+and transport keys, obtains the offline management lock, and on Windows refuses
+a database still open for writing. It recovers a private copy of the stopped
+database and WAL, checks SQLite integrity, and publishes into company storage
+without overwriting a destination. Original source files and keys remain intact;
+no service is started. An existing destination requires investigation rather
+than deletion or an automatic repeat. Restart the matching company stack, verify
+the same devices and trust keys, then create and test a new full backup. Keep the
+pre-upgrade binaries, original database and backup for rollback.
+
 `server-components.json` now requires the maintained Windows rendezvous and
 relay builds, with fixed executable hashes and a canonical digest of their
 complete compiler inputs and public recipe. `deployment/transport/source.json`

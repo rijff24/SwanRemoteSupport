@@ -13,6 +13,14 @@ mod windows;
 mod components;
 
 fn main() -> Result<()> {
+    if std::env::args().nth(1).as_deref()==Some("migrate-transport-database") {
+        let args:Vec<String>=std::env::args().collect();
+        anyhow::ensure!(args.len()==3,"Usage: swan-management migrate-transport-database SOURCE_DIRECTORY");
+        let data=PathBuf::from(std::env::var_os("SWAN_DATA_DIR").context("Set SWAN_DATA_DIR to the existing company data directory")?);
+        backup::migrate_transport_database(&data,std::path::Path::new(&args[2]))?;
+        println!("Transport database migrated into company storage; original database and keys preserved. No services started.");
+        return Ok(());
+    }
     #[cfg(windows)]
     if std::env::args().nth(1).as_deref()==Some("prepare-server-directory") {
         let args:Vec<String>=std::env::args().collect();

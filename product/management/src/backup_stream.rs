@@ -36,9 +36,9 @@ pub(super) fn protect_directory(path: &Path) -> Result<()> {
     Ok(())
 }
 
-struct Staging(PathBuf);
+pub(super) struct Staging(pub(super) PathBuf);
 impl Staging {
-    fn new(parent: &Path) -> Result<Self> {
+    pub(super) fn new(parent: &Path) -> Result<Self> {
         let path = parent.join(format!(".swan-backup-{}", swan_protocol::random_token()));
         let mut builder = std::fs::DirBuilder::new();
         #[cfg(unix)] { use std::os::unix::fs::DirBuilderExt; builder.mode(0o700); }
