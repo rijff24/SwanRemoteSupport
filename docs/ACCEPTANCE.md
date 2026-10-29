@@ -7507,3 +7507,28 @@ qualify the Windows fix: compiled Windows permission checks, an authenticated
 build, restart/reboot and guarded migration preserving retained artifacts remain
 required. Production publication remains blocked by the outstanding acceptance
 and signing gates. Backup restores must reapply legacy worker revocations.
+
+
+### 2026-10-29: private worker reader and migration rejection on Server 2016
+
+The actual private configuration reader ran twice in the same Windows PowerShell
+5.1.14393.693 process on the owned Server 2016 build 14393 company VM, accepted
+private fixture input, and rejected an explicit ALL APPLICATION PACKAGES read
+ACE. Only a fake credential was used. The company service stayed running and
+the contained legacy worker stayed stopped.
+
+The migration preflight then verified a real HTTPS 401 for the previously revoked
+worker and rejected an unregistered replacement credential before creating a
+configuration or journal. The installed executable and receipt hashes remained
+unchanged. These are negative-path and reader checks, not a successful compiled
+worker migration, completed build, or reboot test. See
+[evidence](evidence/worker-private-configuration-server2016.json).
+
+Native 1.5.9 run 40828471470 completed successfully. Its complete artifact hash,
+1,254 tracked public source files, six generated bridge files, manifest hashes,
+and pinned SDK/engine identity were verified without running downloaded code.
+The recorded native security/MSI step conclusions passed; individual regression
+logs were not rechecked in this verification. This archive predates the private
+worker credential fix: do not deploy its legacy worker installer. Independent
+rebuild and runtime upgrade of 1.5.9 remain pending. See
+[source verification](evidence/aff8ff6-native159-source-verification.json).

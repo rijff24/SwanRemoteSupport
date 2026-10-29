@@ -53,6 +53,12 @@ try{$response=$request.GetResponse();$response.Close()}catch [Net.WebException]{
  if($_.Exception.Response){try{$rejected=[int]$_.Exception.Response.StatusCode -eq 401}finally{$_.Exception.Response.Close()}}
 }
 if(!$rejected){throw 'Company HTTPS endpoint did not confirm rejection of the legacy credential; no files changed.'}
+$request=[Net.HttpWebRequest]::Create($next.management_url.TrimEnd('/')+'/api/v1/worker/recipe')
+$request.Method='GET';$request.AllowAutoRedirect=$false;$request.Timeout=15000;$request.ReadWriteTimeout=15000
+$request.Headers['Authorization']='Bearer '+$next.worker_token
+$accepted=$false
+try{$response=$request.GetResponse();try{$accepted=[int]$response.StatusCode -eq 200}finally{$response.Close()}}catch [Net.WebException]{if($_.Exception.Response){$_.Exception.Response.Close()}}
+if(!$accepted){throw 'Company HTTPS endpoint did not accept the replacement worker credential; no files changed.'}
 if(!$PSCmdlet.ShouldProcess('SwanInstallerWorker','Preserve the stopped legacy installation and migrate to a new private-file credential')){return}
 # Inspect every retained object without changing its permissions. Only an owned
 # private installation may be migrated; public or linked state needs investigation.
