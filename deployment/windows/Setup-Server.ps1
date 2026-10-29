@@ -16,7 +16,7 @@ if (Get-Variable -Name SwanPackagedInstallerScript -ErrorAction SilentlyContinue
 $form = [Windows.Forms.Form]::new()
 $form.Text = 'Swan Remote Support - Company server setup'
 if ($UnsignedTestPackage) {$form.Text += ' [UNSIGNED TEST]'}
-$form.ClientSize = [Drawing.Size]::new(820,740)
+$form.ClientSize = [Drawing.Size]::new(820,680)
 $form.MinimumSize = $form.Size
 $form.MaximumSize = $form.Size
 $form.StartPosition = 'CenterScreen'
@@ -88,14 +88,14 @@ $log = [Windows.Forms.TextBox]::new()
 $log.Multiline = $true
 $log.ReadOnly = $true
 $log.ScrollBars = 'Vertical'
-$log.SetBounds(26,568,768,80)
+$log.SetBounds(26,568,768,50)
 $form.Controls.Add($log)
 $progress = [Windows.Forms.ProgressBar]::new()
-$progress.SetBounds(26,661,768,8)
+$progress.SetBounds(26,630,768,8)
 $form.Controls.Add($progress)
 $installButton = [Windows.Forms.Button]::new()
 $installButton.Text = 'Install company server'
-$installButton.SetBounds(26,687,205,32)
+$installButton.SetBounds(26,640,205,32)
 $installButton.BackColor = [Drawing.Color]::FromArgb(0,125,135)
 $installButton.ForeColor = [Drawing.Color]::White
 $installButton.FlatStyle = 'Flat'
@@ -103,7 +103,7 @@ $installButton.Enabled = $administrator -and -not $RenderPreview
 $form.Controls.Add($installButton)
 $webButton = [Windows.Forms.Button]::new()
 $webButton.Text = 'Open company setup'
-$webButton.SetBounds(244,687,205,32)
+$webButton.SetBounds(244,640,205,32)
 $webButton.Enabled = $false
 $webButton.Add_Click({
     if ($script:setupUrl -and -not $RenderPreview) {
@@ -115,7 +115,7 @@ $webButton.Add_Click({
 $form.Controls.Add($webButton)
 $closeButton = [Windows.Forms.Button]::new()
 $closeButton.Text = 'Close'
-$closeButton.SetBounds(689,687,105,32)
+$closeButton.SetBounds(689,640,105,32)
 $closeButton.Add_Click({$form.Close()})
 $form.Controls.Add($closeButton)
 $timer = [Windows.Forms.Timer]::new()
@@ -166,6 +166,19 @@ $timer.Add_Tick({
 $form.Add_FormClosing({param($sender,$event)
     if ($script:operation) {$event.Cancel=$true;$status.Text='Wait for the current installation to finish before closing.'}
 })
+if (-not $RenderPreview) {
+    # Keep the actions above the taskbar on a 1024x768 server console. Smaller
+    # work areas retain all controls through scrolling rather than clipping.
+    $area = [Windows.Forms.Screen]::FromControl($form).WorkingArea
+    $form.AutoScroll = $true
+    $form.AutoScrollMinSize = $form.ClientSize
+    $size = [Drawing.Size]::new([Math]::Min($form.Width,$area.Width),[Math]::Min($form.Height,$area.Height))
+    $form.MinimumSize = $size
+    $form.MaximumSize = $size
+    $form.Size = $size
+    $form.StartPosition = 'Manual'
+    $form.Location = [Drawing.Point]::new(($area.Left+[int](($area.Width-$form.Width)/2)),($area.Top+[int](($area.Height-$form.Height)/2)))
+}
 try {
     if ($RenderPreview) {
         $form.CreateControl()

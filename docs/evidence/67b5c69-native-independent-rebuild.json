@@ -1,0 +1,97 @@
+{
+  "source_commit": "67b5c69ca62feadf7ecf57d835a79c3d2da19dd2",
+  "source_date_epoch": 1793227638,
+  "builds": [
+    {
+      "workflow_run": 40782677653,
+      "artifact": 12861896518,
+      "digest": "sha256:51e0dea72204ff3d21ced7fc2c03db514d4b3b05732b6ec02fbb60ea0d4aede6",
+      "expected_bytes": 254845617,
+      "source": "67b5c69ca62feadf7ecf57d835a79c3d2da19dd2"
+    },
+    {
+      "workflow_run": 40819351377,
+      "artifact": 12875938829,
+      "digest": "sha256:54ab72ff56e825e2fc4fc41c5342a5aa6cb560a8888330b83ae2ac4267bd7bef",
+      "expected_bytes": 254845563,
+      "source": "67b5c69ca62feadf7ecf57d835a79c3d2da19dd2"
+    }
+  ],
+  "recorded_msvc_inputs_identical": true,
+  "outputs": [
+    {
+      "path": "SwanRemoteSupport-1.5.8-customer-x64-unsigned.msi",
+      "first_sha256": "4d3af7dbac8be6e3ad362c186803582a92d215d9b1b8dcc102ffbd1399178b46",
+      "second_sha256": "4d3af7dbac8be6e3ad362c186803582a92d215d9b1b8dcc102ffbd1399178b46",
+      "first_bytes": 33599488,
+      "second_bytes": 33599488,
+      "identical": true
+    },
+    {
+      "path": "SwanRemoteSupport-1.5.8-technician-x64-unsigned.exe",
+      "first_sha256": "d760d2820f3d1584fa8a3a15f21c85cc236d1de6ec37aed71f923b91442ed266",
+      "second_sha256": "d760d2820f3d1584fa8a3a15f21c85cc236d1de6ec37aed71f923b91442ed266",
+      "first_bytes": 24259072,
+      "second_bytes": 24259072,
+      "identical": true
+    },
+    {
+      "path": "SwanRemoteSupport-1.5.8-technician-x64-unsigned.msi",
+      "first_sha256": "8e89859193aa48209e6c4026050f96d6e80319ff0f67bf36e937795d9259f6b7",
+      "second_sha256": "8e89859193aa48209e6c4026050f96d6e80319ff0f67bf36e937795d9259f6b7",
+      "first_bytes": 31354880,
+      "second_bytes": 31354880,
+      "identical": true
+    },
+    {
+      "path": "SwanRemoteSupport-1.5.8-x64-unsigned-install.exe",
+      "first_sha256": "d760d2820f3d1584fa8a3a15f21c85cc236d1de6ec37aed71f923b91442ed266",
+      "second_sha256": "d760d2820f3d1584fa8a3a15f21c85cc236d1de6ec37aed71f923b91442ed266",
+      "first_bytes": 24259072,
+      "second_bytes": 24259072,
+      "identical": true
+    },
+    {
+      "path": "SwanServerSetup-UNSIGNED-TEST.exe",
+      "first_sha256": "8c2f6e9f8617961ed50370d783d051f0f3f456e3e39ea871e4555f03c84a0dac",
+      "second_sha256": "8c2f6e9f8617961ed50370d783d051f0f3f456e3e39ea871e4555f03c84a0dac",
+      "first_bytes": 64304640,
+      "second_bytes": 64304640,
+      "identical": true
+    },
+    {
+      "path": "swan-agent.exe",
+      "first_sha256": "4c3e7bf2659f1f07749dfa059848d772b9c1848f11cd1d9058b0addda5f8ad86",
+      "second_sha256": "4c3e7bf2659f1f07749dfa059848d772b9c1848f11cd1d9058b0addda5f8ad86",
+      "first_bytes": 5522944,
+      "second_bytes": 5522944,
+      "identical": true
+    },
+    {
+      "path": "swan-management.exe",
+      "first_sha256": "5232d2c9927419aa8076d7ba42fd3d7a3ea28ff18574f2b58e6fcd047ea2c410",
+      "second_sha256": "5232d2c9927419aa8076d7ba42fd3d7a3ea28ff18574f2b58e6fcd047ea2c410",
+      "first_bytes": 8870400,
+      "second_bytes": 8870400,
+      "identical": true
+    },
+    {
+      "path": "swan-worker.exe",
+      "first_sha256": "104d6dced6818da87b12c2aa0f52fea4f7e6da0c1ab20109e9c699a5ff44081c",
+      "second_sha256": "104d6dced6818da87b12c2aa0f52fea4f7e6da0c1ab20109e9c699a5ff44081c",
+      "first_bytes": 4833792,
+      "second_bytes": 4833792,
+      "identical": true
+    }
+  ],
+  "independent_rebuild_verified": true,
+  "normalization_applied_to_shipping_files": false,
+  "executables_run": false,
+  "runtime_qualified": false,
+  "production_approved": false,
+  "scope": "Original unsigned native shipping outputs; no runtime, signing or production qualification",
+  "recorded_utc": "2026-10-29T06:12:42.822338+00:00",
+  "public_source_proofs_verified": true,
+  "independently_generated_bridges_identical": true,
+  "private_lab_signatures_excluded_from_comparison": true
+}

@@ -107,9 +107,12 @@ an OK-only closure dialog. Resume preserved identity without reviving that grant
 This does not qualify ordinary-user control, UAC, multiple monitors or public
 Internet connectivity. A stale sign-in frame after a long idle interval remains
 unattributed. See [native1.5.8 runtime evidence](evidence/67b5c69-native158-runtime.json).
-The user approved one independent native build, run40819351377; it is in progress.
-No recurring controller or duplicate build was started. Native reproduction and
-runtime audit-network tracing remain open.
+The approved independent native build40819351377 succeeded. All eight original
+shipping outputs matched build40782677653 byte-for-byte, with public source and
+generated bridges verified and no shipping-file normalization. See the
+[independent comparison](evidence/67b5c69-native-independent-rebuild.json).
+No recurring controller or duplicate build was started. Runtime audit-network
+tracing remains open.
 
 The streamed backup implementation at `67b5c69` passed both Windows and Linux
 component verification on push and PR jobs. Windows explicitly exported and
