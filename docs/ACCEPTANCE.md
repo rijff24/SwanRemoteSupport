@@ -7532,3 +7532,22 @@ logs were not rechecked in this verification. This archive predates the private
 worker credential fix: do not deploy its legacy worker installer. Independent
 rebuild and runtime upgrade of 1.5.9 remain pending. See
 [source verification](evidence/aff8ff6-native159-source-verification.json).
+
+
+### 2026-10-29: compiled private-file worker checks passed on Windows
+
+Both component runs for `1c43a382c87b05e44caff1c6c2bef4cf0b0bb6fc`
+passed Windows, Ubuntu and Linux deployment jobs (six jobs total). The actual
+Windows executable accepted a protected configuration larger than the Windows
+pipe buffer and rejected app-container read access, unexpected ownership,
+oversized/malformed input and complete legacy environment fallback. Credentials
+were not reflected into captured diagnostics. The Windows PowerShell 5 input
+reader also validated two inputs in one process. The retained executable hash
+matches its test receipt; all 239 corresponding public source files were checked
+against Git before any local execution. See
+[evidence](evidence/1c43a38-private-worker-windows-checks.json).
+
+This supersedes the pending compiled-check status above. It does not yet prove
+successful migration of an installed service, authenticated package generation,
+standard-user file denial or reboot of the repaired worker. Those runtime gates
+and production signing remain outstanding.
