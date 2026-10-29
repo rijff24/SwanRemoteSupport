@@ -1,8 +1,25 @@
 # Configurable product acceptance report
 
-Evidence through 29 October 2026. **The product is not complete or approved for
+Evidence through 30 October 2026. **The product is not complete or approved for
 production publication.** A passing component test is not evidence of a working
 native support session or a clean-machine installation.
+
+## Native branding synchronization, 30 October
+
+Both installed 1.5.9 editions automatically accepted signed company profile
+revision 2 and displayed changed names, SVG logos, colors, contacts, consent text
+and shortcut labels. Restoring the original content created revision 3; both
+editions automatically accepted it and displayed the original branding again.
+Device identity, credential hash, bootstrap trust, consent, installation identity,
+release sequence and executable hashes matched the pre-test baseline throughout.
+No manual synchronization, reinstallation or enrollment was used for these changes.
+
+Both original limited-user launchers restarted while narrowly scoped management
+blocks were enabled. However, the recorded cached customer display observation
+came after the five-minute automatic unblock, so this run does **not** qualify
+full offline UI behavior. Both owned blocks were subsequently verified disabled.
+Software upgrades, key rotation and other Windows versions remain separate gates.
+See the [native branding receipt](evidence/159-windows-native-branding-sync-20261030.json).
 
 ## Latest source checks, 28–29 October
 

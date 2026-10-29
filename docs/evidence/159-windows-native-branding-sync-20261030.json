@@ -1,0 +1,36 @@
+{
+  "utc": "2026-10-29T23:44:11.515201+00:00",
+  "application_source": "aff8ff61e3fbd6f34c4cf0bb9de6e330ec6e0521",
+  "management_source": "361d7c362de7f67b7b7456d33bf0191736eec7d5",
+  "version": "1.5.9",
+  "scope": "Existing separate Server 2016 company/technician and customer VMs; shipping installed applications; company-controlled lab HTTPS.",
+  "signed_revision_sequence": [
+    1,
+    2,
+    3
+  ],
+  "automatic_branding_change_displayed_in_both_native_editions": true,
+  "changed_fields": [
+    "display names",
+    "SVG logos",
+    "colors",
+    "support contacts",
+    "consent text",
+    "shortcut labels"
+  ],
+  "manual_sync_or_install_required": false,
+  "signature_and_exact_profile_content_verified_in_both_caches": true,
+  "original_branding_automatically_restored_and_native_ui_observed": true,
+  "device_identity_credential_bootstrap_consent_installation_and_binary_hashes_preserved": true,
+  "transport_keys_policy_release_approvals_unchanged": true,
+  "both_original_limited_launchers_restarted_while_management_rule_enabled": true,
+  "both_temporary_management_rules_verified_disabled_after_test": true,
+  "offline_cached_ui_acceptance_complete": false,
+  "limits": [
+    "The five-minute automatic outage recovery preceded the recorded cached customer UI observation. Neither edition receives full offline UI acceptance from this run.",
+    "Software upgrade, embedded resources, key rotation, negative profile tests and other Windows versions are outside this specific test.",
+    "Lab signing and same-host VM networking do not establish production signing or public Internet connectivity."
+  ],
+  "production_publication": false,
+  "full_product_acceptance_complete": false
+}
