@@ -35,6 +35,8 @@
     "Earlier native acceptance after rollback remains separate from this incomplete restored-data test.",
     "No public Internet connectivity, different-host recovery or production signing claim."
   ],
+  "follow_up_native_session_completed_evidence": "361d7c3-windows-native-active-restored-data-20261030.json",
+  "original_incomplete_observation_preserved": true,
   "production_publication": false,
   "full_product_acceptance_complete": false
 }

@@ -1,0 +1,86 @@
+{
+  "utc": "2026-10-29T22:36:51.519268+00:00",
+  "management_source": "361d7c362de7f67b7b7456d33bf0191736eec7d5",
+  "application_source": "aff8ff61e3fbd6f34c4cf0bb9de6e330ec6e0521",
+  "version": "1.5.9",
+  "fresh_native_mfa_server_audit_matched": true,
+  "standard_customer_explicitly_accepted_authenticated_technician": true,
+  "original_enrollment_credentials_bootstrap_binaries_consent_preserved": true,
+  "native_remote_video_and_mouse_keyboard_input_observed": true,
+  "independent_saved_input_bytes": 52,
+  "independent_saved_input_sha256": "f16dc25b55ee080f5fd362827fc29355afeb08907debf432651c498902824273",
+  "one_new_claimed_attended_grant_with_live_authorization_lease": true,
+  "receiver_and_maintained_windows_relay_uuid_correlated": true,
+  "receiver_log_sha256": "ba08ece00c71c6bbfac021b27e7016d2d7eecc44a26ab2ae5b6f9e07164d0ec7",
+  "relay_log_sha256": "c6af2f047e4c2e73574a8cbd423f9782d04a8e94a75fa00bb0b122e3f6933b1b",
+  "production_publication": false,
+  "completed_utc": "2026-10-29T22:39:19.121719+00:00",
+  "customer_native_disconnect_closed_original_grant": true,
+  "closed_grant_renew_with_original_device_credential_rejected_403": true,
+  "one_request_only_and_no_live_authorization_after_stop": true,
+  "shipping_installed_verifier_passed_after_disconnect": true,
+  "customer_service_running": true,
+  "scope": "Existing separate Server 2016 company and customer VMs while the actual restored populated company data is active after canonical transport migration. Fresh native technician MFA, standard customer approval and input, maintained Windows relay through lab host forwarding.",
+  "limits": [
+    "Same-host lab networking; no public Internet/NAT traversal qualification.",
+    "Restored company data was active during this native session; different-host recovery remains unqualified."
+  ],
+  "full_product_acceptance_complete": false,
+  "actual_restored_company_data_active_during_session": true,
+  "diagnostic_launcher_added_only_stage_timestamps": true,
+  "original_shipping_launcher_bytes_unchanged": true,
+  "all_original_signature_sync_and_installed_checks_retained": true,
+  "earlier_native_stall_cause_unresolved": true,
+  "return_to_retained_newer_original_data_pending": false,
+  "returned_to_newer_original_company_data_and_rechecked_https_mfa_downloads": true,
+  "restored_test_data_copy_retained_after_return": true,
+  "owned_input_fixture_stopped_and_saved_proof_retained": true,
+  "diagnostic_launcher_stopped_original_byte_verified_launcher_started": true,
+  "diagnostic_startup_stage_times": [
+    {
+      "step": "script-entered",
+      "utc": "2026-10-29T22:20:20.8116165Z"
+    },
+    {
+      "step": "agent-signature-before",
+      "utc": "2026-10-29T22:20:21.0616537Z"
+    },
+    {
+      "step": "agent-signature-valid",
+      "utc": "2026-10-29T22:20:25.9263243Z"
+    },
+    {
+      "step": "sync-start-before",
+      "utc": "2026-10-29T22:20:26.1763734Z"
+    },
+    {
+      "step": "sync-process-started",
+      "utc": "2026-10-29T22:20:26.2232577Z"
+    },
+    {
+      "step": "sync-wait-before",
+      "utc": "2026-10-29T22:20:26.2388960Z"
+    },
+    {
+      "step": "sync-process-exited",
+      "utc": "2026-10-29T22:20:26.4561034Z"
+    },
+    {
+      "step": "installed-verification-before",
+      "utc": "2026-10-29T22:20:26.4717356Z"
+    },
+    {
+      "step": "installed-verification-passed",
+      "utc": "2026-10-29T22:20:30.5229158Z"
+    },
+    {
+      "step": "portable-start-before",
+      "utc": "2026-10-29T22:20:30.5697897Z"
+    },
+    {
+      "step": "portable-process-started",
+      "utc": "2026-10-29T22:20:30.6010686Z"
+    }
+  ],
+  "first_diagnostic_parse_failure_not_counted_as_product_failure": true
+}

@@ -184,6 +184,23 @@ restarted after checking its account SID. At the last check that launcher was
 running without a native GUI. No new support request was issued and this native
 retest has not passed. See the
 [incomplete restored-data retest](evidence/361d7c3-restored-data-native-retest-pending-20261030.json).
+A follow-up on 30 October completed that missing native session while the
+restored populated company data was active. A diagnostic copy of the installed
+launcher added only stage timestamps; original signature, sync and installed
+verification checks remained intact, and startup reached the portable GUI in
+about ten seconds. Fresh native technician MFA matched the restored database's
+audit. The same enrolled standard customer accepted the authenticated request;
+video, mouse/keyboard input and a distinct 52-byte saved fixture hash passed.
+One attended grant correlated with the receiver and maintained Windows relay.
+Customer Disconnect closed it, renewal with the original device credential
+returned403, and installed verification still passed. The newer original company
+data was then reinstated and HTTPS/MFA, company state and five download hashes
+rechecked. Both data copies and saved input proof were retained. The diagnostic
+launcher and owned input fixture were stopped, and the unchanged normal launcher
+returned to its empty sign-in screen. The earlier stall's cause remains
+unestablished; this successful retest does not retrospectively classify it as
+solely hardware-related. See the
+[active restored-data native receipt](evidence/361d7c3-windows-native-active-restored-data-20261030.json).
 See the [populated running recovery receipt](evidence/361d7c3-windows-populated-running-recovery-20261029.json),
 [actual migration receipt](evidence/361d7c3-windows-populated-transport-migration-20261029.json),
 [component checks](evidence/361d7c3-windows-transport-storage-component-checks.json)
