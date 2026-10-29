@@ -45,6 +45,17 @@ This does not qualify Unicode/image clipboard, large/interrupted transfers,
 denied file permissions, UAC, logon-screen access or multiple monitors. See the
 [native clipboard/transfer receipt](evidence/159-windows-native-clipboard-transfer-20261029.json).
 
+A receiving-side negative test then removed only the real lab group's file
+permission. A newly approved desktop still connected, with file access disabled
+on the receiving consent dialog. The technician's Transfer file action remained
+available and opened a separate connection, but the receiver rejected its signed
+grant with `Company grant denies file transfer`. The remote directory listing
+stayed empty; the denied connection was claimed and closed in server history,
+while the permitted desktop remained live. Both connections were closed and the
+exact original group policy restored. This is native protocol enforcement rather
+than a hidden button. It does not qualify every malicious packet/client variant.
+See the [receiving denial receipt](evidence/159-windows-receiving-file-permission-denial-20261029.json).
+
 Installation reporting is now being implemented after the completed recovery
 checkpoint. The new shared report contract, authenticated management endpoints,
 paginated status page and schema3 migration are source changes under verification;
