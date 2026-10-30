@@ -6,6 +6,10 @@ Passing one operating system or one component does not qualify the full product.
 
 ## Sources and signing
 
+- Working candidate `1.5.10+78` adds an early service-manager connection before
+  loading the native core. It is not yet built, installed or qualified; the
+  [startup design and boundary tests](../deployment/windows/SERVICE-STARTUP.md)
+  do not clear the recorded 1.5.9 intermittent startup failure.
 - Native customer/technician candidate: `aff8ff61e3fbd6f34c4cf0bb9de6e330ec6e0521`,
   version `1.5.9+77`.
 - Management storage/recovery candidate:

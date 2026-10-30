@@ -136,6 +136,23 @@ pub extern "C" fn rustdesk_core_main_args(args_len: *mut c_int) -> *mut *mut c_c
     return std::ptr::null_mut() as _;
 }
 
+#[cfg(all(windows, feature = "swan_custom"))]
+#[no_mangle]
+pub extern "C" fn swan_service_bootstrap(
+    report: Option<crate::platform::windows::BootstrapServiceStatus>,
+) -> u32 {
+    match report {
+        Some(report) => crate::platform::windows::run_bootstrapped_service(report),
+        None => winapi::shared::winerror::ERROR_INVALID_PARAMETER,
+    }
+}
+
+#[cfg(all(windows, feature = "swan_custom"))]
+#[no_mangle]
+pub extern "C" fn swan_service_control(control: u32) -> u32 {
+    crate::platform::windows::bootstrap_service_control(control)
+}
+
 // https://gist.github.com/iskakaushik/1c5b8aa75c77479c33c4320913eebef6
 #[cfg(windows)]
 fn rust_args_to_c_args(args: Vec<String>, outlen: *mut c_int) -> *mut *mut c_char {

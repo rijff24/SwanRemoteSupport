@@ -525,8 +525,91 @@ fn fix_cursor_mask(
 define_windows_service!(ffi_service_main, service_main);
 
 fn service_main(arguments: Vec<OsString>) {
-    if let Err(e) = run_service(arguments) {
+    if let Err(e) = run_service(arguments, None) {
         log::error!("run_service failed: {}", e);
+    }
+}
+
+pub(crate) type BootstrapServiceStatus = extern "C" fn(u32, u32) -> i32;
+
+enum ServiceStatusReporter {
+    Native(service_control_handler::ServiceStatusHandle),
+    Bootstrap(BootstrapServiceStatus),
+}
+
+impl ServiceStatusReporter {
+    fn set_service_status(&self, status: ServiceStatus) -> ResultType<()> {
+        match self {
+            Self::Native(handle) => handle.set_service_status(status).map_err(Into::into),
+            Self::Bootstrap(report) => {
+                let state = match status.current_state {
+                    ServiceState::Running => winapi::um::winsvc::SERVICE_RUNNING,
+                    ServiceState::Stopped => winapi::um::winsvc::SERVICE_STOPPED,
+                    _ => bail!("Unexpected bootstrapped service state"),
+                };
+                let code = match status.exit_code {
+                    ServiceExitCode::Win32(code) => code,
+                    _ => bail!("Unexpected bootstrapped service exit code"),
+                };
+                if report(state, code) == 0 {
+                    bail!("Service status report failed: {}", io::Error::last_os_error());
+                }
+                Ok(())
+            }
+        }
+    }
+}
+
+fn service_control_event(control_event: ServiceControl) -> ServiceControlHandlerResult {
+    log::info!("Got service control event: {:?}", control_event);
+    match control_event {
+        ServiceControl::Interrogate => ServiceControlHandlerResult::NoError,
+        ServiceControl::Stop | ServiceControl::Preshutdown | ServiceControl::Shutdown => {
+            send_close(crate::POSTFIX_SERVICE).ok();
+            ServiceControlHandlerResult::NoError
+        }
+        _ => ServiceControlHandlerResult::NotImplemented,
+    }
+}
+
+#[cfg(feature = "swan_custom")]
+pub(crate) fn bootstrap_service_control(control: u32) -> u32 {
+    use winapi::um::winsvc::*;
+    let event = match control {
+        SERVICE_CONTROL_INTERROGATE => ServiceControl::Interrogate,
+        SERVICE_CONTROL_STOP => ServiceControl::Stop,
+        SERVICE_CONTROL_SHUTDOWN => ServiceControl::Shutdown,
+        SERVICE_CONTROL_PRESHUTDOWN => ServiceControl::Preshutdown,
+        _ => return ERROR_CALL_NOT_IMPLEMENTED,
+    };
+    if matches!(service_control_event(event), ServiceControlHandlerResult::NoError) {
+        NO_ERROR
+    } else {
+        ERROR_CALL_NOT_IMPLEMENTED
+    }
+}
+
+// The managed launcher has already connected to SCM and is reporting bounded
+// StartPending checkpoints before it loads this DLL or company configuration.
+#[cfg(feature = "swan_custom")]
+pub(crate) fn run_bootstrapped_service(report: BootstrapServiceStatus) -> u32 {
+    if std::env::args().skip(1).collect::<Vec<_>>() != ["--service"] {
+        return ERROR_INVALID_PARAMETER;
+    }
+    if !crate::common::global_init() {
+        return ERROR_GEN_FAILURE;
+    }
+    crate::load_custom_client();
+    if crate::get_app_name() != "Swan Remote Support" || !bootstrap() {
+        return ERROR_INVALID_DATA;
+    }
+    hbb_common::init_log(false, "service");
+    match run_service(Vec::new(), Some(report)) {
+        Ok(()) => NO_ERROR,
+        Err(error) => {
+            log::error!("Bootstrapped service failed: {}", error);
+            ERROR_GEN_FAILURE
+        }
     }
 }
 
@@ -639,21 +722,13 @@ extern "system" {
 }
 
 #[tokio::main(flavor = "current_thread")]
-async fn run_service(_arguments: Vec<OsString>) -> ResultType<()> {
-    let event_handler = move |control_event| -> ServiceControlHandlerResult {
-        log::info!("Got service control event: {:?}", control_event);
-        match control_event {
-            ServiceControl::Interrogate => ServiceControlHandlerResult::NoError,
-            ServiceControl::Stop | ServiceControl::Preshutdown | ServiceControl::Shutdown => {
-                send_close(crate::POSTFIX_SERVICE).ok();
-                ServiceControlHandlerResult::NoError
-            }
-            _ => ServiceControlHandlerResult::NotImplemented,
-        }
+async fn run_service(_arguments: Vec<OsString>, bootstrap: Option<BootstrapServiceStatus>) -> ResultType<()> {
+    let status_handle = match bootstrap {
+        Some(report) => ServiceStatusReporter::Bootstrap(report),
+        None => ServiceStatusReporter::Native(service_control_handler::register(
+            crate::get_app_name(), service_control_event,
+        )?),
     };
-
-    // Register system service event handler
-    let status_handle = service_control_handler::register(crate::get_app_name(), event_handler)?;
 
     let next_status = ServiceStatus {
         // Should match the one from system service registry

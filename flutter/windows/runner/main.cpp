@@ -10,6 +10,9 @@
 #include "win32_desktop.h"
 #include "flutter_window.h"
 #include "utils.h"
+#ifdef SWAN_MANAGED_SERVICE_BOOTSTRAP
+#include "service_bootstrap.h"
+#endif
 
 typedef char** (*FUNC_RUSTDESK_CORE_MAIN)(int*);
 typedef void (*FUNC_RUSTDESK_FREE_ARGS)( char**, int);
@@ -22,6 +25,10 @@ const wchar_t* getWindowClassName();
 int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
                       _In_ wchar_t *command_line, _In_ int show_command)
 {
+#ifdef SWAN_MANAGED_SERVICE_BOOTSTRAP
+  int service_exit = 0;
+  if (RunSwanServiceIfRequested(&service_exit)) return service_exit;
+#endif
   HINSTANCE hInstance = LoadLibraryA("librustdesk.dll");
   if (!hInstance)
   {

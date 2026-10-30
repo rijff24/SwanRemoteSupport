@@ -21,6 +21,12 @@ add_executable(${BINARY_NAME} WIN32
 # that need different build settings.
 apply_standard_settings(${BINARY_NAME})
 
+if("$ENV{SWAN_BUILD}" STREQUAL "1")
+  target_sources(${BINARY_NAME} PRIVATE "service_bootstrap.cpp")
+  target_compile_definitions(${BINARY_NAME} PRIVATE SWAN_MANAGED_SERVICE_BOOTSTRAP)
+  target_link_libraries(${BINARY_NAME} PRIVATE advapi32 shell32)
+endif()
+
 # Add preprocessor definitions for the build version.
 target_compile_definitions(${BINARY_NAME} PRIVATE "FLUTTER_VERSION=\"${FLUTTER_VERSION}\"")
 target_compile_definitions(${BINARY_NAME} PRIVATE "FLUTTER_VERSION_MAJOR=${FLUTTER_VERSION_MAJOR}")
