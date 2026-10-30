@@ -1,0 +1,135 @@
+{
+  "application_source": "b1fbe1e2419c3e749663746c74442d1fe864302d",
+  "management_source": "361d7c362de7f67b7b7456d33bf0191736eec7d5",
+  "scope": "Current isolated company HTTPS API, current Server2019 receiving-device credential and current Server2025 technician graphical account filtering. These checks do not qualify hostile native transport paths.",
+  "company_api": {
+    "utc": "2026-10-30T09:59:02.605024+00:00",
+    "management_source": "361d7c362de7f67b7b7456d33bf0191736eec7d5",
+    "application_candidate": "b1fbe1e2419c3e749663746c74442d1fe864302d",
+    "scope": "Actual isolated company HTTPS API with MFA accounts and one new pending enrollment; not native protocol bypass qualification.",
+    "checks": [
+      {
+        "name": "anonymous inventory rejected",
+        "status": 401
+      },
+      {
+        "name": "anonymous grant rejected",
+        "status": 401
+      },
+      {
+        "name": "unassigned technician inventory empty",
+        "status": 200
+      },
+      {
+        "name": "unassigned technician grant to known approved device rejected",
+        "status": 403
+      },
+      {
+        "name": "unassigned technician cannot read administrator audit",
+        "status": 401
+      },
+      {
+        "name": "unattended grant without customer consent rejected",
+        "status": 403
+      },
+      {
+        "name": "pending device may read only its own status",
+        "status": 200
+      },
+      {
+        "name": "authorized technician cannot obtain pending-device grant",
+        "status": 403
+      },
+      {
+        "name": "administrator cannot bypass pending-device approval",
+        "status": 403
+      },
+      {
+        "name": "pending device cannot claim a session",
+        "status": 401
+      },
+      {
+        "name": "pending device cannot renew a closed session",
+        "status": 401
+      },
+      {
+        "name": "revoked fixture credential cannot read device status",
+        "status": 401
+      }
+    ],
+    "existing_devices_and_consent_unchanged": true,
+    "no_grants_created_by_denied_requests": true,
+    "only_new_fixture_revoked_after_test": true,
+    "existing_native_app_sessions_not_logged_out": true,
+    "native_unauthorized_protocol_paths_tested": false,
+    "closed_grant_replay_with_approved_device_tested": false,
+    "production_publication": false
+  },
+  "receiving_device_api": {
+    "checks": [
+      {
+        "name": "modified wrong-company payload rejected",
+        "status": 403
+      },
+      {
+        "name": "modified signature rejected",
+        "status": 403
+      },
+      {
+        "name": "valid once-only claim positive control",
+        "status": 200
+      },
+      {
+        "name": "same signed grant second claim rejected",
+        "status": 403
+      },
+      {
+        "name": "authorized open-lease renewal positive control",
+        "status": 200
+      },
+      {
+        "name": "close original receiver authorization",
+        "status": 200
+      },
+      {
+        "name": "closed grant renewal rejected before lease expiry",
+        "status": 403
+      },
+      {
+        "name": "closed signed grant replay rejected before grant expiry",
+        "status": 403
+      },
+      {
+        "name": "earlier native disconnected grant cannot renew",
+        "status": 403
+      }
+    ],
+    "native_protocol_bypass_tested": false,
+    "utc": "2026-10-30T10:03:53.4431119Z",
+    "identity_credential_trust_and_consent_unchanged": true,
+    "receiver_service_running": true,
+    "scope": "Actual company HTTPS claim/renew/close API using the current receiving device credential in guest memory. Native unauthorized transport paths remain separate.",
+    "closed_renew_and_reclaim_checked_before_both_expiries": true,
+    "production_publication": false,
+    "shipping_verifier_passed": true
+  },
+  "native_unassigned_account": {
+    "utc": "2026-10-30T10:10:11.285722+00:00",
+    "application_source": "b1fbe1e2419c3e749663746c74442d1fe864302d",
+    "native_version": "1.5.10",
+    "os_build": 26100,
+    "one_owned_unassigned_account_mfa_login_succeeded": true,
+    "company_branding_visible": true,
+    "no_approved_devices_assigned_message_rendered": true,
+    "no_request_support_controls_rendered": true,
+    "no_sessions_history_message_rendered": true,
+    "credentials_and_otp_not_recorded": true,
+    "protocol_bypass_tested": false
+  },
+  "not_qualified": [
+    "Legacy-password or direct-IP protocol bypass rejection on the current native receiver",
+    "Wrong-company grant signed by a different valid company key; this receipt mutates payload/signature instead",
+    "Full current session expiry/outage/revocation and Windows matrix",
+    "Production signing or external public-network operation"
+  ]
+}
