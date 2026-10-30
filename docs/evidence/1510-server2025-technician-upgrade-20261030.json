@@ -43,12 +43,24 @@
     "forced_reset_or_disk_replacement": false
   },
   "not_qualified_by_this_receipt": [
-    "Technician graphical login, inventory or native sessions",
+    "Native desktop sessions, attended approval, disconnect and receiving permission enforcement",
     "Standard-user installation or elevation behavior",
     "Automatic updating, interruption recovery or session/update coordination",
     "Fresh installation, repair, uninstall or complete operating-system matrix",
     "Rendered branding, offline branding or profile-key rotation",
     "External public-network connectivity",
     "Production publisher approval"
-  ]
+  ],
+  "subsequent_native_gui": {
+    "utc": "2026-10-30T09:30:26.427579+00:00",
+    "native_version": "1.5.10",
+    "os_build": 26100,
+    "swan_attribution_visible": true,
+    "one_owned_lab_mfa_login_succeeded": true,
+    "authorized_inventory_rendered": true,
+    "target_customer19_approved_visible": true,
+    "native_desktop_session_demonstrated": false,
+    "otp_or_password_recorded": false,
+    "launch_observer_timeout_did_not_restart_original_task": true
+  }
 }
