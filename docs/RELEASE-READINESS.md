@@ -15,8 +15,7 @@ Passing one operating system or one component does not qualify the full product.
   recovery. The [full native build and local archive/source verification](evidence/1511-7b60309-native-build-and-source-ci-20261030.json)
   also passed, including customer headless service startup and unsigned technician
   install/repair/uninstall on CI. All1314 tracked source files and six generated
-  bridge files matched. Independent build41093808835 is running; byte comparison,
-  production signing and installed-endpoint qualification remain open.
+  bridge files matched. [Independent build41093808835 and original-byte comparison](evidence/1511-independent-build-coordinated-lab-upgrade-and-bundles-20261031.json) passed: all eight shipping outputs,1314 tracked source files, six bridge files and618 MSVC input files per build matched. Production signing and installed-endpoint qualification remain open.
   [Owned lab signing](evidence/1511-7b60309-owned-lab-signed-packages-20261030.json)
   subsequently produced verified customer/technician MSIs, their native programs,
   the agent, management and worker using the retained nonexportable lab key.
@@ -24,9 +23,7 @@ Passing one operating system or one component does not qualify the full product.
   qualified by signing alone. A matching
   [Linux lab management build](evidence/1511-7b60309-linux-lab-management-fresh-company-20261030.json)
   passed fresh-company setup, MFA/replay, enrollment, restart and backup/restore
-  checks using a verified cached toolchain and a new empty build path. The live
-  company remains on361; coordinated server/worker upgrade, new-image HTTPS/native
-  integration and canonical Docker image reproduction remain separate gates. The exact 1.5.10 receipts
+  checks using a verified cached toolchain and a new empty build path. The [owned company server and private Windows worker upgrade](evidence/1511-independent-build-coordinated-lab-upgrade-and-bundles-20261031.json) subsequently passed with a fresh encrypted backup, real HTTPS/MFA and unchanged company profile26, consent, accounts, permissions, release/job records, private worker credentials and TLS/transport containers. Both release14 company bundles passed exact-source/signature/hash checks and public customer/protected technician downloads. Automatic rollout remains paused; native integration, installed1.5.11 qualification and canonical Docker image reproduction remain open. The exact 1.5.10 receipts
   below remain scoped to their original source and lab settings.
 - Working candidate `1.5.10+78` adds an early service-manager connection before
   loading the native core. The corrected complete build run40988690083 succeeded:
