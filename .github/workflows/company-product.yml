@@ -130,6 +130,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'MSI version preflight checks failed.' }
           powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File ./deployment/windows/test_company_watch_recovery.ps1
           if ($LASTEXITCODE -ne 0) { throw 'Company configuration watcher recovery checks failed.' }
+          powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File ./deployment/windows/test_update_recovery_task.ps1
+          if ($LASTEXITCODE -ne 0) { throw 'Update recovery task ownership and lifecycle checks failed.' }
       - name: Render the Windows setup wizard without installation
         if: runner.os == 'Windows'
         shell: pwsh

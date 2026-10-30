@@ -78,8 +78,11 @@ but does not yet demonstrate native uninstall/reinstall.
 For diagnostics, `Update-RecoveryTask.ps1 -InspectOnly` reads task ownership and
 outputs a proposed identity without registering or removing a task. It does not
 prove executable trust or successful registration. `test_update_recovery_task.ps1`
-tests pure ownership rejection and cancellation files in an isolated temporary
-directory, without native task changes or installer execution.
+tests exact-SID account resolution, ownership rejection and cancellation files.
+It also registers, inspects and removes one isolated technician task using a
+signed OS binary without starting it. Windows may return a short principal name
+after registration by SID; the guard resolves that account to its SID and rejects
+foreign or unresolvable identities. It never accepts a name suffix as ownership.
 
 The company bundle includes the fixed read-only MSI mode inspector. Setup selects
 repair for the exact already-registered product and installation for an unknown

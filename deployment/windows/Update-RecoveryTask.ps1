@@ -7,8 +7,16 @@ param(
     [switch]$InspectOnly
 )
 $ErrorActionPreference='Stop'
-function Assert-RecoveryTask($Task,[string]$Helper,[string[]]$Accounts) {
-    if ($Task.TaskPath -cne '\' -or $Task.Actions.Count -ne 1 -or [IO.Path]::GetFullPath($Task.Actions[0].Execute) -ine $Helper -or $Task.Actions[0].Arguments -cne 'recover-update-task' -or $Task.Principal.UserId -notin $Accounts) { throw 'Update recovery task belongs to another installation.' }
+function Assert-RecoveryTask($Task,[string]$Helper,[string]$AccountSid) {
+    if ($Task.TaskPath -cne '\' -or $Task.Actions.Count -ne 1 -or [IO.Path]::GetFullPath($Task.Actions[0].Execute) -ine $Helper -or $Task.Actions[0].Arguments -cne 'recover-update-task') { throw 'Update recovery task belongs to another installation.' }
+    # Task Scheduler can return a short account name after registration by SID.
+    # Resolve that identity; never authorize by display-name or suffix matching.
+    try {
+        $principal=[string]$Task.Principal.UserId
+        $actualSid=if ($principal -match '^S-\d-') { ([Security.Principal.SecurityIdentifier]::new($principal)).Value } else { ([Security.Principal.NTAccount]::new($principal)).Translate([Security.Principal.SecurityIdentifier]).Value }
+        $expectedSid=([Security.Principal.SecurityIdentifier]::new($AccountSid)).Value
+    } catch { throw 'Update recovery task account cannot be resolved.' }
+    if ($actualSid -cne $expectedSid) { throw 'Update recovery task belongs to another installation.' }
 }
 $directoryPath=[IO.Path]::GetFullPath($Directory).TrimEnd('\')
 if ($Sequence -eq 0) { throw 'A positive recovery sequence is required.' }
@@ -21,8 +29,7 @@ $tasks=@(Get-ScheduledTask | Where-Object { $_.TaskName -ceq $name })
 if ($tasks.Count -gt 1) { throw 'Ambiguous update recovery task.' }
 if ($tasks.Count -eq 1) {
     $task=$tasks[0]
-    $account=if ($Edition -eq 'customer') { @('SYSTEM','S-1-5-18','NT AUTHORITY\SYSTEM') } else { @($user,[Security.Principal.WindowsIdentity]::GetCurrent().Name) }
-    Assert-RecoveryTask $task $helper $account
+    Assert-RecoveryTask $task $helper $user
 }
 if ($InspectOnly) {
     @{task_name=$name;helper=$helper;principal=$user;operation=$Operation;task_mutated=$false} | ConvertTo-Json -Compress
