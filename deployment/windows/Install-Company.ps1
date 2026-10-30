@@ -143,7 +143,7 @@ if (Test-Path -LiteralPath $installationMarker) { throw 'Company installation re
 if ($bootstrap.edition -eq 'customer') {
     $action = New-ScheduledTaskAction -Execute (Join-Path $editionDirectory 'swan-agent.exe') -Argument 'watch'
     $trigger = New-ScheduledTaskTrigger -AtStartup
-    $settings = New-ScheduledTaskSettingsSet -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 1) -ExecutionTimeLimit ([TimeSpan]::Zero)
+    $settings = New-ScheduledTaskSettingsSet -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 1) -ExecutionTimeLimit ([TimeSpan]::Zero) -Priority 4
     Register-ScheduledTask -TaskName 'Swan Company Configuration' -Action $action -Trigger $trigger -Settings $settings -User 'SYSTEM' -RunLevel Highest -Force | Out-Null
     Enable-ScheduledTask -TaskName 'Swan Company Configuration' | Out-Null
     Start-ScheduledTask -TaskName 'Swan Company Configuration'

@@ -6,6 +6,12 @@ Passing one operating system or one component does not qualify the full product.
 
 ## Sources and signing
 
+- Development candidate `1.5.11+79` gives configuration/recovery tasks and
+  noninteractive trust/update helpers normal scheduling priority. Restart and
+  restore migrate the validated existing configuration task without changing
+  its action or account. This source change follows a Windows10 lab repair;
+  it has not yet been built, signed or qualified. The exact 1.5.10 receipts
+  below remain scoped to their original source and lab settings.
 - Working candidate `1.5.10+78` adds an early service-manager connection before
   loading the native core. The corrected complete build run40988690083 succeeded:
   [exact source, input hashes, security regressions and unsigned MSI lifecycle](evidence/1510-b1fbe1e-native-build-and-msi-ci-20261030.json)
@@ -65,7 +71,7 @@ uninstall and native behavior on each advertised operating system.
 
 | Operating system, x64 Desktop Experience | Current candidate status |
 | --- | --- |
-| Windows 10 | Existing Pro build19045 normally booted with customer1.5.4, preserved original enrollment/trust/consent and passed shipping verification. A [subsequent attended attempt](evidence/154-win10-receiving-approval-pipe-failure-20261030.json) reached receiving authorization but its approval manager logged a pipe access-denied error and no customer-approved desktop was obtained. This older receiver failure is retained for diagnosis; it does not establish a current1.5.10 customer defect. No customer upgrade or session/update coordination is qualified by that attempt. Complete 1.5.10 matrix remains open. |
+| Windows 10 | The [1.5.4 approval-manager pipe failure](evidence/154-win10-receiving-approval-pipe-failure-20261030.json) remains preserved. A subsequent [automatic upgrade and current native session](evidence/1510-win10-customer-automatic-upgrade-and-session-20261030.json) reached 1.5.10 with exact signed files, shipping verification and unchanged identity/trust/consent. The older watcher required a scoped task-priority repair and controlled restart; this does not qualify the unmodified default update flow. Current customer approval, desktop, correlated pointer/Escape, lease renewal and customer Stop support passed; the same server session closed and the technician lost access. Complete lifecycle and session/update coordination remain open. |
 | Windows 11 | Earlier candidate coverage exists; current test is deferred while the host cannot retain its memory reserve with the company server running. |
 | Windows Server 2016 | Substantial 1.5.9 native, installation and recovery evidence above; full install/update/uninstall matrix still open. |
 | Windows Server 2019 | Explicit 1.5.9 to 1.5.10 customer upgrade and three normal reboots passed with identity/consent and private worker preserved. Current attended native session, pointer/Escape input and customer disconnect passed with the Server 2025 technician. The same-machine technician automatically upgraded from 1.5.8 to 1.5.10 after pause/window/cohort deferral checks, preserved trust and consent, restarted and completed fresh MFA/inventory and installation reporting. Remaining desktop, negative-access and installer/update cases remain open. |

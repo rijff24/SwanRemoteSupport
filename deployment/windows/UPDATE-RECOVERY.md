@@ -9,7 +9,12 @@ own staged location rather than inherited environment settings.
 
 Customer recovery runs as SYSTEM at startup and every five minutes. Technician
 recovery runs as the current user, with limited privileges, at logon and every
-five minutes. Tasks use a per-directory, edition and sequence name. Registration
+five minutes. Configuration and recovery tasks use normal priority (Task Scheduler
+priority 4), including when a validated configuration task is restarted or restored
+from an older installation. Trust-check and installation helpers also explicitly
+start at normal priority; they must not inherit a background caller's priority.
+This does not change their accounts, privileges, action paths or approval checks.
+Tasks use a per-directory, edition and sequence name. Registration
 or deletion refuses unexpected task paths, actions, arguments or principals.
 Failed registration stops handoff before installation. The staged folder is
 outside the MSI-owned installed files; customer setup protects its state tree

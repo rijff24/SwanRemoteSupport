@@ -23,7 +23,7 @@ env:
   FLUTTER_ENGINE_SHA256: "ec8cabf36ee4ff24c8d98de25b00e70781eb03876265aee84d0fe554a110036e"
   VCPKG_COMMIT_ID: "120deac3062162151622ca4860575a33844ba10b"
   VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
-  VERSION: "1.5.10"
+  VERSION: "1.5.11"
 
 jobs:
   maintained-transport:
@@ -360,6 +360,8 @@ jobs:
       - name: Build company management and distribution components
         shell: pwsh
         run: |
+          cargo test --manifest-path product/Cargo.toml --locked -p swan-agent update::tests::powershell_verifier_does_not_inherit_background_priority -- --exact
+          if ($LASTEXITCODE -ne 0) { throw 'Windows trust-helper scheduling regression failed.' }
           cargo build --manifest-path product/Cargo.toml --workspace --release --locked
           Copy-Item product/target/release/swan-*.exe artifacts/
           Copy-Item deployment/windows/Install-Company.ps1,deployment/windows/Open-Technician.ps1,deployment/windows/Uninstall-Technician.ps1,deployment/windows/Verify-Package.ps1,deployment/windows/Get-WindowsCompatibility.ps1 artifacts/

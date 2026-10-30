@@ -35,7 +35,7 @@ if ($Operation -eq 'remove') {
 if ((Get-AuthenticodeSignature -LiteralPath $helper).Status -ne 'Valid') { throw 'Recovery helper signature is invalid.' }
 $action=New-ScheduledTaskAction -Execute $helper -Argument 'recover-update-task'
 $repeat=New-ScheduledTaskTrigger -Once -At ([DateTime]::Now.AddMinutes(5)) -RepetitionInterval (New-TimeSpan -Minutes 5)
-$settings=New-ScheduledTaskSettingsSet -StartWhenAvailable -ExecutionTimeLimit (New-TimeSpan -Hours 2) -MultipleInstances IgnoreNew
+$settings=New-ScheduledTaskSettingsSet -StartWhenAvailable -ExecutionTimeLimit (New-TimeSpan -Hours 2) -MultipleInstances IgnoreNew -Priority 4
 if ($Edition -eq 'customer') {
     $startup=New-ScheduledTaskTrigger -AtStartup
     $principal=New-ScheduledTaskPrincipal -UserId $user -LogonType ServiceAccount -RunLevel Highest

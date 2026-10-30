@@ -332,11 +332,15 @@ fn system_directory()->Result<std::path::PathBuf> {
 
 #[cfg(windows)]
 pub fn powershell_command()->Result<std::process::Command> {
+    use std::os::windows::process::CommandExt;
     let root=system_directory()?.join("WindowsPowerShell/v1.0");
     let mut command=std::process::Command::new(root.join("powershell.exe"));
     // PowerShell 7 can pass its module paths through a Rust child to Windows
     // PowerShell. Use only Windows' built-ins for trust and compatibility checks.
     command.env("PSModulePath",root.join("Modules"));
+    // Trust checks must not inherit a background caller's scheduling priority.
+    // Keep these noninteractive helpers hidden and explicitly normal priority.
+    command.creation_flags(0x08000020);
     Ok(command)
 }
 
@@ -861,7 +865,7 @@ fn launch_update_helper(directory:&Path,release:&Release)->Result<()> {
     crate::replace_state(&attempt,&folder.join("last-attempt.txt"))?;
     let log=std::fs::OpenOptions::new().create(true).append(true).open(folder.join("apply-update.log"))?;
     std::process::Command::new(helper).arg("apply-update").env("SWAN_STATE_DIR",directory).env_remove("SWAN_TECHNICIAN_TOKEN")
-        .creation_flags(0x08000000).stdin(std::process::Stdio::null())
+        .creation_flags(0x08000020).stdin(std::process::Stdio::null())
         .stdout(std::process::Stdio::from(log.try_clone()?)).stderr(std::process::Stdio::from(log)).spawn()?;
     Ok(())
 }
@@ -1438,6 +1442,34 @@ pub(crate) fn test_failed_release_quarantine(state:&AgentState,release:&Release,
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[cfg(windows)]
+    #[test]
+    fn normal_priority_powershell_child() {
+        if std::env::var("SWAN_TEST_PRIORITY_CHILD").as_deref()!=Ok("1"){return;}
+        // Only this disposable test process is lowered; the main test runner
+        // and its other concurrent tests keep their original scheduling.
+        let lower=format!("$p=[Diagnostics.Process]::GetProcessById({});$p.PriorityClass=[Diagnostics.ProcessPriorityClass]::BelowNormal;[Console]::WriteLine($p.PriorityClass.ToString())",std::process::id());
+        let parent=powershell_command().unwrap().args(["-NoLogo","-NoProfile","-NonInteractive","-Command",&lower]).output().unwrap();
+        assert!(parent.status.success());
+        assert_eq!(String::from_utf8(parent.stdout).unwrap().trim(),"BelowNormal");
+        let verifier=powershell_command().unwrap().args(["-NoLogo","-NoProfile","-NonInteractive","-Command","[Console]::WriteLine(([Diagnostics.Process]::GetCurrentProcess()).PriorityClass.ToString())"]).output().unwrap();
+        assert!(verifier.status.success());
+        assert_eq!(String::from_utf8(verifier.stdout).unwrap().trim(),"Normal");
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn powershell_verifier_does_not_inherit_background_priority() {
+        use std::process::{Command,Stdio};
+        let mut child=Command::new(std::env::current_exe().unwrap())
+            .args(["--exact","update::tests::normal_priority_powershell_child","--nocapture"])
+            .env("SWAN_TEST_PRIORITY_CHILD","1")
+            .stdin(Stdio::null()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();
+        let status=crate::verifier_process::wait(&mut child,std::time::Duration::from_secs(240)).unwrap();
+        let output=child.wait_with_output().unwrap();
+        assert!(status.success(),"priority fixture failed: {} {}",String::from_utf8_lossy(&output.stdout),String::from_utf8_lossy(&output.stderr));
+    }
+
     #[tokio::test]
     async fn streamed_download_requires_completion_hash_and_limit_before_replacement(){
         let folder=std::env::temp_dir().join(format!("swan-stream-test-{}",random_token()));

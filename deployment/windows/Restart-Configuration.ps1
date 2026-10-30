@@ -18,5 +18,12 @@ do {
     Start-Sleep -Milliseconds 100
 } while ($true)
 if ($StopOnly) { return }
+# Existing installations may still use Task Scheduler's background default.
+# Normalize only the validated task, after its previous instance has exited.
+if ($task.Settings.Priority -ne 4) {
+    $settings = $task.Settings
+    $settings.Priority = 4
+    Set-ScheduledTask -TaskName $task.TaskName -TaskPath $task.TaskPath -Settings $settings | Out-Null
+}
 $task | Enable-ScheduledTask | Out-Null
 $task | Start-ScheduledTask
