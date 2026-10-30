@@ -11,7 +11,9 @@ Passing one operating system or one component does not qualify the full product.
   [exact source, input hashes, security regressions and unsigned MSI lifecycle](evidence/1510-b1fbe1e-native-build-and-msi-ci-20261030.json)
   verified. The actual customer service started without desktop modules on CI;
   technician install/repair/uninstall passed. Enrolled-machine upgrades, normal
-  broader reboot reliability and independent full native reproduction remain pending. The
+  broader reboot reliability remains pending. [Independent Windows reproduction](evidence/1510-b1fbe1e-independent-native-reproduction-20261030.json)
+  verified all eight original unsigned shipping files byte-for-byte, with matching
+  recorded compiler inputs and no shipping-file normalization. The
   [startup design and boundary tests](../deployment/windows/SERVICE-STARTUP.md)
   passed actual SCM/loader tests on Windows Server 2022 CI and the Server 2019
   lab using simulated core DLLs; see the [boundary receipt](evidence/1510-service-bootstrap-scm-boundary-20261030.json).
@@ -31,7 +33,8 @@ Passing one operating system or one component does not qualify the full product.
   approval and production-signed release artifacts remain outstanding.
 - [Windows/Linux component reproduction](evidence/361d7c3-push-pr-windows-linux-component-reproduction-20261030.json)
   establishes identical management, agent and worker bytes in the two recorded
-  builds. It does not establish native Flutter/engine/MSI reproduction.
+  component builds. The separate 1.5.10 Windows reproduction above covers the
+  native packages; canonical Linux Docker image reproduction remains separate.
 
 ## Current acceptance boundaries
 

@@ -55,6 +55,20 @@ external release-mirror files in
 the existing lab bind mount are outside this archive. See the
 [offline recovery receipt](evidence/361d7c3-linux-preupgrade-offline-backup-restore-20261030.json).
 
+## Candidate 1.5.10 independent Windows reproduction, 30 October
+
+Native runs40988690083 and40997460699 both succeeded at public source `b1fbe1e`
+with the same pinned engine. Comparison run41005323442 verified the original
+archives and corresponding source, then compared eight unsigned shipping files:
+both MSIs, customer and technician EXEs, server setup, agent, management service
+and worker. All eight were byte-identical, and recorded MSVC inputs matched.
+No shipping files were normalized or rebuilt for comparison, and no executable
+was run by it. The downloaded comparison report matched its artifact digest and
+its first archive/output hashes matched the independently verified local original.
+Runtime, signing, complete OS qualification and canonical Linux Docker image
+reproduction have separate gates. See the
+[reproduction receipt](evidence/1510-b1fbe1e-independent-native-reproduction-20261030.json).
+
 ## Candidate 1.5.10 company bundles, enrolled upgrade and three reboots, 30 October
 
 Both lab-signed MSI packages, agent and native executables passed fresh publisher
@@ -82,8 +96,9 @@ untouched and its corrected read-only observer passed before the next reboot.
 
 This is one Server2019 VM, not physical cold-power-on or all-Windows reliability
 qualification. Current native GUI/session tests, technician runtime and automatic
-rollout remain open. Both native builds succeeded; exact byte comparison is
-pending. See the [scoped receipt](evidence/1510-linux-bundles-server2019-upgrade-three-reboots-20261030.json).
+rollout remain open. Both native builds succeeded; exact byte comparison was
+subsequently verified in the separate receipt above. See the
+[scoped runtime receipt](evidence/1510-linux-bundles-server2019-upgrade-three-reboots-20261030.json).
 
 ## Candidate 1.5.10 complete native build and MSI lifecycle, 30 October
 
