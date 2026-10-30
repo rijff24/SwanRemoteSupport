@@ -1,0 +1,70 @@
+{
+  "utc": "2026-10-30T00:20:00.980417+00:00",
+  "scope": "Existing disposable Windows Server2019 Standard Evaluation x64 Desktop Experience build17763, original Linux company with automatic updates paused. Explicit upgrade of original customer; not fresh installation or complete OS qualification.",
+  "application_source": "aff8ff61e3fbd6f34c4cf0bb9de6e330ec6e0521",
+  "worker_source": "1c43a382c87b05e44caff1c6c2bef4cf0b0bb6fc",
+  "before_version": "1.5.1+69",
+  "after_version": "1.5.9+77",
+  "before_sequence": 1,
+  "after_sequence": 11,
+  "profile_revision": 14,
+  "worker_migrated_to_new_private_file_credential": true,
+  "legacy_registrations_remain_revoked": true,
+  "service_registry_contains_only_private_configuration_path": true,
+  "actual_standard_user_control_read_succeeded_and_private_credential_read_denied": true,
+  "temporary_standard_user_removed": true,
+  "both_original_queued_bundles_completed_and_independently_verified": true,
+  "public_customer_protected_technician_downloads_verified": true,
+  "generated_bundles": [
+    {
+      "edition": "customer",
+      "job_id": "f0888951-919e-4933-9d2c-b8434162459e",
+      "bundle_sha256": "e65621990df49e9600dd8a00dd068fc68e56858771b20a548563c809bb87ae6b",
+      "bytes": 32722365,
+      "public_bootstrap_only": true,
+      "profile_and_release_signatures_verified": true,
+      "tamper_rejection_verified": true,
+      "seven_source_texts_exact": true,
+      "signed_payload_hashes_verified": true,
+      "anonymous_status": 200,
+      "download_status": 200
+    },
+    {
+      "edition": "technician",
+      "job_id": "202fd50f-bba0-4d54-a298-2b20389be88f",
+      "bundle_sha256": "5ceb548601d7b9cde3566df45b6de291bb1a76b61afb4ea6db0fe2ee25f0dc94",
+      "bytes": 30526383,
+      "public_bootstrap_only": true,
+      "profile_and_release_signatures_verified": true,
+      "tamper_rejection_verified": true,
+      "seven_source_texts_exact": true,
+      "signed_payload_hashes_verified": true,
+      "anonymous_status": 401,
+      "download_status": 200
+    }
+  ],
+  "explicit_customer_upgrade_and_shipping_verifier_passed": true,
+  "original_device_identity_credential_bootstrap_and_consent_preserved": true,
+  "company_branding_and_paused_policy_preserved": true,
+  "worker_automatic_reboot_passed": true,
+  "customer_automatic_reboot_passed": false,
+  "customer_boot_failure": {
+    "event_ids": [
+      7000,
+      7009
+    ],
+    "service_connection_timeout_ms": 30000,
+    "service_stopped_after_actual_new_boot": true,
+    "cause_unproven": true
+  },
+  "customer_one_manual_warm_recovery_passed": true,
+  "manual_warm_start_seconds": 6.1103574,
+  "recovered_service_did_not_load_flutter_engine_or_desktop_plugins": true,
+  "limits": [
+    "Customer automatic boot is a failing release gate; warm recovery does not qualify it.",
+    "No automatic update rollout, fresh1.5.9 installation, native GUI/session or full Server2019 matrix is established by this run.",
+    "Disposable lab publisher and same-host VM networking do not qualify production signing or public connectivity."
+  ],
+  "production_publication": false,
+  "full_product_acceptance_complete": false
+}

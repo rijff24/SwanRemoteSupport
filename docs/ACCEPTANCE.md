@@ -4,6 +4,30 @@ Evidence through 30 October 2026. **The product is not complete or approved for
 production publication.** A passing component test is not evidence of a working
 native support session or a clean-machine installation.
 
+For the current candidate and remaining release gates, start with the compact
+[release-readiness index](RELEASE-READINESS.md). The older checkpoints below
+remain source-specific historical evidence.
+
+## Server 2019 upgrade and unresolved automatic startup, 30 October
+
+The existing Linux-company Server 2019 customer upgraded explicitly from
+1.5.1+69/sequence1 to 1.5.9+77/sequence11. Its identity, device credential,
+bootstrap trust, consent and branding were preserved and the installed-file
+verifier passed. The original worker was separately migrated to a new private-file
+credential; both old registrations remain revoked. An actual standard-user token
+read a public control file but could not read the new credential file. Both queued
+customer and technician bundles completed and passed independent signature,
+source-text and payload-hash checks; anonymous customer access succeeded and
+anonymous technician access returned401.
+
+After one normal reboot, the worker started automatically but the customer did
+not: Windows recorded service events7000/7009 and a 30-second connection timeout.
+A single manual warm start succeeded in about6.11 seconds. The recovered process
+loaded neither the Flutter engine nor desktop plugin DLLs. The earlier delay-load
+fix is present, but reliable customer automatic boot remains a **failed acceptance
+gate**, with its cause unproven. This is not full Server 2019 qualification or an
+automatic-update rollout test. See the [scoped upgrade and failure receipt](evidence/159-server2019-upgrade-private-worker-cold-start-failure-20261030.json).
+
 ## Native branding synchronization, 30 October
 
 Both installed 1.5.9 editions automatically accepted signed company profile
