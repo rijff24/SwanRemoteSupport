@@ -88,3 +88,14 @@ an empty protected directory. The replacement HTTPS proxy uses the restored PFX;
 key/certificate bytes match the originals, the management public signing key and
 device credential survive, and the closed grant remains denied. Local certificate
 storage recovery does not prove ACME renewal or production Caddy recovery.
+
+The [current 1.5.10 installed rehearsal](evidence/1510-installed-profile-key-rotation-and-native-recovery-20261030.json)
+verified automatic transition and replacement-key adoption on a Windows 10
+customer and both Server 2019 editions. The existing private worker required an
+explicit public-pin update; its credential, registry path and private ACLs stayed
+unchanged. A fresh customer-approved native desktop session worked after rotation
+and customer stop closed it. Real shipping-agent HTTPS checks rejected cached
+states that missed the transition. Old installer links were withdrawn. Fresh
+encrypted exports were retained before and after rotation; restoring the latest
+archive and generating replacement bundles remain separate checks. Offline
+installations were not silently reset to a new trust key.
