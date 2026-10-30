@@ -1,0 +1,64 @@
+{
+  "recorded_utc": "2026-10-30T23:53:55.759298+00:00",
+  "source": "94284db24b8993344c12cae0a8baa95f82dc0e02",
+  "canonical_build": {
+    "utc": "2026-10-30T23:15:42.539697+00:00",
+    "source": "94284db24b8993344c12cae0a8baa95f82dc0e02",
+    "image": "sha256:83996cd1336c1a718deb84c43a05d079ae53d974346cf0b91a4fbbbc11815713",
+    "tag": "swan-linux-owned:source94284db-canonical-20261031",
+    "canonical_recipe_unchanged": true,
+    "archive_checkout_crlf_only_verified": true,
+    "runtime_tests_pending": true,
+    "independent_canonical_reproduction_pending": true,
+    "company_configuration_unchanged": true,
+    "production_publication": false
+  },
+  "source_context": {
+    "utc": "2026-10-30T22:49:15.194684+00:00",
+    "source": "94284db24b8993344c12cae0a8baa95f82dc0e02",
+    "tag": "swan-linux-owned:source94284db-canonical-20261031",
+    "context_sha256": "d70f6a2b43d9a9029e8195a7154e202664fdf2c2f895a11aa84b90a3640c8b28",
+    "canonical_dockerfile_sha256": "d68a85159e999ffbd45da40d3c0a03e522e74b989f783e53171ecd4727b08be5",
+    "canonical_recipe_unchanged": true,
+    "archive_checkout_crlf_only_verified": true,
+    "pinned_official_builder_id": "sha256:3914072ca0c3b8aad871db9169a651ccfce30cf58303e5d6f2db16d1d8a7e58f",
+    "empty_tracked_target_and_no_cache": true,
+    "one_job_one_cpu_memory_mib": 1536,
+    "company_configuration_unchanged": true,
+    "production_publication": false
+  },
+  "measured_build_resources": {
+    "utc": "2026-10-30T22:54:23.773250+00:00",
+    "authoritative_process": "Existing cargo2615",
+    "cgroup": "/docker/buildkit/kgeq1vx2iyvaa5fmdyzjgefgo",
+    "memory_max_bytes": 1610612736,
+    "memory_current_bytes": 128319488,
+    "cpu_max": "100000 100000",
+    "enforced_one_cpu_and_1536mib_verified": true,
+    "cargo_index_files_observed": 26,
+    "existing_build_not_restarted": true
+  },
+  "fresh_company_runtime": {
+    "utc": "2026-10-30T23:19:44.630389+00:00",
+    "source": "94284db24b8993344c12cae0a8baa95f82dc0e02",
+    "image": "sha256:83996cd1336c1a718deb84c43a05d079ae53d974346cf0b91a4fbbbc11815713",
+    "lab_cached_toolchain_variant": false,
+    "canonical_recipe_and_official_pinned_builder": true,
+    "fresh_source_and_target_compile": true,
+    "real_shipped_harness_passed": true,
+    "nonroot_readonly_and_private_storage": true,
+    "fresh_company_setup_mfa_replay_enrollment_policy_and_restart_persistence": true,
+    "real_management_backup_wrong_password_rejection_and_restore": true,
+    "original_company_image_unchanged": true,
+    "https_and_native_transport_to_new_image_qualified": false,
+    "existing_company_upgrade_performed": false,
+    "canonical_production_docker_reproduction": false,
+    "production_publication": false
+  },
+  "bounds": [
+    "Independent canonical build and binary comparison remain pending. First second-build preflight stopped before Docker build because host memory reserve was unavailable.",
+    "No live company upgrade or external NAT/relay qualification.",
+    "Canonical source export differed from Git blobs only by declared Windows text CRLF checkout conversion; no Dockerfile instructions changed."
+  ],
+  "production_publication": false
+}
