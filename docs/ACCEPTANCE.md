@@ -55,6 +55,36 @@ external release-mirror files in
 the existing lab bind mount are outside this archive. See the
 [offline recovery receipt](evidence/361d7c3-linux-preupgrade-offline-backup-restore-20261030.json).
 
+## Candidate 1.5.10 company bundles, enrolled upgrade and three reboots, 30 October
+
+Both lab-signed MSI packages, agent and native executables passed fresh publisher
+checks with the existing non-exportable Windows10 lab key. The original final
+verification stalled; its tasks and logs remain retained and are not reported
+successful. Already committed outputs were not rebuilt or re-signed. The final
+read-only checks passed with normal task priority and pinned Windows built-in
+modules, including verification that all original inputs remained unchanged.
+
+The source361 Linux company rejected invalid release signatures, request-supplied
+trust overrides and builds of unapproved releases. Its unchanged source1c43
+private Windows worker generated both approved sequence13 test bundles. The
+customer bundle downloaded anonymously; technician download required login.
+Both bundles' installer/agent hashes, seven exact source texts, public-only
+bootstrap and signed profile/release verified. Company policy stayed paused.
+
+The enrolled Server2019 customer then upgraded explicitly from1.5.9 to1.5.10,
+preserving device identity, credential, bootstrap trust, consent and branding.
+Three subsequent normal guest reboots passed automatic SYSTEM-service startup,
+with no service timeout events or manual service starts. The real native core
+loaded without desktop engine/plugins; installed-file/publisher verification
+and the private worker's HTTPS authorization passed after each boot. An initial
+compound reboot observer exceeded its observation timeout; the VM was left
+untouched and its corrected read-only observer passed before the next reboot.
+
+This is one Server2019 VM, not physical cold-power-on or all-Windows reliability
+qualification. Current native GUI/session tests, technician runtime and automatic
+rollout remain open. Both native builds succeeded; exact byte comparison is
+pending. See the [scoped receipt](evidence/1510-linux-bundles-server2019-upgrade-three-reboots-20261030.json).
+
 ## Candidate 1.5.10 complete native build and MSI lifecycle, 30 October
 
 Corrected run40988690083 succeeded at public source `b1fbe1e`. The downloaded

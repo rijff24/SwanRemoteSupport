@@ -11,11 +11,14 @@ Passing one operating system or one component does not qualify the full product.
   [exact source, input hashes, security regressions and unsigned MSI lifecycle](evidence/1510-b1fbe1e-native-build-and-msi-ci-20261030.json)
   verified. The actual customer service started without desktop modules on CI;
   technician install/repair/uninstall passed. Enrolled-machine upgrades, normal
-  reboot reliability and independent full native reproduction remain pending. The
+  broader reboot reliability and independent full native reproduction remain pending. The
   [startup design and boundary tests](../deployment/windows/SERVICE-STARTUP.md)
   passed actual SCM/loader tests on Windows Server 2022 CI and the Server 2019
-  lab using simulated core DLLs. This does not clear the recorded 1.5.9
-  intermittent startup failure; see the [scoped receipt](evidence/1510-service-bootstrap-scm-boundary-20261030.json).
+  lab using simulated core DLLs; see the [boundary receipt](evidence/1510-service-bootstrap-scm-boundary-20261030.json).
+  Actual lab-signed 1.5.10 subsequently passed an enrolled Server2019 upgrade and
+  three normal reboots with automatic native startup and no timeout events;
+  [distribution and reboot evidence](evidence/1510-linux-bundles-server2019-upgrade-three-reboots-20261030.json)
+  retains the historical 1.5.9 failure and the remaining qualification limits.
   The first native build failed on a missing `winsvc` dependency feature; the
   feature is now explicit in source `b1fbe1e` used by that corrected run.
 - Native customer/technician candidate: `aff8ff61e3fbd6f34c4cf0bb9de6e330ec6e0521`,
@@ -43,7 +46,7 @@ Passing one operating system or one component does not qualify the full product.
 | Windows encrypted recovery and transport data | [Populated migration](evidence/361d7c3-windows-populated-transport-migration-20261029.json), [running recovery/rollback](evidence/361d7c3-windows-populated-running-recovery-20261029.json), and [native session with restored data active](evidence/361d7c3-windows-native-active-restored-data-20261030.json) passed. Different-host disaster recovery remains open; Linux migration has separate evidence below. |
 | Current Linux recovery and migration | [Encrypted offline restore](evidence/361d7c3-linux-preupgrade-offline-backup-restore-20261030.json) preserved keys, settings, all21 installers and six TLS identities. [Live restore, migration and rollback](evidence/361d7c3-linux-live-migration-recovery-20261030.json) then passed with fresh MFA, permissions and download checks. The latest original data was upgraded to schema3, rolled back using a fresh schema2 checkpoint, and rolled forward successfully. Native sessions against this upgraded server and different-host recovery remain open. |
 | Installer worker credential protection | [Private worker checks](evidence/1c43a38-private-worker-windows-checks.json) cover the earlier Windows company migration. Every existing lab worker must be separately migrated; revoked legacy registrations must stay revoked. |
-| Server 2019 upgrade and startup | [1.5.1 to 1.5.9 upgrade and worker migration](evidence/159-server2019-upgrade-private-worker-cold-start-failure-20261030.json) preserved customer identity, trust, credential and consent. The private worker restarted automatically and completed a post-reboot build. **Customer automatic startup failed with a 30-second service connection timeout.** A subsequent traced normal reboot passed without manual startup; the intermittent failure remains unresolved. |
+| Server 2019 upgrade and startup | The [historical 1.5.9 timeout](evidence/159-server2019-upgrade-private-worker-cold-start-failure-20261030.json) is retained. [Actual 1.5.10 upgrade and three normal reboots](evidence/1510-linux-bundles-server2019-upgrade-three-reboots-20261030.json) passed with automatic native startup, no timeout events, unchanged identity/consent, installed-file verification and private worker authorization. Physical cold-power-on, current GUI/session behavior and other OS startup qualification remain open. |
 | Approved automatic updates | Earlier explicit/automatic update, interruption and rollout tests are source-specific records in ACCEPTANCE.md. They are not blanket approval of 1.5.9 across every OS. Complete current-candidate update/recovery, active-session coordination, publisher-policy and rollout tests remain release gates. |
 | Public connectivity without Tailscale | Native maintained-relay tests currently use separate VMs with lab host port forwarding. External NAT traversal, external relay fallback and negative-access tests are not qualified by those results. |
 | Profile security and trust rotation | Earlier signed-profile, rejection and rotation records are source-specific. Full current installed-edition tamper, expiry, rollback, wrong-company and trusted rotation qualification remains to be collected. |
@@ -56,12 +59,12 @@ uninstall and native behavior on each advertised operating system.
 
 | Operating system, x64 Desktop Experience | Current candidate status |
 | --- | --- |
-| Windows 10 | Earlier candidate coverage exists; complete 1.5.9 matrix remains open. |
+| Windows 10 | Earlier candidate coverage exists; complete 1.5.10 matrix remains open. The existing VM supplied lab signing, not current endpoint runtime qualification. |
 | Windows 11 | Earlier candidate coverage exists; current test is deferred while the host cannot retain its memory reserve with the company server running. |
 | Windows Server 2016 | Substantial 1.5.9 native, installation and recovery evidence above; full install/update/uninstall matrix still open. |
-| Windows Server 2019 | Explicit 1.5.1 to 1.5.9 upgrade and private worker migration passed; customer automatic startup after reboot failed. Full qualification remains open. |
-| Windows Server 2022 | Earlier candidate coverage exists; complete 1.5.9 matrix remains open. |
-| Windows Server 2025 | Earlier candidate coverage exists; complete 1.5.9 matrix remains open. |
+| Windows Server 2019 | Explicit 1.5.9 to 1.5.10 customer upgrade and three normal reboots passed with identity/consent and private worker preserved. Native GUI/session, remaining installer/update cases and technician1510 runtime remain open. |
+| Windows Server 2022 | Unsigned 1.5.10 CI lifecycle passed; complete enrolled-machine matrix remains open. |
+| Windows Server 2025 | Earlier candidate coverage exists; complete 1.5.10 matrix remains open. |
 
 Production publication also requires valid signing, exact corresponding source,
 documented deployment/update/restore procedures and closure of the remaining
