@@ -8,6 +8,33 @@ For the current candidate and remaining release gates, start with the compact
 [release-readiness index](RELEASE-READINESS.md). The older checkpoints below
 remain source-specific historical evidence.
 
+## Linux live recovery and current-data migration, 30 October
+
+The encrypted restore subsequently served the company over its existing HTTPS
+identity and migrated its management database from schema2 to schema3. Fresh
+administrator and technician MFA, device/group permissions, consent, profile
+trust, revoked/current worker credentials and customer/technician download
+hashes passed against the restored data and after actual rollback. The automatic
+encrypted pre-migration backup also authenticated and restored to schema2.
+
+The final upgrade used the latest original data, preserving audit events created
+since the earlier backup. A fresh quiesced schema2 checkpoint was retained;
+source361 upgraded the current data in place. The old binary then ran against
+that checkpoint for an actual rollback test, followed by successful rollforward
+to the current schema3 data. Fresh authentication, permissions, downloads and
+20 recent pre-upgrade audit events passed in all three phases. Transport and
+HTTPS container identities/volumes were preserved. The final deployment recipe
+matches the local recipe and no longer passes the one-time migration password
+to the container. All recovery copies remain private and retained, with only
+one company copy running at a time.
+
+The initial live test had a harness error: installation reporting is paginated,
+not a bare list. Its guarded rollback completed; the corrected test resumed the
+retained restored containers and passed. These results cover same-host recovery,
+not different-host disaster recovery or a native desktop session against the
+upgraded Linux company. See the
+[live migration receipt](evidence/361d7c3-linux-live-migration-recovery-20261030.json).
+
 ## Linux pre-upgrade encrypted recovery, 30 October
 
 The source361 management CLI was built offline with the existing pinned lab
@@ -22,8 +49,9 @@ The wrong passphrase failed before its destination was created. The profile and
 transport key files, setup token, actual proxy recipe, deployment settings, all21
 generated installer files and six TLS key/certificate files matched. Both restored
 SQLite headers were valid. No restored server was started or exposed, and no
-plaintext private key was exported to the host. Live restored-data service,
-schema3 migration and rollback remain pending; external release-mirror files in
+plaintext private key was exported to the host. At this offline checkpoint,
+live service and migration were pending (the subsequent results are above);
+external release-mirror files in
 the existing lab bind mount are outside this archive. See the
 [offline recovery receipt](evidence/361d7c3-linux-preupgrade-offline-backup-restore-20261030.json).
 

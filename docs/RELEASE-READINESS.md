@@ -7,13 +7,15 @@ Passing one operating system or one component does not qualify the full product.
 ## Sources and signing
 
 - Working candidate `1.5.10+78` adds an early service-manager connection before
-  loading the native core. The complete native app is not yet built, installed or qualified; the
+  loading the native core. The corrected complete app compiled in run40988690083;
+  security checks and installer packaging are still in progress, and the app is
+  not yet installed or qualified. The
   [startup design and boundary tests](../deployment/windows/SERVICE-STARTUP.md)
   passed actual SCM/loader tests on Windows Server 2022 CI and the Server 2019
   lab using simulated core DLLs. This does not clear the recorded 1.5.9
   intermittent startup failure; see the [scoped receipt](evidence/1510-service-bootstrap-scm-boundary-20261030.json).
   The first native build failed on a missing `winsvc` dependency feature; the
-  feature is now explicit and a corrected build is required.
+  feature is now explicit in source `b1fbe1e` used by that corrected run.
 - Native customer/technician candidate: `aff8ff61e3fbd6f34c4cf0bb9de6e330ec6e0521`,
   version `1.5.9+77`.
 - Management storage/recovery candidate:
@@ -36,7 +38,7 @@ Passing one operating system or one component does not qualify the full product.
 | Secure desktop and unattended consent | [Lock/unlock](evidence/159-windows-attended-lock-unlock-20261029.json), [standard-user UAC](evidence/159-windows-standard-customer-uac-20261029.json), and [unattended reboot/logon/revocation](evidence/159-windows-unattended-reboot-logon-revocation-20261029.json) passed in that lab. This is not universal Windows qualification. |
 | Multiple monitors | [Two real QXL displays](evidence/159-windows-native-two-monitor-20261029.json) passed native selection and input. Other display drivers and OS combinations remain open. |
 | Company branding and cache | [Both native editions](evidence/159-windows-native-branding-sync-20261030.json) automatically rendered changed branding and monotonic restoration, then rendered cached branding after restart during verified management outages. This test does not qualify software-upgrade preservation or key rotation/negative profile cases. |
-| Encrypted recovery and transport data | [Populated migration](evidence/361d7c3-windows-populated-transport-migration-20261029.json), [running recovery/rollback](evidence/361d7c3-windows-populated-running-recovery-20261029.json), and [native session with restored data active](evidence/361d7c3-windows-native-active-restored-data-20261030.json) passed. Different-host disaster recovery and current Linux migration still require their own evidence. |
+| Windows encrypted recovery and transport data | [Populated migration](evidence/361d7c3-windows-populated-transport-migration-20261029.json), [running recovery/rollback](evidence/361d7c3-windows-populated-running-recovery-20261029.json), and [native session with restored data active](evidence/361d7c3-windows-native-active-restored-data-20261030.json) passed. Different-host disaster recovery remains open; Linux migration has separate evidence below. |
 | Current Linux recovery and migration | [Encrypted offline restore](evidence/361d7c3-linux-preupgrade-offline-backup-restore-20261030.json) preserved keys, settings, all21 installers and six TLS identities. [Live restore, migration and rollback](evidence/361d7c3-linux-live-migration-recovery-20261030.json) then passed with fresh MFA, permissions and download checks. The latest original data was upgraded to schema3, rolled back using a fresh schema2 checkpoint, and rolled forward successfully. Native sessions against this upgraded server and different-host recovery remain open. |
 | Installer worker credential protection | [Private worker checks](evidence/1c43a38-private-worker-windows-checks.json) cover the earlier Windows company migration. Every existing lab worker must be separately migrated; revoked legacy registrations must stay revoked. |
 | Server 2019 upgrade and startup | [1.5.1 to 1.5.9 upgrade and worker migration](evidence/159-server2019-upgrade-private-worker-cold-start-failure-20261030.json) preserved customer identity, trust, credential and consent. The private worker restarted automatically and completed a post-reboot build. **Customer automatic startup failed with a 30-second service connection timeout.** A subsequent traced normal reboot passed without manual startup; the intermittent failure remains unresolved. |
