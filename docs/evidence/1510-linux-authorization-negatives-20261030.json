@@ -127,7 +127,7 @@
     "protocol_bypass_tested": false
   },
   "not_qualified": [
-    "Legacy-password or direct-IP protocol bypass rejection on the current native receiver",
+    "Direct-IP native bypass rejection; current stock-client legacy by-ID denial has separate native evidence",
     "Wrong-company grant signed by a different valid company key; this receipt mutates payload/signature instead",
     "Full current session expiry/outage/revocation and Windows matrix",
     "Production signing or external public-network operation"
