@@ -8,6 +8,25 @@ For the current candidate and remaining release gates, start with the compact
 [release-readiness index](RELEASE-READINESS.md). The older checkpoints below
 remain source-specific historical evidence.
 
+## Linux pre-upgrade encrypted recovery, 30 October
+
+The source361 management CLI was built offline with the existing pinned lab
+Rust1.90 toolchain image and the pinned canonical Debian runtime. This cached
+builder recipe is recorded separately from canonical production Docker-image
+reproduction. The original source67/schema2 Linux company was stopped for a
+consistent encrypted full snapshot, then the same four containers and images
+were restarted. HTTPS trust, signed profile14 and paused update policy matched.
+
+The661,268,962-byte SWANBK2 archive restored offline into a new private volume.
+The wrong passphrase failed before its destination was created. The profile and
+transport key files, setup token, actual proxy recipe, deployment settings, all21
+generated installer files and six TLS key/certificate files matched. Both restored
+SQLite headers were valid. No restored server was started or exposed, and no
+plaintext private key was exported to the host. Live restored-data service,
+schema3 migration and rollback remain pending; external release-mirror files in
+the existing lab bind mount are outside this archive. See the
+[offline recovery receipt](evidence/361d7c3-linux-preupgrade-offline-backup-restore-20261030.json).
+
 ## Candidate 1.5.10 service bootstrap, 30 October
 
 The managed Windows launcher now connects to SCM before loading its native core,
@@ -29,6 +48,12 @@ DLLs are simulated unsigned cores: these results do **not** establish native
 integration, signing, enrolled support or reliable cold boot. Full native build
 and installed-machine retests remain pending. See the
 [boundary receipt](evidence/1510-service-bootstrap-scm-boundary-20261030.json).
+
+The first full native run40984115696 reached branded-client compilation but
+failed with E0432 because the new Rust bridge referenced `winapi::um::winsvc`
+without enabling that dependency feature. The existing Windows dependency now
+explicitly enables `winsvc`. No installer was qualified by that failed run;
+the corrected native build and installed cold-boot tests remain required.
 
 ## Server 2019 upgrade and unresolved automatic startup, 30 October
 
