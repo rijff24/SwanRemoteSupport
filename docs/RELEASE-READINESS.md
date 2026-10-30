@@ -10,7 +10,10 @@ Passing one operating system or one component does not qualify the full product.
   noninteractive trust/update helpers normal scheduling priority. Restart and
   restore migrate the validated existing configuration task without changing
   its action or account. This source change follows a Windows10 lab repair;
-  it has not yet been built, signed or qualified. The exact 1.5.10 receipts
+  [Windows/Linux component checks](evidence/1511-component-priority-and-recovery-ci-20261030.json)
+  passed, including the real Windows parent/child priority test and large-backup
+  recovery. Its full native build is still running; it has not been signed or
+  qualified on installed endpoints. The exact 1.5.10 receipts
   below remain scoped to their original source and lab settings.
 - Working candidate `1.5.10+78` adds an early service-manager connection before
   loading the native core. The corrected complete build run40988690083 succeeded:
