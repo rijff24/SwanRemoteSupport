@@ -28,6 +28,16 @@ fix is present, but reliable customer automatic boot remains a **failed acceptan
 gate**, with its cause unproven. This is not full Server 2019 qualification or an
 automatic-update rollout test. See the [scoped upgrade and failure receipt](evidence/159-server2019-upgrade-private-worker-cold-start-failure-20261030.json).
 
+A second normal reboot, with a bounded Microsoft WPR startup trace, started both
+services automatically. The original customer identity, credential, trust and
+consent still matched; the installed-file verifier passed. The private worker
+also completed a newly queued customer build after reboot, whose public bundle,
+signed profile/release and package hashes were checked independently. The trace
+saved privately and its automatic stop task disabled itself. It records about
+4.54 seconds between the customer executable and core DLL image loads on this
+successful boot. It does not explain the earlier failed boot or establish a fix;
+reliable automatic startup remains unqualified.
+
 ## Native branding synchronization, 30 October
 
 Both installed 1.5.9 editions automatically accepted signed company profile

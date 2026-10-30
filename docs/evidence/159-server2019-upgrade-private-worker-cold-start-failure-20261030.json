@@ -66,5 +66,32 @@
     "Disposable lab publisher and same-host VM networking do not qualify production signing or public connectivity."
   ],
   "production_publication": false,
-  "full_product_acceptance_complete": false
+  "full_product_acceptance_complete": false,
+  "repeat_normal_reboot_customer_and_worker_automatic_start_passed": true,
+  "repeat_boot_identity_credential_trust_consent_and_shipping_verifier_passed": true,
+  "reliable_customer_automatic_startup_qualified": false,
+  "post_reboot_worker_build_verified": {
+    "utc": "2026-10-30T00:32:40.066735+00:00",
+    "job_id": "57ce241e-df10-431b-98af-769a7444941d",
+    "job_completed_after_actual_reboot": true,
+    "only_new_private_worker_registration_enabled": true,
+    "public_download_status": 200,
+    "bundle_sha256": "5d6b3e6d33f93554b5f98ff662a3cf4f41a4c4d52e47d5b416433dbbd9dabad9",
+    "bytes": 32722366,
+    "profile_and_release_signatures_verified": true,
+    "package_and_agent_hashes_verified": true,
+    "company_revision": 14,
+    "release_sequence": 11,
+    "updates_remain_paused": true,
+    "customer_cold_start_failure_remains_unresolved": true,
+    "production_publication": false
+  },
+  "bounded_private_trace": {
+    "bytes": 55574528,
+    "guest_host_sha256_match": true,
+    "automatic_stop_succeeded_and_task_disabled": true,
+    "scope": "Successful repeat boot, not the earlier failed boot",
+    "customer_executable_to_core_image_load_seconds": 4.537094,
+    "no_causal_fix_or_failure_diagnosis_inferred": true
+  }
 }
