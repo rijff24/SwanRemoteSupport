@@ -16,7 +16,12 @@ Passing one operating system or one component does not qualify the full product.
   also passed, including customer headless service startup and unsigned technician
   install/repair/uninstall on CI. All1314 tracked source files and six generated
   bridge files matched. Independent build41093808835 is running; byte comparison,
-  signing and installed-endpoint qualification remain open. The exact 1.5.10 receipts
+  signing and installed-endpoint qualification remain open. A matching
+  [Linux lab management build](evidence/1511-7b60309-linux-lab-management-fresh-company-20261030.json)
+  passed fresh-company setup, MFA/replay, enrollment, restart and backup/restore
+  checks using a verified cached toolchain and a new empty build path. The live
+  company remains on361; coordinated server/worker upgrade, new-image HTTPS/native
+  integration and canonical Docker image reproduction remain separate gates. The exact 1.5.10 receipts
   below remain scoped to their original source and lab settings.
 - Working candidate `1.5.10+78` adds an early service-manager connection before
   loading the native core. The corrected complete build run40988690083 succeeded:
