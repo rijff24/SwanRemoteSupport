@@ -12,8 +12,11 @@ Passing one operating system or one component does not qualify the full product.
   its action or account. This source change follows a Windows10 lab repair;
   [Windows/Linux component checks](evidence/1511-component-priority-and-recovery-ci-20261030.json)
   passed, including the real Windows parent/child priority test and large-backup
-  recovery. Its full native build completed successfully; its artifacts are being verified. It has not been signed or
-  qualified on installed endpoints. The exact 1.5.10 receipts
+  recovery. The [full native build and local archive/source verification](evidence/1511-7b60309-native-build-and-source-ci-20261030.json)
+  also passed, including customer headless service startup and unsigned technician
+  install/repair/uninstall on CI. All1314 tracked source files and six generated
+  bridge files matched. Independent build41093808835 is running; byte comparison,
+  signing and installed-endpoint qualification remain open. The exact 1.5.10 receipts
   below remain scoped to their original source and lab settings.
 - Working candidate `1.5.10+78` adds an early service-manager connection before
   loading the native core. The corrected complete build run40988690083 succeeded:
