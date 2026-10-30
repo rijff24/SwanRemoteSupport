@@ -96,6 +96,9 @@ explicit public-pin update; its credential, registry path and private ACLs staye
 unchanged. A fresh customer-approved native desktop session worked after rotation
 and customer stop closed it. Real shipping-agent HTTPS checks rejected cached
 states that missed the transition. Old installer links were withdrawn. Fresh
-encrypted exports were retained before and after rotation; restoring the latest
-archive and generating replacement bundles remain separate checks. Offline
-installations were not silently reset to a new trust key.
+encrypted exports were retained before and after rotation. A subsequent
+[isolated restore and replacement-bundle check](evidence/361d7c3-post-profile26-restore-and-replacement-bundles-20261030.json)
+recovered the active key, HTTPS identity, MFA, permissions and withdrawn-download
+state, then verified newly generated public customer and protected technician
+bundles. That archive predates the two replacement jobs. Offline installations
+were not silently reset to a new trust key.
