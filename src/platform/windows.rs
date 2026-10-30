@@ -603,6 +603,8 @@ pub(crate) fn run_bootstrapped_service(report: BootstrapServiceStatus) -> u32 {
     if crate::get_app_name() != "Swan Remote Support" || !bootstrap() {
         return ERROR_INVALID_DATA;
     }
+    #[cfg(not(debug_assertions))]
+    hbb_common::platform::register_breakdown_handler(crate::platform::breakdown_callback);
     hbb_common::init_log(false, "service");
     match run_service(Vec::new(), Some(report)) {
         Ok(()) => NO_ERROR,

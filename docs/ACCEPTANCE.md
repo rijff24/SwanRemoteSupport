@@ -8,6 +8,28 @@ For the current candidate and remaining release gates, start with the compact
 [release-readiness index](RELEASE-READINESS.md). The older checkpoints below
 remain source-specific historical evidence.
 
+## Candidate 1.5.10 service bootstrap, 30 October
+
+The managed Windows launcher now connects to SCM before loading its native core,
+reports bounded initialization checkpoints, and forwards normal status/control
+through the new Rust service entry point. Core DLL loading is restricted to the
+installed executable directory and System32 dependencies. Missing exports are
+rejected without a legacy-dispatcher fallback; stalled initialization terminates
+its own not-yet-running service process. Company defaults and the existing
+receiving-device authorization are retained. Global Windows service timeout and
+company startup policy are unchanged.
+
+Five actual SCM/loader cases passed on Windows Server2022 CI and the existing
+Server2019 VM: normal startup/control/stop, a35-second DLL load with advancing
+pending checkpoints, absent DLL, absent bootstrap export, and a bounded stalled
+loader. Exact argument checks also passed. All fixture services were removed;
+the Server2019 customer's identity, credential, trust, consent and sequence,
+and both original customer/worker process IDs remained unchanged. The fixture
+DLLs are simulated unsigned cores: these results do **not** establish native
+integration, signing, enrolled support or reliable cold boot. Full native build
+and installed-machine retests remain pending. See the
+[boundary receipt](evidence/1510-service-bootstrap-scm-boundary-20261030.json).
+
 ## Server 2019 upgrade and unresolved automatic startup, 30 October
 
 The existing Linux-company Server 2019 customer upgraded explicitly from

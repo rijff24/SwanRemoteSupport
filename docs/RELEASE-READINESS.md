@@ -7,9 +7,11 @@ Passing one operating system or one component does not qualify the full product.
 ## Sources and signing
 
 - Working candidate `1.5.10+78` adds an early service-manager connection before
-  loading the native core. It is not yet built, installed or qualified; the
+  loading the native core. The complete native app is not yet built, installed or qualified; the
   [startup design and boundary tests](../deployment/windows/SERVICE-STARTUP.md)
-  do not clear the recorded 1.5.9 intermittent startup failure.
+  passed actual SCM/loader tests on Windows Server 2022 CI and the Server 2019
+  lab using simulated core DLLs. This does not clear the recorded 1.5.9
+  intermittent startup failure; see the [scoped receipt](evidence/1510-service-bootstrap-scm-boundary-20261030.json).
 - Native customer/technician candidate: `aff8ff61e3fbd6f34c4cf0bb9de6e330ec6e0521`,
   version `1.5.9+77`.
 - Management storage/recovery candidate:
