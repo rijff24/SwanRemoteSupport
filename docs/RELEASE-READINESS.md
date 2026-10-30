@@ -4,6 +4,8 @@
 scoped evidence from older checkpoints in [ACCEPTANCE.md](ACCEPTANCE.md).
 Passing one operating system or one component does not qualify the full product.
 
+[Windows10 customer1.5.10 to1.5.11 automatic update and normal reboot](evidence/1511-win10-automatic-upgrade-reboot-and-profile-rejection-20261031.json) passed with exact signed installed files, MSI registration, shipping verification, preserved identity/consent/branding and restored paused profile28. No manual update, installer invocation, watcher repair or controlled watcher restart was required. Fourteen isolated cases using the installed1.5.11 agent returned the expected profile signature/time/company/replay results. This does not qualify the remaining native-session, interruption or OS/edition matrix.
+
 ## Sources and signing
 
 - Development candidate `1.5.11+79` gives configuration/recovery tasks and

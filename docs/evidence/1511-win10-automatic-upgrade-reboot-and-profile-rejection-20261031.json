@@ -1,0 +1,164 @@
+{
+  "recorded_utc": "2026-10-30T22:21:34.875255+00:00",
+  "source": "7b60309374389a1b0f8d859f8c164d6cf355353f",
+  "scope": "Owned existing Windows10 Pro19045 customer automatic1.5.10 to1.5.11 update, normal reboot and isolated shipping-agent profile validation",
+  "baseline": {
+    "native_version": "1.5.10+78",
+    "release_sequence": 13,
+    "profile_revision": 26,
+    "watch_priority": 4,
+    "service_state": "Running",
+    "shipping_verifier_passed": true,
+    "no_recovery_markers": true
+  },
+  "automatic_upgrade_and_post_reboot_verification": {
+    "os": "Windows10 Pro x64",
+    "branding_and_paused_policy_preserved": true,
+    "configuration_task_running_normal_priority": true,
+    "msi_product_version": "1.5.11",
+    "customer_automatic_system_service_running": true,
+    "to_version": "1.5.11+79",
+    "to_sequence": 14,
+    "os_build": 19045,
+    "exact_signed_installed_bytes": true,
+    "no_pending_or_failed_recovery": true,
+    "production_publication": false,
+    "from_version": "1.5.10+78",
+    "manual_update_or_installer_command_invoked": false,
+    "msi_product_state": 5,
+    "utc": "2026-10-30T22:20:48.9806715Z",
+    "consent_revision": 2,
+    "expected_lab_publisher_valid": true,
+    "profile_revision": 28,
+    "from_sequence": 13,
+    "native_approval_after_upgrade_qualified": false,
+    "lab_watcher_priority_repair_and_controlled_restart_required": false,
+    "identity_credential_consent_and_bootstrap_preserved": true,
+    "shipping_verifier_passed": true,
+    "unattended_consent_disabled": true
+  },
+  "original_server_policy_restored": {
+    "utc": "2026-10-30T22:16:02.155736+00:00",
+    "profile_revision": 28,
+    "signature_verified": true,
+    "original_paused_policy_restored": true
+  },
+  "exact_enrolled_customer_server_report": {
+    "utc": "2026-10-30T22:17:39.732244+00:00",
+    "exact_enrolled_customer_owner_matched": true,
+    "installed_sequence": 14,
+    "phase": "current",
+    "revision": 110
+  },
+  "isolated_shipping_agent_profile_cases": [
+    {
+      "edition": "customer",
+      "accepted": true,
+      "case": "valid-control",
+      "expected_reason_matched": true,
+      "state_unchanged": true
+    },
+    {
+      "edition": "customer",
+      "accepted": false,
+      "case": "tampered-payload",
+      "expected_reason_matched": true,
+      "state_unchanged": true
+    },
+    {
+      "edition": "customer",
+      "accepted": false,
+      "case": "invalid-signature",
+      "expected_reason_matched": true,
+      "state_unchanged": true
+    },
+    {
+      "edition": "customer",
+      "accepted": false,
+      "case": "signed-expired",
+      "expected_reason_matched": true,
+      "state_unchanged": true
+    },
+    {
+      "edition": "customer",
+      "accepted": false,
+      "case": "signed-future",
+      "expected_reason_matched": true,
+      "state_unchanged": true
+    },
+    {
+      "edition": "customer",
+      "accepted": false,
+      "case": "signed-wrong-company",
+      "expected_reason_matched": true,
+      "state_unchanged": true
+    },
+    {
+      "edition": "customer",
+      "accepted": false,
+      "case": "signed-older-revision",
+      "expected_reason_matched": true,
+      "state_unchanged": true
+    },
+    {
+      "edition": "technician",
+      "accepted": true,
+      "case": "valid-control",
+      "expected_reason_matched": true,
+      "state_unchanged": true
+    },
+    {
+      "edition": "technician",
+      "accepted": false,
+      "case": "tampered-payload",
+      "expected_reason_matched": true,
+      "state_unchanged": true
+    },
+    {
+      "edition": "technician",
+      "accepted": false,
+      "case": "invalid-signature",
+      "expected_reason_matched": true,
+      "state_unchanged": true
+    },
+    {
+      "edition": "technician",
+      "accepted": false,
+      "case": "signed-expired",
+      "expected_reason_matched": true,
+      "state_unchanged": true
+    },
+    {
+      "edition": "technician",
+      "accepted": false,
+      "case": "signed-future",
+      "expected_reason_matched": true,
+      "state_unchanged": true
+    },
+    {
+      "edition": "technician",
+      "accepted": false,
+      "case": "signed-wrong-company",
+      "expected_reason_matched": true,
+      "state_unchanged": true
+    },
+    {
+      "edition": "technician",
+      "accepted": false,
+      "case": "signed-older-revision",
+      "expected_reason_matched": true,
+      "state_unchanged": true
+    }
+  ],
+  "isolated_fixture_state_unchanged": true,
+  "fixtures_have_no_enrolled_device_credentials": true,
+  "normal_reboot_request_after_pre_reboot_shipping_verification": true,
+  "bounds": [
+    "Existing installation upgrade; fresh clean-machine setup remains separate.",
+    "Initial boot lacked the owned WSL KVM driver; no disk opened until driver loaded.",
+    "Two read-only SSH observations timed out during startup; no install, repair or reboot was repeated.",
+    "Isolated profile cases use disposable fixture issuer and do not qualify live HTTPS sync or native UI rejection.",
+    "Post1.5.11 native attended session, active-session update exclusion, interruption recovery, other OS/editions and production signing remain open."
+  ],
+  "production_publication": false
+}
