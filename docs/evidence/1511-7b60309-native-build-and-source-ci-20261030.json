@@ -78,5 +78,5 @@
   "installed1511_runtime_or_upgrade_qualified": false,
   "production_publication": false,
   "declared_text_checkout_conversion_count": 1170,
-  "checkout_conversion_file_list_location": "BUILD-SOURCE.json in the archived exact corresponding source"
+  "source_file_manifest_location": "BUILD-SOURCE.json in archived exact corresponding source; source checkout conversions were checked against pinned Git blobs, without normalizing shipping binaries"
 }

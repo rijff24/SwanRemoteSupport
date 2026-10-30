@@ -16,12 +16,12 @@
   "nonroot_readonly_container_and_private_storage_passed": true,
   "fresh_company_setup_mfa_and_replay_denial_passed": true,
   "pending_enrollment_approval_and_unattended_policy_denial_passed": true,
-  "restart_identity_permission_and_consent_persistence_passed": true,
   "real_backup_wrong_password_rejection_and_restore_passed": true,
   "original_company_image_unchanged": true,
   "existing_company_upgrade_performed": false,
   "new_image_https_native_and_worker_integration_qualified": false,
   "canonical_production_docker_image_reproduction_qualified": false,
   "initial_terminal_build_failure": "Docker interpreted a bare local image ID as a registry name. Corrected attempt verified the existing local tag still resolved to that same image ID. No source or live deployment was changed.",
-  "production_publication": false
+  "production_publication": false,
+  "restart_identity_approval_and_consent_persistence_passed": true
 }

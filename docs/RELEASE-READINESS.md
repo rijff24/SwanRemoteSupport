@@ -16,7 +16,12 @@ Passing one operating system or one component does not qualify the full product.
   also passed, including customer headless service startup and unsigned technician
   install/repair/uninstall on CI. All1314 tracked source files and six generated
   bridge files matched. Independent build41093808835 is running; byte comparison,
-  signing and installed-endpoint qualification remain open. A matching
+  production signing and installed-endpoint qualification remain open.
+  [Owned lab signing](evidence/1511-7b60309-owned-lab-signed-packages-20261030.json)
+  subsequently produced verified customer/technician MSIs, their native programs,
+  the agent, management and worker using the retained nonexportable lab key.
+  These are test packages; no1.5.11 installation or live company upgrade is
+  qualified by signing alone. A matching
   [Linux lab management build](evidence/1511-7b60309-linux-lab-management-fresh-company-20261030.json)
   passed fresh-company setup, MFA/replay, enrollment, restart and backup/restore
   checks using a verified cached toolchain and a new empty build path. The live
