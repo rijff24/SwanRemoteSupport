@@ -7,9 +7,11 @@ Passing one operating system or one component does not qualify the full product.
 ## Sources and signing
 
 - Working candidate `1.5.10+78` adds an early service-manager connection before
-  loading the native core. The corrected complete app compiled in run40988690083;
-  security checks and installer packaging are still in progress, and the app is
-  not yet installed or qualified. The
+  loading the native core. The corrected complete build run40988690083 succeeded:
+  [exact source, input hashes, security regressions and unsigned MSI lifecycle](evidence/1510-b1fbe1e-native-build-and-msi-ci-20261030.json)
+  verified. The actual customer service started without desktop modules on CI;
+  technician install/repair/uninstall passed. Enrolled-machine upgrades, normal
+  reboot reliability and independent full native reproduction remain pending. The
   [startup design and boundary tests](../deployment/windows/SERVICE-STARTUP.md)
   passed actual SCM/loader tests on Windows Server 2022 CI and the Server 2019
   lab using simulated core DLLs. This does not clear the recorded 1.5.9

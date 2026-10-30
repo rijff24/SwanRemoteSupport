@@ -55,6 +55,21 @@ external release-mirror files in
 the existing lab bind mount are outside this archive. See the
 [offline recovery receipt](evidence/361d7c3-linux-preupgrade-offline-backup-restore-20261030.json).
 
+## Candidate 1.5.10 complete native build and MSI lifecycle, 30 October
+
+Corrected run40988690083 succeeded at public source `b1fbe1e`. The downloaded
+256,197,933-byte archive matched GitHub's SHA256 digest. Its complete corresponding
+source, six generated bridge files, pinned SDK, independently reproduced engine
+identity, shipping hashes and required native regression conclusions verified.
+The separately retained CI lifecycle archive also matched its digest; both MSI
+receipt hashes match the actual downloaded packages. The unsigned customer MSI
+started its real native service automatically without desktop engine/plugins,
+then uninstalled. Technician installation, repair and uninstall passed on
+Server2022 CI. These are unenrolled administrative CI tests, with no cold reboot,
+signed installation or support session. Full native reproduction and installed
+lab qualification remain pending. See the
+[build and lifecycle receipt](evidence/1510-b1fbe1e-native-build-and-msi-ci-20261030.json).
+
 ## Candidate 1.5.10 service bootstrap, 30 October
 
 The managed Windows launcher now connects to SCM before loading its native core,
