@@ -1,0 +1,49 @@
+{
+  "utc": "2026-10-31T07:52:27.947351+00:00",
+  "application_source": "58431d9b0d5d3f2b9f0c92f72367bf276c9841da",
+  "native_version": "1.5.13+81",
+  "company_source": "94284db24b8993344c12cae0a8baa95f82dc0e02",
+  "scope": "Windows10 Pro19045 genuine standard-user customer, WindowsServer2019 DesktopExperience17763 built-in Administrator technician, independent Linux company",
+  "fresh_native_mfa_inventory_customer_approval_and_remote_desktop_observed": true,
+  "unattended_consent_disabled": true,
+  "live_desktop_and_separate_transfer_grants_claimed_and_leases_current": true,
+  "viewer_clipboard_receive_and_send_disabled": true,
+  "synthetic_test_data_only": true,
+  "unicode": {
+    "scripts": [
+      "Latin with accents and macron",
+      "Greek",
+      "Japanese",
+      "Arabic",
+      "emoji",
+      "currency and checkmark"
+    ],
+    "forward_utf8_bom_bytes": 113,
+    "forward_sha256": "674fc3aa97b89ca28248b3e4872462d1664177b065efddede030f6ac988c20f5",
+    "reverse_utf8_bom_bytes": 143,
+    "reverse_sha256": "256d7db6fe2eff9d26457a2d64b63111bf9c798fb937c2ab0aa32280e5d5ebdc",
+    "forward_exact": true,
+    "reverse_exact_with_unique_customer_marker": true,
+    "native_notepad_copy_paste_and_saved_file_hashes_checked": true
+  },
+  "rgb_image": {
+    "width": 128,
+    "height": 96,
+    "forward_rgb_sha256": "9cdcba8d15cbe070bf61b7ee9676d3fe8e63f64f61697044d8532970b3a76101",
+    "reverse_rgb_sha256": "db024d244ebbaef3ac2fec8bf5ea201e999b78339e45c6edf22cb0cae0232b95",
+    "forward_all_pixels_exact": true,
+    "reverse_all_pixels_exact": true,
+    "unique_customer_marker_changed_pixels": 1,
+    "stale_original_clipboard_cannot_satisfy_reverse_marker": true,
+    "native_paint_copy_paste_save_and_independent_pixel_hashes_checked": true
+  },
+  "limits": [
+    "This qualifies native1.5.13 clipboard/session behavior;1.5.14 automatic update remains pending.",
+    "Technician uses the lab built-in Administrator; genuine standard-user technician qualification is separate.",
+    "RGB bitmap clipboard only; alpha-channel images and other image formats are not qualified.",
+    "Private native transport against a company-hosted lab; external public NAT/direct/relay remains unqualified.",
+    "Large/interrupted file-transfer receipts and all advertised clean-OS lifecycle tests remain separate."
+  ],
+  "production_publication": false,
+  "product_complete": false
+}
