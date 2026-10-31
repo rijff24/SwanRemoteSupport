@@ -74,6 +74,7 @@ deployment/windows/**
 !deployment/windows/Restore-CustomerExe.ps1
 !deployment/windows/Restore-Configuration.ps1
 !deployment/windows/Restart-Configuration.ps1
+!deployment/windows/Restart-CustomerUi.ps1
 !deployment/windows/Remove-Configuration.ps1
 !deployment/windows/Update-RecoveryTask.ps1
 !deployment/windows/Update-UninstallCancellation.ps1
