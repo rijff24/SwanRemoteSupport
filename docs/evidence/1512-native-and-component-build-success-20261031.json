@@ -1,0 +1,54 @@
+{
+  "observed_utc": "2026-10-31T00:04:28.362729+00:00",
+  "source": "94284db24b8993344c12cae0a8baa95f82dc0e02",
+  "version": "1.5.12+80",
+  "native_run": "https://github.com/rijff24/SwanRemoteSupport/actions/runs/41139949964",
+  "component_run": "https://github.com/rijff24/SwanRemoteSupport/actions/runs/41139900763",
+  "native_conclusion": "success",
+  "component_conclusion": "success",
+  "native_jobs": [
+    {
+      "id": 124351524126,
+      "name": "generate-bridge / generate_bridge (x86_64-unknown-linux-gnu, ubuntu-22.04, 3.44.0, bridge-artifact-flutter-3.44)",
+      "status": "completed",
+      "conclusion": "success",
+      "active_or_failed_steps": []
+    },
+    {
+      "id": 124351524478,
+      "name": "maintained-transport / transport (windows-2022)",
+      "status": "completed",
+      "conclusion": "success",
+      "active_or_failed_steps": []
+    },
+    {
+      "id": 124351524479,
+      "name": "generate-bridge / generate_bridge (x86_64-unknown-linux-gnu, ubuntu-22.04, 3.22.3, bridge-artifact)",
+      "status": "completed",
+      "conclusion": "success",
+      "active_or_failed_steps": []
+    },
+    {
+      "id": 124351524627,
+      "name": "build-topmost-window / build-RustDeskTempTopMostWindow",
+      "status": "completed",
+      "conclusion": "success",
+      "active_or_failed_steps": []
+    },
+    {
+      "id": 124354872092,
+      "name": "Swan Remote Support x64",
+      "status": "completed",
+      "conclusion": "success",
+      "active_or_failed_steps": []
+    }
+  ],
+  "native_artifact": {
+    "id": 13020663666,
+    "name": "SwanRemoteSupport-1.5.12-x64-unsigned",
+    "bytes": 256231575,
+    "digest": "sha256:bace64f8b188b6ea7ae3e38b9c09b5d6e819d1658275ebf5476003d0381ace2d"
+  },
+  "scope": "CI build success only; local original archive and corresponding source verification pending. Independent Windows build submitted separately. No production publication or installed-endpoint upgrade qualification.",
+  "production_publication": false
+}
