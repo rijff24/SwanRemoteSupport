@@ -1,0 +1,85 @@
+{
+  "source": "94284db24b8993344c12cae0a8baa95f82dc0e02",
+  "version": "1.5.12+80",
+  "scope": "Owned Windows 10 x64 customer VM and independently hosted Linux company; disposable lab publisher only",
+  "primary_archive": {
+    "run": 41139949964,
+    "bytes": 256231575,
+    "sha256": "bace64f8b188b6ea7ae3e38b9c09b5d6e819d1658275ebf5476003d0381ace2d",
+    "full_local_hash_and_manifest_verified": true,
+    "tracked_sources_verified": 1325,
+    "generated_bridges_verified": 6,
+    "eight_original_shipping_outputs_match_independent_build": true
+  },
+  "distribution": {
+    "nonexportable_owned_lab_publisher": true,
+    "production_signing": false,
+    "both_msi_packages_and_five_signed_outputs_verified": true,
+    "release_sequence": 15,
+    "both_company_bundles_generated_by_real_windows_worker": true,
+    "public_bootstrap_only_and_seven_exact_source_texts_verified": true,
+    "profile_release_signatures_and_payload_hashes_verified": true,
+    "customer_anonymous_download_status": 200,
+    "technician_anonymous_download_status": 401,
+    "technician_authenticated_download_status": 200,
+    "signed_customer_msi_sha256": "d00f3ddd19aedc963678be71699867c43ec4af3e01cf632eb27d5a498d12bdc3",
+    "signed_technician_msi_sha256": "e78fd360fbcc7c93ffd731725f236a8c3ecdd5ed85f651fbfe00c25fcb8f6cf5"
+  },
+  "native_attended_session": {
+    "endpoint_version": "1.5.11+79",
+    "company_source": "94284db24b8993344c12cae0a8baa95f82dc0e02",
+    "receiving_customer_genuine_standard_user": true,
+    "technician_server2019_builtin_administrator_not_standard_user_qualification": true,
+    "fresh_native_technician_mfa_and_authorized_inventory": true,
+    "customer_native_accept_then_desktop_and_pointer_keyboard_control_observed": true,
+    "grant_attempts_from_one_request": 3,
+    "superseded_transport_attempts_closed": 2,
+    "final_active_session_continuously_renewed_lease": true,
+    "customer_native_stop_closed_session_and_technician_reported_revoked_authorization": true,
+    "unattended_disabled_consent_revision": 2
+  },
+  "active_session_update_gate": {
+    "installed_sequence": 14,
+    "approved_target_sequence": 15,
+    "new_signed_msi_and_helper_downloaded_while_actual_desktop_active": true,
+    "old_installed_bytes_and_sequence_unchanged": true,
+    "no_pending_installation_handoff": true,
+    "windows_exclusive_activity_lock_probe_failed_error": 33,
+    "probe_did_not_hold_or_modify_lock": true,
+    "legacy_report_phase": "Failed; contextual activity deferral, not a Deferred enum report"
+  },
+  "interruption": {
+    "isolated_overlay_original_backing_disk_preserved": true,
+    "real_target15_msiexec_and_signed_pending_installing_receipt_required": true,
+    "guest_observed_utc": "2026-10-31T02:57:26.1419082Z",
+    "hypervisor_powercut_utc": "2026-10-31T02:57:26.831271+00:00",
+    "unexpected_shutdown_events": [41, 6008],
+    "normal_boot_same_overlay_without_snapshot_restore": true,
+    "original_pre_powercut_msi_transaction_event_not_observed": true,
+    "boundary": "Power loss after real MSI client startup and durable installing receipt; interruption during a specific file copy is not claimed"
+  },
+  "autonomous_recovery": {
+    "verified_utc": "2026-10-31T03:13:25.3295152Z",
+    "installed_sequence": 15,
+    "actual_windows_installer_version": "1.5.12",
+    "actual_windows_installer_product_state": 5,
+    "shipping_all_installed_files_and_publisher_verifier_passed": true,
+    "identity_device_credential_bootstrap_branding_and_consent_preserved": true,
+    "unattended_disabled_consent_revision": 2,
+    "automatic_system_native_service_running": true,
+    "configuration_watcher_running_at_normal_priority": true,
+    "no_pending_failure_or_restart_markers": true,
+    "recovery_task_automatically_removed_observed_utc": "2026-10-31T03:19:40.5591085Z",
+    "manual_update_installer_recovery_or_service_start_invoked": false,
+    "original_paused_rollout_policy_restored_and_synced_profile": 32
+  },
+  "remaining": [
+    "Technician 1.5.12 upgrade and real interrupted recovery",
+    "Current candidate qualification on every advertised Windows edition",
+    "Remaining native desktop and security acceptance cases",
+    "External public NAT/direct/relay connectivity without Tailscale",
+    "Production signing approval and production release qualification"
+  ],
+  "product_complete": false,
+  "production_publication": false
+}

@@ -1,12 +1,16 @@
 # Configurable product acceptance report
 
-Evidence through 30 October 2026. **The product is not complete or approved for
+Evidence through 31 October 2026. **The product is not complete or approved for
 production publication.** A passing component test is not evidence of a working
 native support session or a clean-machine installation.
 
 For the current candidate and remaining release gates, start with the compact
 [release-readiness index](RELEASE-READINESS.md). The older checkpoints below
 remain source-specific historical evidence.
+
+## Windows10 customer real interrupted update recovery, 31 October
+
+The [source-scoped1.5.12 receipt](evidence/1512-win10-real-session-update-deferral-and-interrupted-recovery-20261031.json) records complete local native archive/source verification, both real company-generated lab-signed bundles, a genuine standard-user attended session against the canonical Linux company, and update deferral while that session held the actual Windows activity lock. Customer Stop closed the session and revoked technician access. A subsequent real MSI installation was interrupted by power loss in a disposable disk overlay. Normal boot recovered automatically to1.5.12 and passed shipping installed-file, publisher and MSI-registration checks while preserving identity, trust, branding and disabled unattended consent. Its recovery task removed itself; paused rollout policy32 synchronized. No manual installer, recovery or service-start command repaired the result. This proves interruption after actual MSI client startup and a durable installing receipt, without claiming interruption during a particular file copy. The technician endpoint remained1.5.11; its console account was the built-in Administrator, so this is standard-user customer evidence only. Other OS/edition, external-connectivity and production-signing gates remain open.
 
 ## Linux live recovery and current-data migration, 30 October
 
