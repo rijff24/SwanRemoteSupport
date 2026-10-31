@@ -29,14 +29,63 @@
     "python_payload_metadata_tests_passed": 4,
     "standalone_rust_linux_cache_tests_passed": 2,
     "windows_exclusive_locked_file_and_extraction_regressions_added_to_native_ci": true,
-    "new_native_build_and_lab_acceptance_pending": true
+    "source": "58431d9b0d5d3f2b9f0c92f72367bf276c9841da",
+    "native_build": {
+      "run": 41165258500,
+      "url": "https://github.com/rijff24/SwanRemoteSupport/actions/runs/41165258500",
+      "conclusion": "success",
+      "downloaded_archive_sha256": "e053862d1f57fa21d6d75c5b2e533c487fb65325bd0d235292a992760066523d",
+      "public_source_files_verified": 1334,
+      "generated_bridge_files_verified": 6
+    },
+    "cache_regressions": {
+      "source": "8dd97bfe9e417311db55e4d3974d43553d16375f",
+      "runtime_code_identical_to_native_candidate": true,
+      "run": 41165618009,
+      "url": "https://github.com/rijff24/SwanRemoteSupport/actions/runs/41165618009",
+      "windows_job": 124432423815,
+      "linux_job": 124432423707,
+      "both_passed": true,
+      "windows_exclusive_file_lock_branch_executed": true
+    },
+    "independent_build": {
+      "run": 41169951691,
+      "completion_and_comparison_pending": true
+    },
+    "actual_upgraded_runtime_login_reporting_and_recovery_pending": true,
+    "lab_distribution": {
+      "all_five_signatures_and_original_receipts_verified": true,
+      "existing_key_nonexportable_verified": true,
+      "private_key_exported": false,
+      "project_or_production_signing": false,
+      "customer_msi_sha256": "e328a1ad36f1cd77bbefcc26da8e38b2d1448c5132937c6bb99336f86ae3e0b7",
+      "technician_msi_sha256": "18424b4672cff59a75195570b616bc626445d8e212bf251786469803985ec6a2",
+      "public_https_files_and_corresponding_source_hash_verified": true,
+      "test_release_sequence": 16,
+      "both_editions_approved": true,
+      "both_company_bundle_jobs_queued": true,
+      "company_bundle_download_verification_pending": true,
+      "automatic_updates_paused": true,
+      "profile_revision": 34,
+      "invalid_signatures_and_request_trust_override_rejected": true,
+      "unapproved_build_rejected_without_job_creation": true,
+      "actual_installation_and_native_runtime_qualification_pending": true
+    }
   },
   "limits": [
     "Installed-file verification alone does not qualify the running native runtime",
     "The built-in Administrator is not standard-user technician qualification",
-    "Linux tests do not qualify the Windows exclusive-file-lock branch",
+    "The actual Windows exclusive-file-lock regression passed; full installed application acceptance remains pending",
     "Retest automatic update, native login/reporting and interrupted recovery after building the candidate"
   ],
   "product_complete": false,
-  "production_publication": false
+  "production_publication": false,
+  "broader_ci": {
+    "run": 41165618161,
+    "windows_x64": "success",
+    "overall": "failure",
+    "failed_job": "i686-pc-windows-msvc",
+    "reason": "Deferred 32-bit Windows toolchain cannot parse Cargo.lock version 4",
+    "windows_32bit_release_deferred": true
+  }
 }
