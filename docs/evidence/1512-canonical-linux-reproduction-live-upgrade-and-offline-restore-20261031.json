@@ -1,0 +1,142 @@
+{
+  "recorded_utc": "2026-10-31T00:27:06.189561+00:00",
+  "source": "94284db24b8993344c12cae0a8baa95f82dc0e02",
+  "version": "1.5.12+80",
+  "independent_build_comparison": {
+    "utc": "2026-10-31T00:19:10.193240+00:00",
+    "builds": [
+      {
+        "source": "94284db24b8993344c12cae0a8baa95f82dc0e02",
+        "image": "sha256:83996cd1336c1a718deb84c43a05d079ae53d974346cf0b91a4fbbbc11815713",
+        "tag": "swan-linux-owned:source94284db-canonical-20261031",
+        "management_sha256": "877f72e6cab9f2208fef3d127329a9b2284215b1690717f5b5858bba9f91d31a",
+        "context_sha256": "d70f6a2b43d9a9029e8195a7154e202664fdf2c2f895a11aa84b90a3640c8b28",
+        "canonical_recipe_sha256": "d68a85159e999ffbd45da40d3c0a03e522e74b989f783e53171ecd4727b08be5",
+        "builder": "sha256:3914072ca0c3b8aad871db9169a651ccfce30cf58303e5d6f2db16d1d8a7e58f"
+      },
+      {
+        "source": "94284db24b8993344c12cae0a8baa95f82dc0e02",
+        "image": "sha256:1f0966c8e341a71ad2a76a61047ba8c7f67b295b1e06fe37f102a09b9e7ccd70",
+        "tag": "swan-linux-owned:source94284db-canonical-independent-20261031",
+        "management_sha256": "877f72e6cab9f2208fef3d127329a9b2284215b1690717f5b5858bba9f91d31a",
+        "context_sha256": "d70f6a2b43d9a9029e8195a7154e202664fdf2c2f895a11aa84b90a3640c8b28",
+        "canonical_recipe_sha256": "d68a85159e999ffbd45da40d3c0a03e522e74b989f783e53171ecd4727b08be5",
+        "builder": "sha256:3914072ca0c3b8aad871db9169a651ccfce30cf58303e5d6f2db16d1d8a7e58f"
+      }
+    ],
+    "management_original_binary_hashes_equal": true,
+    "image_ids_equal": false,
+    "oci_image_reproducibility_qualified": false,
+    "no_binary_normalization": true,
+    "fresh_runtime_pending": false,
+    "company_configuration_unchanged": true,
+    "production_publication": false,
+    "second_real_fresh_company_harness_passed": true
+  },
+  "live_company_upgrade": {
+    "utc": "2026-10-31T00:23:32.129850+00:00",
+    "source": "94284db24b8993344c12cae0a8baa95f82dc0e02",
+    "image": "sha256:83996cd1336c1a718deb84c43a05d079ae53d974346cf0b91a4fbbbc11815713",
+    "fresh_encrypted_backup_verified": true,
+    "schema_source_unchanged": true,
+    "real_https_health_and_fresh_mfa": true,
+    "company_profile30_paused_updates_identity_consent_roles_workers_releases_jobs_sessions_preserved": true,
+    "transport_and_https_container_ids_preserved": true,
+    "lab_cached_toolchain_image_only": false,
+    "canonical_recipe_and_official_builder": true,
+    "management_binary_independently_reproduced": true,
+    "native_session_and_new_worker_recipe_still_pending": true,
+    "production_publication": false
+  },
+  "postupgrade_https_authorization_and_download_routes": {
+    "utc": "2026-10-31T00:25:02.093635+00:00",
+    "source": "94284db24b8993344c12cae0a8baa95f82dc0e02",
+    "image": "sha256:83996cd1336c1a718deb84c43a05d079ae53d974346cf0b91a4fbbbc11815713",
+    "checks": [
+      {
+        "check": "anonymous inventory denied",
+        "status": 401
+      },
+      {
+        "check": "anonymous grant denied",
+        "status": 401
+      },
+      {
+        "check": "unassigned inventory empty",
+        "status": 200
+      },
+      {
+        "check": "unassigned grant denied",
+        "status": 403
+      },
+      {
+        "check": "unassigned administrative audit denied",
+        "status": 401
+      },
+      {
+        "check": "fresh MFA authorized inventory retained",
+        "status": 200
+      },
+      {
+        "check": "unattended grant without consent denied",
+        "status": 403
+      }
+    ],
+    "downloads": [
+      {
+        "edition": "customer",
+        "anonymous_status": 200,
+        "authorized_or_public_status": 200,
+        "expected_content_length": 32721210,
+        "zip_prefix_only_read": true,
+        "full_artifact_hash_rechecked": false
+      },
+      {
+        "edition": "technician",
+        "anonymous_status": 401,
+        "authorized_or_public_status": 200,
+        "expected_content_length": 30522021,
+        "zip_prefix_only_read": true,
+        "full_artifact_hash_rechecked": false
+      }
+    ],
+    "profile30_signature_and_paused_policy_valid": true,
+    "devices_consent_and_sessions_unchanged": true,
+    "fresh_admin_authorized_and_unassigned_technician_mfa": true,
+    "native_desktop_session_qualified": false,
+    "production_publication": false
+  },
+  "encrypted_preupgrade_backup": {
+    "utc": "2026-10-31T00:22:26.603696+00:00",
+    "bytes": 851028686,
+    "sha256": "48ccf04c61368a0b3b2263a330b77553cc076bafa3c0786a59f5fc347b4dc20c",
+    "encrypted_copy_hash_matched": true,
+    "separate_passphrase": true
+  },
+  "isolated_offline_restore": {
+    "utc": "2026-10-31T00:26:50.463966+00:00",
+    "source": "94284db24b8993344c12cae0a8baa95f82dc0e02",
+    "image": "sha256:83996cd1336c1a718deb84c43a05d079ae53d974346cf0b91a4fbbbc11815713",
+    "archive_sha256": "48ccf04c61368a0b3b2263a330b77553cc076bafa3c0786a59f5fc347b4dc20c",
+    "wrong_password_rejected_before_destination": true,
+    "authenticated_stream_restore_succeeded": true,
+    "management_and_transport_sqlite_headers_valid": true,
+    "profile_key_setup_token_transport_keys_and_actual_proxy_configuration_match": true,
+    "all_original_generated_installer_files_match": true,
+    "all_original_tls_key_and_certificate_files_match": true,
+    "artifact_count": 27,
+    "tls_identity_count": 6,
+    "no_plaintext_keys_exported_to_host": true,
+    "no_network_or_restored_server_start": true,
+    "original_company_not_reconfigured": true,
+    "restored_live_new_signing_key_and_mfa_check_pending": true,
+    "profile_revision_in_archive": 30,
+    "new_archive_schema": 3
+  },
+  "limits": [
+    "Original management program bytes match; full OCI images have different identifiers and are not qualified byte-identical",
+    "The restore was offline: wrong-password rejection, authenticated stream and file equality; restored-company HTTPS/MFA and native-session tests are separate",
+    "This receipt contains no current Windows installer, native desktop, public Internet, or production signing qualification"
+  ],
+  "production_publication": false
+}
