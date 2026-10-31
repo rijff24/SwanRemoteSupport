@@ -1,0 +1,63 @@
+{
+  "utc": "2026-10-31T09:09:37.979327+02:00",
+  "candidate": "1.5.14+82",
+  "trigger": "1513-win10-idle-customer-update-stale-gui-finding-20261031.json",
+  "helper_sha256": "a463848dd1237588f5f964de2ea2ff185074df6ca966fdff1f2841b10343b50a",
+  "test_sha256": "862a92d7757206069a4a835a3a8983246b63249cf678c468f4d1e11763f1a96f",
+  "application_in_functional_lab": "1.5.13+81; original signed installed customer payload unchanged",
+  "os": "Windows10 Pro x64 build19045",
+  "account_scope": "Genuine logged-in standard-user desktop; helper runs as SYSTEM and launches only a limited interactive task for that existing account",
+  "actual_task_result": 0,
+  "checks": {
+    "restart_intent_survives_stop_before_launch": true,
+    "foreign_task_unchanged": true,
+    "real_standard_user_gui_relaunched": true,
+    "fresh_gui_preserved_on_retry": true,
+    "passwords_or_privileged_user_tokens_used": false,
+    "native_wrong_creation_path_and_sid_rejected": true,
+    "unrelated_task_preserved": true,
+    "restart_intent_durable_before_stop": true,
+    "temporary_task_self_deleted": true,
+    "automatic_update_qualified": false,
+    "owned_task_removed_on_uninstall": true,
+    "service_and_payload_unchanged": true
+  },
+  "fresh_native_gui_pids": [
+    4288,
+    4828
+  ],
+  "company_branding_approval_controls_and_paused_support_visually_observed_after_helper": true,
+  "fault_injection": "Interruptions before process stop and after stop/before task launch; real Windows processes and Task Scheduler are used",
+  "actual_hypervisor_power_cut_performed": false,
+  "first_harness_result": {
+    "reserved_namespace_foreign_sentinel_correctly_rejected": true,
+    "fixture_corrected_without_changing_product_helper": true,
+    "only_exact_failed_fixture_tasks_cleaned": true
+  },
+  "implementation_contract": {
+    "signed_installed_release_and_msi_registration_verified_before_ui_recovery": true,
+    "existing_activity_exclusion_and_restart_marker_retained": true,
+    "old_process_path_creation_time_and_user_sid_rechecked_using_held_native_handle": true,
+    "restart_intent_durable_before_process_stop": true,
+    "no_saved_password_or_elevated_customer_ui": true,
+    "fresh_postcommit_gui_not_restarted_on_retry": true,
+    "owned_pending_ui_tasks_removed_on_explicit_uninstall": true,
+    "helper_process_bounded_seconds": 300
+  },
+  "limits": [
+    "This is a functional helper regression, not an automatic MSI update",
+    "Fault injection does not substitute for the required real interruption/recovery test",
+    "Rust integration, native1.5.14 build, real13-to14 customer automatic update and the remaining OS/edition matrix are pending"
+  ],
+  "production_publication": false,
+  "private_stdin_transport": {
+    "utc": "2026-10-31T09:18:06.39588+02:00",
+    "helper_sha256": "a463848dd1237588f5f964de2ea2ff185074df6ca966fdff1f2841b10343b50a",
+    "helper_bytes_streamed": 13446,
+    "bootstrap_encoded_characters": 1340,
+    "full_source_avoids_windows_command_line_limit": true,
+    "actual_windows_powershell_5_1_private_stdin_transport": true,
+    "non_system_rejected_before_task_or_process_mutation": true,
+    "automatic_update_qualified": false
+  }
+}

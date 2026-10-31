@@ -8122,3 +8122,10 @@ The preceding `0a95b2a` component push run 40860193687 passed Linux deployment,
 maintained Windows transport, Windows verification and Ubuntu verification.
 This establishes the transport packaging/provenance fix before the newly added
 receipt coverage; it does not qualify the new receipt reader on Windows yet.
+
+
+### Customer UI update recovery helper
+
+On a disposable Windows machine with the installed customer app open in a genuine standard-user desktop, run `deployment/windows/test_customer_ui_restart.ps1` as SYSTEM. Pass a fresh private `-Directory`, the installed `-Executable`, and a `-ResultPath` whose parent exists. The test uses real native process handles and Task Scheduler to check ownership rejection, interruption before stop and after stop/before launch, limited-user relaunch, idempotence and task cleanup. It preserves application files and the running service. It closes and reopens the test user’s customer UI.
+
+This helper result does not qualify a signed MSI automatic update or real power-loss recovery. Those require separate end-to-end receipts.

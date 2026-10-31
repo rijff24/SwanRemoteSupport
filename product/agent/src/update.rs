@@ -364,7 +364,44 @@ pub fn commit_uninstall(directory:&Path,edition:&str)->Result<()> {
     ensure!(matches!(edition,"customer"|"technician"),"Invalid uninstall edition");
     let status=embedded_powershell_command(include_str!("../../../deployment/windows/Commit-Uninstall.ps1"),
         &[("Directory",directory.to_str().context("Uninstall state path is not valid Unicode")?),("Edition",edition)])?.status()?;
-    ensure!(status.success(),"Uninstall commit cleanup failed");Ok(())
+    ensure!(status.success(),"Uninstall commit cleanup failed");
+    if edition=="customer" {customer_ui_recovery(directory,&installed_target(directory,&Edition::Customer)?,true)?;}
+    Ok(())
+}
+
+#[cfg(windows)]
+fn customer_ui_recovery(directory:&Path,target:&Path,remove:bool)->Result<()> {
+    // The fixed helper exceeds Windows' encoded command-line limit. Feed its
+    // embedded source through a private child pipe instead of a mutable file.
+    let loader=r#"param([string]$Directory,[string]$Executable,[string]$Operation)
+$reader=[IO.StreamReader]::new([Console]::OpenStandardInput(),[Text.UTF8Encoding]::new($false,$true))
+try{$source=$reader.ReadToEnd()}finally{$reader.Dispose()}
+& ([ScriptBlock]::Create($source)) -Directory $Directory -Executable $Executable -Operation $Operation
+"#;
+    let mut helper=embedded_powershell_command(loader,&[
+        ("Directory",directory.to_str().context("Customer UI state path is not valid Unicode")?),
+        ("Executable",target.to_str().context("Customer UI executable path is not valid Unicode")?),
+        ("Operation",if remove{"remove"}else{"restart"}),
+    ])?.stdin(std::process::Stdio::piped()).spawn()?;
+    let mut input=helper.stdin.take().context("Customer UI helper input unavailable")?;
+    let writer=std::thread::Builder::new().name("customer-ui-helper-source".into()).spawn(move || {
+        use std::io::Write;
+        input.write_all(include_bytes!("../../../deployment/windows/Restart-CustomerUi.ps1"))
+    });
+    let writer=match writer {
+        Ok(writer)=>writer,
+        Err(error)=>{
+            helper.kill().context("Cannot stop customer UI helper without its source writer")?;
+            helper.wait().context("Cannot reap customer UI helper without its source writer")?;
+            return Err(error).context("Cannot start customer UI source writer");
+        }
+    };
+    let status=crate::verifier_process::wait_with_message(&mut helper,std::time::Duration::from_secs(300),
+        "Customer UI recovery helper timed out; durable recovery remains pending");
+    let written=writer.join().map_err(|_|anyhow::anyhow!("Customer UI source writer failed"));
+    let status=status?;
+    written??;
+    ensure!(status.success(),"Customer UI recovery helper failed");Ok(())
 }
 
 #[cfg(windows)]
@@ -653,7 +690,7 @@ pub fn finish_configuration_restart(directory:&Path)->Result<()> {
     let activity=activity_file(directory)?;
     fs2::FileExt::try_lock_exclusive(&activity).context("Configuration restart requires update and session exclusion")?;
     let marker=directory.join("configuration-restart.json");
-    if marker.exists() {
+    let ui_target=if marker.exists() {
         ensure!(!directory.join("pending-uninstall").exists(),"Explicit uninstall cancels configuration restart");
         let state=AgentState::load_for_refresh(directory)?;
         let envelope:SignedEnvelope=serde_json::from_slice(&std::fs::read(&marker)?)?;
@@ -663,7 +700,14 @@ pub fn finish_configuration_restart(directory:&Path)->Result<()> {
         ensure!(installed.payload==envelope.payload && installed.signature==envelope.signature,"Restart marker differs from installed release");
         verify_installed(directory,&release)?;
         verify_msi_registration(&installer_cache(directory,&release),&release)?;
-    }
+        Some(installed_target(directory,&release.edition)?)
+    }else{None};
+    // Keep session exclusion and the signed restart marker until existing user
+    // interfaces have durable, unelevated restart tasks. A retry must not leave
+    // an old mapped executable displaying stale company policy after an MSI.
+    if let Some(target)=ui_target {customer_ui_recovery(directory,&target,false)?;}
+    // Resume the watcher last so its update pass cannot race a lengthy UI
+    // recovery and incorrectly report the committed update as failed.
     let status=embedded_powershell_command(include_str!("../../../deployment/windows/Restart-Configuration.ps1"),
         &[("Directory",directory.to_str().context("Configuration path is not valid Unicode")?)])?.status()?;
     ensure!(status.success(),"Configuration task restart remains pending");
