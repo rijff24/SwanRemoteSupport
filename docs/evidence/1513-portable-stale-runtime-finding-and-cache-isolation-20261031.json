@@ -52,7 +52,6 @@
       "run": 41169951691,
       "completion_and_comparison_pending": true
     },
-    "actual_upgraded_runtime_login_reporting_and_recovery_pending": true,
     "lab_distribution": {
       "all_five_signatures_and_original_receipts_verified": true,
       "existing_key_nonexportable_verified": true,
@@ -64,19 +63,28 @@
       "test_release_sequence": 16,
       "both_editions_approved": true,
       "both_company_bundle_jobs_queued": true,
-      "company_bundle_download_verification_pending": true,
+      "company_bundle_download_verification_pending": false,
       "automatic_updates_paused": true,
       "profile_revision": 34,
       "invalid_signatures_and_request_trust_override_rejected": true,
       "unapproved_build_rejected_without_job_creation": true,
-      "actual_installation_and_native_runtime_qualification_pending": true
-    }
+      "actual_installation_and_native_runtime_qualification_pending": false
+    },
+    "qualified_scope": "See 1513-technician-automatic-update-runtime-mfa-and-report-20261031.json: one Server2019 owned Administrator technician automatic upgrade, exact runtime, MFA/inventory, report and paused-policy restoration",
+    "remaining_scope": [
+      "Current customer and standard-user technician",
+      "Remote desktop and remaining lifecycle/OS matrix",
+      "Current-candidate interrupted recovery",
+      "Independent native reproduction"
+    ],
+    "technician_automatic_update_runtime_login_report_qualified": true,
+    "current_candidate_interrupted_recovery_pending": true
   },
   "limits": [
     "Installed-file verification alone does not qualify the running native runtime",
     "The built-in Administrator is not standard-user technician qualification",
     "The actual Windows exclusive-file-lock regression passed; full installed application acceptance remains pending",
-    "Retest automatic update, native login/reporting and interrupted recovery after building the candidate"
+    "The actual Server2019 Administrator technician update/runtime/login/report passed; current customer, standard-user, remote desktop and interrupted-recovery qualification remain separate"
   ],
   "product_complete": false,
   "production_publication": false,

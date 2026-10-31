@@ -1,4 +1,4 @@
-# Release readiness — 30 October 2026
+# Release readiness — 31 October 2026
 
 **Not ready for production publication.** This index distinguishes current,
 scoped evidence from older checkpoints in [ACCEPTANCE.md](ACCEPTANCE.md).
@@ -20,7 +20,7 @@ Passing one operating system or one component does not qualify the full product.
 
 ## Sources and signing
 
-- Candidate `1.5.13+81` addresses a [real stale portable-runtime finding](evidence/1513-portable-stale-runtime-finding-and-cache-isolation-20261031.json). Server2019 technician files upgraded automatically to1.5.12 and passed exact signed installed-file verification, but the shared extracted executable remained1.5.11 and the current installation report did not complete. The new wrapper isolates each embedded payload by its SHA256 and refuses launch after extraction errors. Four Python metadata tests and two standalone Linux Rust tests passed. Windows locked-file tests, the new native build and actual upgraded-runtime/login/reporting qualification remain pending. This supersedes any inference that successful MSI verification alone qualified technician restart.
+- Candidate `1.5.13+81` addresses a [real stale portable-runtime finding](evidence/1513-portable-stale-runtime-finding-and-cache-isolation-20261031.json). Server2019 technician files upgraded automatically to1.5.12 and passed exact signed installed-file verification, but the shared extracted executable remained1.5.11 and the current installation report did not complete. The new wrapper isolates each embedded payload by its SHA256 and refuses launch after extraction errors. Four Python metadata tests and two standalone Linux Rust tests passed. Windows exclusive-file-lock and Linux cache regressions, the full native build and exact corresponding-source verification subsequently passed. [The actual Server2019 technician1.5.12 to1.5.13 automatic update](evidence/1513-technician-automatic-update-runtime-mfa-and-report-20261031.json) also passed: the sole running native process is1.5.13+81 in its new payload-specific cache and matches the verified original runtime hash; fresh MFA/inventory and the exact company installation report passed. Identity, consent, trust and the excluded customer remained unchanged, and paused profile36 was restored. Two obsolete pre1.5.12 lab recovery tasks were separately removed through exact ownership checks after their old helpers failed; this maintenance is not claimed as upgrade cleanup acceptance. The test used the owned built-in Administrator, so standard-user technician and current-candidate remote desktop/lifecycle qualification remain open. Independent native reproduction is running. This supersedes any inference that successful MSI verification alone qualified technician restart.
 
 - Development candidate `1.5.11+79` gives configuration/recovery tasks and
   noninteractive trust/update helpers normal scheduling priority. Restart and
