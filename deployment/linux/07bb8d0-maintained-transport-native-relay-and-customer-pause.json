@@ -1,0 +1,96 @@
+{
+  "recorded_utc": "2026-10-28T21:21:32.338938+00:00",
+  "application_source": "07bb8d0b99e2be002a30e5d97eebe67a9c2794ad",
+  "transport_recipe_source": "650361413543baf7ef150f5960544154ec77ddeb",
+  "transport_image": "sha256:3e879d6f3954ff2bc750ab02cdea43e05894e75cd4f8d288c411450d2fae93ca",
+  "both_running_transport_container_images_verified": true,
+  "receiver_relay_request_utc": "2026-10-28T21:12:47.567975+00:00",
+  "matching_relay_pair_utc": "2026-10-28T21:12:47.125530+00:00",
+  "native_video_service_utc": "2026-10-28T21:13:04.192738+00:00",
+  "matching_receiver_and_maintained_relay_connection_id_verified": true,
+  "real_native_live_desktop_after_customer_accept": true,
+  "remote_pointer_changed_customer_server_manager_to_local_server": true,
+  "receiving_viewer_independently_showed_changed_page": true,
+  "claimed_attended_grant_with_subsequent_lease_renewal": true,
+  "technician_native_payload": {
+    "source": "07bb8d0b99e2be002a30e5d97eebe67a9c2794ad",
+    "flutter_and_rust_libraries_loaded": true,
+    "native_child_process_running": true,
+    "version": "1.5.7",
+    "utc": "2026-10-28T21:15:36.6770984Z",
+    "native_process_count": 1,
+    "no_new_application_crash_event": true,
+    "source_payload_hashes": {
+      "rustdesk.exe": "00db5cea227670af716d8dac88b7cb9fd5c86dab15f1dbfbed3c91a040733985",
+      "librustdesk.dll": "a79de5449074eb4d463eb72706015e70d5ec9f04f4c009a42336efa9adf45da4",
+      "flutter_windows.dll": "c87ba5a71afa7b7100c1c9ccc1289009dab812f9de2acc38f9d5103e48c1f204"
+    },
+    "gui_mfa_and_inventory_observed_separately": false,
+    "remote_session_qualified": false
+  },
+  "customer_pause": {
+    "consent_revision": 0,
+    "version": "1.5.7",
+    "closed_grant_renewal_status": 403,
+    "profile_revision": 14,
+    "sequence": 9,
+    "utc": "2026-10-28T21:20:24.5173317Z",
+    "service_pid": 1196,
+    "support_paused": true,
+    "same_service_process_and_watch_running": true,
+    "new_msi_events": 0,
+    "shipping_verifier_passed": true,
+    "standard_account_test": false,
+    "unattended_consent_off": true,
+    "original_claimed_grant_closed": true,
+    "closed_grant_retains_historical_lease_timestamp": true
+  },
+  "customer_resume": {
+    "consent_revision": 0,
+    "version": "1.5.7",
+    "closed_grant_renewal_status": 403,
+    "profile_revision": 14,
+    "sequence": 9,
+    "utc": "2026-10-28T21:20:54.1280944Z",
+    "service_pid": 1196,
+    "support_paused": false,
+    "same_service_process_and_watch_running": true,
+    "new_msi_events": 0,
+    "shipping_verifier_passed": true,
+    "standard_account_test": false,
+    "unattended_consent_off": true,
+    "original_claimed_grant_closed": true,
+    "closed_grant_retains_historical_lease_timestamp": true,
+    "identity_credential_and_trust_preserved_across_resume": true
+  },
+  "gui_findings": {
+    "incoming_prompt_used_legacy_peer_display_name": true,
+    "observed_peer_display_name": "Administrator",
+    "authenticated_technician_display_name_on_customer_prompt_not_qualified": true
+  },
+  "original_private_log_sha256": {
+    "receiver-native.private.log": "f9e50f9af32660b2ed735e30c18561b9950f360a58fc92c00db1080b83448d84",
+    "hbbr.private.log": "bd8e6a526eb2977323dedbd6e53b79e0b794af44d99845318a40b3e9be527637"
+  },
+  "limits": [
+    "Loopback company endpoints and separate NAT lab VMs; no public Internet or direct-transport qualification.",
+    "Customer controls used owned Administrator desktop; no ordinary-account active-session termination claim.",
+    "No real clipboard, file transfer, remote UAC, multiple monitors or authorization-outage expiry qualification from this test.",
+    "No production signing or complete Windows compatibility qualification."
+  ],
+  "native_technician_mfa_and_inventory": {
+    "actual_installed_company_branding_and_https_origin_observed": true,
+    "native_username_password_totp_login_observed": true,
+    "independent_server_login_audit_matches": true,
+    "visible_approved_device_count": 5,
+    "technician_os": "Windows Server 2019 x64 17763.3650",
+    "customer_os": "Windows Server 2016 x64 14393",
+    "owned_administrator_desktops": true,
+    "ordinary_account_active_session_test": false
+  },
+  "verification_correction": {
+    "initial_checker_incorrectly_required_zero_historical_lease_timestamp": true,
+    "failure_preserved_privately": true,
+    "closed_flag_and_actual_renewal_403_verified_instead": true
+  }
+}

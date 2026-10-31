@@ -1,0 +1,107 @@
+{
+  "utc": "2026-10-30T05:03:15.451734+00:00",
+  "source": "b1fbe1e2419c3e749663746c74442d1fe864302d",
+  "version": "1.5.10+78",
+  "source_date_epoch": 1793325277,
+  "comparison_run": 41005323442,
+  "comparison_url": "https://github.com/rijff24/SwanRemoteSupport/actions/runs/41005323442",
+  "comparison_artifact": 12955371943,
+  "comparison_artifact_sha256": "sha256:120597b24e76d19325b5c9fd20c74835fe7afca91bafa1b427f4729f08526a98",
+  "builds": [
+    {
+      "workflow_run": 40988690083,
+      "run_attempt": 1,
+      "artifact": 12950288879,
+      "archive_digest": "sha256:dc97a1b997edfd6aa725562b2f0c90485e2c11791d4a5274150c73c19969640b",
+      "bytes": 256197933
+    },
+    {
+      "workflow_run": 40997460699,
+      "run_attempt": 1,
+      "artifact": 12953994935,
+      "archive_digest": "sha256:785c2da1d0b6f8aa063a770987c8d586151384037057e7aa77b9be8a3d89b7a2",
+      "bytes": 256198010
+    }
+  ],
+  "complete_corresponding_source_and_generated_bridge_checked_by_comparison": true,
+  "first_archive_matches_locally_verified_original": true,
+  "recorded_msvc_inputs_identical": true,
+  "all_eight_original_unsigned_shipping_outputs_byte_identical": true,
+  "shipping_files_normalized_or_rebuilt_for_comparison": false,
+  "outputs": [
+    {
+      "path": "SwanRemoteSupport-1.5.10-customer-x64-unsigned.msi",
+      "first_sha256": "d4545f75aec2618065b32b11c65bafaef470904977f4e0c45c2731eb5da0e6f8",
+      "second_sha256": "d4545f75aec2618065b32b11c65bafaef470904977f4e0c45c2731eb5da0e6f8",
+      "first_bytes": 33894400,
+      "second_bytes": 33894400,
+      "identical": true
+    },
+    {
+      "path": "SwanRemoteSupport-1.5.10-technician-x64-unsigned.exe",
+      "first_sha256": "0514f3bb71f7802cd184bc53f5770f275c398af4cfbaad6cd004fdb6386b75b0",
+      "second_sha256": "0514f3bb71f7802cd184bc53f5770f275c398af4cfbaad6cd004fdb6386b75b0",
+      "first_bytes": 24276480,
+      "second_bytes": 24276480,
+      "identical": true
+    },
+    {
+      "path": "SwanRemoteSupport-1.5.10-technician-x64-unsigned.msi",
+      "first_sha256": "033aefa2cecc720e57b73b94daa6860a38b67df563350d3fbbb588f50f276a96",
+      "second_sha256": "033aefa2cecc720e57b73b94daa6860a38b67df563350d3fbbb588f50f276a96",
+      "first_bytes": 31637504,
+      "second_bytes": 31637504,
+      "identical": true
+    },
+    {
+      "path": "SwanRemoteSupport-1.5.10-x64-unsigned-install.exe",
+      "first_sha256": "0514f3bb71f7802cd184bc53f5770f275c398af4cfbaad6cd004fdb6386b75b0",
+      "second_sha256": "0514f3bb71f7802cd184bc53f5770f275c398af4cfbaad6cd004fdb6386b75b0",
+      "first_bytes": 24276480,
+      "second_bytes": 24276480,
+      "identical": true
+    },
+    {
+      "path": "SwanServerSetup-UNSIGNED-TEST.exe",
+      "first_sha256": "ced82ac66da9e5a26803390f04313926fb8a2c93a3fd13b35088ea178eb314fa",
+      "second_sha256": "ced82ac66da9e5a26803390f04313926fb8a2c93a3fd13b35088ea178eb314fa",
+      "first_bytes": 65881088,
+      "second_bytes": 65881088,
+      "identical": true
+    },
+    {
+      "path": "swan-agent.exe",
+      "first_sha256": "9706c97188ffdf878dabfb57e7853c4292caff7c318c9011ce6431220daf7b8c",
+      "second_sha256": "9706c97188ffdf878dabfb57e7853c4292caff7c318c9011ce6431220daf7b8c",
+      "first_bytes": 5756416,
+      "second_bytes": 5756416,
+      "identical": true
+    },
+    {
+      "path": "swan-management.exe",
+      "first_sha256": "772cb5a490452742d39342e34decc82b3f3be1a2cad1ece6f348ab3972771038",
+      "second_sha256": "772cb5a490452742d39342e34decc82b3f3be1a2cad1ece6f348ab3972771038",
+      "first_bytes": 9130496,
+      "second_bytes": 9130496,
+      "identical": true
+    },
+    {
+      "path": "swan-worker.exe",
+      "first_sha256": "5dbf2a0f2048c9831212cc4a0e8b3a6b454330a1035c1aec5ab011103136cde7",
+      "second_sha256": "5dbf2a0f2048c9831212cc4a0e8b3a6b454330a1035c1aec5ab011103136cde7",
+      "first_bytes": 4900352,
+      "second_bytes": 4900352,
+      "identical": true
+    }
+  ],
+  "independent_rebuild_verified": true,
+  "executables_run_by_comparison": false,
+  "runtime_qualified_by_comparison": false,
+  "limits": [
+    "Original unsigned Windows outputs only; lab signatures and enrolled-machine runtime have separate receipts.",
+    "This does not qualify canonical Linux Docker image reproduction or the complete Windows runtime matrix.",
+    "Production signing/provider approval and remaining product acceptance gates are open."
+  ],
+  "production_publication": false,
+  "full_product_acceptance_complete": false
+}

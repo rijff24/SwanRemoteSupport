@@ -1,0 +1,29 @@
+{
+  "date": "2026-10-29",
+  "application_source": "67b5c69ca62feadf7ecf57d835a79c3d2da19dd2",
+  "version": "1.5.8",
+  "test_release_sequence": 10,
+  "transport_recipe_source": "650361413543baf7ef150f5960544154ec77ddeb",
+  "transport_image": "sha256:3e879d6f3954ff2bc750ab02cdea43e05894e75cd4f8d288c411450d2fae93ca",
+  "passed": [
+    "Server-generated customer and protected technician bundles upgraded installed1.5.7 endpoints to1.5.8",
+    "Shipping installed-file verification, MSI state and lab publisher signatures matched",
+    "Device identity, enrollment, company trust, profile14 and disabled unattended consent survived upgrades",
+    "Technician MFA displayed five authorized devices",
+    "Customer approval prompt used the company-authenticated technician username instead of the operating-system display name",
+    "Live attended desktop matched receiver and maintained relay connection ID and timestamps",
+    "Claimed authorization renewed beyond the initial300-second lease",
+    "Customer Stop closed the original grant; actual receiving-device renewal returned403",
+    "Technician closure dialog offered OK without Retry",
+    "Resume preserved service, watcher, identity and consent without reviving the closed grant or creating a new lease",
+    "Loaded technician native executable and Rust/Flutter libraries matched verified release payload hashes"
+  ],
+  "limits": [
+    "Separate NAT lab VMs and private company endpoints, not public Internet or direct-connection qualification",
+    "Owned Administrator desktops, not ordinary-user active-session control",
+    "Current-candidate clipboard, transfer, UAC, multiple monitors and outage expiry require separate checks",
+    "A stale sign-in frame after a long idle interval redrew after changing window visibility; cause remains unestablished",
+    "Independent native build40819351377 still in progress when this receipt was prepared",
+    "Lab signing only; no production qualification"
+  ]
+}

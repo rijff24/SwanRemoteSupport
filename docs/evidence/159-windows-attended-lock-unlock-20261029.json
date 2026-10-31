@@ -1,0 +1,30 @@
+{
+  "utc": "2026-10-29T16:47:54.502982+00:00",
+  "application_source": "aff8ff61e3fbd6f34c4cf0bb9de6e330ec6e0521",
+  "version": "1.5.9",
+  "standard_user_technician": true,
+  "customer_os": "Windows Server 2016 Standard Evaluation x64 build14393 Desktop Experience",
+  "customer_approved_attended_session": true,
+  "remote_lock_action_reached_real_windows_lock_screen": true,
+  "lock_screen_video_visible_in_native_technician": true,
+  "secure_attention_sent_using_swan_insert_ctrl_alt_del": true,
+  "owned_lab_password_typed_as_masked_remote_input": true,
+  "same_authorized_session_returned_to_customer_desktop": true,
+  "same_original_live_attended_lease_verified_after_unlock": true,
+  "no_replacement_grant_or_reconnection_required": true,
+  "no_host_secure_attention_used": true,
+  "uac_policy_inspection": {
+    "EnableLUA": 1,
+    "PromptOnSecureDesktop": 1,
+    "ConsentPromptBehaviorAdmin": 5,
+    "ConsentPromptBehaviorUser": 3,
+    "FilterAdministratorToken_configured": false
+  },
+  "uac_prompt_test_passed": false,
+  "production_publication": false,
+  "limits": [
+    "Existing attended Administrator desktop lock/unlock only. Does not qualify unattended consent, reboot to logon, standard-user customer behavior or UAC elevation.",
+    "Separate NAT lab VMs and lab signing only."
+  ],
+  "original_session_closed_and_no_live_lease_after_test": true
+}

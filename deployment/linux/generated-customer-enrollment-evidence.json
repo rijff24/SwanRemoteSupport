@@ -1,0 +1,26 @@
+{
+  "downloaded_generated_bundle": true,
+  "guest_install_command_exit": 0,
+  "company_identity_matches": true,
+  "device_identity_matches_server": true,
+  "server_approval_state": "pending",
+  "grant_before_approval_status": 403,
+  "customer_service_running": true,
+  "worker_service_preserved": true,
+  "unattended_consent": false,
+  "pending_install_absent": true,
+  "profile_revision": 1,
+  "release_sequence": 1,
+  "manual_address_edit": false,
+  "tailscale_required": false,
+  "guest_proof_sha256": "46e3d7b4c4d8c8d9c82d01277d205f4c55074bfa03c8ff40292b1e6ee61f3372",
+  "native_session_qualified": false,
+  "date": "2026-10-26",
+  "application_source": "da0c621845057bed321a98a1886ef15891e431a9",
+  "os": "Windows Server 2019 x64 build 17763.3650",
+  "limitations": [
+    "Lab CA installed only on the disposable guest; no public Internet or production signing claim.",
+    "Installation invoked the generated company script from an administrator session with explicit lab company confirmation; customer UAC and standard-user technician behavior remain separate.",
+    "Pre-approval grant denial is a management API check; receiving native protocol enforcement, approved sessions, public direct/relay connectivity and updates remain open."
+  ]
+}

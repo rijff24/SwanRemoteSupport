@@ -1,0 +1,38 @@
+{
+  "utc": "2026-10-29T18:23:53.121224+00:00",
+  "runtime_baseline_source": "9fa5e8aa6a846ce015362de8082da5c938d79ff8",
+  "os": "Windows Server 2016 Desktop Experience build14393",
+  "finding": "Maintained Windows rendezvous default placed its peer database in the RustDesk LocalService profile, outside company transport storage and the earlier full backup input.",
+  "populated_backup_preflight_failed_before_export": true,
+  "encrypted_backup_not_created": true,
+  "company_and_worker_services_running_after_failed_preflight": true,
+  "earlier_absent_transport_db_backup_receipts_do_not_prove_peer_record_recovery": true,
+  "candidate_changes": [
+    "Explicit DB_URL under company transport storage.",
+    "Fail startup and full transport export when a legacy database remains outside company storage and no managed database exists.",
+    "Explicit offline migration with management lock and Windows source writer exclusion.",
+    "Recover stopped database/WAL in private staging, check SQLite integrity, publish without overwriting a destination, preserve original source and keys."
+  ],
+  "implementation_files_sha256": {
+    "product/management/src/components.rs": "c7f016b08b59cb14891f6f442a8b4189f4f0a3c696b7c793b1bef237ebd209be",
+    "product/management/src/main.rs": "f2b45944d8a5a9dbef9c8c7a22b31db651320d3afa3c9d6d26cf2dec517a1723",
+    "product/management/src/backup.rs": "a6c655d84f68500e2bfca9caf32daa2deb7fe8574525e47d63683aae4752e1f7",
+    "product/management/src/backup_stream.rs": "cbcc889e80f9989e91f0fc7086707a6d9d2867de02960933a6885bd8471d76bd"
+  },
+  "linux_regressions": {
+    "clean_package_rebuild": true,
+    "passed": 6,
+    "failed": 0,
+    "log_sha256": "3ccd74ef7cd5c637b39a908a267c492187a91288a50c537270d45176c21de16c",
+    "earlier_cached_test_run_counted": false,
+    "live_company_containers_changed": false
+  },
+  "pending": [
+    "Actual Windows legacy database migration with source/key/identity preservation.",
+    "Full backup and recovery of populated transport and current management records."
+  ],
+  "production_publication": false,
+  "full_product_acceptance_complete": false,
+  "windows_compiled_regressions_passed_source": "361d7c362de7f67b7b7456d33bf0191736eec7d5",
+  "windows_component_evidence": "361d7c3-windows-transport-storage-component-checks.json"
+}

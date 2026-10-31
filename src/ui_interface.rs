@@ -98,13 +98,20 @@ pub fn get_id() -> String {
 
 #[inline]
 pub fn goto_install() {
+    #[cfg(feature = "swan_custom")]
+    log::warn!("Managed installation requires the company bundle or approved update agent");
+    #[cfg(not(feature = "swan_custom"))]
+    {
     allow_err!(crate::run_me(vec!["--install"]));
     std::process::exit(0);
+    }
 }
 
 #[inline]
 pub fn install_me(_options: String, _path: String, _silent: bool, _debug: bool) {
-    #[cfg(windows)]
+    #[cfg(feature = "swan_custom")]
+    log::warn!("Managed installation requires the company bundle or approved update agent");
+    #[cfg(all(windows, not(feature = "swan_custom")))]
     std::thread::spawn(move || {
         allow_err!(crate::platform::windows::install_me(
             &_options, _path, _silent, _debug
@@ -430,7 +437,11 @@ pub fn set_option(key: String, value: String) {
         }
         #[cfg(any(target_os = "windows", target_os = "linux"))]
         {
-            if crate::platform::is_installed() {
+            // Managed Windows support pauses through the existing service IPC;
+            // stopping support must not uninstall it or require elevation.
+            if crate::platform::is_installed()
+                && !cfg!(all(target_os = "windows", feature = "swan_custom"))
+            {
                 if value == "Y" {
                     if crate::platform::uninstall_service(true, false) {
                         return;

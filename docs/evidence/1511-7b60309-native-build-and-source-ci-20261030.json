@@ -1,0 +1,82 @@
+{
+  "utc": "2026-10-30T17:19:19.761891+00:00",
+  "source": "7b60309374389a1b0f8d859f8c164d6cf355353f",
+  "version": "1.5.11+79",
+  "workflow_run": 41079284199,
+  "workflow_url": "https://github.com/rijff24/SwanRemoteSupport/actions/runs/41079284199",
+  "artifact": 12993142115,
+  "artifact_digest": "sha256:353181dce9b4dff8ed9977fdcbeddd42721b99e7e529d6b2816fb62b6a60912b",
+  "artifact_bytes": 256216207,
+  "archive_hash_size_crc_and_safe_entries_verified": true,
+  "all_manifest_hashes_match": true,
+  "public_tracked_source_files_verified": 1314,
+  "generated_bridge_files_verified": 6,
+  "source_repositories": {
+    ".": "7b60309374389a1b0f8d859f8c164d6cf355353f",
+    "libs/hbb_common/": "7e1c392c62d39c364127307cd408421dd5f8cfb0"
+  },
+  "source_date_epoch": 1793373381,
+  "pinned_flutter_sdk_and_engine_verified": true,
+  "engine_source_commit": "05d5369c04804b9a9b2dc06df0cb85b0efe6f274",
+  "engine_production_approved": false,
+  "no_eager_bundled_desktop_dll_imports": true,
+  "required_native_ci_steps": {
+    "Reject paused support and authorization reuse after resume": "success",
+    "Reject authorization retries and inherited audit destinations": "success",
+    "Reject cross-target and stale-login file-transfer handles": "success",
+    "Verify hardened DLL search supports delayed application libraries": "success",
+    "Build branded client": "success",
+    "Reject incoming capture helpers in the technician edition": "success",
+    "Verify service launcher defers desktop DLL loading": "success",
+    "Verify customer MSI starts a headless native service": "success",
+    "Reject unsigned legacy management policy in managed editions": "success",
+    "Reject upstream updater entry points in managed editions": "success",
+    "Reject system-control packets from view-only managed sessions": "success",
+    "Build unsigned customer and technician MSIs with pinned WiX": "success",
+    "Verify unsigned technician MSI installation repair and uninstall": "success",
+    "Build unsigned company server setup with pinned components": "success"
+  },
+  "eight_unsigned_shipping_files": {
+    "swan-agent.exe": {
+      "sha256": "ffbc7944b22f9bc237f5e9b3690271b74393ced2e01c759fa69c78a99e27ad7f",
+      "bytes": 5756416
+    },
+    "swan-management.exe": {
+      "sha256": "8249a0685e70326d3a4c5f666493e0e419a6ce04c21e4011478d459b5ed16d28",
+      "bytes": 9130496
+    },
+    "swan-worker.exe": {
+      "sha256": "79d16d6998285438f07b12b15740be5adc70d9a13d7b7726dfd9586c777aea50",
+      "bytes": 4900352
+    },
+    "SwanRemoteSupport-1.5.11-customer-x64-unsigned.msi": {
+      "sha256": "9fe23bc680997b9b8a61396fb235c77c0b462438139952fb22fe9752715f23bb",
+      "bytes": 33902592
+    },
+    "SwanRemoteSupport-1.5.11-technician-x64-unsigned.exe": {
+      "sha256": "194fed13671f14fad554cb14cf1a639f01017d607b80efe20f9e4de488728e75",
+      "bytes": 24276992
+    },
+    "SwanRemoteSupport-1.5.11-technician-x64-unsigned.msi": {
+      "sha256": "d4bd46e2131a7d1f9295b825826964d19210eabc0d79cfe07703a2e845902a8d",
+      "bytes": 31637504
+    },
+    "SwanRemoteSupport-1.5.11-x64-unsigned-install.exe": {
+      "sha256": "194fed13671f14fad554cb14cf1a639f01017d607b80efe20f9e4de488728e75",
+      "bytes": 24276992
+    },
+    "SwanServerSetup-UNSIGNED-TEST.exe": {
+      "sha256": "e4d9dfd287375faa0d7986433cd1856daa72fed7cb66f912bcac0f30d5a12dd8",
+      "bytes": 65881088
+    }
+  },
+  "individual_native_regression_log_bodies_rechecked": false,
+  "independent_build_run": 41093808835,
+  "independent_original_byte_comparison_pending": true,
+  "production_signing_approved": false,
+  "new_lab_signed_packages_ready": false,
+  "installed1511_runtime_or_upgrade_qualified": false,
+  "production_publication": false,
+  "declared_text_checkout_conversion_count": 1170,
+  "source_file_manifest_location": "BUILD-SOURCE.json in archived exact corresponding source; source checkout conversions were checked against pinned Git blobs, without normalizing shipping binaries"
+}

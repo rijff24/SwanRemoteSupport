@@ -1,0 +1,135 @@
+{
+  "schema": 1,
+  "source_commit": "9ba592ca0431ce734a1edf7391aec183f5c100fa",
+  "source_date_epoch": 1793065678,
+  "source_proofs": [
+    {
+      "tracked_files_verified": 1203,
+      "bridge_hashes": {
+        "flutter/ios/Runner/bridge_generated.h": "d7b339a3f2d8ef4ec4631f4d4e61f7aea695ba211b4ff8a227321e3eb7738c02",
+        "flutter/lib/generated_bridge.dart": "0df68aa681e39ec769a23053bbcd9022bee09885e1a16b1dd7a26b28f6a8a38a",
+        "flutter/lib/generated_bridge.freezed.dart": "06ab02a3cb491c965860a5364d3230e4969134ec0294fef5abde7c3b13575613",
+        "flutter/macos/Runner/bridge_generated.h": "d7b339a3f2d8ef4ec4631f4d4e61f7aea695ba211b4ff8a227321e3eb7738c02",
+        "src/bridge_generated.io.rs": "b4ac7aaecea8d2f51f23950792030ccc66f01d3676640d8091b828a5895aa66f",
+        "src/bridge_generated.rs": "b14a876e159eba96f8964329b9abee0afe449a9e28daeb381fb74075714fa425"
+      },
+      "declared_source_text_checkout_conversion_count": 1061
+    },
+    {
+      "tracked_files_verified": 1203,
+      "bridge_hashes": {
+        "flutter/ios/Runner/bridge_generated.h": "d7b339a3f2d8ef4ec4631f4d4e61f7aea695ba211b4ff8a227321e3eb7738c02",
+        "flutter/lib/generated_bridge.dart": "0df68aa681e39ec769a23053bbcd9022bee09885e1a16b1dd7a26b28f6a8a38a",
+        "flutter/lib/generated_bridge.freezed.dart": "06ab02a3cb491c965860a5364d3230e4969134ec0294fef5abde7c3b13575613",
+        "flutter/macos/Runner/bridge_generated.h": "d7b339a3f2d8ef4ec4631f4d4e61f7aea695ba211b4ff8a227321e3eb7738c02",
+        "src/bridge_generated.io.rs": "b4ac7aaecea8d2f51f23950792030ccc66f01d3676640d8091b828a5895aa66f",
+        "src/bridge_generated.rs": "b14a876e159eba96f8964329b9abee0afe449a9e28daeb381fb74075714fa425"
+      },
+      "declared_source_text_checkout_conversion_count": 1061
+    }
+  ],
+  "msvc_input_proofs": [
+    {
+      "input_identity_sha256": "cc28be208566e3a22107767ee1c5a7dbd926154258b518b9abf7f15810a81f47",
+      "files": 618,
+      "visual_studio_version": "17.14.37806.7",
+      "toolset_directory_version": "14.44.35207",
+      "scope": "Recorded default x64 MSVC inputs; not Windows SDK or actual compiler-command verification"
+    },
+    {
+      "input_identity_sha256": "cc28be208566e3a22107767ee1c5a7dbd926154258b518b9abf7f15810a81f47",
+      "files": 618,
+      "visual_studio_version": "17.14.37806.7",
+      "toolset_directory_version": "14.44.35207",
+      "scope": "Recorded default x64 MSVC inputs; not Windows SDK or actual compiler-command verification"
+    }
+  ],
+  "recorded_msvc_inputs_identical": true,
+  "outputs": [
+    {
+      "path": "SwanRemoteSupport-1.5.2-customer-x64-unsigned.msi",
+      "first_sha256": "60dc02e617ff31d287672ee7c0a649433af70aafaf1c987f41c239d5d827f09b",
+      "second_sha256": "60dc02e617ff31d287672ee7c0a649433af70aafaf1c987f41c239d5d827f09b",
+      "first_bytes": 33591296,
+      "second_bytes": 33591296,
+      "identical": true
+    },
+    {
+      "path": "SwanRemoteSupport-1.5.2-technician-x64-unsigned.exe",
+      "first_sha256": "c557f1e58ce441be87eb25091eb1a0f1e2cf5c10725d031dec343db38b3a56cf",
+      "second_sha256": "c557f1e58ce441be87eb25091eb1a0f1e2cf5c10725d031dec343db38b3a56cf",
+      "first_bytes": 24252928,
+      "second_bytes": 24252928,
+      "identical": true
+    },
+    {
+      "path": "SwanRemoteSupport-1.5.2-technician-x64-unsigned.msi",
+      "first_sha256": "869c2b26d2fd50cda723563b6f79798880f27f00858deff57256ece3d992d8d6",
+      "second_sha256": "869c2b26d2fd50cda723563b6f79798880f27f00858deff57256ece3d992d8d6",
+      "first_bytes": 31330304,
+      "second_bytes": 31330304,
+      "identical": true
+    },
+    {
+      "path": "SwanRemoteSupport-1.5.2-x64-unsigned-install.exe",
+      "first_sha256": "c557f1e58ce441be87eb25091eb1a0f1e2cf5c10725d031dec343db38b3a56cf",
+      "second_sha256": "c557f1e58ce441be87eb25091eb1a0f1e2cf5c10725d031dec343db38b3a56cf",
+      "first_bytes": 24252928,
+      "second_bytes": 24252928,
+      "identical": true
+    },
+    {
+      "path": "SwanServerSetup-UNSIGNED-TEST.exe",
+      "first_sha256": "5856c2ed738a045814b6739405454840f78530a6c20e475213fb94dbcf810379",
+      "second_sha256": "5856c2ed738a045814b6739405454840f78530a6c20e475213fb94dbcf810379",
+      "first_bytes": 64254464,
+      "second_bytes": 64254464,
+      "identical": true
+    },
+    {
+      "path": "swan-agent.exe",
+      "first_sha256": "6616071f13debfd2b8bdf5ddd8a80237e5b4db2410bcec8ce5ed9fca9fd8a498",
+      "second_sha256": "6616071f13debfd2b8bdf5ddd8a80237e5b4db2410bcec8ce5ed9fca9fd8a498",
+      "first_bytes": 5511168,
+      "second_bytes": 5511168,
+      "identical": true
+    },
+    {
+      "path": "swan-management.exe",
+      "first_sha256": "da1780b243252c485842d5c2e6005ec6efd0516a3da07c91924ffbfdb9b86017",
+      "second_sha256": "da1780b243252c485842d5c2e6005ec6efd0516a3da07c91924ffbfdb9b86017",
+      "first_bytes": 8820224,
+      "second_bytes": 8820224,
+      "identical": true
+    },
+    {
+      "path": "swan-worker.exe",
+      "first_sha256": "154731c628ba77ff7c3ed5f3282e8676a3cfe900bed5fb796c66a56368db5ce6",
+      "second_sha256": "154731c628ba77ff7c3ed5f3282e8676a3cfe900bed5fb796c66a56368db5ce6",
+      "first_bytes": 4833792,
+      "second_bytes": 4833792,
+      "identical": true
+    }
+  ],
+  "all_shipping_bytes_identical": true,
+  "normalization_applied_to_shipping_files": false,
+  "executables_run": false,
+  "runtime_qualified": false,
+  "production_approved": false,
+  "scope": "Original unsigned native shipping outputs; no runtime, signing or production qualification",
+  "utc": "2026-10-27T06:32:25.901337+00:00",
+  "builds": [
+    {
+      "workflow_run": 40435586938,
+      "artifact": 12707165114,
+      "archive_digest": "sha256:34d20a3da90f352cf6cab71817d0960818cf557a383770ad9e43e261b004deac"
+    },
+    {
+      "workflow_run": 40442895972,
+      "artifact": 12709173502,
+      "archive_digest": "sha256:e564e4b4a4b5fbf9c26acb2af8c7a4f0486d3d4047906a9e6d1c495a0733f671"
+    }
+  ],
+  "independent_rebuild_verified": true,
+  "original_comparison_sha256": "89560d25e9076730223e21e156dcb90070d93c658b144482c46408f9184436ba"
+}

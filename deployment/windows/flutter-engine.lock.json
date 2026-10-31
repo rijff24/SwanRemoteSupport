@@ -1,0 +1,79 @@
+{
+  "schema": 1,
+  "engine": {
+    "repository": "https://github.com/flutter-team-archive/engine.git",
+    "revision": "db49896cf25ceabc44096d5f088d86414e05a7aa",
+    "tag_reference": "3.24.4",
+    "deps_sha256": "21defd97b8a7d8e28e9e6fc5b5b7d15f824b8c99f554f27676d433e9b4734b41"
+  },
+  "depot_tools": {
+    "repository": "https://chromium.googlesource.com/chromium/tools/depot_tools.git",
+    "revision": "580b4ff3f5cd0dcaa2eacda28cefe0f45320e8f7"
+  },
+  "patch": {
+    "file": "flutter-engine-windows.patch",
+    "sha256": "4e966e98d96e768145671e9efb6ff9af3407fdc9f609f35eaa41b9f5cb27528f",
+    "files": {
+      "shell/platform/windows/flutter_windows_engine.cc": {
+        "original_sha256": "28ca726b790daf49e7dbeddb212e54eb7932f6a795704e2058b4b53d42ea479c",
+        "patched_sha256": "638b0bbbfa2679781feaa072b57ad48e2794ad1e9c9b3da44908b1cfe08bad6e"
+      },
+      "fml/hex_codec.h": {
+        "original_sha256": "ccf41a4cf1a24e7b6a88af244542507d549b8aba02c4303fe8a47a36c5c922a8",
+        "patched_sha256": "cba92d82927832b3c7fb9c6727ba99e7d9d9b1777e80cd2d5b0b8557b69f26e8"
+      },
+      "build/archives/BUILD.gn": {
+        "original_sha256": "9fea9055c58fed94b91b3d5c1c5c6a7b1f3a46b46337d50fbf2f8d56e3ef48ca",
+        "patched_sha256": "0007c4ba5ecbd426904b18254808ceaaae01b6237f3f94f64a25a7a1a5078196"
+      }
+    }
+  },
+  "gn_arguments": [
+    "--runtime-mode=release"
+  ],
+  "ninja_target": "flutter_windows.dll",
+  "upstream_binary": {
+    "sha256": "ec8cabf36ee4ff24c8d98de25b00e70781eb03876265aee84d0fe554a110036e",
+    "source_to_binary_match_verified": false
+  },
+  "status": "Source reconstruction candidate; independent builds and runtime qualification required before replacing the pinned upstream engine",
+  "dependency_overrides": {
+    "src/flutter/third_party/tinygltf": {
+      "repository": "https://github.com/syoyo/tinygltf.git",
+      "revision": "9bb5806df4055ac973b970ba5b3e27ce27d98148",
+      "reason": "The Flutter mirror no longer exposes this exact DEPS commit; use the canonical upstream repository without changing the source revision."
+    }
+  },
+  "buildroot": {
+    "repository": "https://github.com/flutter/buildroot.git",
+    "revision": "e265c359126b24351f534080fb22edaa159f2215",
+    "patch_file": "flutter-engine-buildroot.patch",
+    "patch_sha256": "eb8cac7686ac7cb3e2595f3c6e4fc2d72fd6961d662f357f416caf0545535aaa",
+    "files": {
+      "build/toolchain/win/setup_toolchain.py": {
+        "original_sha256": "ee45bc284922f01b107aea6b31b7b5b5f81d33480acd4cbf0c516ff09f47a03c",
+        "patched_sha256": "0eb81ef45f71b803e0a04d99a90c024de4c53ec009099557ac59ebf762126cef"
+      },
+      "build/config/compiler/BUILD.gn": {
+        "original_sha256": "db1892df2c28b8b5b730467a777a3d722f2f3f07e81a902e691ee19b6264c9de",
+        "patched_sha256": "cb3d429220cae24978a9f96a3232d85ee6a3d798d2d4539e108203fbd5b87ca8"
+      },
+      "build/toolchain/win/BUILD.gn": {
+        "original_sha256": "26a00b317541f63d548bf605f5554a2b08580318fe79f052c5fcb67e0d1449db",
+        "patched_sha256": "ce1b14c0ba313771744ae28110503f03f19dc8971aa66adeabe55a1cab2e6c16"
+      }
+    }
+  },
+  "windows_toolchain": {
+    "msvc_component": "Microsoft.VisualStudio.Component.VC.14.38.17.8.x86.x64",
+    "msvc_tools_version": "14.38.33130",
+    "vcvars_selector": "14.38",
+    "windows_sdk_version": "10.0.22621.0",
+    "msvc_atl_component": "Microsoft.VisualStudio.Component.VC.14.38.17.8.ATL"
+  },
+  "linker": {
+    "path": "buildtools/windows-x64/clang/bin/lld-link.exe",
+    "source": "pinned-engine-DEPS-clang-package",
+    "threads": 1
+  }
+}

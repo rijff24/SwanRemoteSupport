@@ -1,6 +1,27 @@
 name: build RustDeskTempTopMostWindow
 
 on:
+  workflow_dispatch:
+    inputs:
+      upload-artifact:
+        type: boolean
+        default: true
+      target:
+        type: choice
+        options: [windows-2022]
+        default: windows-2022
+      configuration:
+        type: choice
+        options: [Release]
+        default: Release
+      platform:
+        type: choice
+        options: [x64]
+        default: x64
+      target_version:
+        type: choice
+        options: [Windows10]
+        default: Windows10
   workflow_call:
     inputs:
         upload-artifact:
@@ -27,6 +48,9 @@ on:
             type: string
             default: 'Windows10'
 
+permissions:
+  contents: read
+
 env:
   project_path: WindowInjection/WindowInjection.vcxproj
 
@@ -37,18 +61,58 @@ jobs:
         fail-fast: false
     env:
       build_output_dir: RustDeskTempTopMostWindow/WindowInjection/${{ inputs.platform }}/${{ inputs.configuration }}
+      CL: ${{ inputs.configuration == 'Release' && inputs.platform == 'x64' && '/Brepro' || '' }}
+      _LINK_: ${{ inputs.configuration == 'Release' && inputs.platform == 'x64' && '/Brepro /INCREMENTAL:NO /PDBALTPATH:%_PDB%' || '' }}
     steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
       - name: Add MSBuild to PATH
         uses: microsoft/setup-msbuild@6fb02220983dee41ce7ae257b6f4d8f9bf5ed4ce # v2
 
       - name: Download the source code
         run: |
-          git clone https://github.com/rustdesk-org/RustDeskTempTopMostWindow RustDeskTempTopMostWindow
+          git init RustDeskTempTopMostWindow
+          git -C RustDeskTempTopMostWindow remote add origin https://github.com/rustdesk-org/RustDeskTempTopMostWindow
+          git -C RustDeskTempTopMostWindow fetch --depth=1 origin ecd8d6a139eee76845ea66423fb739af450fda90
+          git -C RustDeskTempTopMostWindow checkout --detach FETCH_HEAD
 
       - name: Build the project
         run: |
           cd RustDeskTempTopMostWindow && git checkout ecd8d6a139eee76845ea66423fb739af450fda90
           msbuild ${{ env.project_path }} -p:Configuration=${{ inputs.configuration }} -p:Platform=${{ inputs.platform }} /p:TargetVersion=${{ inputs.target_version }}
+
+      - name: Verify release metadata and retain exact public helper source
+        if: inputs.configuration == 'Release' && inputs.platform == 'x64'
+        shell: pwsh
+        run: |
+          python -m unittest discover -s deployment/windows -p test_reproducible_pe.py
+          if ($LASTEXITCODE -ne 0) { throw 'PE metadata guard tests failed.' }
+          $dll = Join-Path $env:build_output_dir 'WindowInjection.dll'
+          $verification = & python deployment/windows/verify-reproducible-pe.py $dll --dll
+          if ($LASTEXITCODE -ne 0) { throw 'Helper lacks reproducible release metadata.' }
+          $metadata = $verification | ConvertFrom-Json
+          $revision = (& git -C RustDeskTempTopMostWindow rev-parse HEAD).Trim()
+          if ($LASTEXITCODE -ne 0 -or $revision -cne 'ecd8d6a139eee76845ea66423fb739af450fda90') { throw 'Helper source pin changed.' }
+          git -C RustDeskTempTopMostWindow diff --quiet HEAD
+          if ($LASTEXITCODE -ne 0) { throw 'Helper tracked source changed.' }
+          New-Item -ItemType Directory -Path helper-source | Out-Null
+          $archive = [IO.Path]::GetFullPath('helper-source/WindowInjection-original-source.zip')
+          git -C RustDeskTempTopMostWindow archive --format=zip --output=$archive HEAD
+          if ($LASTEXITCODE -ne 0) { throw 'Pinned helper source export failed.' }
+          Copy-Item .github/workflows/third-party-RustDeskTempTopMostWindow.yml helper-source/build-workflow.yml
+          Copy-Item deployment/windows/verify-reproducible-pe.py,deployment/windows/test_reproducible_pe.py helper-source/
+          $record = @{schema=1;repository='https://github.com/rustdesk-org/RustDeskTempTopMostWindow';source_revision=$revision;workflow_repository=$env:GITHUB_REPOSITORY;workflow_source_revision=$env:GITHUB_SHA;workflow_run=$env:GITHUB_RUN_ID;platform='x64';configuration='Release';compiler_flags=$env:CL;linker_flags=$env:_LINK_;runner_image=$env:ImageOS;runner_image_version=$env:ImageVersion;binary=$metadata;source_files=@{};independent_rebuild_verified=$false;runtime_qualified=$false;production_approved=$false}
+          foreach ($file in Get-ChildItem -LiteralPath helper-source -File) { $record.source_files[$file.Name]=(Get-FileHash -LiteralPath $file.FullName).Hash.ToLowerInvariant() }
+          $record | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath helper-source/WindowInjection-SOURCE.json -Encoding utf8
+
+      - name: Archive helper corresponding source separately from installed payload
+        if: inputs.configuration == 'Release' && inputs.platform == 'x64' && inputs.upload-artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: topmostwindow-source-${{ inputs.platform }}
+          path: helper-source/
+          if-no-files-found: error
 
       - name: Archive build artifacts
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

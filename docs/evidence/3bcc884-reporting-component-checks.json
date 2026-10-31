@@ -1,0 +1,40 @@
+{
+  "date": "2026-10-29",
+  "source": "3bcc884ca1a727150fc48aea4639bf97f5eef218",
+  "push_run": 40802350838,
+  "pull_request_run": 40802355594,
+  "passed_jobs": {
+    "push_linux_deployment": 123213172045,
+    "push_windows_verify": 123213172348,
+    "push_ubuntu_verify": 123213172545,
+    "pr_ubuntu_verify": 123213188333,
+    "pr_linux_deployment": 123213188602,
+    "pr_windows_verify": 123213188686
+  },
+  "named_tests_confirmed_in_both_push_platform_logs": [
+    "identity_and_revision_survive_restart_without_credentials_and_stale_callbacks_lose",
+    "preparation_uses_enrolled_identity_and_never_guesses_installed_version",
+    "technician_restarts_and_concurrent_reporters_keep_one_identity_and_unique_revisions",
+    "http_conflict_recovers_once_and_a_newer_local_phase_cancels_old_retry"
+  ],
+  "docker_context": {
+    "required_public_files": 50,
+    "private_file_canaries_excluded": true,
+    "new_reporting_source_included": true,
+    "actual_local_docker_export_also_passed": true
+  },
+  "windows_artifact": {
+    "id": 12867480300,
+    "bytes": 9098709,
+    "sha256": "0565d3eb25e7400fa062dbcd2398c3d3c53b21b8d58a30c20f6436cf4ee275d0",
+    "public_source_files_verified_against_git": 234,
+    "x64_agent_management_worker_verified": true,
+    "executables_run_during_collection": false
+  },
+  "limits": [
+    "MSI lifecycle jobs were skipped, not passed",
+    "Native Windows application version1.5.9 has not been built or tested by these component jobs",
+    "No independent binary reproduction or production signing claim"
+  ],
+  "production_qualified": false
+}

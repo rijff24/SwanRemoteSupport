@@ -1,0 +1,66 @@
+{
+  "observed_utc": "2026-10-30T06:47:27.2909330Z",
+  "application_source": "b1fbe1e2419c3e749663746c74442d1fe864302d",
+  "management_source": "361d7c362de7f67b7b7456d33bf0191736eec7d5",
+  "scope": "Existing per-user technician installation in an owned disposable Windows Server 2025 Desktop Experience VM, build26100; explicit company-bundle upgrade under the existing administrator profile.",
+  "company_bundle_sha256": "a70e7a496068a7c5928980e7da441bbb99c64e7d07e047349eda0e714f59be8a",
+  "before": {
+    "native_file_version": "1.5.1",
+    "release_sequence": 3,
+    "profile_revision": 5
+  },
+  "after": {
+    "native_file_version": "1.5.10",
+    "release_sequence": 13,
+    "profile_revision": 14,
+    "technician_executable_sha256": "eda740b63ddd50c796786407d291f89989c554b4eb3aa5c59d0c4eb5ad125352",
+    "agent_sha256": "f886a53dcb1b97e76fc5792e9fa4a221a13e6bbfd24973d9a56f2a726103adfa"
+  },
+  "verified": {
+    "existing_company_endpoint_and_both_trust_pins_match_bundle": true,
+    "signed_profile_refreshed_before_setup_without_pin_override": true,
+    "company_bootstrap_identity_and_consent_preserved": true,
+    "technician_state_contains_no_customer_device_credential": true,
+    "installed_bytes_match_original_lab_signed_outputs": true,
+    "installed_publisher_valid": true,
+    "shipping_verify_installed_passed": true,
+    "company_branding_and_paused_updates_preserved": true,
+    "pending_install_update_configuration_and_uninstall_markers_absent": true
+  },
+  "observer_correction": {
+    "original_post_setup_check_failed": true,
+    "reason": "The observer incorrectly required the customer Flutter file-version label 1.5.10+78. The technician executable reports 1.5.10.",
+    "original_failure_and_setup_logs_preserved": true,
+    "fresh_verification_checked_exact_signed_hashes_publisher_identity_state_and_shipping_verifier": true,
+    "installer_repeated": false
+  },
+  "lab_boundary": {
+    "lab_signing_only": true,
+    "public_lab_certificate_imported_only_into_owned_guest": true,
+    "private_signing_key_exported": false,
+    "production_publication": false,
+    "pre_upgrade_vm_normal_shutdown_and_memory_adjustment": true,
+    "forced_reset_or_disk_replacement": false
+  },
+  "not_qualified_by_this_receipt": [
+    "Native desktop sessions, attended approval, disconnect and receiving permission enforcement",
+    "Standard-user installation or elevation behavior",
+    "Automatic updating, interruption recovery or session/update coordination",
+    "Fresh installation, repair, uninstall or complete operating-system matrix",
+    "Rendered branding, offline branding or profile-key rotation",
+    "External public-network connectivity",
+    "Production publisher approval"
+  ],
+  "subsequent_native_gui": {
+    "utc": "2026-10-30T09:30:26.427579+00:00",
+    "native_version": "1.5.10",
+    "os_build": 26100,
+    "swan_attribution_visible": true,
+    "one_owned_lab_mfa_login_succeeded": true,
+    "authorized_inventory_rendered": true,
+    "target_customer19_approved_visible": true,
+    "native_desktop_session_demonstrated": false,
+    "otp_or_password_recorded": false,
+    "launch_observer_timeout_did_not_restart_original_task": true
+  }
+}

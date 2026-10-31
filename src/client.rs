@@ -2547,10 +2547,21 @@ impl LoginConfigHandler {
         };
         let mut config = self.load_config();
         config.info = serde;
+        #[cfg(feature = "swan_custom")]
+        {
+            // Managed authorization is never a saved peer password. Remove
+            // inherited credentials rather than syncing them to address books.
+            self.password.clear();self.remember=false;config.password.clear();
+        }
+        #[cfg(not(feature = "swan_custom"))]
         let password = self.password.clone();
+        #[cfg(not(feature = "swan_custom"))]
         let password0 = config.password.clone();
+        #[cfg(not(feature = "swan_custom"))]
         let remember = self.remember;
+        #[cfg(not(feature = "swan_custom"))]
         let hash = self.hash.clone();
+        #[cfg(not(feature = "swan_custom"))]
         if remember {
             // remember is true: use PeerConfig password or ui login
             // not sync shared password to recent
@@ -2583,7 +2594,7 @@ impl LoginConfigHandler {
                 .options
                 .insert("force-always-relay".to_owned(), "Y".to_owned());
         }
-        #[cfg(feature = "flutter")]
+        #[cfg(all(feature = "flutter",not(feature = "swan_custom")))]
         {
             // sync connected password to personal ab automatically if it is not shared password
             if !config.password.is_empty()
@@ -3480,6 +3491,15 @@ pub async fn handle_hash(
     peer: &mut Stream,
 ) {
     lc.write().unwrap().hash = hash.clone();
+    #[cfg(feature = "swan_custom")]
+    {
+        let target = lc.read().unwrap().id.clone();
+        match crate::managed::login(&hash.challenge, &target, password_preset).await {
+            Ok(proof) => send_login(lc, String::new(), String::new(), proof, peer).await,
+            Err(_) => interface.msgbox("error", "Company authorization required", "Sign in and request a new session from the company technician device list.", ""),
+        }
+        return;
+    }
     // Take care of password application order
 
     // switch_uuid
@@ -3656,6 +3676,12 @@ pub async fn handle_login_from_ui(
     remember: bool,
     peer: &mut Stream,
 ) {
+    #[cfg(feature = "swan_custom")]
+    {
+        let _=(&lc,&os_username,&os_password,&password,remember,&peer);
+        log::warn!("Managed login requires company authorization; legacy UI password submission refused");
+        return;
+    }
     let mut hash_password = if password.is_empty() {
         let mut password2 = lc.read().unwrap().password.clone();
         if password2.is_empty() {
@@ -3984,6 +4010,19 @@ lazy_static::lazy_static! {
 /// * `text` - The text of the message.
 #[inline]
 pub fn check_if_retry(msgtype: &str, title: &str, text: &str, retry_for_relay: bool) -> bool {
+    #[cfg(feature = "swan_custom")]
+    if matches!(text,
+        "Company session authorization expired or revoked" |
+        "Company session authorization denied" |
+        "A valid company session grant is required" |
+        "Customer paused support" |
+        "Customer paused support during authorization")
+        || text.starts_with("Company grant denies ")
+    {
+        // Authorization closure is definitive even when relay retry is enabled.
+        // A new customer-approved request must start a new managed session.
+        return false;
+    }
     msgtype == "error"
         && title == "Connection Error"
         && ((text.contains("10054") || text.contains("104")) && retry_for_relay
@@ -4000,6 +4039,30 @@ pub fn check_if_retry(msgtype: &str, title: &str, text: &str, retry_for_relay: b
                 && !text.to_lowercase().contains("manually")
                 && !text.to_lowercase().contains("restricted")
                 && !text.to_lowercase().contains("not allowed")))
+}
+
+#[cfg(all(test, feature = "swan_custom"))]
+mod managed_retry_tests {
+    use super::check_if_retry;
+
+    #[test]
+    fn authorization_closure_never_retries_but_network_fallback_remains() {
+        for reason in [
+            "Company session authorization expired or revoked",
+            "Company session authorization denied",
+            "A valid company session grant is required",
+            "Customer paused support",
+            "Customer paused support during authorization",
+            "Company grant denies file transfer",
+            "Closed manually by the peer",
+        ] {
+            for retry_for_relay in [false, true] {
+                assert!(!check_if_retry("error", "Connection Error", reason, retry_for_relay));
+            }
+        }
+        assert!(check_if_retry("error", "Connection Error", "Connection reset by peer (10054)", true));
+        assert!(check_if_retry("error", "Connection Error", "Connection timed out", false));
+    }
 }
 
 pub async fn hc_connection(

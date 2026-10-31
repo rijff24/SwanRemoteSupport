@@ -1,0 +1,72 @@
+{
+  "schema": 1,
+  "date": "2026-10-29",
+  "management_source": "9fa5e8aa6a846ce015362de8082da5c938d79ff8",
+  "previous_management_source": "aff8ff61e3fbd6f34c4cf0bb9de6e330ec6e0521",
+  "worker_source_unchanged": "1c43a382c87b05e44caff1c6c2bef4cf0b0bb6fc",
+  "os": "Windows Server 2016 Standard Evaluation x64 build 14393, Desktop Experience",
+  "inputs": {
+    "management_lab_signature_timestamp_and_hash_verified": true,
+    "hbbs_sha256": "2f3b865dea3e2439f732829e19562533044e7b83a050530e0c11341786b047be",
+    "hbbr_sha256": "97ead452f1c5484fa78d2d7f6b0954c116f32d00d0a6cdd045806806df124bc0",
+    "caddy_sha256": "586d4a4cd74bdfd2951b6b81766a32904ffa69c4f1c3d521da3870a2120f1d31",
+    "all_140_transport_source_files_verified": true,
+    "source_tree_sha256": "c0d40c3b122dfe740fbea5946f3bba9fb67734b57e80c8b7fb4ee3cdcef85541",
+    "complete_corresponding_source_and_license_notices_installed": true,
+    "component_binaries_not_resigned_or_modified": true
+  },
+  "upgrade": {
+    "tested_encrypted_backup_and_prior_running_restore_retained": true,
+    "zero_active_builds_devices_or_sessions_before_switch": true,
+    "management_and_transport_replaced_together": true,
+    "normal_owned_service_stops_and_guarded_directory_moves": true,
+    "all_nine_installed_files_verified_by_hash": true,
+    "three_expected_component_processes_and_udp_listener_verified": true,
+    "company_and_worker_running_automatic": true,
+    "company_identity_transport_trust_worker_credential_and_ownership_receipt_preserved": true,
+    "existing_database_schema": 3,
+    "database_schema_migration_performed": false,
+    "original_installation_and_transport_state_retained": true
+  },
+  "external_management_checks": {
+    "verified_https_and_mfa_login": true,
+    "signed_profile_approvals_and_worker_revocations_unchanged": true,
+    "revoked_worker_rejected_401": true,
+    "all_four_existing_download_links_and_original_payload_hashes_verified": true,
+    "customer_downloads_public": true,
+    "technician_download_authenticated": true,
+    "anonymous_technician_download_rejected_401": true
+  },
+  "transport_registration": {
+    "actual_service_owned_maintained_hbbs": true,
+    "wsl_host_forwarded_ipv4_registration_reply": "3a021001",
+    "guest_ipv4_registration_reply": "3a021001",
+    "guest_ipv6_registration_reply": "3a021001",
+    "no_10014_or_wsaefault_in_maintained_test_log": true,
+    "original_private_and_public_transport_keys_preserved": true,
+    "windows_host_loopback_udp_attempt_failed_10054": true,
+    "wsl_direct_probe_used_instead_of_claiming_windows_udp_forwarding": true,
+    "wsl_probe_compiled_in_cached_isolated_container_without_host_cargo_or_network_dependency_downloads": true
+  },
+  "rollback_and_rollforward": {
+    "original_stock_installation_and_original_transport_state_restored_normally": true,
+    "rollback_verified_https_mfa_trust_approvals_and_revoked_worker_rejection": true,
+    "maintained_installation_and_its_transport_state_restored_normally_again": true,
+    "rollforward_verified_https_mfa_trust_approvals_and_revoked_worker_rejection": true,
+    "both_installations_and_transport_states_preserved": true,
+    "worker_identity_unchanged": true,
+    "no_data_deleted": true,
+    "final_active_stack": "Maintained transport with management 9fa5e8a"
+  },
+  "limits": {
+    "lab_signing_only": true,
+    "native_desktop_session_through_windows_relay_pending": false,
+    "post_upgrade_windows_reboot_test_pending": false,
+    "fresh_full_maintained_windows_setup_installer_runtime_pending": true,
+    "public_internet_connectivity_pending": true,
+    "database_migration_rollback_not_established_by_same_schema_binary_switch": true,
+    "six_windows_versions_not_qualified_by_this_server_test": true,
+    "production_publication": false,
+    "full_product_acceptance_complete": false
+  }
+}

@@ -1,0 +1,211 @@
+{
+  "source": "9ba592ca0431ce734a1edf7391aec183f5c100fa",
+  "version": "1.5.2",
+  "lab_signed_only": true,
+  "production_publication": false,
+  "signed_packages_installed": false,
+  "unsigned_inputs_independently_reproduced": true,
+  "independent_comparison_evidence": "9ba592c-native-independent-comparison.json",
+  "verified_input_files": 219,
+  "original_inputs_unchanged": true,
+  "all_seven_signatures_reverified": true,
+  "new_key_nonexportable_independently_verified": true,
+  "private_key_exported": false,
+  "publisher": "Swan Disposable Lab Publisher 20261027",
+  "publisher_certificate_sha256": "c797e22798a8afa94496ea0e8668b6e5ee4a4fc9f639b8200d5e1071e6925ec3",
+  "signing_receipts": {
+    "agent-signed.exe.signing.json": {
+      "artifact": "agent-signed.exe",
+      "input_sha256": "6616071f13debfd2b8bdf5ddd8a80237e5b4db2410bcec8ce5ed9fca9fd8a498",
+      "timestamp_url": "http://timestamp.sectigo.com/rfc3161",
+      "schema": 1,
+      "timestamp_verification": "signtool-verify-pa-all-tw",
+      "publisher": "Swan Disposable Lab Publisher 20261027",
+      "publisher_certificate_sha256": "c797e22798a8afa94496ea0e8668b6e5ee4a4fc9f639b8200d5e1071e6925ec3",
+      "sha256": "fba21e0fd6d59a56a0a14979f95896e621a85eaf24a63c08da87b1f84d13885b"
+    },
+    "customer-1.5.2-signed.msi.signing.json": {
+      "artifact": "customer-1.5.2-signed.msi",
+      "input_sha256": "34a7ec5043ff8aaca48dc480f5e59e81d2acd1dcb1e9a49cccd6d1e6b2219190",
+      "timestamp_url": "http://timestamp.sectigo.com/rfc3161",
+      "schema": 1,
+      "timestamp_verification": "signtool-verify-pa-all-tw",
+      "publisher": "Swan Disposable Lab Publisher 20261027",
+      "publisher_certificate_sha256": "c797e22798a8afa94496ea0e8668b6e5ee4a4fc9f639b8200d5e1071e6925ec3",
+      "sha256": "ad6731f999b2706522a3e1d9a48f930c88417c1b80b1d091edd632223ddbf630"
+    },
+    "customer-main-signed.exe.signing.json": {
+      "artifact": "customer-main-signed.exe",
+      "input_sha256": "64ba92090a0ffc954a8df43f1750a652cd11c2479d5151ddc7d2b6ae837aff38",
+      "timestamp_url": "http://timestamp.sectigo.com/rfc3161",
+      "schema": 1,
+      "timestamp_verification": "signtool-verify-pa-all-tw",
+      "publisher": "Swan Disposable Lab Publisher 20261027",
+      "publisher_certificate_sha256": "c797e22798a8afa94496ea0e8668b6e5ee4a4fc9f639b8200d5e1071e6925ec3",
+      "sha256": "606136e7df4ab611656bc51f362cabef03c5d5c36c76d47580fa5f6268a94583"
+    },
+    "management-signed.exe.signing.json": {
+      "artifact": "management-signed.exe",
+      "input_sha256": "da1780b243252c485842d5c2e6005ec6efd0516a3da07c91924ffbfdb9b86017",
+      "timestamp_url": "http://timestamp.sectigo.com/rfc3161",
+      "schema": 1,
+      "timestamp_verification": "signtool-verify-pa-all-tw",
+      "publisher": "Swan Disposable Lab Publisher 20261027",
+      "publisher_certificate_sha256": "c797e22798a8afa94496ea0e8668b6e5ee4a4fc9f639b8200d5e1071e6925ec3",
+      "sha256": "ea2910809298333f9253715c86d3c67f90f86b97cb6eb5818c7ac62da6a47dbd"
+    },
+    "technician-1.5.2-signed.msi.signing.json": {
+      "artifact": "technician-1.5.2-signed.msi",
+      "input_sha256": "c45cedc49e767316b34eef5d0b2aa996612e084d15a911ad306fbabf1b511796",
+      "timestamp_url": "http://timestamp.sectigo.com/rfc3161",
+      "schema": 1,
+      "timestamp_verification": "signtool-verify-pa-all-tw",
+      "publisher": "Swan Disposable Lab Publisher 20261027",
+      "publisher_certificate_sha256": "c797e22798a8afa94496ea0e8668b6e5ee4a4fc9f639b8200d5e1071e6925ec3",
+      "sha256": "aa4572f8a7a714367743d9fe54cb8aa5a6fff29ecff1d7715914a26e8ce7a3ff"
+    },
+    "technician-signed.exe.signing.json": {
+      "artifact": "technician-signed.exe",
+      "input_sha256": "c557f1e58ce441be87eb25091eb1a0f1e2cf5c10725d031dec343db38b3a56cf",
+      "timestamp_url": "http://timestamp.sectigo.com/rfc3161",
+      "schema": 1,
+      "timestamp_verification": "signtool-verify-pa-all-tw",
+      "publisher": "Swan Disposable Lab Publisher 20261027",
+      "publisher_certificate_sha256": "c797e22798a8afa94496ea0e8668b6e5ee4a4fc9f639b8200d5e1071e6925ec3",
+      "sha256": "303da1f60010e92891ee38d1bb76dd53574397937290267b76cad385c7f1cb51"
+    },
+    "worker-signed.exe.signing.json": {
+      "artifact": "worker-signed.exe",
+      "input_sha256": "154731c628ba77ff7c3ed5f3282e8676a3cfe900bed5fb796c66a56368db5ce6",
+      "timestamp_url": "http://timestamp.sectigo.com/rfc3161",
+      "schema": 1,
+      "timestamp_verification": "signtool-verify-pa-all-tw",
+      "publisher": "Swan Disposable Lab Publisher 20261027",
+      "publisher_certificate_sha256": "c797e22798a8afa94496ea0e8668b6e5ee4a4fc9f639b8200d5e1071e6925ec3",
+      "sha256": "aecf0117104531891dc774572eb21ead7312a6a9d4d729ca9806bbebc0e864b1"
+    }
+  },
+  "original_evidence_files": [
+    {
+      "sha256": "fba21e0fd6d59a56a0a14979f95896e621a85eaf24a63c08da87b1f84d13885b",
+      "name": "agent-signed.exe",
+      "bytes": 5519664
+    },
+    {
+      "sha256": "ea2910809298333f9253715c86d3c67f90f86b97cb6eb5818c7ac62da6a47dbd",
+      "name": "management-signed.exe",
+      "bytes": 8828720
+    },
+    {
+      "sha256": "aecf0117104531891dc774572eb21ead7312a6a9d4d729ca9806bbebc0e864b1",
+      "name": "worker-signed.exe",
+      "bytes": 4842288
+    },
+    {
+      "sha256": "606136e7df4ab611656bc51f362cabef03c5d5c36c76d47580fa5f6268a94583",
+      "name": "customer-main-signed.exe",
+      "bytes": 383792
+    },
+    {
+      "sha256": "303da1f60010e92891ee38d1bb76dd53574397937290267b76cad385c7f1cb51",
+      "name": "technician-signed.exe",
+      "bytes": 24261424
+    },
+    {
+      "sha256": "ad6731f999b2706522a3e1d9a48f930c88417c1b80b1d091edd632223ddbf630",
+      "name": "customer-1.5.2-signed.msi",
+      "bytes": 33628160
+    },
+    {
+      "sha256": "aa4572f8a7a714367743d9fe54cb8aa5a6fff29ecff1d7715914a26e8ce7a3ff",
+      "name": "technician-1.5.2-signed.msi",
+      "bytes": 31371264
+    },
+    {
+      "sha256": "fca1bb809bf733d72aebb084e6359c2095825ee3079ae01f3725ca882d9788f3",
+      "name": "agent-signed.exe.signing.json",
+      "bytes": 525
+    },
+    {
+      "sha256": "f59d9a422515dcdb9fbce01113ea1e8c812d9d865c0baded36079ce39ee06ba3",
+      "name": "management-signed.exe.signing.json",
+      "bytes": 530
+    },
+    {
+      "sha256": "57261da41ca0a110672ad599a74b67f7374fcb09da5834733271b7044f849c43",
+      "name": "worker-signed.exe.signing.json",
+      "bytes": 526
+    },
+    {
+      "sha256": "df4548d26ed60d3d192c9699a08b21d572c59952403c9e6ff34fa3fe6bae34a4",
+      "name": "customer-main-signed.exe.signing.json",
+      "bytes": 533
+    },
+    {
+      "sha256": "6ff7d38c2b96b570408257293ae033a1379e2df8ed617117d7906bd5b7de9418",
+      "name": "technician-signed.exe.signing.json",
+      "bytes": 530
+    },
+    {
+      "sha256": "9675b4d38ebae94a16ccb499df68cc0e46e4baf8c0dc39bb27ff6ee60e2b30ea",
+      "name": "customer-1.5.2-signed.msi.signing.json",
+      "bytes": 534
+    },
+    {
+      "sha256": "a52ace0763614be16da9f44d7d061099c20a6567c8f9e1cb2ee339d8959261af",
+      "name": "technician-1.5.2-signed.msi.signing.json",
+      "bytes": 536
+    },
+    {
+      "sha256": "ed5fd83bea992a76416a1cf13158c95d8527d564f88ca54b3a2f9db4917d720d",
+      "name": "build-result.json",
+      "bytes": 1645
+    },
+    {
+      "sha256": "831c28cc8164a5d7b522622e1e61221521e3fe7be9f09f5cd2c75815d0a2a2ab",
+      "name": "build-journal.jsonl",
+      "bytes": 675
+    },
+    {
+      "sha256": "04a0e36d0185482fc9e846470adebcb76b75e26e9732ba00fe455f68aeaf8ca3",
+      "name": "build-task-registered.json",
+      "bytes": 439
+    },
+    {
+      "sha256": "c797e22798a8afa94496ea0e8668b6e5ee4a4fc9f639b8200d5e1071e6925ec3",
+      "name": "lab-publisher-public.cer",
+      "bytes": 1078
+    },
+    {
+      "sha256": "3943f697a2785997dd78d50c4a2992909423cbe1c12b52574332bca9d13f034b",
+      "name": "lab-publisher-public.json",
+      "bytes": 378
+    },
+    {
+      "sha256": "3394f4ee136d45129bfdc06a99bf0a56f6d6aff102a8ff65f01d9818b94be586",
+      "name": "customer-1.5.2-unsigned.msi.build.json",
+      "bytes": 758
+    },
+    {
+      "sha256": "8332fc0f439cffb7628e109a2b1cda789af95ff73c495aaac715570ca6f703b0",
+      "name": "customer-1.5.2-unsigned.msi.installed-files.json",
+      "bytes": 14349
+    },
+    {
+      "sha256": "fbefbd4ccc78ad1a51d1ffad6c97eb4845b688938af6dc4236d4e837466ce0b2",
+      "name": "technician-1.5.2-unsigned.msi.build.json",
+      "bytes": 750
+    },
+    {
+      "sha256": "5025fd62d843f070a20dbf98a2fb0b17e6dad5faac364dec808f8f4c81f2af61",
+      "name": "Build-Startup152CompanyPackages.ps1",
+      "bytes": 10509
+    }
+  ],
+  "customer_service_preserved_running": true,
+  "limitations": [
+    "Signatures use an explicitly trusted disposable lab publisher, not an approved production publisher.",
+    "Successful signing and MSI construction do not qualify installation, automatic rollout, interrupted recovery or native sessions for this version.",
+    "The original Windows company VM and its signing identity were not used or modified."
+  ]
+}

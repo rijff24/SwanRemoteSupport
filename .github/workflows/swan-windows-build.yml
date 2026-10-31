@@ -2,19 +2,35 @@ name: Build Swan Remote Support for Windows x64
 
 on:
   workflow_dispatch:
+    inputs:
+      engine:
+        description: Experimental source engine requires a new matching app bundle and lab qualification
+        type: choice
+        default: reviewed-upstream
+        options:
+          - reviewed-upstream
+          - source-candidate-9f97ef0
+          - source-candidate-05d5369
 
 permissions:
   contents: read
+  actions: read
 
 env:
-  RUST_VERSION: "1.75"
+  RUST_VERSION: "1.90.0"
   LLVM_VERSION: "15.0.6"
   FLUTTER_VERSION: "3.24.5"
+  FLUTTER_ENGINE_SHA256: "ec8cabf36ee4ff24c8d98de25b00e70781eb03876265aee84d0fe554a110036e"
   VCPKG_COMMIT_ID: "120deac3062162151622ca4860575a33844ba10b"
   VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
-  VERSION: "1.4.9"
+  VERSION: "1.5.14"
 
 jobs:
+  maintained-transport:
+    uses: ./.github/workflows/swan-transport.yml
+    with:
+      windows_only: true
+
   generate-bridge:
     uses: ./.github/workflows/bridge.yml
 
@@ -29,16 +45,10 @@ jobs:
 
   build-windows-x64:
     name: Swan Remote Support x64
-    needs: [generate-bridge, build-topmost-window]
+    needs: [generate-bridge, build-topmost-window, maintained-transport]
     runs-on: windows-2022
     env:
       SWAN_BUILD: "1"
-      # Public Tailscale routing/trust defaults. Never put a private server key,
-      # unattended password, token, or signing credential in this section.
-      RENDEZVOUS_SERVER: "100.82.236.84"
-      RELAY_SERVER: "100.82.236.84"
-      RS_PUB_KEY: "I0s1JvqJ19WDNKBLFY+FC5HekcOqNWPpH+6xGmKUQLI="
-      API_SERVER: ""
     steps:
       - name: Export GitHub Actions cache environment variables
         uses: actions/github-script@d7906e4ad0b1822421a7e6a35d5ca353c962f410 # v6
@@ -52,34 +62,27 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Validate public server configuration
+      - name: Verify application and installer versions agree
+        env:
+          SWAN_ENGINE_SELECTION: ${{ inputs.engine }}
         shell: pwsh
         run: |
-          if ([string]::IsNullOrWhiteSpace($env:RENDEZVOUS_SERVER)) {
-            throw "Set the RENDEZVOUS_SERVER repository Actions variable to the public hbbs hostname."
+          if ($env:SWAN_ENGINE_SELECTION -cnotin @('reviewed-upstream','source-candidate-9f97ef0','source-candidate-05d5369')) {
+            throw 'Unknown engine selection; use an explicitly pinned candidate.'
           }
-          if ($env:RENDEZVOUS_SERVER -match "^https?://") {
-            throw "RENDEZVOUS_SERVER must be a hostname or host:port, without http:// or https://."
+          $sourceVersion = [regex]::Match((Get-Content Cargo.toml -Raw), '(?m)^version = "([0-9]+\.[0-9]+\.[0-9]+)"').Groups[1].Value
+          $packerVersion = [regex]::Match((Get-Content libs/portable/Cargo.toml -Raw), '(?m)^version = "([0-9]+\.[0-9]+\.[0-9]+)"').Groups[1].Value
+          $flutterVersion = [regex]::Match((Get-Content flutter/pubspec.yaml -Raw), '(?m)^version: ([0-9]+\.[0-9]+\.[0-9]+)\+[0-9]+').Groups[1].Value
+          if (-not $sourceVersion -or $sourceVersion -cne $env:VERSION -or $packerVersion -cne $sourceVersion -or $flutterVersion -cne $sourceVersion) {
+            throw 'Application, portable packer, Flutter and installer artifact versions must agree.'
           }
-          if ([string]::IsNullOrWhiteSpace($env:RS_PUB_KEY)) {
-            throw "Set the RS_PUB_KEY repository Actions variable to the contents of id_ed25519.pub."
-          }
-          try {
-            $decodedKey = [Convert]::FromBase64String($env:RS_PUB_KEY)
-          } catch {
-            throw "RS_PUB_KEY is not valid Base64: $($_.Exception.Message)"
-          }
-          if ($decodedKey.Length -ne 32) {
-            throw "RS_PUB_KEY must decode to a 32-byte Ed25519 public key; received $($decodedKey.Length) bytes."
-          }
-          if (-not [string]::IsNullOrWhiteSpace($env:API_SERVER)) {
-            $apiUri = $null
-            if (-not [Uri]::TryCreate($env:API_SERVER, [UriKind]::Absolute, [ref]$apiUri) -or
-                $apiUri.Scheme -ne "https") {
-              throw "API_SERVER must be an absolute HTTPS URL when supplied."
-            }
-          }
-          Write-Output "Public Swan server configuration passed structural validation."
+
+      - name: Set reproducible UTC application build date from public source
+        shell: pwsh
+        run: |
+          $epoch = (git show -s --format=%ct HEAD).Trim()
+          if ($LASTEXITCODE -ne 0 -or $epoch -cnotmatch '^[0-9]+$') { throw 'Source commit timestamp is unavailable.' }
+          Add-Content -LiteralPath $env:GITHUB_ENV -Value ('SOURCE_DATE_EPOCH='+$epoch)
 
       - name: Restore Flutter bridge files
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
@@ -92,21 +95,56 @@ jobs:
         with:
           version: "${{ env.LLVM_VERSION }}"
 
-      - name: Install Flutter
-        uses: subosito/flutter-action@2783a3f08e1baf891508463f8c6653c258246225 # v2.12.0
-        with:
-          channel: stable
-          flutter-version: "${{ env.FLUTTER_VERSION }}"
-          architecture: x64
+      - name: Install hash-pinned Flutter SDK
+        shell: pwsh
+        run: |
+          python -m unittest discover -s deployment/windows -p test_pinned_flutter_sdk.py
+          if ($LASTEXITCODE -ne 0) { throw 'Pinned SDK rejection tests failed.' }
+          ./deployment/windows/install-pinned-flutter.ps1 -Destination (Join-Path $env:RUNNER_TEMP 'swan-flutter-sdk') -ExpectedVersion $env:FLUTTER_VERSION
+          New-Item -ItemType Directory -Path artifacts -Force | Out-Null
+          Copy-Item -LiteralPath (Join-Path $env:RUNNER_TEMP 'swan-flutter-sdk/sdk-identity.json') -Destination artifacts/flutter-sdk-identity.json
 
       - name: Replace Flutter engine with RustDesk Windows engine
+        if: inputs.engine == 'reviewed-upstream'
         shell: pwsh
         run: |
           flutter doctor -v
           flutter precache --windows
           Invoke-WebRequest -Uri https://github.com/rustdesk/engine/releases/download/main/windows-x64-release.zip -OutFile windows-x64-release.zip
+          if ((Get-FileHash windows-x64-release.zip -Algorithm SHA256).Hash -ne $env:FLUTTER_ENGINE_SHA256) {
+            throw 'Pinned Flutter engine hash mismatch. Review the upstream artifact before changing this pin.'
+          }
           Expand-Archive -Path windows-x64-release.zip -DestinationPath windows-x64-release
-          Move-Item -Path windows-x64-release\* -Destination C:\hostedtoolcache\windows\flutter\stable-${{ env.FLUTTER_VERSION }}-x64\bin\cache\artifacts\engine\windows-x64-release\ -Force
+          Move-Item -Path windows-x64-release\* -Destination (Join-Path $env:FLUTTER_ROOT 'bin/cache/artifacts/engine/windows-x64-release') -Force
+
+      - name: Download the exact experimental source-engine build
+        if: inputs.engine == 'source-candidate-9f97ef0'
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: swan-flutter-engine-source-built-9f97ef0053d822bcf5cf3f5f03bf5dc571247d16
+          run-id: 39716739857
+          github-token: ${{ github.token }}
+          path: ./artifacts/engine-source
+
+      - name: Download the independently reproduced experimental source engine
+        if: inputs.engine == 'source-candidate-05d5369'
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: swan-flutter-engine-source-built-05d5369c04804b9a9b2dc06df0cb85b0efe6f274
+          run-id: 39753153773
+          github-token: ${{ github.token }}
+          path: ./artifacts/engine-source
+
+      - name: Select experimental engine with the matching SDK snapshot compiler
+        if: inputs.engine == 'source-candidate-9f97ef0' || inputs.engine == 'source-candidate-05d5369'
+        env:
+          SWAN_ENGINE_CANDIDATE: ${{ inputs.engine }}
+        shell: pwsh
+        run: |
+          flutter doctor -v
+          flutter precache --windows
+          python -m unittest discover -s deployment/windows -p test_engine_candidate.py
+          python deployment/windows/select-engine-candidate.py --candidate artifacts/engine-source --sdk "$env:FLUTTER_ROOT" --receipt artifacts/engine-selection.json --source-candidate "$env:SWAN_ENGINE_CANDIDATE"
 
       - name: Patch Flutter 3.24 dropdown support
         shell: bash
@@ -146,17 +184,127 @@ jobs:
             exit 1
           fi
 
+      - name: Preserve exact public build inputs including generated bridge source
+        shell: pwsh
+        run: |
+          python3 -m unittest discover -s deployment/windows -p test_build_source.py
+          if ($LASTEXITCODE -ne 0) { throw 'Corresponding source archive checks failed.' }
+          New-Item -ItemType Directory -Path artifacts -Force | Out-Null
+          python3 deployment/windows/archive-build-source.py . artifacts/SwanRemoteSupport-build-source.zip
+          if ($LASTEXITCODE -ne 0) { throw 'Exact build input archive failed.' }
+
+      - name: Record exact default MSVC compiler library and header inputs
+        shell: pwsh
+        run: |
+          ./deployment/windows/Record-MsvcToolchain.ps1 -Output artifacts/native-msvc-toolchain.json
+
       - name: Build branded client
         shell: pwsh
         run: |
           python3 .\build.py --portable --flutter --skip-portable-pack --hwcodec --vram
           Move-Item .\flutter\build\windows\x64\runner\Release .\swan-client
 
-      - name: Add signed topmost-window helper
+      - name: Reject unsigned legacy management policy in managed editions
+        shell: pwsh
+        run: |
+          cargo test --release --lib --features "flutter,swan_custom,hwcodec,vram" hbbs_http::sync::managed_sync_tests::managed_sync_rejects_legacy_endpoint_and_unsigned_options -- --exact 2>&1 | Tee-Object -FilePath artifacts/native-managed-sync-tests.log
+          if ($LASTEXITCODE -ne 0) { throw 'Managed legacy-sync regression failed.' }
+          if ((Get-Content artifacts/native-managed-sync-tests.log -Raw) -notmatch 'test result: ok\. 1 passed; 0 failed;') { throw 'Expected managed legacy-sync test did not run.' }
+
+      - name: Reject upstream updater entry points in managed editions
+        shell: pwsh
+        run: |
+          cargo test --release --lib --features "flutter,swan_custom,hwcodec,vram" updater::managed_update_tests::managed_edition_rejects_every_legacy_update_entry_point -- --exact 2>&1 | Tee-Object -FilePath artifacts/native-managed-updater-tests.log
+          if ($LASTEXITCODE -ne 0) { throw 'Managed updater isolation regression failed.' }
+          if ((Get-Content artifacts/native-managed-updater-tests.log -Raw) -notmatch 'test result: ok\. 1 passed; 0 failed;') { throw 'Expected managed updater isolation test did not run.' }
+
+      - name: Reject incoming capture helpers in the technician edition
+        shell: pwsh
+        run: |
+          cargo test --release --lib --features "flutter,swan_custom,hwcodec,vram" server::portable_service::client::edition_tests::outgoing_only_refuses_capture_helper_before_runtime_initialization -- --exact 2>&1 | Tee-Object -FilePath artifacts/native-technician-helper-tests.log
+          if ($LASTEXITCODE -ne 0) { throw 'Technician incoming-helper isolation regression failed.' }
+          if ((Get-Content artifacts/native-technician-helper-tests.log -Raw) -notmatch 'test result: ok\. 1 passed; 0 failed;') { throw 'Expected technician helper test did not run.' }
+
+      - name: Verify hardened DLL search supports delayed application libraries
+        shell: pwsh
+        run: |
+          cargo test --release --lib --features "flutter,swan_custom,hwcodec,vram" platform::windows::dll_search_tests::hardened_search_loads_application_dlls_but_rejects_cwd_and_path -- --exact 2>&1 | Tee-Object -FilePath artifacts/native-dll-search-tests.log
+          if ($LASTEXITCODE -ne 0) { throw 'Hardened application DLL search regression failed.' }
+          if ((Get-Content artifacts/native-dll-search-tests.log -Raw) -notmatch 'test result: ok\. 1 passed; 0 failed;') { throw 'Expected real Windows DLL-search test did not run.' }
+
+      - name: Verify desktop launcher and plugin reproducibility metadata
+        shell: pwsh
+        run: |
+          python3 -m unittest discover -s deployment/windows -p test_reproducible_pe.py
+          if ($LASTEXITCODE -ne 0) { throw 'PE metadata verifier tests failed.' }
+          $targets = @((Get-Item swan-client/rustdesk.exe)) + @(Get-ChildItem swan-client -Filter '*_plugin.dll' -File)
+          if ($targets.Count -lt 2) { throw 'Expected the desktop launcher and native Flutter plugins.' }
+          $records = @()
+          foreach ($target in $targets) {
+            $record = python3 deployment/windows/verify-reproducible-pe.py $target.FullName
+            if ($LASTEXITCODE -ne 0) { throw ('Native desktop link metadata is not reproducible: '+$target.Name) }
+            $records += @{name=$target.Name;metadata=($record | ConvertFrom-Json)}
+          }
+          $records | ConvertTo-Json -Depth 5 | Set-Content artifacts/native-desktop-pe-metadata.json
+
+      - name: Verify service launcher defers desktop DLL loading
+        shell: pwsh
+        run: |
+          python3 -m unittest discover -s deployment/windows -p test_service_imports.py
+          if ($LASTEXITCODE -ne 0) { throw 'Service import verifier tests failed.' }
+          $record = python3 deployment/windows/verify-service-imports.py swan-client/rustdesk.exe --bundle swan-client
+          if ($LASTEXITCODE -ne 0) { throw 'Service launcher eagerly loads desktop DLLs.' }
+          $record | Set-Content artifacts/native-service-imports.json
+
+      - name: Verify deterministic managed application build metadata
+        shell: pwsh
+        run: |
+          cargo test --release --lib --features "flutter,swan_custom,hwcodec,vram" build_metadata::tests:: 2>&1 | Tee-Object -FilePath artifacts/native-build-metadata-tests.log
+          if ($LASTEXITCODE -ne 0) { throw 'Managed build metadata regressions failed.' }
+          if ((Get-Content artifacts/native-build-metadata-tests.log -Raw) -notmatch 'test result: ok\. 3 passed; 0 failed;') { throw 'Expected managed build metadata tests did not run.' }
+
+      - name: Reject system-control packets from view-only managed sessions
+        shell: pwsh
+        run: |
+          cargo test --release --lib --features "flutter,swan_custom,hwcodec,vram" server::connection::test::managed_view_only_packets_cannot_change_system_control -- --exact 2>&1 | Tee-Object -FilePath artifacts/native-managed-control-tests.log
+          if ($LASTEXITCODE -ne 0) { throw 'Managed view-only control regression failed.' }
+          if ((Get-Content artifacts/native-managed-control-tests.log -Raw) -notmatch 'test result: ok\. 1 passed; 0 failed;') { throw 'Expected managed control test did not run.' }
+
+      - name: Reject paused support and authorization reuse after resume
+        shell: pwsh
+        run: |
+          cargo test --release --lib --features "flutter,swan_custom,hwcodec,vram" managed::pause_tests::pause_denies_claims_and_resume_cannot_revive_old_authorization -- --exact 2>&1 | Tee-Object -FilePath artifacts/native-managed-pause-tests.log
+          if ($LASTEXITCODE -ne 0) { throw 'Managed support pause regression failed.' }
+          if ((Get-Content artifacts/native-managed-pause-tests.log -Raw) -notmatch 'test result: ok\. 1 passed; 0 failed;') { throw 'Expected managed support pause test did not run.' }
+
+      - name: Reject authorization retries and inherited audit destinations
+        shell: pwsh
+        run: |
+          cargo test --release --lib --features "flutter,swan_custom,hwcodec,vram" client::managed_retry_tests::authorization_closure_never_retries_but_network_fallback_remains -- --exact 2>&1 | Tee-Object -FilePath artifacts/native-managed-retry-tests.log
+          if ($LASTEXITCODE -ne 0) { throw 'Managed authorization retry regression failed.' }
+          if ((Get-Content artifacts/native-managed-retry-tests.log -Raw) -notmatch 'test result: ok\. 1 passed; 0 failed;') { throw 'Expected managed authorization retry test did not run.' }
+          cargo test --release --lib --features "flutter,swan_custom,hwcodec,vram" common::tests::managed_edition_never_derives_legacy_audit_targets -- --exact 2>&1 | Tee-Object -FilePath artifacts/native-managed-audit-tests.log
+          if ($LASTEXITCODE -ne 0) { throw 'Managed legacy audit regression failed.' }
+          if ((Get-Content artifacts/native-managed-audit-tests.log -Raw) -notmatch 'test result: ok\. 1 passed; 0 failed;') { throw 'Expected managed legacy audit test did not run.' }
+
+      - name: Reject cross-target and stale-login file-transfer handles
+        shell: pwsh
+        run: |
+          cargo test --release --lib --features "flutter,swan_custom,hwcodec,vram" managed::subsession_tests::file_transfer_handle_is_bound_to_target_company_and_current_login -- --exact 2>&1 | Tee-Object -FilePath artifacts/native-managed-subsession-tests.log
+          if ($LASTEXITCODE -ne 0) { throw 'Managed file-transfer handle regression failed.' }
+          if ((Get-Content artifacts/native-managed-subsession-tests.log -Raw) -notmatch 'test result: ok\. 1 passed; 0 failed;') { throw 'Expected managed file-transfer handle test did not run.' }
+
+      - name: Add pinned topmost-window helper
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: topmostwindow-artifacts-x64
           path: ./swan-client
+
+      - name: Retain helper corresponding source and exact build metadata
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: topmostwindow-source-x64
+          path: ./artifacts/topmost-source
 
       - name: Build self-extracting installer
         shell: bash
@@ -170,29 +318,181 @@ jobs:
           sed -i '/dpiAware/d' res/manifest.xml
           pushd ./libs/portable
           pip3 install -r requirements.txt
+          python3 -m unittest discover -s . -p test_generate.py
+          rustc --edition 2021 --test resource_order.rs -o resource-order-tests.exe
+          ./resource-order-tests.exe
           python3 ./generate.py -f ../../swan-client/ -o . -e ../../swan-client/rustdesk.exe
+          cargo test --locked --release
           popd
           mkdir -p ./artifacts
           # The portable packer opens RustDesk's one-page installer when the
           # filename ends in "install.exe".
           mv ./target/release/rustdesk-portable-packer.exe ./artifacts/SwanRemoteSupport-${{ env.VERSION }}-x64-unsigned-install.exe
+          # Both editions use unchanged project binaries. A pinned technician
+          # bootstrap selects its authenticated outgoing-only interface. The
+          # technician filename launches the portable app instead of customer setup.
+          cp ./artifacts/SwanRemoteSupport-${{ env.VERSION }}-x64-unsigned-install.exe ./artifacts/SwanRemoteSupport-${{ env.VERSION }}-technician-x64-unsigned.exe
           pushd ./artifacts
           sha256sum SwanRemoteSupport-*.exe | tee SHA256SUMS.txt
           popd
 
-      - name: Add express installation helpers
+      - name: Generate unsigned installed payload manifests
         shell: pwsh
         run: |
-          Copy-Item .\scripts\Install-SwanRemoteSupport.ps1 .\artifacts\
-          Copy-Item .\scripts\Install-SwanRemoteSupport.cmd .\artifacts\
-          Copy-Item .\scripts\Install-SwanRemoteSupport-UNSIGNED-TEST.cmd .\artifacts\
-          Copy-Item .\scripts\Run-Swan-Technician-UNSIGNED-TEST.cmd .\artifacts\
-          Copy-Item .\scripts\Enable-SwanUnattendedAccess.ps1 .\artifacts\
-          Copy-Item .\scripts\Disable-SwanUnattendedAccess.ps1 .\artifacts\
-          Copy-Item .\docs\CUSTOMER_INSTALL.md .\artifacts\
-          Copy-Item .\docs\UNSIGNED_SPARE_LAPTOP_TEST.md .\artifacts\
-          Copy-Item .\docs\PRIVACY.md .\artifacts\
-          Copy-Item .\docs\SOURCE_AND_LICENSE.md .\artifacts\
+          python3 -m unittest discover -s deployment/windows -p test_payload_manifest.py
+          python3 -m unittest discover -s deployment/windows -p test_customer_msi.py
+          & "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe" -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File deployment/windows/test_company_setup_entrypoint.ps1
+          if ($LASTEXITCODE -ne 0) { throw 'Company setup entry-point checks failed.' }
+          & "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe" -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File deployment/windows/test_msi_install_mode.ps1
+          if ($LASTEXITCODE -ne 0) { throw 'MSI version preflight checks failed.' }
+          & "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe" -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File deployment/windows/test_company_watch_recovery.ps1
+          if ($LASTEXITCODE -ne 0) { throw 'Company configuration watcher recovery checks failed.' }
+          & "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe" -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File deployment/windows/test_msi_service_guard.ps1
+          if ($LASTEXITCODE -ne 0) { throw 'Customer MSI recovery service guard checks failed.' }
+          & "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe" -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File deployment/windows/test_update_recovery_task.ps1
+          if ($LASTEXITCODE -ne 0) { throw 'Update recovery task ownership checks failed.' }
+          rustc --edition 2021 --test libs/portable/src/install_wait.rs -o portable-install-wait-tests.exe
+          if ($LASTEXITCODE -ne 0) { throw 'Portable installer wait tests did not compile.' }
+          ./portable-install-wait-tests.exe
+          if ($LASTEXITCODE -ne 0) { throw 'Portable installer completion tests failed.' }
+          rustc --edition 2021 --test libs/portable/src/runtime_cache.rs -o portable-runtime-cache-tests.exe
+          if ($LASTEXITCODE -ne 0) { throw 'Portable runtime cache tests did not compile.' }
+          ./portable-runtime-cache-tests.exe
+          if ($LASTEXITCODE -ne 0) { throw 'Portable runtime cache isolation tests failed.' }
+          python3 deployment/windows/generate-payload-manifest.py --edition customer --source swan-client --output artifacts/customer-installed-files.unsigned.json
+          python3 deployment/windows/generate-payload-manifest.py --edition technician --source artifacts/SwanRemoteSupport-${{ env.VERSION }}-technician-x64-unsigned.exe --output artifacts/technician-installed-files.unsigned.json
+
+      - name: Build company management and distribution components
+        shell: pwsh
+        run: |
+          cargo test --manifest-path product/Cargo.toml --locked -p swan-agent update::tests::powershell_verifier_does_not_inherit_background_priority -- --exact
+          if ($LASTEXITCODE -ne 0) { throw 'Windows trust-helper scheduling regression failed.' }
+          cargo build --manifest-path product/Cargo.toml --workspace --release --locked
+          Copy-Item product/target/release/swan-*.exe artifacts/
+          Copy-Item deployment/windows/Install-Company.ps1,deployment/windows/Open-Technician.ps1,deployment/windows/Uninstall-Technician.ps1,deployment/windows/Verify-Package.ps1,deployment/windows/Get-WindowsCompatibility.ps1 artifacts/
+          Copy-Item deployment/windows/Install-Worker.ps1,deployment/windows/Uninstall-Worker.ps1,deployment/windows/Read-WorkerConfiguration.ps1,deployment/windows/Migrate-WorkerCredential.ps1,deployment/windows/Prepare-CustomerDirectory.ps1 artifacts/
+          Copy-Item LICENCE artifacts/
+
+      - name: Build unsigned customer and technician MSIs with pinned WiX
+        id: package-clients
+        shell: pwsh
+        run: |
+          $toolPackage = Join-Path $env:RUNNER_TEMP 'wix-cli-x64-5.0.2.msi'
+          Invoke-WebRequest -Uri https://github.com/wixtoolset/wix/releases/download/v5.0.2/wix-cli-x64.msi -OutFile $toolPackage
+          $toolDirectory = Join-Path $env:RUNNER_TEMP 'swan-wix-5.0.2'
+          $wix = ./deployment/windows/Expand-WixBuildTools.ps1 -Package $toolPackage -OutputDirectory $toolDirectory -SevenZip 'C:/Program Files/7-Zip/7z.exe'
+          $output = 'artifacts/SwanRemoteSupport-${{ env.VERSION }}-technician-x64-unsigned.msi'
+          ./deployment/windows/Build-TechnicianMsi.ps1 -WixExe $wix -TechnicianExe 'artifacts/SwanRemoteSupport-${{ env.VERSION }}-technician-x64-unsigned.exe' -AgentExe artifacts/swan-agent.exe -Version '${{ env.VERSION }}' -Output $output -UnsignedTest -SourceDateEpoch $env:SOURCE_DATE_EPOCH
+          $hash = (Get-FileHash -LiteralPath $output -Algorithm SHA256).Hash.ToLowerInvariant()
+          Add-Content artifacts/SHA256SUMS.txt ($hash+'  '+[IO.Path]::GetFileName($output))
+          $customerOutput = 'artifacts/SwanRemoteSupport-${{ env.VERSION }}-customer-x64-unsigned.msi'
+          ./deployment/windows/Build-CustomerMsi.ps1 -WixExe $wix -SourceDirectory swan-client -AgentExe artifacts/swan-agent.exe -Version '${{ env.VERSION }}' -Output $customerOutput -UnsignedTest -SourceDateEpoch $env:SOURCE_DATE_EPOCH
+          $customerHash = (Get-FileHash -LiteralPath $customerOutput -Algorithm SHA256).Hash.ToLowerInvariant()
+          Add-Content artifacts/SHA256SUMS.txt ($customerHash+'  '+[IO.Path]::GetFileName($customerOutput))
+          $sourceHash = (Get-FileHash -LiteralPath artifacts/SwanRemoteSupport-build-source.zip -Algorithm SHA256).Hash.ToLowerInvariant()
+          Add-Content artifacts/SHA256SUMS.txt ($sourceHash+'  SwanRemoteSupport-build-source.zip')
+
+      - name: Verify MSI input staging and deterministic metadata guards
+        shell: powershell
+        run: |
+          ./deployment/windows/test_msi_staging.ps1 -WorkDirectory (Join-Path $env:RUNNER_TEMP 'swan-msi-staging-check')
+          $raw = 'artifacts/SwanRemoteSupport-${{ env.VERSION }}-technician-x64-unsigned.msi.raw-unsigned.msi'
+          ./deployment/windows/test_msi_metadata.ps1 -FirstMsi $raw -SecondMsi $raw -WorkDirectory (Join-Path $env:RUNNER_TEMP 'swan-msi-metadata-check') -SourceDateEpoch $env:SOURCE_DATE_EPOCH
+
+      - name: Verify unsigned technician MSI installation repair and uninstall
+        shell: pwsh
+        run: |
+          ./deployment/windows/test_technician_msi_lifecycle.ps1 -Package 'artifacts/SwanRemoteSupport-${{ env.VERSION }}-technician-x64-unsigned.msi' -TechnicianExecutable 'artifacts/SwanRemoteSupport-${{ env.VERSION }}-technician-x64-unsigned.exe' -AgentExecutable artifacts/swan-agent.exe
+
+      - name: Verify customer MSI starts a headless native service
+        shell: pwsh
+        run: |
+          ./deployment/windows/test_customer_service_startup.ps1 -Package 'artifacts/SwanRemoteSupport-${{ env.VERSION }}-customer-x64-unsigned.msi' -CustomerExecutable swan-client/rustdesk.exe
+
+      - name: Preserve technician MSI lifecycle evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: technician-msi-lifecycle
+          if-no-files-found: ignore
+          path: |
+            ${{ runner.temp }}/swan-msi-lifecycle-*/**
+            ${{ runner.temp }}/swan-customer-service-*/**
+            ${{ runner.temp }}/swan-msi-staging-check/result.json
+            ${{ runner.temp }}/swan-msi-metadata-check/result.json
+
+      - name: Retain completed client inputs before independent server packaging
+        if: always() && steps.package-clients.conclusion == 'success'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: SwanRemoteSupport-${{ env.VERSION }}-client-inputs-x64-UNSIGNED-TEST
+          if-no-files-found: error
+          path: |
+            artifacts/SwanRemoteSupport-*.exe
+            artifacts/SwanRemoteSupport-${{ env.VERSION }}-technician-x64-unsigned.msi
+            artifacts/SwanRemoteSupport-${{ env.VERSION }}-customer-x64-unsigned.msi
+            artifacts/SwanRemoteSupport-build-source.zip
+            artifacts/*.msi.build.json
+            artifacts/*.msi.installed-files.json
+            artifacts/SHA256SUMS.txt
+            artifacts/swan-*.exe
+            artifacts/*-installed-files.unsigned.json
+            artifacts/topmost-source/**
+            artifacts/engine-source/**
+            artifacts/engine-selection.json
+            artifacts/native-desktop-pe-metadata.json
+            artifacts/native-service-imports.json
+            artifacts/native-dll-search-tests.log
+            artifacts/native-msvc-toolchain.json
+            artifacts/flutter-sdk-identity.json
+            artifacts/native-managed-updater-tests.log
+            artifacts/native-managed-pause-tests.log
+            artifacts/native-managed-subsession-tests.log
+            artifacts/Install-Company.ps1
+            artifacts/Install-Worker.ps1
+            artifacts/Read-WorkerConfiguration.ps1
+            artifacts/Migrate-WorkerCredential.ps1
+            artifacts/Prepare-CustomerDirectory.ps1
+            artifacts/Uninstall-Worker.ps1
+            artifacts/Open-Technician.ps1
+            artifacts/Uninstall-Technician.ps1
+            artifacts/Verify-Package.ps1
+            artifacts/Get-WindowsCompatibility.ps1
+            artifacts/LICENCE
+
+      - name: Restore maintained Windows transport and corresponding source
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: swan-transport-candidate-windows-2022
+          path: ${{ runner.temp }}/swan-maintained-transport
+
+      - name: Build unsigned company server setup with pinned components
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $pins = Get-Content deployment/windows/server-components.json -Raw | ConvertFrom-Json
+          $https = Join-Path $env:RUNNER_TEMP 'swan-server-https.zip'
+          ./deployment/windows/test_pinned_archive.ps1
+          ./deployment/windows/Get-PinnedArchive.ps1 -Uri $pins.https.url -Sha256 $pins.https.sha256 -Output $https | Out-Null
+          $components = Join-Path $env:RUNNER_TEMP 'swan-server-components'
+          ./deployment/windows/Prepare-ServerComponents.ps1 -TransportDirectory (Join-Path $env:RUNNER_TEMP 'swan-maintained-transport') -HttpsPackage $https -OutputDirectory $components
+          $compilerPin = Get-Content deployment/windows/server-compiler.json -Raw | ConvertFrom-Json
+          $references = Get-Content deployment/windows/server-references.json -Raw | ConvertFrom-Json
+          $compilerPackage = Join-Path $env:RUNNER_TEMP 'swan-server-roslyn-4.12.0.nupkg'
+          $frameworkPackage = Join-Path $env:RUNNER_TEMP 'swan-server-framework-references.nupkg'
+          $powershellPackage = Join-Path $env:RUNNER_TEMP 'swan-server-powershell-references.nupkg'
+          ./deployment/windows/Get-PinnedArchive.ps1 -Uri $compilerPin.url -Sha256 $compilerPin.sha256 -Output $compilerPackage | Out-Null
+          ./deployment/windows/Get-PinnedArchive.ps1 -Uri $references.framework.url -Sha256 $references.framework.sha256 -Output $frameworkPackage | Out-Null
+          ./deployment/windows/Get-PinnedArchive.ps1 -Uri $references.powershell.url -Sha256 $references.powershell.sha256 -Output $powershellPackage | Out-Null
+          $setup = ./deployment/windows/Build-ServerSetup.ps1 -ManagementExecutable artifacts/swan-management.exe -ComponentsDirectory $components -CompilerPackage $compilerPackage -FrameworkReferencesPackage $frameworkPackage -PowerShellReferencesPackage $powershellPackage -OutputDirectory artifacts/server-setup -UnsignedTest
+          $reproEvidence = Join-Path $env:RUNNER_TEMP 'swan-server-setup-repro'
+          ./deployment/windows/test_server_setup_reproducibility.ps1 -ManagementExecutable artifacts/swan-management.exe -ComponentsDirectory $components -CompilerPackage $compilerPackage -FrameworkReferencesPackage $frameworkPackage -PowerShellReferencesPackage $powershellPackage -WorkDirectory $reproEvidence
+          Copy-Item -LiteralPath (Join-Path $reproEvidence 'result.json') -Destination artifacts/server-setup-repro.json
+          Copy-Item -LiteralPath (Join-Path $reproEvidence 'packaged-preview.png') -Destination artifacts/server-setup-packaged-preview.png
+          $hash = (Get-FileHash -LiteralPath $setup -Algorithm SHA256).Hash.ToLowerInvariant()
+          Copy-Item -LiteralPath $setup -Destination artifacts/SwanServerSetup-UNSIGNED-TEST.exe
+          Copy-Item -LiteralPath artifacts/server-setup/SOURCE.json -Destination artifacts/SwanServerSetup-SOURCE.json
+          Add-Content artifacts/SHA256SUMS.txt ($hash+'  SwanServerSetup-UNSIGNED-TEST.exe')
 
       - name: Upload unsigned installer and checksum
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -201,14 +501,35 @@ jobs:
           if-no-files-found: error
           path: |
             artifacts/SwanRemoteSupport-${{ env.VERSION }}-x64-unsigned-install.exe
+            artifacts/SwanRemoteSupport-${{ env.VERSION }}-technician-x64-unsigned.exe
+            artifacts/SwanRemoteSupport-${{ env.VERSION }}-technician-x64-unsigned.msi
+            artifacts/SwanRemoteSupport-${{ env.VERSION }}-customer-x64-unsigned.msi
+            artifacts/SwanServerSetup-UNSIGNED-TEST.exe
+            artifacts/SwanServerSetup-SOURCE.json
+            artifacts/server-setup-repro.json
+            artifacts/server-setup-packaged-preview.png
+            artifacts/SwanRemoteSupport-build-source.zip
+            artifacts/topmost-source/**
+            artifacts/engine-source/**
+            artifacts/engine-selection.json
+            artifacts/native-desktop-pe-metadata.json
+            artifacts/native-service-imports.json
+            artifacts/native-dll-search-tests.log
+            artifacts/native-msvc-toolchain.json
+            artifacts/*.msi.build.json
+            artifacts/flutter-sdk-identity.json
+            artifacts/*.msi.installed-files.json
             artifacts/SHA256SUMS.txt
-            artifacts/Install-SwanRemoteSupport.ps1
-            artifacts/Install-SwanRemoteSupport.cmd
-            artifacts/Install-SwanRemoteSupport-UNSIGNED-TEST.cmd
-            artifacts/Run-Swan-Technician-UNSIGNED-TEST.cmd
-            artifacts/Enable-SwanUnattendedAccess.ps1
-            artifacts/Disable-SwanUnattendedAccess.ps1
-            artifacts/CUSTOMER_INSTALL.md
-            artifacts/UNSIGNED_SPARE_LAPTOP_TEST.md
-            artifacts/PRIVACY.md
-            artifacts/SOURCE_AND_LICENSE.md
+            artifacts/swan-*.exe
+            artifacts/Install-Company.ps1
+            artifacts/Install-Worker.ps1
+            artifacts/Read-WorkerConfiguration.ps1
+            artifacts/Migrate-WorkerCredential.ps1
+            artifacts/Prepare-CustomerDirectory.ps1
+            artifacts/Uninstall-Worker.ps1
+            artifacts/Open-Technician.ps1
+            artifacts/Uninstall-Technician.ps1
+            artifacts/Verify-Package.ps1
+            artifacts/Get-WindowsCompatibility.ps1
+            artifacts/*-installed-files.unsigned.json
+            artifacts/LICENCE

@@ -1,0 +1,17 @@
+{
+  "source": "7407fa1ca76e22910697f0c31cf385620e520b23",
+  "workflow_run": 40432863268,
+  "windows_job": 121954917886,
+  "ubuntu_job": 121954917487,
+  "linux_deployment_job": 121954918008,
+  "windows_and_linux_component_jobs_passed": true,
+  "windows_verifier_tests_passed": [
+    "completed_and_rejected_verifiers_keep_their_real_exit_status",
+    "stalled_verification_is_an_error_and_its_process_is_reaped",
+    "verifier_child"
+  ],
+  "docker_context_public_file_count": 46,
+  "docker_secret_canaries_excluded": true,
+  "installed_application_timeout_qualified": false,
+  "production_approved": false
+}

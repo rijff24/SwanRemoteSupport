@@ -1,0 +1,33 @@
+{
+  "no_restored_server_started": true,
+  "full_running_deployment_restore_pending": true,
+  "production_publication": false,
+  "https_files_restored": 13,
+  "management_database_restored": true,
+  "os_build": 14393,
+  "https_key_and_certificate_files_match": 8,
+  "installer_artifacts_restored": 3,
+  "canonical_company_data_not_replaced": true,
+  "changed_ciphertext_rejected_without_target": true,
+  "wrong_password_rejected_without_target": true,
+  "utc": "2026-10-29T11:20:05.2522537Z",
+  "original_services_not_restarted": true,
+  "management_signing_setup_keys_and_https_recipe_match": true,
+  "original_optional_database_check_corrected_without_repeating_restore": true,
+  "transport_database_recovered_if_present": true,
+  "management_source": "aff8ff61e3fbd6f34c4cf0bb9de6e330ec6e0521",
+  "restored_keys_private": true,
+  "transport_database_present": false,
+  "transport_private_and_public_keys_match": true,
+  "actual_msvc_restore_cli": true,
+  "service_environment_matches": true,
+  "windows_installation_receipt_missing": true,
+  "worker_credential_unchanged": true,
+  "private_staging_cleaned": true,
+  "scope": "Actual MSVC CLI wrong-password/tamper rejection and isolated payload recovery; no restored server was started and no canonical live data replaced.",
+  "harness_notes": [
+    "An initial post-check incorrectly required an optional transport database although none had been created.",
+    "A read-only continuation initially referenced an undefined input path; corrected without repeating restore."
+  ],
+  "receipt_fix_status": "Source fix and local backup tests passed; updated Windows binary/runtime re-export and running-stack restore pending."
+}

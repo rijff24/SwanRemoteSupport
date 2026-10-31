@@ -8,7 +8,7 @@ The current GitHub Actions workflow intentionally produces an **unsigned build a
 
 Current primary references: [Microsoft SmartScreen reputation guidance](https://learn.microsoft.com/en-us/windows/apps/package-and-deploy/smartscreen-reputation), [Microsoft Artifact Signing eligibility and setup](https://learn.microsoft.com/en-us/azure/artifact-signing/quickstart), [SignPath Foundation conditions](https://signpath.org/terms.html), and the [Microsoft Security Intelligence file-submission portal](https://www.microsoft.com/en-us/wdsi/filesubmission).
 
-The repository's release rules are in the public [Swan code-signing policy](CODE_SIGNING_POLICY.md). Free code signing provided by SignPath.io, certificate by SignPath Foundation.
+The repository's release rules are in the public [Swan code-signing policy](CODE_SIGNING_POLICY.md). SignPath is a proposed provider; no application acceptance or active production signing service is claimed.
 
 ## What signing can and cannot do
 
@@ -34,7 +34,12 @@ Required preparation:
 6. Design a two-stage signing pipeline: sign the inner executables/DLLs, create the self-extracting installer, then sign and timestamp the outer installer.
 7. Verify that SignPath can support the custom self-extracting format. If it cannot, package the signed client as an MSI or another supported container.
 
-The official Tailscale Windows MSI is not embedded in or signed as part of Swan. The bootstrap downloads it from Tailscale and requires its pinned SHA-256 plus a valid `Tailscale Inc.` Authenticode signature. This boundary avoids representing Tailscale's proprietary Windows GUI as a Swan open-source component; SignPath must still review and accept the complete bootstrap behavior.
+The configurable product's company packages do not install or require Tailscale.
+The Tailscale download/signature boundary belongs to the preserved single-company
+baseline only. Provider review must cover the actual configurable release,
+including upstream components, consent and uninstall behavior. Current provider
+preparation and unfulfilled prerequisites are recorded in the
+[code signing policy](CODE_SIGNING_POLICY.md#provider-preparation-checked-28-october-2026).
 
 ### 2. Buy an organization-validated code-signing certificate
 

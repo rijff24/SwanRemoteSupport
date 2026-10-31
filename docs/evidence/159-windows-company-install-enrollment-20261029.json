@@ -1,0 +1,104 @@
+{
+  "schema": 1,
+  "date": "2026-10-29",
+  "application_source": "aff8ff61e3fbd6f34c4cf0bb9de6e330ec6e0521",
+  "management_source": "9fa5e8aa6a846ce015362de8082da5c938d79ff8",
+  "worker_source": "1c43a382c87b05e44caff1c6c2bef4cf0b0bb6fc",
+  "os": "Windows Server 2016 Standard Evaluation x64 build 14393, Desktop Experience",
+  "scope": "Separate disposable customer VM; standard-user technician on company VM. Existing clean pre-product OS baseline reused. Lab publisher only.",
+  "company_normal_reboot": {
+    "ten_pinned_component_source_key_configuration_and_receipt_hashes_preserved": true,
+    "company_and_worker_running_automatic": true,
+    "maintained_transport_children_and_udp_listener_running": true,
+    "external_verified_https_mfa_profile_and_download_checks_passed": true
+  },
+  "customer_msi_159_sequence11": {
+    "server_generated_public_bundle_used": true,
+    "tailscale_absent": true,
+    "no_manual_server_address_entry": true,
+    "unique_device_enrollment_and_company_branding_verified": true,
+    "shipping_installed_verifier_passed": true,
+    "automatic_system_service_running": true,
+    "unattended_consent_off": true
+  },
+  "technician_standard_user": {
+    "msi_sequence11_blocked_by_windows_policy_1625": true,
+    "server_generated_exe_sequence12_installed_successfully": true,
+    "actual_token_had_no_administrators_sid": true,
+    "shipping_replace_failed_setup_path_used": true,
+    "original_failed_msi_marker_archived_exactly": true,
+    "same_signed_native_and_agent_bytes_as_msi_payload": true,
+    "bootstrap_trust_branding_and_shipping_verifier_passed": true,
+    "windows_installer_policy_not_modified": true,
+    "no_device_credential_present_in_technician_state": true
+  },
+  "deployed_https_authorization_tests": {
+    "real_admin_and_two_technician_mfa_logins": true,
+    "pending_device_hidden_and_grant_rejected_403": true,
+    "technician_self_approval_rejected_401": true,
+    "administrator_approved_device_and_assigned_scoped_group": true,
+    "authorized_inventory_contains_only_approved_device": true,
+    "unassigned_inventory_empty_and_grant_rejected_403": true,
+    "unattended_grant_without_consent_rejected_403": true,
+    "technician_group_access_edit_rejected_401": true,
+    "denied_requests_created_no_grants_or_sessions": true
+  },
+  "external_runtime_interruption_recovery": {
+    "existing_disks_checked_and_normal_booted_without_reinstallation": true,
+    "company_worker_and_installed_technician_hashes_preserved": true,
+    "same_customer_identity_and_original_credential_accepted_over_verified_https": true,
+    "customer_approval_branding_release_sequence_and_consent_preserved": true,
+    "customer_automatic_service_and_shipping_verifier_passed": true
+  },
+  "native_technician_gui": {
+    "mfa_login_passed_in_actual_standard_user_session": true,
+    "company_branding_and_https_identity_visible": true,
+    "authorized_inventory_exactly_one_approved_customer": true,
+    "unattended_action_absent_without_consent": true
+  },
+  "windows_relay_attended_session": {
+    "native_technician_mfa_and_scoped_inventory_used": true,
+    "receiving_prompt_used_company_authenticated_technician_username": true,
+    "customer_explicitly_accepted": true,
+    "exact_receiver_request_and_maintained_windows_hbbr_pair_uuid_correlated": true,
+    "native_video_observed_in_both_vm_consoles": true,
+    "remote_mouse_and_keyboard_opened_customer_folder": true,
+    "claimed_attended_lease_renewed_beyond_initial_300_seconds": true,
+    "customer_disconnect_ended_desktop_and_closed_original_grant": true,
+    "closed_grant_renewal_with_original_device_credential_rejected_403": true,
+    "no_replacement_live_lease_after_disconnect": true,
+    "technician_dialog_closed_manually_by_peer_with_only_ok": true,
+    "initial_direct_path_collision_timed_out_before_relay_fallback": true,
+    "scope": "Separate NAT lab VMs using the company Windows relay through host forwards. This does not qualify public Internet or direct NAT traversal."
+  },
+  "management_outage": {
+    "fresh_native_customer_approved_session_established": true,
+    "only_customer_outbound_management_tcp_port_38446_blocked": true,
+    "relay_ports_not_blocked": true,
+    "automatic_rule_restore_task_registered_before_outage": true,
+    "native_receiver_closed_for_managed_authorization_unavailable": true,
+    "seconds_from_outage_to_receiver_close": 6.983795,
+    "receiver_close_utc": "2026-10-29T16:22:14.703388+00:00",
+    "receiver_log_sha256": "b0c1b11f7ee43d4bbdc9677ec350822ddaffcd52cabaf5347c2dd31fb474e364",
+    "technician_authorization_error_offered_only_ok": true,
+    "outage_rule_disabled_and_verified_https_restored": true,
+    "original_customer_credential_identity_branding_and_consent_preserved": true,
+    "restoring_management_did_not_revive_desktop": true,
+    "after_actual_original_lease_expiry_renew_rejected_403": true,
+    "original_lease_never_extended_after_outage": true,
+    "no_live_replacement_session": true,
+    "session_history_displayed_ended_after_expiry": true,
+    "limit": "The server could not receive the close report during the outage. Its stored closed bit stayed false; the unchanged lease expired normally. The inventory labels it Ended after expiry. This is receiver-side management unreachability, not a full infrastructure outage."
+  },
+  "limits": {
+    "attended_lock_unlock_and_standard_customer_uac_scope_in_separate_159_receipts": true,
+    "clipboard_and_transfer_scope_in_separate_159_windows_native_receipt": true,
+    "no_public_internet_connectivity_claim": true,
+    "standard_user_msi_install_did_not_pass": true,
+    "no_new_clean_iso_install_or_six_os_matrix_claim": true,
+    "production_publication": false,
+    "full_product_acceptance_complete": false,
+    "unattended_reboot_logon_revocation_scope_in_separate_159_receipt": true,
+    "two_monitor_switching_and_input_scope_in_separate_159_receipt": true
+  }
+}

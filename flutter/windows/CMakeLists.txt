@@ -44,6 +44,17 @@ endforeach()
 # Use Unicode for all projects.
 add_definitions(-DUNICODE -D_UNICODE)
 
+# Apply before creating the runner and plugin targets: their PE link timestamps
+# otherwise change on every build even when all compiled payload bytes match.
+# Keep incremental linking available for interactive Debug builds.
+if(MSVC)
+  add_link_options(
+    "$<$<NOT:$<CONFIG:Debug>>:/Brepro>"
+    "$<$<NOT:$<CONFIG:Debug>>:/INCREMENTAL:NO>"
+    "$<$<NOT:$<CONFIG:Debug>>:/PDBALTPATH:%_PDB%>"
+  )
+endif()
+
 # Compilation settings that should be applied to most targets.
 #
 # Be cautious about adding new options here, as plugins use this function by
@@ -69,6 +80,21 @@ add_subdirectory("runner")
 # Generated plugin build rules, which manage building the plugins and adding
 # them to the application.
 include(flutter/generated_plugins.cmake)
+
+# --service returns from the Rust core before creating a Flutter window. Avoid
+# loading the engine and every GUI plugin before the service can register with
+# Windows, especially during a cold boot on slower storage.
+if(MSVC)
+  target_link_libraries(${BINARY_NAME} PRIVATE delayimp)
+  target_link_options(${BINARY_NAME} PRIVATE "/DELAYLOAD:flutter_windows.dll")
+  foreach(plugin ${FLUTTER_PLUGIN_LIST})
+    get_target_property(plugin_type ${plugin}_plugin TYPE)
+    if(plugin_type STREQUAL "SHARED_LIBRARY")
+      target_link_options(${BINARY_NAME} PRIVATE
+        "/DELAYLOAD:$<TARGET_FILE_NAME:${plugin}_plugin>")
+    endif()
+  endforeach()
+endif()
 
 
 # === Installation ===

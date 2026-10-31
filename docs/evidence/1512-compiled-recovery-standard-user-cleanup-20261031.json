@@ -1,0 +1,68 @@
+{
+  "recorded_utc": "2026-10-30T23:53:55.759298+00:00",
+  "source": "94284db24b8993344c12cae0a8baa95f82dc0e02",
+  "component_workflow": 41139900763,
+  "component_artifact": 13020050616,
+  "component_artifact_digest": "sha256:436add7111392f65a017990ab79bdf361eb1a6173af5d27c16835914b837fe3a",
+  "component_sources": {
+    "utc": "2026-10-30T23:21:41.397414+00:00",
+    "source": "94284db24b8993344c12cae0a8baa95f82dc0e02",
+    "tracked_component_source_files_verified": 247,
+    "archive_bytes_and_manifests_verified": true,
+    "compiled_windows_agent_unsigned_sha256": "7bcd945aa4edc6dbd85ffb121bc52c9a928e9fcd2f9fc8849c8f686370d5d7a7",
+    "management_and_worker_bytes_unchanged_from7b": true,
+    "executed": false
+  },
+  "declared_text_crlf_checkout_files": 231,
+  "compiled_signed_agent_sha256": "b6a679a2129caf70dcd89958055985043a199f8a2960d7f3bb91754249fce349",
+  "fixed_embedded_script_sha256": "ffd5db22e7e25335b46b62b9a2ac8da529d6ea12b193449fecbbaecb7787d3e7",
+  "actual_standard_user_results": {
+    "fixture_state_and_installed_metadata_unchanged": true,
+    "principal_returned_as_short_name": true,
+    "actual_non_administrator_token": true,
+    "network_update_invoked": false,
+    "actual_installer_executed": false,
+    "legacy_account_string_match": false,
+    "utc": "2026-10-30T23:45:17.9769535Z",
+    "no_enrolled_credentials_in_fixture": true,
+    "source": "94284db24b8993344c12cae0a8baa95f82dc0e02",
+    "legacy_control": {
+      "removed": false,
+      "result": 1
+    },
+    "scope": "No-pending-update durable task cleanup only; interruption and installer recovery remain separate",
+    "own_standard_user_registered_task": true,
+    "fixed_embedded_script_hash_verified": true,
+    "real_customer_binary_unchanged": true,
+    "compiled_candidate_removed_exact_own_task": true,
+    "production_publication": false
+  },
+  "real_customer_after_test": {
+    "sequence": 14,
+    "profile_revision": 30,
+    "utc": "2026-10-30T23:52:15.0396030Z",
+    "actual_customer_identity_device_credential_bootstrap_consent_and_release_preserved": true,
+    "customer_service_running": true,
+    "actual_installed_agent_still_source7b": true,
+    "unattended_consent_disabled": true,
+    "source942_only_in_isolated_signed_fixture": true
+  },
+  "signing": {
+    "utc": "2026-10-30T23:30:17.562549+00:00",
+    "source": "94284db24b8993344c12cae0a8baa95f82dc0e02",
+    "publisher_certificate_sha256": "c797e22798a8afa94496ea0e8668b6e5ee4a4fc9f639b8200d5e1071e6925ec3",
+    "guest_authenticode_and_timestamps_verified": true,
+    "original_unsigned_inputs_preserved": true,
+    "existing_guest_identity_consent_bootstrap_and_service_preserved": true,
+    "private_key_exported": false,
+    "private_key_exportable": false,
+    "lab_only": true,
+    "production_publication": false
+  },
+  "bounds": [
+    "No-pending-update cleanup only; interrupted installation, retry, rollback and all OS/edition recovery paths remain open.",
+    "The candidate ran only in a separate standard-user fixture with no enrolled device credentials; the actual installed customer remains1.5.11.",
+    "Full1.5.12 native installer build, signing and deployment qualification remain pending."
+  ],
+  "production_publication": false
+}

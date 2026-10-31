@@ -1,0 +1,96 @@
+{
+  "source": "9ba592ca0431ce734a1edf7391aec183f5c100fa",
+  "version": "1.5.2",
+  "os": "Windows Server 2019 Desktop Experience x64 17763.3650",
+  "explicit_technician_setup_upgrade_registered": true,
+  "msi_product_state": 5,
+  "installed_hashes_and_publishers_verified": true,
+  "bootstrap_branding_customer_identity_and_consent_preserved": true,
+  "native_startup_passed": false,
+  "application_event_ids": [
+    1000,
+    1001
+  ],
+  "native_exception_code": "0xc06d007e",
+  "faulting_module": "KERNELBASE.dll",
+  "native_cache_hashes": [
+    {
+      "sha256": "64ba92090a0ffc954a8df43f1750a652cd11c2479d5151ddc7d2b6ae837aff38",
+      "name": "rustdesk.exe"
+    },
+    {
+      "sha256": "4391bb302363ac569894c1c174124ad413bb5bae1342f5f3b2594f241d0add8c",
+      "name": "librustdesk.dll"
+    },
+    {
+      "sha256": "c87ba5a71afa7b7100c1c9ccc1289009dab812f9de2acc38f9d5103e48c1f204",
+      "name": "flutter_windows.dll"
+    }
+  ],
+  "outer_launcher_success_does_not_qualify_native_startup": true,
+  "both_sequence5_test_releases_withdrawn": true,
+  "both_generated_bundle_downloads_return_404": true,
+  "automatic_updates_remain_paused": true,
+  "baseline_releases_and_customer_services_preserved": true,
+  "loader_api_fixture": {
+    "utc": "2026-10-27T07:30:31.886376+00:00",
+    "results": [
+      {
+        "flags": "0xc00",
+        "results": {
+          "swan-dll-search-app-probe.dll": {
+            "loaded": false,
+            "error": 126
+          },
+          "version.dll": {
+            "loaded": true,
+            "error": null,
+            "loaded_from_application_directory": false
+          },
+          "swan-dll-search-cwd-probe.dll": {
+            "loaded": false,
+            "error": 126
+          },
+          "swan-dll-search-path-probe.dll": {
+            "loaded": false,
+            "error": 126
+          }
+        }
+      },
+      {
+        "flags": "0xe00",
+        "results": {
+          "swan-dll-search-app-probe.dll": {
+            "loaded": true,
+            "error": null,
+            "loaded_from_application_directory": true
+          },
+          "version.dll": {
+            "loaded": true,
+            "error": null,
+            "loaded_from_application_directory": false
+          },
+          "swan-dll-search-cwd-probe.dll": {
+            "loaded": false,
+            "error": 126
+          },
+          "swan-dll-search-path-probe.dll": {
+            "loaded": false,
+            "error": 126
+          }
+        }
+      }
+    ],
+    "actual_windows_loader_test": true,
+    "old_policy_reproduces_application_dll_error_126": true,
+    "application_directory_policy_fixes_resolution": true,
+    "cwd_and_path_remain_excluded": true,
+    "only_isolated_child_processes_changed_policy": true,
+    "host_system_policy_changed": false,
+    "native_application_binary_qualified": false,
+    "scope": "Actual loader search masks in isolated Python child processes; native Rust regression and repaired GUI startup remain separate"
+  },
+  "repair_version": "1.5.3",
+  "repair_native_build_and_gui_retest_pending": true,
+  "production_publication": false
+}

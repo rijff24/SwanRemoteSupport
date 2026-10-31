@@ -1,0 +1,115 @@
+{
+  "recorded_utc": "2026-10-28T21:46:39.008845+00:00",
+  "application_source": "07bb8d0b99e2be002a30e5d97eebe67a9c2794ad",
+  "application_version": "1.5.7",
+  "technician_os": "Windows Server 2019 17763.3650 x64",
+  "customer_os": "Windows Server 2016 14393 x64",
+  "owned_administrator_desktops": true,
+  "viewer_clipboard_isolation": {
+    "accept_clipboard_disabled_for_both": true,
+    "send_clipboard_disabled_for_both": true,
+    "viewer_count": 2,
+    "utc": "2026-10-28T21:33:39.6549943Z",
+    "only_local_lab_endpoints": true,
+    "documented_options": "https://tigervnc.org/doc/vncviewer.html"
+  },
+  "no_session_baseline_distinct_markers_verified_after_both_setters_completed": true,
+  "customer_to_technician": {
+    "source": {
+      "actual_characters": 84,
+      "interactive_session": 1,
+      "mode": "Check",
+      "actual_utf8_sha256": "5d46d2bf539c9ce0a80ce0f6349bc7a03c0938d433903cc863fe6504876e523f",
+      "matched": true,
+      "utc": "2026-10-28T21:39:57.5931422Z",
+      "endpoint_role": "customer"
+    },
+    "destination": {
+      "actual_characters": 84,
+      "interactive_session": 1,
+      "mode": "Check",
+      "actual_utf8_sha256": "5d46d2bf539c9ce0a80ce0f6349bc7a03c0938d433903cc863fe6504876e523f",
+      "matched": true,
+      "utc": "2026-10-28T21:38:09.4895254Z",
+      "endpoint_role": "technician"
+    },
+    "exact_multiline_unicode_utf8_hash_match": true
+  },
+  "technician_to_customer": {
+    "source": {
+      "actual_characters": 86,
+      "interactive_session": 1,
+      "mode": "Set",
+      "actual_utf8_sha256": "a24549e44c59c5c42ff4f81299ad287ffc6e82e17dae7e94c515ace91b8b3b05",
+      "matched": true,
+      "utc": "2026-10-28T21:40:35.0850446Z",
+      "endpoint_role": "technician"
+    },
+    "destination": {
+      "actual_characters": 86,
+      "interactive_session": 1,
+      "mode": "Check",
+      "actual_utf8_sha256": "a24549e44c59c5c42ff4f81299ad287ffc6e82e17dae7e94c515ace91b8b3b05",
+      "matched": true,
+      "utc": "2026-10-28T21:41:20.9783670Z",
+      "endpoint_role": "customer"
+    },
+    "exact_multiline_unicode_utf8_hash_match": true
+  },
+  "keyboard": {
+    "actual_characters": 50,
+    "raw_file_sha256": "bee5fe07d3bef8c327c72ef03cb5cf03b61094266eb43d5d9d1d76bd6a6e4fd7",
+    "interactive_notepad_session": 1,
+    "text_utf8_sha256": "bee5fe07d3bef8c327c72ef03cb5cf03b61094266eb43d5d9d1d76bd6a6e4fd7",
+    "utc": "2026-10-28T21:42:27.6941332Z",
+    "exact_typed_marker_saved": true,
+    "endpoint_role": "customer"
+  },
+  "session_end": {
+    "utc": "2026-10-28T21:42:58.709603+00:00",
+    "one_real_claimed_attended_session": true,
+    "customer_stopped_and_server_closed": true,
+    "unattended": false
+  },
+  "post_stop": {
+    "new_customer_marker_set": {
+      "actual_characters": 67,
+      "interactive_session": 1,
+      "mode": "Set",
+      "actual_utf8_sha256": "d05475bcd0377bc1219418b4cc93d19c58a8e5d037b919a8080439bcc2aa10ba",
+      "matched": true,
+      "utc": "2026-10-28T21:43:21.1086894Z",
+      "endpoint_role": "customer"
+    },
+    "technician_hash_only_sample": {
+      "actual_characters": 84,
+      "interactive_session": 1,
+      "mode": "Check",
+      "actual_utf8_sha256": "5d46d2bf539c9ce0a80ce0f6349bc7a03c0938d433903cc863fe6504876e523f",
+      "matched": false,
+      "utc": "2026-10-28T21:43:51.2064562Z",
+      "endpoint_role": "technician"
+    },
+    "new_customer_marker_not_received": true,
+    "earlier_customer_marker_observed_instead": true,
+    "last_clipboard_value_preservation_not_qualified": true
+  },
+  "probe_limitations": [
+    "Initial customer Set probe exited1 before final result; failure preserved. Independent read-only source and destination checks verified the intended same value without resetting it.",
+    "Subsequent probe added bounded clipboard-read retries and error-type records; no product binary or permission was changed.",
+    "The first post-stop checker required preservation of the last technician marker and failed. The hash-only result instead matched the earlier customer marker. Only non-arrival of the newly changed customer marker after grant closure is established."
+  ],
+  "limits": [
+    "Text clipboard and one exact ASCII keyboard-save operation; no clipboard-file transfer, file transfer, remote UAC or multiple monitors.",
+    "Two lab VMs and loopback company transport; no public Internet or direct-connect qualification.",
+    "This uses installed1.5.7; the1.5.8 identity-prompt build is separate and not yet installed.",
+    "No complete Windows matrix or production qualification."
+  ],
+  "viewer_clipboard_isolation_after_test": {
+    "viewer_count": 2,
+    "send_clipboard_disabled_for_both": true,
+    "utc": "2026-10-28T21:47:27.8188411Z",
+    "unchanged_through_entire_feature_test": true,
+    "accept_clipboard_disabled_for_both": true
+  }
+}

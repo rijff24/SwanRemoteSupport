@@ -1,0 +1,103 @@
+{
+  "schema": 1,
+  "observed_utc": "2026-10-26T21:23:15.229005+00:00",
+  "environment": "Independent Linux company, loopback HTTPS with owned Server 2019 Desktop endpoint",
+  "management_source": "761b5c56cca8cd7eecb65d3438de0d6f0075bd4e",
+  "installed_application_source": "da0c621845057bed321a98a1886ef15891e431a9",
+  "before_profile_revision": 3,
+  "prepared_profile_revision": 4,
+  "activated_profile_revision": 5,
+  "both_editions_cached_old_key_signed_transition_before_activation": true,
+  "both_installed_editions_automatically_adopted_new_key": true,
+  "manual_agent_sync_used_for_installed_editions": false,
+  "customer_unattended_consent_remained_revoked": true,
+  "customer_consent_revision": 2,
+  "software_release_sequences_preserved": {
+    "customer": 1,
+    "technician": 2
+  },
+  "missed_transition_shipping_agent_rejected_new_signature": true,
+  "missed_transition_cached_state_byte_identical": true,
+  "negative_harness_note": "PowerShell stopped on expected native signature error; a separate read-only inspection verified unchanged cached state without rerunning sync.",
+  "pre_rotation_encrypted_backup": {
+    "utc": "2026-10-26T21:16:35.635462+00:00",
+    "bytes": 62837995,
+    "sha256": "5c8830582da1f56e6c58c0f02a5a556146b3aadb678d082f89e988bd874ed11d",
+    "separate_passphrase": true
+  },
+  "worker_pin_updated_by_operator_from_trusted_transition": true,
+  "old_both_bundle_links_returned_404": true,
+  "replacement_test_bundles": "Both worker jobs completed; downloaded and independently verified",
+  "production_signing": false,
+  "limitations": [
+    "No active desktop session during rotation; native session termination unqualified",
+    "Only owned Server 2019 endpoint; broader Windows matrix remains open",
+    "Loopback lab HTTPS does not qualify public Internet deployment",
+    "No interrupted activation recovery; restored native transport/session behavior remains unqualified"
+  ],
+  "replacement_bundle_verification": [
+    {
+      "edition": "customer",
+      "bundle_sha256": "89e7d0989d00a97bad4ae4560ca7a24c70e9ce3ebba30ca6f918dcdfa0461dd7",
+      "bytes": 32508756,
+      "public_bootstrap_only": true,
+      "profile_and_release_signatures_verified": true,
+      "tamper_rejection_verified": true,
+      "seven_source_texts_exact": true,
+      "signed_payload_hashes_verified": true,
+      "anonymous_status": 200,
+      "download_status": 200
+    },
+    {
+      "edition": "technician",
+      "bundle_sha256": "2cda243b34fb5647eba32851784df6ca90f18cef5963f128fa4cdf533703f4f1",
+      "bytes": 30301813,
+      "public_bootstrap_only": true,
+      "profile_and_release_signatures_verified": true,
+      "tamper_rejection_verified": true,
+      "seven_source_texts_exact": true,
+      "signed_payload_hashes_verified": true,
+      "anonymous_status": 401,
+      "download_status": 200
+    }
+  ],
+  "post_rotation_encrypted_backup": {
+    "utc": "2026-10-26T21:29:37.159260+00:00",
+    "bytes": 125642740,
+    "sha256": "934ed759b19a6fe364c51fe8eaf33f86dda9620122aa26cf918f7828dd95aa0d",
+    "separate_passphrase": true
+  },
+  "rotated_company_restore": {
+    "utc": "2026-10-26T21:30:48.244867+00:00",
+    "restored_https_original_ca_and_hostname": true,
+    "restored_active_signing_key_from_database": true,
+    "legacy_seed_unchanged": true,
+    "profile_revision": 5,
+    "administrator_mfa": true,
+    "device_approval_identity_and_revoked_consent_preserved": true,
+    "replacement_downloads": [
+      {
+        "edition": "customer",
+        "bundle_sha256": "89e7d0989d00a97bad4ae4560ca7a24c70e9ce3ebba30ca6f918dcdfa0461dd7"
+      },
+      {
+        "edition": "technician",
+        "bundle_sha256": "2cda243b34fb5647eba32851784df6ca90f18cef5963f128fa4cdf533703f4f1"
+      }
+    ],
+    "old_downloads_still_withdrawn": true,
+    "no_native_transport_started": true,
+    "native_session_qualified": false
+  },
+  "restored_existing_device_credential": {
+    "company_and_device_identity_match": true,
+    "approval_state": "approved",
+    "existing_customer_credential_authenticated_to_restored_server": true,
+    "utc": "2026-10-26T21:31:15.5723682Z",
+    "original_https_trust_used": true,
+    "credential_value_disclosed": false,
+    "native_session_tested": false,
+    "customer_bootstrap_and_credential_unchanged": true
+  },
+  "recovery_services_stopped": true
+}

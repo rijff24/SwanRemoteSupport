@@ -1,0 +1,103 @@
+{
+  "recorded_utc": "2026-10-30T23:53:55.759298+00:00",
+  "source": "7b60309374389a1b0f8d859f8c164d6cf355353f",
+  "os": "Windows10 Pro x64 build19045",
+  "edition": "customer",
+  "scope": "Installed shipping agent verify-package against a real lab-signed1.5.11 MSI and isolated credential-free state/issuer fixtures",
+  "actual_results": {
+    "isolated_fixture_keys_only": true,
+    "actual_installer_executed": false,
+    "utc": "2026-10-30T23:16:52.9886478Z",
+    "production_publication": false,
+    "agent_sha256": "b74868f18b05d5ff3a90f73d5947ebde6aa832b7a2c61b82546751f8537ca87c",
+    "cases": [
+      {
+        "fixture_state_unchanged": true,
+        "accepted": true,
+        "case": "valid-control",
+        "expected_reason_matched": true
+      },
+      {
+        "fixture_state_unchanged": true,
+        "accepted": false,
+        "case": "tampered-signature",
+        "expected_reason_matched": true
+      },
+      {
+        "fixture_state_unchanged": true,
+        "accepted": false,
+        "case": "signed-replay",
+        "expected_reason_matched": true
+      },
+      {
+        "fixture_state_unchanged": true,
+        "accepted": false,
+        "case": "signed-expired",
+        "expected_reason_matched": true
+      },
+      {
+        "fixture_state_unchanged": true,
+        "accepted": false,
+        "case": "signed-wrong-edition",
+        "expected_reason_matched": true
+      },
+      {
+        "fixture_state_unchanged": true,
+        "accepted": false,
+        "case": "signed-wrong-architecture",
+        "expected_reason_matched": true
+      },
+      {
+        "fixture_state_unchanged": true,
+        "accepted": false,
+        "case": "signed-wrong-channel",
+        "expected_reason_matched": true
+      },
+      {
+        "fixture_state_unchanged": true,
+        "accepted": false,
+        "case": "signed-incompatible-windows",
+        "expected_reason_matched": true
+      },
+      {
+        "fixture_state_unchanged": true,
+        "accepted": false,
+        "case": "signed-wrong-hash",
+        "expected_reason_matched": true
+      },
+      {
+        "fixture_state_unchanged": true,
+        "accepted": false,
+        "case": "signed-wrong-publisher",
+        "expected_reason_matched": true
+      },
+      {
+        "fixture_state_unchanged": true,
+        "accepted": false,
+        "case": "signed-wrong-certificate",
+        "expected_reason_matched": true
+      },
+      {
+        "fixture_state_unchanged": true,
+        "accepted": false,
+        "case": "signed-wrong-msi-version",
+        "expected_reason_matched": true
+      },
+      {
+        "fixture_state_unchanged": true,
+        "accepted": false,
+        "case": "signed-invalid-package",
+        "expected_reason_matched": true
+      }
+    ],
+    "network_update_invoked": false,
+    "installed_durable_state_trust_and_binary_unchanged": true
+  },
+  "invalid_package_case_hash_matched_its_signed_fixture_metadata_before_authenticode_rejection": true,
+  "bounds": [
+    "No MSI installation or network update was invoked. This tests the real package-verification path without claiming live automatic-update rejection or other OS/editions.",
+    "Fixture issuer keys are isolated; the installed company trust was not changed.",
+    "Lab publisher only; production signing remains separate."
+  ],
+  "production_publication": false
+}

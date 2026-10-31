@@ -1,0 +1,59 @@
+{
+  "utc": "2026-10-31T06:08:44.158999+00:00",
+  "source": "58431d9b0d5d3f2b9f0c92f72367bf276c9841da",
+  "version": "1.5.13+81",
+  "first_run": 41165258500,
+  "independent_run": 41169951691,
+  "comparison_run": 41175183194,
+  "comparison_url": "https://github.com/rijff24/SwanRemoteSupport/actions/runs/41175183194",
+  "both_native_builds_and_all_packaging_checks_passed": true,
+  "all_eight_original_shipping_outputs_identical": true,
+  "normalization_applied_to_shipping_files": false,
+  "public_source_files_verified_per_build": 1334,
+  "generated_bridges_per_build": 6,
+  "matching_msvc_input_files_per_build": [
+    618,
+    618
+  ],
+  "first_archive_matches_original_locally_verified_download": true,
+  "second_large_host_download_started": false,
+  "outputs": [
+    {
+      "path": "SwanRemoteSupport-1.5.13-customer-x64-unsigned.msi",
+      "sha256": "19f5da8132d35b5bcc2d34f7f3a6ce00f8957da9e242234672c6396a43f86e9c"
+    },
+    {
+      "path": "SwanRemoteSupport-1.5.13-technician-x64-unsigned.exe",
+      "sha256": "733ee3e4b7bf607d50a07a4a6d8f94dc3a8d7ef8db74fe404b776ba4d281d950"
+    },
+    {
+      "path": "SwanRemoteSupport-1.5.13-technician-x64-unsigned.msi",
+      "sha256": "74f8b0902994808b08dce85b61eb3d3389da3682045d8f8a1260f9e5aa69546a"
+    },
+    {
+      "path": "SwanRemoteSupport-1.5.13-x64-unsigned-install.exe",
+      "sha256": "733ee3e4b7bf607d50a07a4a6d8f94dc3a8d7ef8db74fe404b776ba4d281d950"
+    },
+    {
+      "path": "SwanServerSetup-UNSIGNED-TEST.exe",
+      "sha256": "3f2521331d347c1a5923fb274708386e92f292c9739eceefdaa7cbc991daca35"
+    },
+    {
+      "path": "swan-agent.exe",
+      "sha256": "7bcd945aa4edc6dbd85ffb121bc52c9a928e9fcd2f9fc8849c8f686370d5d7a7"
+    },
+    {
+      "path": "swan-management.exe",
+      "sha256": "8249a0685e70326d3a4c5f666493e0e419a6ce04c21e4011478d459b5ed16d28"
+    },
+    {
+      "path": "swan-worker.exe",
+      "sha256": "79d16d6998285438f07b12b15740be5adc70d9a13d7b7726dfd9586c777aea50"
+    }
+  ],
+  "limits": [
+    "Unsigned original shipping artifacts; lab Authenticode signatures are separate and are not claimed byte-identical",
+    "Reproducibility is not runtime, Windows compatibility, external-connectivity or production-signing qualification"
+  ],
+  "production_publication": false
+}

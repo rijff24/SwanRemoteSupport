@@ -1,0 +1,32 @@
+{
+  "source": "aff8ff61e3fbd6f34c4cf0bb9de6e330ec6e0521",
+  "workflow_run": 40828471470,
+  "artifact": 12880851423,
+  "artifact_digest": "sha256:fc7e6f085fb46a16fc8f9e574db7a3b0ab8741f3d4416cfb15c256d7444d1795",
+  "public_tracked_source_files_verified": 1254,
+  "generated_bridge_files_verified": 6,
+  "source_date_epoch": 1793253592,
+  "all_manifest_hashes_match": true,
+  "pinned_sdk_and_engine_verified": true,
+  "required_job_steps": {
+    "Reject paused support and authorization reuse after resume": "success",
+    "Reject authorization retries and inherited audit destinations": "success",
+    "Reject cross-target and stale-login file-transfer handles": "success",
+    "Verify hardened DLL search supports delayed application libraries": "success",
+    "Build branded client": "success",
+    "Reject incoming capture helpers in the technician edition": "success",
+    "Verify service launcher defers desktop DLL loading": "success",
+    "Verify customer MSI starts a headless native service": "success",
+    "Reject unsigned legacy management policy in managed editions": "success",
+    "Reject upstream updater entry points in managed editions": "success",
+    "Reject system-control packets from view-only managed sessions": "success",
+    "Build unsigned customer and technician MSIs with pinned WiX": "success",
+    "Verify unsigned technician MSI installation repair and uninstall": "success",
+    "Build unsigned company server setup with pinned components": "success"
+  },
+  "executables_run_during_verification": false,
+  "independent_rebuild_of_this_version_completed": false,
+  "runtime_upgrade_of_this_version_completed": false,
+  "worker_contains_legacy_registry_installer_do_not_deploy": true,
+  "production_publication": false
+}

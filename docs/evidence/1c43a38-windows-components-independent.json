@@ -1,0 +1,41 @@
+{
+  "utc": "2026-10-29T09:45:06.534252+00:00",
+  "public_source": "1c43a382c87b05e44caff1c6c2bef4cf0b0bb6fc",
+  "second_actual_build_revision": "71698e4d4ba9a5998f8fac9aafe17717f816723d",
+  "public_tree_equality_verified": true,
+  "runs": [
+    40846044050,
+    40846052027
+  ],
+  "artifacts": [
+    12885946951,
+    12885920784
+  ],
+  "archive_sha256": [
+    "ef2ea7756c6a01cf9a26331326ebc6f12d90428350fdfc24ccd6a3e195c04604",
+    "a1b3f5cc9beaa8e3b89907d76e0dffb69279562050f6f2601f36dd0b1bddf054"
+  ],
+  "public_source_files_verified_per_build": 239,
+  "binaries": {
+    "swan-worker.exe": {
+      "sha256": "5dbf2a0f2048c9831212cc4a0e8b3a6b454330a1035c1aec5ab011103136cde7",
+      "bytes": 4900352,
+      "original_bytes_identical": true
+    },
+    "swan-agent.exe": {
+      "sha256": "9706c97188ffdf878dabfb57e7853c4292caff7c318c9011ce6431220daf7b8c",
+      "bytes": 5756416,
+      "original_bytes_identical": true
+    },
+    "swan-management.exe": {
+      "sha256": "ab29be710b7f546947c3de9fb9f63f1180d0d27ff2157c8446702bd0a280e726",
+      "bytes": 9107968,
+      "original_bytes_identical": true
+    }
+  },
+  "existing_independent_ci_jobs_only": true,
+  "new_build_dispatched": false,
+  "binary_normalization": false,
+  "downloaded_executables_run_for_comparison": false,
+  "production_publication": false
+}

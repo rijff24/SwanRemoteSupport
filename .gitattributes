@@ -1,1 +1,6 @@
 * text=auto
+deployment/transport/** text eol=lf
+deployment/windows/flutter-engine* text eol=lf
+deployment/windows/Build-FlutterEngine.ps1 text eol=lf
+deployment/windows/Install-FlutterEngineToolchain.ps1 text eol=lf
+.github/workflows/swan-flutter-engine.yml text eol=lf

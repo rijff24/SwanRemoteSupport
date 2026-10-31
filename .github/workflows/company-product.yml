@@ -1,0 +1,267 @@
+name: Company product components
+on:
+  workflow_dispatch:
+    inputs:
+      technician_msi_only:
+        description: Test the pinned unsigned technician MSI on a disposable Windows runner
+        type: boolean
+        default: false
+      technician_msi_os:
+        description: Disposable Windows runner for the MSI lifecycle test
+        type: choice
+        options: [windows-2022, windows-2025]
+        default: windows-2022
+  push:
+    paths: ['product/**', 'deployment/**', 'libs/portable/build.rs', 'libs/portable/resource_order.rs', '.cargo/config.toml', '.dockerignore', '.github/workflows/company-product.yml']
+  pull_request:
+    paths: ['product/**', 'deployment/**', 'libs/portable/build.rs', 'libs/portable/resource_order.rs', '.cargo/config.toml', '.dockerignore', '.github/workflows/company-product.yml']
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'workflow_dispatch' && github.run_id || github.ref }}
+  cancel-in-progress: ${{ github.event_name != 'workflow_dispatch' }}
+jobs:
+  maintained-windows-transport:
+    if: github.event_name != 'workflow_dispatch' || !inputs.technician_msi_only
+    uses: ./.github/workflows/swan-transport.yml
+    with:
+      windows_only: true
+
+  verify:
+    needs: maintained-windows-transport
+    if: github.event_name != 'workflow_dispatch' || !inputs.technician_msi_only
+    strategy:
+      matrix:
+        os: [ubuntu-24.04, windows-2022]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - name: Install pinned Rust
+        run: rustup toolchain install 1.90.0 --profile minimal
+      - name: Reject randomized portable resource metadata ordering
+        shell: bash
+        run: |
+          rustc +1.90.0 --edition 2021 --test libs/portable/resource_order.rs -o "$RUNNER_TEMP/portable-resource-tests.exe"
+          "$RUNNER_TEMP/portable-resource-tests.exe"
+      - name: Preserve company component source inputs
+        shell: bash
+        run: |
+          python -m unittest discover -s deployment/windows -p test_build_source.py
+          python -m unittest discover -s deployment/windows -p test_customer_msi.py
+          mkdir -p component-artifacts
+          python deployment/windows/archive-build-source.py . component-artifacts/CompanyComponents-source.zip --components-only
+      - name: Reject mismatched maintained Windows binaries and corresponding source
+        shell: bash
+        run: python -m unittest discover -s deployment/transport -p test_windows_components.py
+      - name: Test security and management
+        run: cargo +1.90.0 test --manifest-path product/Cargo.toml --workspace --locked
+      - name: Verify real HTTPS update streaming and interrupted download recovery
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          ./deployment/windows/test_update_download.ps1 -OutputDirectory "${{ runner.temp }}/swan-update-download-test"
+          Copy-Item -LiteralPath "${{ runner.temp }}/swan-update-download-test/verified.json" -Destination component-artifacts/update-download-https.json
+      - name: Restore an incompressible backup above the former 512 MiB limit
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo +1.90.0 test --manifest-path product/Cargo.toml --locked -p swan-management backup::stream::tests::backup_above_previous_limit_preserves_incompressible_artifact -- --exact --ignored 2>&1 | tee component-artifacts/large-backup-tests.log
+          grep -F 'test result: ok. 1 passed; 0 failed;' component-artifacts/large-backup-tests.log
+      - name: Verify installation status escaping and sign-out isolation
+        run: node deployment/web/test-installation-status.js
+      - name: Verify first-run branding and policy form contracts
+        run: node deployment/web/test-company-setup.js
+      - name: Verify bounded pinned archive retries and integrity rejection
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File ./deployment/windows/test_pinned_archive.ps1
+          if ($LASTEXITCODE -ne 0) { throw 'Pinned download retry and integrity checks failed.' }
+      - name: Build components
+        run: cargo +1.90.0 build --manifest-path product/Cargo.toml --workspace --release --locked
+      - name: Verify compiled worker private configuration and registry downgrade rejection
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+            powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File ./deployment/windows/test_worker_configuration.ps1 -WorkerExecutable ./product/target/release/swan-worker.exe -ResultPath ./component-artifacts/worker-private-configuration.json
+      - name: Verify the real backup CLI above 512 MiB with bounded address space
+        if: runner.os == 'Linux'
+        run: python3 deployment/linux/test_backup_memory.py product/target/release/swan-management component-artifacts/large-backup-cli.json
+      - name: Verify compiled management creates fresh private server state
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File ./deployment/windows/test_server_directory.ps1 -ManagementExe ./product/target/release/swan-management.exe
+          if ($LASTEXITCODE -ne 0) { throw 'Compiled server directory checks failed.' }
+      - name: Verify company server removal ownership and data preservation
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          ./deployment/windows/test_server_removal_plan.ps1
+          powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File ./deployment/windows/test_server_removal_plan.ps1
+          if ($LASTEXITCODE -ne 0) { throw 'Windows PowerShell removal-plan checks failed.' }
+      - name: Verify technician offline launcher and package rejection
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File ./deployment/windows/test_technician_launcher.ps1
+          if ($LASTEXITCODE -ne 0) { throw 'Windows PowerShell technician launcher checks failed.' }
+      - name: Verify uninstall commit and rollback preservation
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File ./deployment/windows/test_uninstall_commit.ps1
+          if ($LASTEXITCODE -ne 0) { throw 'Uninstall commit checks failed.' }
+      - name: Verify private customer state creation and unsafe-state rejection
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File ./deployment/windows/test_customer_directory.ps1 -RequireAdministratorCases
+          if ($LASTEXITCODE -ne 0) { throw 'Customer state directory checks failed.' }
+      - name: Verify company setup entry point and trust rejection
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File ./deployment/windows/test_company_setup_entrypoint.ps1
+          if ($LASTEXITCODE -ne 0) { throw 'Company setup entry-point checks failed.' }
+          powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File ./deployment/windows/test_msi_install_mode.ps1
+          if ($LASTEXITCODE -ne 0) { throw 'MSI version preflight checks failed.' }
+          powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File ./deployment/windows/test_company_watch_recovery.ps1
+          if ($LASTEXITCODE -ne 0) { throw 'Company configuration watcher recovery checks failed.' }
+          powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File ./deployment/windows/test_update_recovery_task.ps1
+          if ($LASTEXITCODE -ne 0) { throw 'Update recovery task ownership and lifecycle checks failed.' }
+      - name: Render the Windows setup wizard without installation
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          powershell.exe -NoProfile -NonInteractive -STA -ExecutionPolicy Bypass -File ./deployment/windows/Setup-Server.ps1 -RenderPreview "$env:RUNNER_TEMP/server-setup-preview.png"
+          if ($LASTEXITCODE -ne 0) { throw 'Server setup preview failed.' }
+      - name: Restore maintained Windows transport and corresponding source
+        if: runner.os == 'Windows'
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: swan-transport-candidate-windows-2022
+          path: ${{ runner.temp }}/server-maintained-transport
+
+      - name: Verify unsigned server setup reproducibility with pinned compiler
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $pins = Get-Content deployment/windows/server-components.json -Raw | ConvertFrom-Json
+          $compiler = Get-Content deployment/windows/server-compiler.json -Raw | ConvertFrom-Json
+          $references = Get-Content deployment/windows/server-references.json -Raw | ConvertFrom-Json
+          $https = Join-Path $env:RUNNER_TEMP 'server-repro-https.zip'
+          $toolset = Join-Path $env:RUNNER_TEMP 'server-repro-roslyn.nupkg'
+          $framework = Join-Path $env:RUNNER_TEMP 'server-repro-framework.nupkg'
+          $powershell = Join-Path $env:RUNNER_TEMP 'server-repro-powershell.nupkg'
+          ./deployment/windows/Get-PinnedArchive.ps1 -Uri $pins.https.url -Sha256 $pins.https.sha256 -Output $https | Out-Null
+          ./deployment/windows/Get-PinnedArchive.ps1 -Uri $compiler.url -Sha256 $compiler.sha256 -Output $toolset | Out-Null
+          ./deployment/windows/Get-PinnedArchive.ps1 -Uri $references.framework.url -Sha256 $references.framework.sha256 -Output $framework | Out-Null
+          ./deployment/windows/Get-PinnedArchive.ps1 -Uri $references.powershell.url -Sha256 $references.powershell.sha256 -Output $powershell | Out-Null
+          $components = Join-Path $env:RUNNER_TEMP 'server-repro-components'
+          ./deployment/windows/Prepare-ServerComponents.ps1 -TransportDirectory (Join-Path $env:RUNNER_TEMP 'server-maintained-transport') -HttpsPackage $https -OutputDirectory $components
+          $evidence = Join-Path $env:RUNNER_TEMP 'server-repro-evidence'
+          ./deployment/windows/test_server_setup_reproducibility.ps1 -ManagementExecutable product/target/release/swan-management.exe -ComponentsDirectory $components -CompilerPackage $toolset -FrameworkReferencesPackage $framework -PowerShellReferencesPackage $powershell -WorkDirectory $evidence
+          Copy-Item -LiteralPath (Join-Path $evidence 'result.json') -Destination component-artifacts/server-setup-repro.json
+          Copy-Item -LiteralPath (Join-Path $evidence 'packaged-preview.png') -Destination component-artifacts/server-setup-packaged-preview.png
+
+      - name: Record unsigned component hashes and build provenance
+        shell: bash
+        run: |
+          python - <<'PY'
+          import hashlib, json, os, pathlib, shutil, subprocess
+          root = pathlib.Path('component-artifacts')
+          suffix = '.exe' if os.name == 'nt' else ''
+          hashes = {}
+          for name in ('swan-management', 'swan-agent', 'swan-worker'):
+              source = pathlib.Path('product/target/release') / (name + suffix)
+              destination = root / source.name
+              shutil.copyfile(source, destination)
+              hashes[destination.name] = hashlib.sha256(destination.read_bytes()).hexdigest()
+          hashes['CompanyComponents-source.zip'] = hashlib.sha256((root / 'CompanyComponents-source.zip').read_bytes()).hexdigest()
+          record = {'schema': 1, 'source': os.environ['GITHUB_SHA'], 'repository': os.environ['GITHUB_REPOSITORY'],
+                    'rustc': subprocess.check_output(['rustc', '+1.90.0', '-Vv'], text=True),
+                    'unsigned_test_inputs': True, 'production_approved': False, 'sha256': hashes}
+          (root / 'SOURCE.json').write_text(json.dumps(record, indent=2), encoding='utf-8')
+          PY
+      - name: Upload unsigned company component test inputs and corresponding source
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: CompanyComponents-${{ matrix.os }}-UNSIGNED-TEST
+          path: component-artifacts/
+          if-no-files-found: error
+  linux-deployment:
+    if: github.event_name != 'workflow_dispatch' || !inputs.technician_msi_only
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - name: Verify bounded pinned image pulls without retrying unknown download state
+        run: python3 -m unittest discover -s deployment/linux -p test_pinned_images.py
+      - name: Verify private files cannot enter the Docker build context
+        run: python3 deployment/linux/test_build_context.py
+      - name: Build the company management image
+        run: docker build --file deployment/linux/Dockerfile --tag swan-management:test .
+      - name: Exercise fresh company setup and persistence in the deployment image
+        run: python3 deployment/linux/test_container_startup.py swan-management:test
+      - name: Rehearse pinned HTTPS and transport components with an isolated test CA
+        run: python3 deployment/linux/test_container_stack.py swan-management:test
+      - name: Build maintained transport from pinned public source with corresponding source
+        run: docker build --file deployment/transport/Dockerfile --tag swan-transport:maintained-test .
+      - name: Preserve maintained Linux transport binaries and exact patched source
+        run: python3 deployment/linux/export_transport_candidate.py transport-artifacts
+      - name: Rehearse maintained transport with HTTPS, enrollment and complete backup recovery
+        run: python3 deployment/linux/test_container_stack.py swan-management:test --maintained-transport
+      - name: Retain unsigned Linux transport candidate and source
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: MaintainedTransport-Linux-x64-UNSIGNED-TEST
+          path: transport-artifacts/
+          if-no-files-found: error
+  technician-msi-lifecycle:
+    if: github.event_name == 'workflow_dispatch' && inputs.technician_msi_only
+    runs-on: ${{ inputs.technician_msi_os || 'windows-2022' }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - name: Verify the pinned completed unsigned build
+        uses: actions/github-script@d7906e4ad0b1822421a7e6a35d5ca353c962f410 # v6
+        with:
+          script: |
+            const run = await github.rest.actions.getWorkflowRun({owner: context.repo.owner, repo: context.repo.repo, run_id: 37110881152});
+            if (run.data.conclusion !== 'success' || run.data.head_sha !== 'c7d118c4b655d401c14fd95672ae2aff3b5ed679') {
+              throw new Error('Pinned native build provenance failed');
+            }
+      - name: Download the pinned unsigned build inputs
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: SwanRemoteSupport-1.5.0-x64-unsigned
+          run-id: 37110881152
+          github-token: ${{ github.token }}
+          path: artifacts
+      - name: Verify payload hashes before MSI execution
+        shell: pwsh
+        run: |
+          $expected = @{}
+          foreach ($line in Get-Content artifacts/SHA256SUMS.txt) {
+            if ($line -match '^([a-f0-9]{64})\s+\*?(.+)$') {
+              if ($expected.ContainsKey($Matches[2])) { throw 'Duplicate artifact checksum.' }
+              $expected[$Matches[2]] = $Matches[1]
+            }
+          }
+          # This older build's checksum list covers installers only. Pin its
+          # agent hash from the independently verified GitHub artifact archive.
+          $expected['swan-agent.exe'] = 'c54da22a3d70f337d8a28ffb940549dbedfa303503a552b92d30b5a536d2ce26'
+          foreach ($name in @('SwanRemoteSupport-1.5.0-technician-x64-unsigned.msi','SwanRemoteSupport-1.5.0-technician-x64-unsigned.exe','swan-agent.exe')) {
+            if (-not $expected.ContainsKey($name) -or (Get-FileHash -LiteralPath (Join-Path artifacts $name) -Algorithm SHA256).Hash.ToLowerInvariant() -ne $expected[$name]) { throw 'Pinned MSI payload checksum failed.' }
+          }
+      - name: Test unsigned MSI install repair and uninstall
+        shell: pwsh
+        run: ./deployment/windows/test_technician_msi_lifecycle.ps1 -Package artifacts/SwanRemoteSupport-1.5.0-technician-x64-unsigned.msi -TechnicianExecutable artifacts/SwanRemoteSupport-1.5.0-technician-x64-unsigned.exe -AgentExecutable artifacts/swan-agent.exe
+      - name: Preserve MSI lifecycle evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: technician-msi-lifecycle-${{ inputs.technician_msi_os || 'windows-2022' }}
+          if-no-files-found: ignore
+          path: ${{ runner.temp }}/swan-msi-lifecycle-*/**

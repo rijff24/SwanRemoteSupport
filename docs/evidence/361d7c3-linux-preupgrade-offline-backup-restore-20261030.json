@@ -1,0 +1,42 @@
+{
+  "utc": "2026-10-30T01:54:36.762486+00:00",
+  "management_source": "361d7c362de7f67b7b7456d33bf0191736eec7d5",
+  "scope": "Original Linux company at source67 schema2 / signed profile14, with source361 backup/restore CLI. Offline restore only; live management upgrade, schema3 startup and migration rollback not yet qualified.",
+  "lab_image": "sha256:e273bd77169fa37ca947128f557957e2b2a0aaea1f72116de174ec11d61c6d24",
+  "builder": {
+    "cached_toolchain_image": "sha256:e279ac3bf9680e4a088ff251fae96da5dfe4b026ccd81a7bd6f1eb233e7d9e6e",
+    "rust_version": "1.90.0",
+    "offline_compile": true,
+    "pinned_canonical_runtime_retained": true,
+    "canonical_production_docker_reproduction": false,
+    "public_git_source_context_sha256": "d8a4ebf49579f32ccfcd809ee0058c613cf6e44050f9e569d081f0945a52864c",
+    "derived_lab_recipe_context_sha256": "b103eb4df8be5bd76bc8d64420f9255645cff2e00f12489f9c096550ccfaf73a"
+  },
+  "encrypted_backup": {
+    "format": "SWANBK2",
+    "bytes": 661268962,
+    "sha256": "9e0fe6e98da0d75db5cbc370f2fe7bb15a38290cf83be8546f28d62abde04632",
+    "private_passphrase_kept_separately": true
+  },
+  "same_original_four_containers_and_images_restarted": true,
+  "original_https_trust_profile_revision_and_paused_policy_preserved": true,
+  "wrong_password_rejected_before_destination": true,
+  "authenticated_stream_restore_succeeded": true,
+  "management_and_transport_sqlite_headers_valid": true,
+  "profile_key_setup_token_transport_keys_match": true,
+  "actual_proxy_recipe_and_deployment_settings_match": true,
+  "all_generated_installer_files_match": true,
+  "installer_file_count": 21,
+  "all_tls_key_and_certificate_files_match": true,
+  "tls_identity_file_count": 6,
+  "plaintext_private_keys_not_exported_to_host": true,
+  "restored_server_not_started_or_exposed": true,
+  "live_restore_schema_migration_rollback_pending": true,
+  "limits": [
+    "The restored data has not yet served management or native clients.",
+    "External project-release mirror assets remain in their existing lab bind mount; different-host disaster recovery is not qualified.",
+    "The cached lab compiler recipe is recorded separately from canonical production Docker image reproduction."
+  ],
+  "production_publication": false,
+  "full_product_acceptance_complete": false
+}

@@ -1,0 +1,125 @@
+{
+  "source": "da0c621845057bed321a98a1886ef15891e431a9",
+  "passed": true,
+  "edition": "technician",
+  "package_sha256": "9e339a4140c204846c7b51c33068da9502593fcdd79e6351691426d7fe1319e3",
+  "administrative": true,
+  "phases": [
+    {
+      "passed": true,
+      "exit_code": 0,
+      "missing_file_repair": false,
+      "log_sha256": "22ad4b9077121512bfb17f2a04d7c3f3a5046e1557508fc20ca5dce8ae0b7d74",
+      "phase": "install",
+      "result_sha256": "c3cc04868e9f9c300855b34a23d09688039ffbd3dfe93b89d4679773b6c79b48"
+    },
+    {
+      "passed": true,
+      "exit_code": 0,
+      "missing_file_repair": true,
+      "log_sha256": "ddf11ca5d4eaa339d4dd2823670d9c7a0918a999e042e4771c52579d3243791f",
+      "phase": "repair",
+      "result_sha256": "9cbcae649a1b7ad13b8230dcd48172ff7f7395beab3e150b972e8b89782cbfe4"
+    },
+    {
+      "passed": true,
+      "exit_code": 0,
+      "missing_file_repair": false,
+      "log_sha256": "3f3c061e560ecc892f1af2a196eb960c46636b3bf50640986edf9bdb987a8839",
+      "phase": "uninstall",
+      "result_sha256": "6ec0bd3c5f6292aaf8534cd2d8aac50eeb03bea40069275ef083b2c6a1b02895"
+    }
+  ],
+  "os": {
+    "Caption": "Microsoft Windows 10 Pro",
+    "Version": "10.0.19045",
+    "BuildNumber": "19045",
+    "OSArchitecture": "64-bit",
+    "revision": 3803
+  },
+  "original_evidence_records": [
+    {
+      "sha256": "ae351e031665c51db38c81fdd77f3eb3d68709db1b512ce33ca3de61b43d7679",
+      "name": "transfer-manifest.json",
+      "bytes": 577
+    },
+    {
+      "sha256": "f0c9f7e509f442040b220f14e5ba906413ac04ea6fc2d20f1f1b4a2dba46701f",
+      "name": "Run-Lifecycle.ps1",
+      "bytes": 4345
+    },
+    {
+      "sha256": "4a3e98464044e3511a38c6f917f01f63ff43c2b41253d52e0819bde22c313384",
+      "name": "Test-DisposableMsi.ps1",
+      "bytes": 11239
+    },
+    {
+      "sha256": "64b7144b38c8b963b98cbb96f9964395c9413ce1a1b614d10fd0d57484f7619e",
+      "name": "Get-MsiIdentity.ps1",
+      "bytes": 1035
+    },
+    {
+      "sha256": "845e8355e969b95b38b6ea83f4b89103fdc541aa088d95e2602f0d23005aa8ea",
+      "name": "Get-WindowsCompatibility.ps1",
+      "bytes": 1202
+    },
+    {
+      "sha256": "e866ce520416b1ef59b005508a95a16b017866d1bcad63560d0c44de356eb600",
+      "name": "lifecycle-started.json",
+      "bytes": 731
+    },
+    {
+      "sha256": "c345c8119de80464276249521a8a6221aa9cd34f5e6708df4ed7f19825fd271f",
+      "name": "lifecycle-result.json",
+      "bytes": 1942
+    },
+    {
+      "sha256": "daa42ba4f8c6d4c65598c23dcf6f257f5e8af8f00134d2170762689e611b7834",
+      "name": "trust-preflight.json",
+      "bytes": 748
+    },
+    {
+      "sha256": "c3cc04868e9f9c300855b34a23d09688039ffbd3dfe93b89d4679773b6c79b48",
+      "name": "results/install/result.json",
+      "bytes": 1241
+    },
+    {
+      "sha256": "22ad4b9077121512bfb17f2a04d7c3f3a5046e1557508fc20ca5dce8ae0b7d74",
+      "name": "results/install/msi.log",
+      "bytes": 131154
+    },
+    {
+      "sha256": "9cbcae649a1b7ad13b8230dcd48172ff7f7395beab3e150b972e8b89782cbfe4",
+      "name": "results/repair/result.json",
+      "bytes": 1239
+    },
+    {
+      "sha256": "ddf11ca5d4eaa339d4dd2823670d9c7a0918a999e042e4771c52579d3243791f",
+      "name": "results/repair/msi.log",
+      "bytes": 102804
+    },
+    {
+      "sha256": "6ec0bd3c5f6292aaf8534cd2d8aac50eeb03bea40069275ef083b2c6a1b02895",
+      "name": "results/uninstall/result.json",
+      "bytes": 1243
+    },
+    {
+      "sha256": "3f3c061e560ecc892f1af2a196eb960c46636b3bf50640986edf9bdb987a8839",
+      "name": "results/uninstall/msi.log",
+      "bytes": 83212
+    }
+  ],
+  "scope": "Raw lab-signed technician MSI first application context on newly created standard Windows10 Pro VM, in an administrator SSH child test process; original certificate-cmdlet and restricted-script preflight failures were retained and occurred before MSI; administrative install, missing-executable repair and uninstall. Not standard-user, login, sessions, software-version upgrade or approved automatic updates.",
+  "full_product_acceptance": false,
+  "lab_signed_only": true,
+  "production_publication": false,
+  "clean_vm": true,
+  "os_media": "Standard Microsoft Windows 10 22H2 x64; no activation bypass or licensed evaluation claim",
+  "certificate_sha256": "d5d4567bf67622ae8bda75e22db7b72b278c0eaa58450427bf8bf0e0bba3f94e",
+  "permanent_execution_policies_changed": false,
+  "retained_preflight_failures": [
+    "Import-Certificate returned access denied before MSI. A separate query proved a full RID-500 administrator token; exact public certificate trust was then verified through X509Store. Original cause is unproven.",
+    "Default script restriction prevented the wrapper from starting MSI. The actual test ran in one child PowerShell process with explicit process-only execution policy.",
+    "The first evidence helper transfer timed out. Original results were subsequently collected without uploading a helper and all 14 records matched their guest hashes."
+  ]
+}

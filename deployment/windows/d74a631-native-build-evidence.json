@@ -1,0 +1,24 @@
+{
+  "source": "d74a63143e98de70676ac6e09864183ee52a2963",
+  "workflow_run": 40398269765,
+  "artifact": 12693280053,
+  "artifact_digest": "sha256:fcebe69a9541660b8515da6287c1c453663236f2096abe4bbf69b6a43e2f04ad",
+  "all_manifest_hashes_match": true,
+  "native_managed_updater_regression_passed": true,
+  "required_steps": {
+    "Build branded client": "success",
+    "Reject unsigned legacy management policy in managed editions": "success",
+    "Reject upstream updater entry points in managed editions": "success",
+    "Reject system-control packets from view-only managed sessions": "success",
+    "Build unsigned customer and technician MSIs with pinned WiX": "success",
+    "Verify unsigned technician MSI installation repair and uninstall": "success",
+    "Build unsigned company server setup with pinned components": "success"
+  },
+  "public_tracked_source_files_verified": 1186,
+  "generated_bridge_files_verified": 6,
+  "independent_rebuild_run": 40410425646,
+  "independent_rebuild_conclusion": "failed before native compilation: old Flutter installer selected latest stable and wrong SDK path; engine guard rejected it",
+  "independent_byte_reproduction_verified": false,
+  "runtime_upgrade_qualified": false,
+  "production_publication": false
+}

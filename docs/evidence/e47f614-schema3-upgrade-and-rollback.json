@@ -1,0 +1,25 @@
+{
+  "date": "2026-10-29",
+  "new_management_source": "e47f6141a6a4d6b28891face236f8266c09c975a",
+  "old_management_source": "67b5c69ca62feadf7ecf57d835a79c3d2da19dd2",
+  "scope": "Separate writable copy of a previously restored complete Linux lab company; original company and transport unchanged",
+  "passed": [
+    "Missing private backup passphrase prevents schema2 upgrade; database remains schema2 and no backup is published",
+    "Actual schema2-to3 upgrade creates one encrypted SWANBK2 pre-upgrade archive",
+    "Upgraded schema3 server accepts an authenticated installation report over verified HTTPS",
+    "Old server refuses upgraded schema3 instead of silently downgrading it",
+    "New restorer decrypts the pre-upgrade archive into separate storage with schema2",
+    "Old server serves that restored schema2 through the original HTTPS trust",
+    "Active profile key, branding, policy, five approved devices, disabled unattended consent, group permissions and release approvals match the original company",
+    "Fresh administrator MFA and logout work after rollback",
+    "Post-backup login correctly returns401 after restoration",
+    "All copied services stopped; storage retained; original company remains healthy"
+  ],
+  "test_correction": "An initial assertion incorrectly expected a login created after the pre-upgrade backup to survive restoration. The server rejected it with401. Continuation used fresh MFA and verified the recovered company against the original.",
+  "limits": [
+    "Linux debug migration binary, not a Windows service migration test",
+    "No cloned native transport or endpoint session started",
+    "Backup restoration does not merge post-backup revocations, consent, reports or other changes; reconcile these before exposing a restored deployment"
+  ],
+  "production_qualified": false
+}

@@ -1,0 +1,184 @@
+{
+  "utc": "2026-10-29T22:56:36.562797+00:00",
+  "component_source_head": "361d7c362de7f67b7b7456d33bf0191736eec7d5",
+  "run_metadata": {
+    "40930580611": {
+      "id": 40930580611,
+      "event": "push",
+      "head_sha": "361d7c362de7f67b7b7456d33bf0191736eec7d5",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/rijff24/SwanRemoteSupport/actions/runs/40930580611",
+      "jobs": [
+        {
+          "name": "linux-deployment",
+          "id": 123647616688,
+          "conclusion": "success"
+        },
+        {
+          "name": "maintained-windows-transport / transport (windows-2022)",
+          "id": 123647617319,
+          "conclusion": "success"
+        },
+        {
+          "name": "technician-msi-lifecycle",
+          "id": 123647618746,
+          "conclusion": "skipped"
+        },
+        {
+          "name": "verify (windows-2022)",
+          "id": 123652448502,
+          "conclusion": "success"
+        },
+        {
+          "name": "verify (ubuntu-24.04)",
+          "id": 123652448694,
+          "conclusion": "success"
+        }
+      ]
+    },
+    "40930590508": {
+      "id": 40930590508,
+      "event": "pull_request",
+      "head_sha": "361d7c362de7f67b7b7456d33bf0191736eec7d5",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/rijff24/SwanRemoteSupport/actions/runs/40930590508",
+      "jobs": [
+        {
+          "name": "linux-deployment",
+          "id": 123647648907,
+          "conclusion": "success"
+        },
+        {
+          "name": "maintained-windows-transport / transport (windows-2022)",
+          "id": 123647649713,
+          "conclusion": "success"
+        },
+        {
+          "name": "technician-msi-lifecycle",
+          "id": 123647652043,
+          "conclusion": "skipped"
+        },
+        {
+          "name": "verify (ubuntu-24.04)",
+          "id": 123653092178,
+          "conclusion": "success"
+        },
+        {
+          "name": "verify (windows-2022)",
+          "id": 123653092286,
+          "conclusion": "success"
+        }
+      ]
+    }
+  },
+  "all_original_binaries_identical": true,
+  "binary_normalization": false,
+  "executables_run_for_comparison": false,
+  "new_build_dispatched": false,
+  "merge_checkout_not_assumed_identical_to_head": true,
+  "production_publication": false,
+  "platforms": {
+    "windows-2022": {
+      "builds": [
+        {
+          "run": 40930580611,
+          "artifact": 12922249929,
+          "archive_sha256": "f46ad102d48fc45d052864e99e4937e4f46bfa623e61173a981aada4fb5e025e",
+          "actual_checkout": "361d7c362de7f67b7b7456d33bf0191736eec7d5",
+          "public_component_source_files_matching_head": 242,
+          "rustc": "rustc 1.90.0 (1159e78c4 2025-09-14)\nbinary: rustc\ncommit-hash: 1159e78c4747b02ef996e55082b704c09b970588\ncommit-date: 2025-09-14\nhost: x86_64-pc-windows-msvc\nrelease: 1.90.0\nLLVM version: 20.1.8\n",
+          "binary_sha256": {
+            "swan-management.exe": "772cb5a490452742d39342e34decc82b3f3be1a2cad1ece6f348ab3972771038",
+            "swan-agent.exe": "9706c97188ffdf878dabfb57e7853c4292caff7c318c9011ce6431220daf7b8c",
+            "swan-worker.exe": "5dbf2a0f2048c9831212cc4a0e8b3a6b454330a1035c1aec5ab011103136cde7"
+          },
+          "checkout_text_conversion_count": 226
+        },
+        {
+          "run": 40930590508,
+          "artifact": 12924331807,
+          "archive_sha256": "9f04d6e8f4814176f0fd208ff775364ce03f87cc4014cf05ed83d029e823e23a",
+          "actual_checkout": "b13de18fd6e984be6d1dfff40e4d8b388127ccc1",
+          "public_component_source_files_matching_head": 242,
+          "rustc": "rustc 1.90.0 (1159e78c4 2025-09-14)\nbinary: rustc\ncommit-hash: 1159e78c4747b02ef996e55082b704c09b970588\ncommit-date: 2025-09-14\nhost: x86_64-pc-windows-msvc\nrelease: 1.90.0\nLLVM version: 20.1.8\n",
+          "binary_sha256": {
+            "swan-management.exe": "772cb5a490452742d39342e34decc82b3f3be1a2cad1ece6f348ab3972771038",
+            "swan-agent.exe": "9706c97188ffdf878dabfb57e7853c4292caff7c318c9011ce6431220daf7b8c",
+            "swan-worker.exe": "5dbf2a0f2048c9831212cc4a0e8b3a6b454330a1035c1aec5ab011103136cde7"
+          },
+          "checkout_text_conversion_count": 226
+        }
+      ],
+      "binaries": {
+        "swan-management.exe": {
+          "sha256": "772cb5a490452742d39342e34decc82b3f3be1a2cad1ece6f348ab3972771038",
+          "bytes": 9130496,
+          "original_bytes_identical": true
+        },
+        "swan-agent.exe": {
+          "sha256": "9706c97188ffdf878dabfb57e7853c4292caff7c318c9011ce6431220daf7b8c",
+          "bytes": 5756416,
+          "original_bytes_identical": true
+        },
+        "swan-worker.exe": {
+          "sha256": "5dbf2a0f2048c9831212cc4a0e8b3a6b454330a1035c1aec5ab011103136cde7",
+          "bytes": 4900352,
+          "original_bytes_identical": true
+        }
+      }
+    },
+    "ubuntu-24.04": {
+      "builds": [
+        {
+          "run": 40930580611,
+          "artifact": 12922848256,
+          "archive_sha256": "4b231b4f44f17a78183c8b8fe0a5ed26b1f1b62a9553810663fb33cca9c83b65",
+          "actual_checkout": "361d7c362de7f67b7b7456d33bf0191736eec7d5",
+          "public_component_source_files_matching_head": 242,
+          "rustc": "rustc 1.90.0 (1159e78c4 2025-09-14)\nbinary: rustc\ncommit-hash: 1159e78c4747b02ef996e55082b704c09b970588\ncommit-date: 2025-09-14\nhost: x86_64-unknown-linux-gnu\nrelease: 1.90.0\nLLVM version: 20.1.8\n",
+          "binary_sha256": {
+            "swan-management": "c47fc7d59e800a02dd2aafb4f9a5bb88e8bbbf7a01b8f3a7fa84f8868e115c9e",
+            "swan-agent": "f25446584efd95075a512481d6a68c47edf18e1c828fd3f862b05389e42c41f6",
+            "swan-worker": "32d5ef7d7d60883d5ae40a7d4d0ff0a93f07c1d79dfdc1a54bbd3e20d0fe1836"
+          },
+          "checkout_text_conversion_count": 0
+        },
+        {
+          "run": 40930590508,
+          "artifact": 12922289926,
+          "archive_sha256": "929f6b33ef2e2c28acd7eb03066087606fb328c4ec32a7322d23da7a19552b8b",
+          "actual_checkout": "b13de18fd6e984be6d1dfff40e4d8b388127ccc1",
+          "public_component_source_files_matching_head": 242,
+          "rustc": "rustc 1.90.0 (1159e78c4 2025-09-14)\nbinary: rustc\ncommit-hash: 1159e78c4747b02ef996e55082b704c09b970588\ncommit-date: 2025-09-14\nhost: x86_64-unknown-linux-gnu\nrelease: 1.90.0\nLLVM version: 20.1.8\n",
+          "binary_sha256": {
+            "swan-management": "c47fc7d59e800a02dd2aafb4f9a5bb88e8bbbf7a01b8f3a7fa84f8868e115c9e",
+            "swan-agent": "f25446584efd95075a512481d6a68c47edf18e1c828fd3f862b05389e42c41f6",
+            "swan-worker": "32d5ef7d7d60883d5ae40a7d4d0ff0a93f07c1d79dfdc1a54bbd3e20d0fe1836"
+          },
+          "checkout_text_conversion_count": 0
+        }
+      ],
+      "binaries": {
+        "swan-management": {
+          "sha256": "c47fc7d59e800a02dd2aafb4f9a5bb88e8bbbf7a01b8f3a7fa84f8868e115c9e",
+          "bytes": 10841240,
+          "original_bytes_identical": true
+        },
+        "swan-agent": {
+          "sha256": "f25446584efd95075a512481d6a68c47edf18e1c828fd3f862b05389e42c41f6",
+          "bytes": 6262616,
+          "original_bytes_identical": true
+        },
+        "swan-worker": {
+          "sha256": "32d5ef7d7d60883d5ae40a7d4d0ff0a93f07c1d79dfdc1a54bbd3e20d0fe1836",
+          "bytes": 5768032,
+          "original_bytes_identical": true
+        }
+      }
+    }
+  },
+  "scope": "Product management/agent/worker components only. Every preserved component source input matches the stated head; the PR checkout is a separate public merge commit. Native Flutter apps, engine outputs and MSI/EXE packages are outside this comparison.",
+  "all_six_original_component_outputs_identical": true
+}

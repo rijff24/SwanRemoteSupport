@@ -1,0 +1,30 @@
+{
+  "date": "2026-10-26",
+  "source_revision": "761b5c56cca8cd7eecb65d3438de0d6f0075bd4e",
+  "tracked_source_archive_sha256": "af80b7e34db21d642907bdc30b17d884f7617dbe0387bbb3d5a051b3c20d831e",
+  "management_image_build_exit": 0,
+  "cargo_build_jobs": 2,
+  "fresh_independent_company": true,
+  "existing_company_keys_copied": false,
+  "host_published_ports_loopback_only": true,
+  "verified": {
+    "https_certificate_and_hostname": true,
+    "host_default_trust_rejects_lab_ca": true,
+    "signed_profile_and_custom_branding": true,
+    "administrator_totp_login": true,
+    "invalid_totp_rejected": true,
+    "totp_replay_rejected": true,
+    "fresh_inventory_empty": true,
+    "anonymous_inventory_denied": true,
+    "protected_worker_registration": true,
+    "anonymous_worker_inventory_denied": true,
+    "logged_out_token_denied": true
+  },
+  "limitations": [
+    "An internal lab HTTPS issuer was trusted explicitly by the test connection only. Public ACME and Internet reachability remain untested.",
+    "New lab-only accounts, company keys and release issuer are isolated from the preserved existing company. Private inputs stay outside Git.",
+    "This verifies the Linux stack and management API; Windows server setup and full Windows restore remain separate requirements.",
+    "A Windows worker has not yet consumed the new credential. Company package generation, native enrollment, sessions and automatic rollout remain unqualified for this company."
+  ],
+  "full_product_acceptance": false
+}

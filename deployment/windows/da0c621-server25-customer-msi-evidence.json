@@ -1,0 +1,134 @@
+{
+  "source": "da0c621845057bed321a98a1886ef15891e431a9",
+  "package_sha256": "c53626be8ed32f4678d1c7cc1a4b88ca53a07a86f94d36e94b61e68d5f9f06a2",
+  "passed": true,
+  "phases": [
+    {
+      "phase": "install",
+      "exit_code": 0
+    },
+    {
+      "phase": "repair",
+      "exit_code": 0
+    },
+    {
+      "phase": "uninstall",
+      "exit_code": 0
+    }
+  ],
+  "actual_reboot_verified": true,
+  "service_automatically_restarted": true,
+  "installed_manifest_files": 96,
+  "os": {
+    "Caption": "Microsoft Windows Server 2025 Standard Evaluation",
+    "Version": "10.0.26100",
+    "BuildNumber": "26100",
+    "OSArchitecture": "64-bit",
+    "revision": 32230
+  },
+  "original_evidence_records": [
+    {
+      "sha256": "6ab1ac12187ea87007a43efeead92a9329a77723d738b3939e11f3d50092ef52",
+      "name": "fresh-before-install.json",
+      "bytes": 347
+    },
+    {
+      "sha256": "a867e0ac76a19a4f9f959c468ff4afddc7b45eefceb94f1a571ef65221e9383f",
+      "name": "transfer-manifest.json",
+      "bytes": 779
+    },
+    {
+      "sha256": "076cb43c0ee9b9a42289046606381f3bf67d6c0bc0aea37195889baf4e78e12e",
+      "name": "Run-InstallRepair.ps1",
+      "bytes": 4756
+    },
+    {
+      "sha256": "ace4af7c97cbd0c6ebcbba3d80d6c3787a4a9dd82e07fd2090bb5f2a207c97c5",
+      "name": "Verify-RebootUninstall-Utc.ps1",
+      "bytes": 3991
+    },
+    {
+      "sha256": "10cacf2be9e211dad0f9166114f159e1fb6b4d6f21144c420e676dae515c61b1",
+      "name": "installed-files.json",
+      "bytes": 14349
+    },
+    {
+      "sha256": "3eb22aac15264b3b551d3dad3cdd85c45063d9a0cab67919758f758d7c395eff",
+      "name": "lifecycle-started.json",
+      "bytes": 733
+    },
+    {
+      "sha256": "c3e90634c8814705f8719b9ab5020492b2d305a59da754ce745ca9bb5bf88406",
+      "name": "pre-reboot-boot.json",
+      "bytes": 55
+    },
+    {
+      "sha256": "3952c089bfc6df0f98ca691e291ef1bf7e5906ea9c3a6a76ba5746aa4cae381d",
+      "name": "pre-reboot-lifecycle.json",
+      "bytes": 1548
+    },
+    {
+      "sha256": "d51d19583e6b6e2706f020090a52521ce75bf0fc709be8872160bc29a116063c",
+      "name": "reboot-request.json",
+      "bytes": 256
+    },
+    {
+      "sha256": "a0d0226fe33efcf27d444cf168d54cd3bae9c2298feb7a7a967568e128bed398",
+      "name": "reboot-verification.json",
+      "bytes": 278
+    },
+    {
+      "sha256": "a3cac8b796328c72e2bf6e65572523967e2db3d1567290fc016a7edd51355662",
+      "name": "post-reboot-service-original.json",
+      "bytes": 228
+    },
+    {
+      "sha256": "946ea8354bc9d82c15fa8bcf6803ab11c76b3c13333651c48cebaad449e79fef",
+      "name": "post-reboot-lifecycle.json",
+      "bytes": 507
+    },
+    {
+      "sha256": "1dd25500820e4c45da54284afec6e0cb62bea48d0b47806be08a409baa881dc8",
+      "name": "results/install/result.json",
+      "bytes": 1266
+    },
+    {
+      "sha256": "f012f39618fec973c443caa5423debc5aa74ffe1ce6d6ef616660032e676dddc",
+      "name": "results/install/msi.log",
+      "bytes": 355808
+    },
+    {
+      "sha256": "8bb62df50036772c33500c71e1594abc90e60a9a60e62300cdfbb8be0306d912",
+      "name": "results/repair/result.json",
+      "bytes": 1265
+    },
+    {
+      "sha256": "1c6e5b130761cf33606971c49cb04e3f5067c29f2a51b3a1bda2cb0cc492e80a",
+      "name": "results/repair/msi.log",
+      "bytes": 403734
+    },
+    {
+      "sha256": "c8d2d79a56937b143a254f2741827706c06623333ce05560ae705d9467b155e0",
+      "name": "results/uninstall/result.json",
+      "bytes": 1268
+    },
+    {
+      "sha256": "67db7989812e2f85b5fcab780176124fde581d145818e4978423e0e688f65708",
+      "name": "results/uninstall/msi.log",
+      "bytes": 272270
+    }
+  ],
+  "full_product_acceptance": false,
+  "logon_context": "Local administrator S4U tasks, highest privileges, session 0; no account password supplied to task registration",
+  "fresh_machine_scope": "New Server 2025 Standard Evaluation Desktop Experience VM; product registrations absent before the test sequence; technician lifecycle completed before customer testing",
+  "lab_signatures_only": true,
+  "post_reboot_task_disabled_after_one_run": true,
+  "automatic_service_identity": "LocalSystem",
+  "service_started_manually": false,
+  "limitations": [
+    "Not standard-user installation",
+    "Not managed enrollment or native support sessions",
+    "Service startup does not qualify remote logon-screen access",
+    "Not software-version upgrade or approved automatic updates"
+  ]
+}
