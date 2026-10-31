@@ -1,0 +1,42 @@
+{
+  "observed_installed_source": "94284db24b8993344c12cae0a8baa95f82dc0e02",
+  "lab": "Windows Server 2019 technician, owned built-in Administrator console",
+  "automatic_update": {
+    "from_sequence": 14,
+    "to_sequence": 15,
+    "installed_msi_and_shipping_files_verified": true,
+    "installed_version": "1.5.12",
+    "identity_consent_bootstrap_preserved": true,
+    "same_vm_customer_excluded_sequence": 13,
+    "original_paused_policy_restored_profile": 34,
+    "manual_update_or_installer_invoked": false
+  },
+  "failed_acceptance": {
+    "fresh_native_postupdate_login_not_qualified": true,
+    "running_shared_cache_executable_version": "1.5.11+79",
+    "old_cache_runtime_still_present_in_two_processes": true,
+    "backend_control_confirmed_credentials_mfa_and_inventory_valid": true,
+    "company_report_still_installing_old_sequence": true,
+    "restart_to_new_native_runtime_not_qualified": true,
+    "finding": "Portable extraction reuses one per-user runtime directory. A previous process can keep files locked; extraction ignores read/write errors and may launch stale executable bytes. The observed GUI login failure is not independently attributed to this cause."
+  },
+  "candidate": {
+    "version": "1.5.13+81",
+    "separate_cache_directory_per_embedded_payload_sha256": true,
+    "decompression_read_and_write_errors_propagate": true,
+    "failed_extraction_refuses_launch_and_exits_nonzero": true,
+    "new_dependencies": false,
+    "python_payload_metadata_tests_passed": 4,
+    "standalone_rust_linux_cache_tests_passed": 2,
+    "windows_exclusive_locked_file_and_extraction_regressions_added_to_native_ci": true,
+    "new_native_build_and_lab_acceptance_pending": true
+  },
+  "limits": [
+    "Installed-file verification alone does not qualify the running native runtime",
+    "The built-in Administrator is not standard-user technician qualification",
+    "Linux tests do not qualify the Windows exclusive-file-lock branch",
+    "Retest automatic update, native login/reporting and interrupted recovery after building the candidate"
+  ],
+  "product_complete": false,
+  "production_publication": false
+}

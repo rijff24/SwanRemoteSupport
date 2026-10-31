@@ -1,4 +1,5 @@
 import importlib.util
+import hashlib
 import os
 from pathlib import Path
 import re
@@ -28,9 +29,10 @@ class PortablePackageTests(unittest.TestCase):
             second = (root / "app_metadata.toml").read_bytes()
             self.assertNotEqual(first, second)
             for value in (first, second):
-                match = re.fullmatch(rb"timestamp = ([1-9][0-9]*)\n", value)
+                match = re.fullmatch(rb"timestamp = ([1-9][0-9]*)\npayload_sha256 = ([a-f0-9]{64})\n", value)
                 self.assertIsNotNone(match)
                 self.assertLessEqual(int(match[1]), (1 << 63) - 1)
+            self.assertIn(hashlib.sha256(payload.read_bytes()).hexdigest().encode(), second)
 
     def test_package_bytes_and_cache_identity_ignore_dictionary_insertion_order(self):
         with tempfile.TemporaryDirectory() as directory:

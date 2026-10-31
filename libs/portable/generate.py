@@ -72,6 +72,7 @@ def write_app_metadata(output_folder: str):
     output_path = os.path.join(output_folder, "app_metadata.toml")
     with open(output_path, "w", encoding="utf-8", newline="\n") as f:
         f.write(f"timestamp = {cache_identity}\n")
+        f.write(f"payload_sha256 = {digest.hexdigest()}\n")
     print(f"App metadata has been written to {output_path}")
 
 def build_portable(output_folder: str, target: str):

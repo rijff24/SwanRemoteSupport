@@ -9,6 +9,7 @@ use bin_reader::BinaryReader;
 
 pub mod bin_reader;
 mod install_wait;
+mod runtime_cache;
 #[cfg(windows)]
 mod ui;
 
@@ -72,7 +73,13 @@ fn setup(
     } else {
         // home dir
         if let Some(dir) = dirs::data_local_dir() {
-            dir.join(APP_PREFIX)
+            match runtime_cache::directory(&dir.join(APP_PREFIX), APP_METADATA) {
+                Ok(directory) => directory,
+                Err(error) => {
+                    eprintln!("Portable runtime cache unavailable: {error}");
+                    return None;
+                }
+            }
         } else {
             eprintln!("not found data local dir");
             return None;
@@ -89,7 +96,10 @@ fn setup(
         std::fs::remove_dir_all(&dir).ok();
     }
     for file in reader.files.iter() {
-        file.write_to_file(&dir);
+        if let Err(error) = file.write_to_file(&dir) {
+            eprintln!("Portable runtime extraction failed for {}: {error}", file.path);
+            return None;
+        }
     }
     write_meta(&dir, ts);
     #[cfg(windows)]
@@ -213,6 +223,8 @@ fn main() {
             args = vec!["--quick_support".to_owned()];
         }
         execute(exe, args, ui);
+    } else {
+        std::process::exit(1);
     }
 }
 

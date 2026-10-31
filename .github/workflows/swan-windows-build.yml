@@ -23,7 +23,7 @@ env:
   FLUTTER_ENGINE_SHA256: "ec8cabf36ee4ff24c8d98de25b00e70781eb03876265aee84d0fe554a110036e"
   VCPKG_COMMIT_ID: "120deac3062162151622ca4860575a33844ba10b"
   VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
-  VERSION: "1.5.12"
+  VERSION: "1.5.13"
 
 jobs:
   maintained-transport:
@@ -322,6 +322,7 @@ jobs:
           rustc --edition 2021 --test resource_order.rs -o resource-order-tests.exe
           ./resource-order-tests.exe
           python3 ./generate.py -f ../../swan-client/ -o . -e ../../swan-client/rustdesk.exe
+          cargo test --locked --release
           popd
           mkdir -p ./artifacts
           # The portable packer opens RustDesk's one-page installer when the
@@ -354,6 +355,10 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Portable installer wait tests did not compile.' }
           ./portable-install-wait-tests.exe
           if ($LASTEXITCODE -ne 0) { throw 'Portable installer completion tests failed.' }
+          rustc --edition 2021 --test libs/portable/src/runtime_cache.rs -o portable-runtime-cache-tests.exe
+          if ($LASTEXITCODE -ne 0) { throw 'Portable runtime cache tests did not compile.' }
+          ./portable-runtime-cache-tests.exe
+          if ($LASTEXITCODE -ne 0) { throw 'Portable runtime cache isolation tests failed.' }
           python3 deployment/windows/generate-payload-manifest.py --edition customer --source swan-client --output artifacts/customer-installed-files.unsigned.json
           python3 deployment/windows/generate-payload-manifest.py --edition technician --source artifacts/SwanRemoteSupport-${{ env.VERSION }}-technician-x64-unsigned.exe --output artifacts/technician-installed-files.unsigned.json
 
