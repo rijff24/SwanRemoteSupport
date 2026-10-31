@@ -1,9 +1,9 @@
 name: Portable installer wait regression
 on:
   push:
-    paths: ['libs/portable/src/install_wait.rs', '.github/workflows/portable-install-wait.yml']
+    paths: ['libs/portable/src/install_wait.rs', 'libs/portable/src/runtime_cache.rs', '.github/workflows/portable-install-wait.yml']
   pull_request:
-    paths: ['libs/portable/src/install_wait.rs', '.github/workflows/portable-install-wait.yml']
+    paths: ['libs/portable/src/install_wait.rs', 'libs/portable/src/runtime_cache.rs', '.github/workflows/portable-install-wait.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -34,3 +34,8 @@ jobs:
               assert prefix + 'child_fixture: test' in names
               subprocess.run([str(executable)], check=True)
           PY
+      - name: Test payload cache isolation while the previous runtime file is held open
+        shell: bash
+        run: |
+          rustc +1.90.0 --edition 2021 --test libs/portable/src/runtime_cache.rs -o portable-cache-tests.exe
+          ./portable-cache-tests.exe
