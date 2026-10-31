@@ -50,7 +50,10 @@
     },
     "independent_build": {
       "run": 41169951691,
-      "completion_and_comparison_pending": true
+      "conclusion": "success",
+      "comparison_run": 41175183194,
+      "all_eight_original_shipping_outputs_identical": true,
+      "exact_source_inputs_verified": true
     },
     "lab_distribution": {
       "all_five_signatures_and_original_receipts_verified": true,
@@ -74,8 +77,7 @@
     "remaining_scope": [
       "Current customer and standard-user technician",
       "Remote desktop and remaining lifecycle/OS matrix",
-      "Current-candidate interrupted recovery",
-      "Independent native reproduction"
+      "Current-candidate interrupted recovery"
     ],
     "technician_automatic_update_runtime_login_report_qualified": true,
     "current_candidate_interrupted_recovery_pending": true
