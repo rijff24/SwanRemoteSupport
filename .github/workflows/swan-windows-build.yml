@@ -23,7 +23,7 @@ env:
   FLUTTER_ENGINE_SHA256: "ec8cabf36ee4ff24c8d98de25b00e70781eb03876265aee84d0fe554a110036e"
   VCPKG_COMMIT_ID: "120deac3062162151622ca4860575a33844ba10b"
   VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
-  VERSION: "1.5.14"
+  VERSION: "1.5.15"
 
 jobs:
   maintained-transport:
@@ -224,6 +224,13 @@ jobs:
           cargo test --release --lib --features "flutter,swan_custom,hwcodec,vram" server::portable_service::client::edition_tests::outgoing_only_refuses_capture_helper_before_runtime_initialization -- --exact 2>&1 | Tee-Object -FilePath artifacts/native-technician-helper-tests.log
           if ($LASTEXITCODE -ne 0) { throw 'Technician incoming-helper isolation regression failed.' }
           if ((Get-Content artifacts/native-technician-helper-tests.log -Raw) -notmatch 'test result: ok\. 1 passed; 0 failed;') { throw 'Expected technician helper test did not run.' }
+
+      - name: Reject indefinitely blocked file-transfer writes
+        shell: pwsh
+        run: |
+          cargo test --release --lib --features "flutter,swan_custom,hwcodec,vram" client::io_loop::transfer_write_tests:: -- --nocapture 2>&1 | Tee-Object -FilePath artifacts/native-transfer-write-timeout-tests.log
+          if ($LASTEXITCODE -ne 0) { throw 'File-transfer write timeout regression failed.' }
+          if ((Get-Content artifacts/native-transfer-write-timeout-tests.log -Raw) -notmatch 'test result: ok\. 3 passed; 0 failed;') { throw 'Expected all three transfer write tests to run.' }
 
       - name: Verify hardened DLL search supports delayed application libraries
         shell: pwsh
@@ -443,6 +450,7 @@ jobs:
             artifacts/native-desktop-pe-metadata.json
             artifacts/native-service-imports.json
             artifacts/native-dll-search-tests.log
+            artifacts/native-transfer-write-timeout-tests.log
             artifacts/native-msvc-toolchain.json
             artifacts/flutter-sdk-identity.json
             artifacts/native-managed-updater-tests.log
@@ -515,6 +523,7 @@ jobs:
             artifacts/native-desktop-pe-metadata.json
             artifacts/native-service-imports.json
             artifacts/native-dll-search-tests.log
+            artifacts/native-transfer-write-timeout-tests.log
             artifacts/native-msvc-toolchain.json
             artifacts/*.msi.build.json
             artifacts/flutter-sdk-identity.json
