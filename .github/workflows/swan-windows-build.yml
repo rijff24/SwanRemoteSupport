@@ -23,7 +23,7 @@ env:
   FLUTTER_ENGINE_SHA256: "ec8cabf36ee4ff24c8d98de25b00e70781eb03876265aee84d0fe554a110036e"
   VCPKG_COMMIT_ID: "120deac3062162151622ca4860575a33844ba10b"
   VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
-  VERSION: "1.5.16"
+  VERSION: "1.5.17"
 
 jobs:
   maintained-transport:
@@ -203,6 +203,14 @@ jobs:
         run: |
           python3 .\build.py --portable --flutter --skip-portable-pack --hwcodec --vram
           Move-Item .\flutter\build\windows\x64\runner\Release .\swan-client
+
+      - name: Keep pending customer approvals visible during reconnects
+        shell: pwsh
+        working-directory: flutter
+        run: |
+          flutter test --reporter expanded test/approval_window_auto_hide_test.dart 2>&1 | Tee-Object -FilePath ../artifacts/native-customer-approval-window-tests.log
+          if ($LASTEXITCODE -ne 0) { throw 'Customer approval-window regression failed.' }
+          if ((Get-Content ../artifacts/native-customer-approval-window-tests.log -Raw) -notmatch 'All tests passed!') { throw 'Expected customer approval tests did not complete.' }
 
       - name: Reject unsigned legacy management policy in managed editions
         shell: pwsh
