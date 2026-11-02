@@ -165,11 +165,7 @@ class ConnectionManagerState extends State<ConnectionManager>
   Widget build(BuildContext context) {
     final serverModel = Provider.of<ServerModel>(context);
     pointerHandler(PointerEvent e) {
-      if (serverModel.cmHiddenTimer != null) {
-        serverModel.cmHiddenTimer!.cancel();
-        serverModel.cmHiddenTimer = null;
-        debugPrint("CM hidden timer has been canceled");
-      }
+      serverModel.cancelApprovalWindowAutoHide();
     }
 
     return serverModel.clients.isEmpty

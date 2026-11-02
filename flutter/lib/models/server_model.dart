@@ -59,6 +59,8 @@ class ServerModel with ChangeNotifier {
 
   final _wakelockKey = UniqueKey();
 
+  void cancelApprovalWindowAutoHide() => _approvalWindowAutoHide.cancel();
+
   bool get isStart => _isStart;
 
   bool get mediaOk => _mediaOk;

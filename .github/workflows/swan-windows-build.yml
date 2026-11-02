@@ -202,6 +202,7 @@ jobs:
         shell: pwsh
         run: |
           python3 .\build.py --portable --flutter --skip-portable-pack --hwcodec --vram
+          if ($LASTEXITCODE -ne 0) { throw 'Native or Flutter application build failed.' }
           Move-Item .\flutter\build\windows\x64\runner\Release .\swan-client
 
       - name: Keep pending customer approvals visible during reconnects
