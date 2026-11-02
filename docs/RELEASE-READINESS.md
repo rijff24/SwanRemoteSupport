@@ -1,5 +1,7 @@
 # Release readiness — 31 October 2026
 
+[Native1.5.14 real automatic update](evidence/1514-real-automatic-msi-update-and-ui-restart-failure-20261102.json) installed and verified the exact signed MSI while preserving identity, trust and consent, but **failed customer UI recovery**. MSI renamed the mapped old image into rollback storage; the exact kernel-path guard rejected termination, and an advanced PowerShell failure returned an incorrect success status. Updates are paused at profile40. Pre-MSI process shutdown and explicit helper error propagation are draft fixes; production and full update acceptance remain blocked on their verification.
+
 **Not ready for production publication.** This index distinguishes current,
 scoped evidence from older checkpoints in [ACCEPTANCE.md](ACCEPTANCE.md).
 Passing one operating system or one component does not qualify the full product.

@@ -2,7 +2,8 @@
 param(
     [Parameter(Mandatory=$true)][string]$Directory,
     [Parameter(Mandatory=$true)][string]$Executable,
-    [ValidateSet('restart','remove')][string]$Operation='restart'
+    [ValidateSet('prepare','restart','remove')][string]$Operation='restart',
+    [string]$ExpectedHashes=''
 )
 $ErrorActionPreference='Stop'
 
@@ -130,12 +131,13 @@ function Remove-CustomerUiRecoveryTasks([string]$StateDirectory,[string]$Path) {
     foreach ($task in $context.Tasks.Values) { $context.Folder.DeleteTask($task.TaskName,0) }
 }
 
-function Restart-VerifiedCustomerUi([string]$StateDirectory,[string]$Path) {
+function Restart-VerifiedCustomerUi([string]$StateDirectory,[string]$Path,[switch]$PrepareOnly) {
     if (-not [Security.Principal.WindowsIdentity]::GetCurrent().IsSystem) { throw 'Customer UI update restart requires SYSTEM.' }
     $directoryPath=[IO.Path]::GetFullPath($StateDirectory).TrimEnd('\')
     $exe=[IO.Path]::GetFullPath($Path)
     if ([IO.Path]::GetFileName($exe) -cne 'Swan Remote Support.exe' -or (Get-Item -LiteralPath $exe).Attributes -band [IO.FileAttributes]::ReparsePoint) { throw 'Unexpected installed customer executable.' }
     if (Test-Path -LiteralPath (Join-Path $directoryPath 'pending-uninstall')) { throw 'Explicit uninstall cancels customer UI restoration.' }
+    if ($PrepareOnly -and -not (Test-Path -LiteralPath (Join-Path $directoryPath 'pending-update.json'))) { throw 'Customer UI preparation requires a pending update.' }
     # The caller verified this exact signed release while holding session
     # exclusion. Do not restart a newly opened post-commit UI on recovery.
     $committed=(Get-Item -LiteralPath (Join-Path $directoryPath 'installed-release.json')).LastWriteTimeUtc
@@ -147,8 +149,13 @@ function Restart-VerifiedCustomerUi([string]$StateDirectory,[string]$Path) {
         $sid=([Security.Principal.SecurityIdentifier]::new($owner.Sid)).Value
         if ($sid -eq 'S-1-5-18') { continue }
         $created=$process.CreationDate.ToUniversalTime()
-        if ($created -ge $committed) { $fresh[$sid]=$true;continue }
+        if (-not $PrepareOnly -and $created -ge $committed) { $fresh[$sid]=$true;continue }
         $old+=@{Pid=[int]$process.ProcessId;Sid=$sid;Created=$created}
+    }
+    if ($PrepareOnly -and $old.Count -gt 0) {
+        $hashes=@($ExpectedHashes.Split(','))
+        if ($hashes.Count -ne 2 -or @($hashes | Where-Object { $_ -cnotmatch '^[0-9a-f]{64}$' }).Count) { throw 'Expected signed executable identities are required.' }
+        if ((Get-FileHash -LiteralPath $exe -Algorithm SHA256).Hash.ToLowerInvariant() -cnotin $hashes) { throw 'Customer executable differs from both signed releases.' }
     }
     $context=Read-CustomerUiRecoveryTasks $directoryPath $exe
     $prefix=$context.Prefix;$folder=$context.Folder;$pending=$context.Tasks
@@ -159,7 +166,10 @@ function Restart-VerifiedCustomerUi([string]$StateDirectory,[string]$Path) {
         $principal=New-ScheduledTaskPrincipal -UserId $sid -LogonType Interactive -RunLevel Limited
         $trigger=New-ScheduledTaskTrigger -AtLogOn -User $sid
         $settings=New-ScheduledTaskSettingsSet -ExecutionTimeLimit (New-TimeSpan -Minutes 2) -MultipleInstances IgnoreNew -Priority 4 -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries
-        $task=Register-ScheduledTask -TaskName $name -Action $action -Principal $principal -Trigger $trigger -Settings $settings
+        if ($PrepareOnly) {
+            # No logon trigger may launch an application halfway through MSI.
+            $task=Register-ScheduledTask -TaskName $name -InputObject (New-ScheduledTask -Action $action -Principal $principal -Settings $settings)
+        } else { $task=Register-ScheduledTask -TaskName $name -Action $action -Principal $principal -Trigger $trigger -Settings $settings }
         # The UI can remove its completed task, but cannot replace its action or
         # change its ACL. Keep SYSTEM/admin control and do not add a principal ACE.
         $registered=$folder.GetTask($name)
@@ -167,14 +177,23 @@ function Restart-VerifiedCustomerUi([string]$StateDirectory,[string]$Path) {
         Assert-CustomerUiTask $task $action $sid $registered
         $pending[$sid]=$task
     }
+    if ($PrepareOnly) {
+        foreach ($task in @($pending.Values)) { $task | Disable-ScheduledTask | Out-Null }
+    }
     # Recovery tasks are durable before any old process is stopped. Their action
     # runs only as that existing user, with no password or elevated token.
     if (Test-Path -LiteralPath (Join-Path $directoryPath 'pending-uninstall')) { throw 'Explicit uninstall cancels customer UI restoration.' }
     Stop-OwnedCustomerUi $old $exe
+    if ($PrepareOnly) {
+        @{old_processes_closed=@($old).Count;restarts_disabled_until_verified_commit=$true;credentials_used=$false} | ConvertTo-Json -Compress
+        return
+    }
     $requested=@();$deferred=@()
     foreach ($sid in @($pending.Keys)) {
         $task=$pending[$sid]
         if ($fresh.ContainsKey($sid)) { $folder.DeleteTask($task.TaskName,0);continue }
+        Set-ScheduledTask -TaskName $task.TaskName -TaskPath $task.TaskPath -Trigger (New-ScheduledTaskTrigger -AtLogOn -User $sid) | Out-Null
+        $task | Enable-ScheduledTask | Out-Null
         try { $task | Start-ScheduledTask;$requested+=$sid }
         catch { Write-Warning ('Customer UI restart deferred to this user next logon: '+$_.Exception.Message);$deferred+=$sid }
     }
@@ -183,5 +202,5 @@ function Restart-VerifiedCustomerUi([string]$StateDirectory,[string]$Path) {
 
 if ($MyInvocation.InvocationName -ne '.') {
     if ($Operation -eq 'remove') { Remove-CustomerUiRecoveryTasks $Directory $Executable }
-    else { Restart-VerifiedCustomerUi $Directory $Executable }
+    else { Restart-VerifiedCustomerUi $Directory $Executable -PrepareOnly:($Operation -eq 'prepare') }
 }

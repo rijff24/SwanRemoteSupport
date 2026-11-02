@@ -365,23 +365,30 @@ pub fn commit_uninstall(directory:&Path,edition:&str)->Result<()> {
     let status=embedded_powershell_command(include_str!("../../../deployment/windows/Commit-Uninstall.ps1"),
         &[("Directory",directory.to_str().context("Uninstall state path is not valid Unicode")?),("Edition",edition)])?.status()?;
     ensure!(status.success(),"Uninstall commit cleanup failed");
-    if edition=="customer" {customer_ui_recovery(directory,&installed_target(directory,&Edition::Customer)?,true)?;}
+    if edition=="customer" {customer_ui_recovery(directory,&installed_target(directory,&Edition::Customer)?,"remove","")?;}
     Ok(())
 }
 
 #[cfg(windows)]
-fn customer_ui_recovery(directory:&Path,target:&Path,remove:bool)->Result<()> {
-    // The fixed helper exceeds Windows' encoded command-line limit. Feed its
-    // embedded source through a private child pipe instead of a mutable file.
-    let loader=r#"param([string]$Directory,[string]$Executable,[string]$Operation)
+fn customer_ui_loader()->&'static str {
+    r#"param([string]$Directory,[string]$Executable,[string]$Operation,[string]$ExpectedHashes)
+$ErrorActionPreference='Stop'
+try {
 $reader=[IO.StreamReader]::new([Console]::OpenStandardInput(),[Text.UTF8Encoding]::new($false,$true))
 try{$source=$reader.ReadToEnd()}finally{$reader.Dispose()}
-& ([ScriptBlock]::Create($source)) -Directory $Directory -Executable $Executable -Operation $Operation
-"#;
-    let mut helper=embedded_powershell_command(loader,&[
+& ([ScriptBlock]::Create($source)) -Directory $Directory -Executable $Executable -Operation $Operation -ExpectedHashes $ExpectedHashes
+} catch { [Console]::Error.WriteLine($_.Exception.Message); exit 1 }
+"#
+}
+
+#[cfg(windows)]
+fn customer_ui_recovery(directory:&Path,target:&Path,operation:&str,expected_hashes:&str)->Result<()> {
+    // The fixed helper exceeds Windows' encoded command-line limit. Feed its
+    // embedded source through a private child pipe instead of a mutable file.
+    let mut helper=embedded_powershell_command(customer_ui_loader(),&[
         ("Directory",directory.to_str().context("Customer UI state path is not valid Unicode")?),
         ("Executable",target.to_str().context("Customer UI executable path is not valid Unicode")?),
-        ("Operation",if remove{"remove"}else{"restart"}),
+        ("Operation",operation),("ExpectedHashes",expected_hashes),
     ])?.stdin(std::process::Stdio::piped()).spawn()?;
     let mut input=helper.stdin.take().context("Customer UI helper input unavailable")?;
     let writer=std::thread::Builder::new().name("customer-ui-helper-source".into()).spawn(move || {
@@ -705,7 +712,7 @@ pub fn finish_configuration_restart(directory:&Path)->Result<()> {
     // Keep session exclusion and the signed restart marker until existing user
     // interfaces have durable, unelevated restart tasks. A retry must not leave
     // an old mapped executable displaying stale company policy after an MSI.
-    if let Some(target)=ui_target {customer_ui_recovery(directory,&target,false)?;}
+    if let Some(target)=ui_target {customer_ui_recovery(directory,&target,"restart","")?;}
     // Resume the watcher last so its update pass cannot race a lengthy UI
     // recovery and incorrectly report the committed update as failed.
     let status=embedded_powershell_command(include_str!("../../../deployment/windows/Restart-Configuration.ps1"),
@@ -1135,6 +1142,16 @@ impl AgentState {
             if let Some(previous)=receipt.previous_release.as_ref(){
                 verify_rollback_snapshot(&latest,&folder.join("rollback"),previous,receipt.previous_sequence)?;
             }
+            if release.edition==Edition::Customer {
+                // MSI can rename a mapped old image into rollback storage. Close
+                // only exact existing user images before that rename, retaining
+                // disabled recovery tasks until signed installation verification.
+                let previous=receipt.previous_release.as_ref()
+                    .map(|envelope|validate_previous_release(&latest,envelope,receipt.previous_sequence)).transpose()?;
+                let old_hash=previous.as_ref().map(|value|value.installed_sha256.as_str()).unwrap_or(&release.installed_sha256);
+                let hashes=format!("{old_hash},{}",release.installed_sha256).to_ascii_lowercase();
+                customer_ui_recovery(directory,&installed_target(directory,&Edition::Customer)?,"prepare",&hashes)?;
+            }
             if latest.bootstrap.edition==Edition::Technician {
                 ensure!(release.format=="msi" || (release.format=="exe" && release.sha256.eq_ignore_ascii_case(&release.installed_sha256)),"Technician updates require an MSI or a portable EXE");
                 let target=installed_target(directory,&latest.bootstrap.edition)?;
@@ -1486,6 +1503,31 @@ pub(crate) fn test_failed_release_quarantine(state:&AgentState,release:&Release,
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[cfg(windows)]
+    #[test]
+    fn advanced_customer_ui_script_failure_returns_a_failed_child_status() {
+        use std::io::Write;
+        use std::process::Stdio;
+        for (body,success) in [
+            ("[Console]::WriteLine('completed')",true),
+            ("throw 'controlled recovery failure'",false),
+            ("[void][int]::Parse('controlled recovery failure')",false),
+        ] {
+            // Advanced scripts otherwise emit an inner terminating error while
+            // the outer invocation can still return a successful process code.
+            let source=format!("[CmdletBinding()]param($Directory,$Executable,$Operation,$ExpectedHashes)\n$ErrorActionPreference='Stop'\nfunction Run-Recovery {{ {body} }}\nif($Operation -eq 'restart'){{Run-Recovery}}\n");
+            let mut child=embedded_powershell_command(customer_ui_loader(),&[
+                ("Directory","C:/inert"),("Executable","C:/inert.exe"),("Operation","restart"),
+            ]).unwrap().stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();
+            child.stdin.take().unwrap().write_all(source.as_bytes()).unwrap();
+            let status=crate::verifier_process::wait_with_message(&mut child,std::time::Duration::from_secs(30),"Recovery loader regression timed out").unwrap();
+            let output=child.wait_with_output().unwrap();
+            assert_eq!(status.success(),success,"{}",String::from_utf8_lossy(&output.stderr));
+            if success {assert!(String::from_utf8_lossy(&output.stdout).contains("completed"));}
+            else {assert!(!output.stderr.is_empty());}
+        }
+    }
+
     #[cfg(windows)]
     #[test]
     fn normal_priority_powershell_child() {

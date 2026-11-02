@@ -74,21 +74,38 @@ Require ($foreign.Actions[0].Execute -ceq $foreignAction.Execute -and $foreign.P
 Require-OriginalProcesses
 $foreign | Unregister-ScheduledTask -Confirm:$false
 
+$rejected=$false
+try { Restart-VerifiedCustomerUi $Directory $exe -PrepareOnly | Out-Null } catch { $rejected=$true }
+Require $rejected 'Preparation without pending update was accepted.'
+Require-OriginalProcesses
+[IO.File]::WriteAllText((Join-Path $Directory 'pending-update.json'),'{}')
+$ExpectedHashes=('0'*64)+','+('0'*64)
+$rejected=$false
+try { Restart-VerifiedCustomerUi $Directory $exe -PrepareOnly | Out-Null } catch { $rejected=$true }
+Require $rejected 'Preparation accepted an executable outside both signed identities.'
+Require-OriginalProcesses
+$ExpectedHashes=$payloadBefore.ToLowerInvariant()+','+$payloadBefore.ToLowerInvariant()
+
 $originalStop=(Get-Item Function:\Stop-OwnedCustomerUi).ScriptBlock
 try {
     function Stop-OwnedCustomerUi { throw 'Simulated interruption before stopping old GUI.' }
     $interrupted=$false
-    try { Restart-VerifiedCustomerUi $Directory $exe | Out-Null } catch { $interrupted=$true }
+    try { Restart-VerifiedCustomerUi $Directory $exe -PrepareOnly | Out-Null } catch { $interrupted=$true }
     Require $interrupted 'The pre-stop interruption was not exercised.'
     Require-OriginalProcesses
     $context=Read-CustomerUiRecoveryTasks $Directory $exe
     Require ($context.Tasks.Count -eq 1 -and $context.Tasks.ContainsKey($sid)) 'Restart intent was not durable before process stop.'
+    $preparedTask=Get-ScheduledTask -TaskName $name
+    Require ($preparedTask.State -eq 'Disabled' -and @($preparedTask.Triggers | Where-Object { $null -ne $_ }).Count -eq 0) 'Unverified installation could trigger a user launch.'
 } finally { Set-Item Function:\Stop-OwnedCustomerUi -Value $originalStop }
 
 try {
     function Start-ScheduledTask { throw 'Simulated interruption after stopping old GUI, before user launch.' }
+    $prepared=Restart-VerifiedCustomerUi $Directory $exe -PrepareOnly | ConvertFrom-Json
+    Require ($prepared.old_processes_closed -eq $initial.Count -and $prepared.restarts_disabled_until_verified_commit) 'Pre-MSI preparation did not close its exact old UI.'
+    Require ((Get-ScheduledTask -TaskName $name).State -eq 'Disabled') 'Preparation enabled premature relaunch.'
     $deferred=Restart-VerifiedCustomerUi $Directory $exe | ConvertFrom-Json
-    Require ($deferred.old_processes_closed -eq $initial.Count -and $sid -in $deferred.user_restarts_deferred_to_logon) 'Post-stop restart intent was lost.'
+    Require ($deferred.old_processes_closed -eq 0 -and $sid -in $deferred.user_restarts_deferred_to_logon) 'Post-stop restart intent was lost.'
     $context=Read-CustomerUiRecoveryTasks $Directory $exe
     Require ($context.Tasks.Count -eq 1) 'Post-stop interruption lost its durable task.'
 } finally { Remove-Item Function:\Start-ScheduledTask }
@@ -127,6 +144,8 @@ $retained | Unregister-ScheduledTask -Confirm:$false
 Require ((Get-Service -Name 'Swan Remote Support').Status -eq $serviceBefore -and (Get-FileHash -LiteralPath $exe).Hash -ceq $payloadBefore) 'The helper changed the service or application payload.'
 @{
     native_wrong_creation_path_and_sid_rejected=$true
+    preparation_requires_pending_update_and_signed_executable_identity=$true
+    real_pre_msi_stop_keeps_disabled_durable_recovery_task=$true
     foreign_task_unchanged=$true
     restart_intent_durable_before_stop=$true
     restart_intent_survives_stop_before_launch=$true
