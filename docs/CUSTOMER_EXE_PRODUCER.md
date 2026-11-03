@@ -11,6 +11,15 @@ unchanged project artifacts and package their public bootstrap/profile assets.
 Company profile fields cannot select source code, compiler commands or scripts.
 Project signing keys must remain with the project's signing provider.
 
+The input payload may name its signed main executable `rustdesk.exe`. The
+producer stages those unchanged bytes as `Swan Remote Support.exe` and uses that
+name as the portable entry point. The native Flutter installer copies the
+payload directory without renaming its executable; the staged names must
+therefore match `installed_files` exactly. Verification must not translate an
+embedded `rustdesk.exe` into the expected installed name. A valid signature and
+matching content hash alone do not establish a usable installed service or
+shortcut.
+
 ## Inputs
 
 Use a Windows x64 build environment with Rust/Cargo1.90.0, Microsoft C++ tools and

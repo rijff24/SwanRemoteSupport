@@ -2,6 +2,7 @@ import hashlib
 import importlib.util
 import json
 from pathlib import Path
+import shutil
 import struct
 import tempfile
 import unittest
@@ -50,9 +51,11 @@ class CustomerExeTests(unittest.TestCase):
                 z.writestr("source/" + name, data)
         return archive, hashlib.sha256(archive.read_bytes()).hexdigest()
 
-    def package(self, entries=None, entrypoint=b".\\rustdesk.exe"):
+    def package(self, entries=None, entrypoint=b".\\Swan Remote Support.exe"):
         raw = bytearray(b"not a PE; test the portable container only\0rustdesk")
-        for name, content in (entries or self.files).items():
+        files = {"Swan Remote Support.exe" if n == "rustdesk.exe" else n: v
+                 for n, v in self.files.items()} if entries is None else entries
+        for name, content in files.items():
             encoded = ("./" + name).encode()
             compressed = brotli.compress(content)
             raw.extend(struct.pack(">I", len(encoded)) + encoded)
@@ -68,7 +71,8 @@ class CustomerExeTests(unittest.TestCase):
         record = staging.prepare(archive, digest, self.revision, self.payload, self.manifest, work)
         self.assertFalse(record["executables_run"])
         self.assertEqual(record["payload_files"], 3)
-        self.assertEqual((work / "payload/rustdesk.exe").read_bytes(), self.files["rustdesk.exe"])
+        self.assertEqual((work / "payload/Swan Remote Support.exe").read_bytes(), self.files["rustdesk.exe"])
+        self.assertFalse((work / "payload/rustdesk.exe").exists())
         self.assertEqual((work / "source/Cargo.lock").read_bytes(), b"source:Cargo.lock")
         with self.assertRaises(FileExistsError):
             staging.prepare(archive, digest, self.revision, self.payload, self.manifest, work)
@@ -80,6 +84,23 @@ class CustomerExeTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 staging.prepare(archive, pin, revision, self.payload, self.manifest, work)
             self.assertFalse(work.exists())
+
+    def test_native_directory_copy_installs_the_exact_manifest_names(self):
+        archive, digest = self.source_archive()
+        work = self.root / "work"
+        staging.prepare(archive, digest, self.revision, self.payload, self.manifest, work)
+        installed = self.root / "installed"
+        # The native Flutter installer copies the directory without renaming.
+        shutil.copytree(work / "payload", installed)
+        actual = {f.relative_to(installed).as_posix(): hashlib.sha256(f.read_bytes()).hexdigest()
+                  for f in installed.rglob("*") if f.is_file()}
+        self.assertEqual(actual, {item["path"]: item["sha256"] for item in self.manifest})
+
+    def test_legacy_packaged_filename_cannot_be_remapped_into_a_passing_manifest(self):
+        with self.assertRaises(ValueError):
+            portable.verify(self.package(self.files, b".\\rustdesk.exe"), self.manifest)
+        with self.assertRaises(ValueError):
+            portable.verify(self.package(entrypoint=b".\\rustdesk.exe"), self.manifest)
 
     def test_tampered_inner_executable_cannot_be_wrapped_using_the_signed_manifest(self):
         archive, digest = self.source_archive()
@@ -99,7 +120,9 @@ class CustomerExeTests(unittest.TestCase):
         self.assertEqual(result["embedded_files"], 3)
 
     def test_signing_only_outer_does_not_make_old_inner_bytes_match(self):
-        changed = dict(self.files, **{"rustdesk.exe": b"earlier unsigned inner executable"})
+        changed = {"Swan Remote Support.exe" if n == "rustdesk.exe" else n: v
+                   for n, v in self.files.items()}
+        changed["Swan Remote Support.exe"] = b"earlier unsigned inner executable"
         with self.assertRaises(ValueError):
             portable.verify(self.package(changed), self.manifest)
 

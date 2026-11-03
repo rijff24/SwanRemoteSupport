@@ -52,13 +52,14 @@ def read_payload(raw, start):
         if not decoder.is_finished() or checksum.hexdigest().encode() != raw[position:position + 32]:
             raise ValueError("Portable payload checksum differs")
         position += 32
-        installed = "Swan Remote Support.exe" if name == "rustdesk.exe" else name
-        if installed in files:
-            raise ValueError("Ambiguous installed payload path")
-        files[installed] = digest.hexdigest()
+        files[name] = digest.hexdigest()
         if len(files) > 4096:
             raise ValueError("Too many portable files")
-    if not raw[position + 8:].startswith((b".\\rustdesk.exe", b"./rustdesk.exe")):
+    entrypoint = raw[position + 8:]
+    # The linked PE contains data after the embedded container.
+    names = (b"Swan Remote Support.exe", b".\\Swan Remote Support.exe",
+             b"./Swan Remote Support.exe")
+    if not entrypoint.startswith(names):
         raise ValueError("Unexpected portable entry point")
     return files
 

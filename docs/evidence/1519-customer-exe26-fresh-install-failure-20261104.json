@@ -1,0 +1,51 @@
+{
+  "utc": "2026-11-03T23:38:22.466670+00:00",
+  "runtime_source": "a3fedd94e38d902164db90321bcf397c85a6c12b",
+  "failed_lab_customer_exe_sequence": 26,
+  "fresh_windows10_build": "19045",
+  "actual_failure": "Shipping setup returned Installed executable not found after the EXE copied rustdesk.exe into the Swan installation directory. Expected Swan Remote Support.exe absent.",
+  "actual_directory_listing": [
+    "data",
+    "desktop_drop_plugin.dll",
+    "desktop_multi_window_plugin.dll",
+    "dylib_virtual_display.dll",
+    "file_selector_windows_plugin.dll",
+    "flutter_custom_cursor_plugin.dll",
+    "flutter_gpu_texture_renderer_plugin.dll",
+    "flutter_windows.dll",
+    "librustdesk.dll",
+    "RuntimeBroker_rustdesk.exe",
+    "rustdesk.exe",
+    "screen_retriever_plugin.dll",
+    "texture_rgba_renderer_plugin.dll",
+    "Uninstall Swan Remote Support.lnk",
+    "uni_links_desktop_plugin.dll",
+    "url_launcher_windows_plugin.dll",
+    "WindowInjection.dll",
+    "window_manager_plugin.dll",
+    "window_size_plugin.dll"
+  ],
+  "recovery_markers_retained": [
+    "pending-install.json",
+    "managed-state.json"
+  ],
+  "cause": "Native Flutter installation copies the payload directory without renaming; the producer retained rustdesk.exe and the verifier normalized that filename into the expected manifest name.",
+  "producer_fix": "Stage unchanged signed bytes under the stable installed name; select that entry point; compare embedded names literally.",
+  "python_packaging_tests_passed": 10,
+  "actual_failed_signed_exe_rejected_by_corrected_verifier": true,
+  "host_powershell_native_exit_handling_regression_passed": true,
+  "windows_replacement_build_qualified": false,
+  "fixed_fresh_installation_qualified": false,
+  "approval_withdrawal": {
+    "utc": "2026-11-03T23:31:33.813423+00:00",
+    "withdrawn_lab_customer_exe_sequences": [
+      24,
+      26
+    ],
+    "release_history_retained": true,
+    "other_release_approvals_unchanged": true,
+    "profile44_unchanged_updates_paused": true,
+    "production_releases_affected": false
+  },
+  "production_publication": false
+}

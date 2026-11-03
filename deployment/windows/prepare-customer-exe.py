@@ -56,7 +56,9 @@ def load_payload(source, manifest):
         data = file.read_bytes()
         if hashlib.sha256(data).hexdigest() != expected[installed]:
             raise ValueError("Signed payload hash differs: " + installed)
-        actual[installed] = (name, data)
+        # The native installer copies the payload directory without renaming
+        # its main executable. Stage its stable installed name before packing.
+        actual[installed] = (installed, data)
     if set(actual) != set(expected) or not {
             "Swan Remote Support.exe", "librustdesk.dll", "flutter_windows.dll"} <= set(actual):
         raise ValueError("Incomplete customer payload")

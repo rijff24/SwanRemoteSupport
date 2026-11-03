@@ -91,7 +91,7 @@ try {
     $env:CARGO_HOME=$CargoHome
     Invoke-BuildTool $PythonExe @((Join-Path $PSScriptRoot 'prepare-customer-exe.py'),'--source-archive',$SourceArchive,'--source-sha256',$SourceArchiveSha256,'--source-revision',$SourceRevision,'--payload',$SourceDirectory,'--payload-manifest',$PayloadManifest,'--work-directory',$WorkDirectory)
     $prepared=[IO.File]::ReadAllText((Join-Path $WorkDirectory 'prepared.json'))|ConvertFrom-Json
-    $stagedMain=Join-Path $WorkDirectory 'payload/rustdesk.exe'
+    $stagedMain=Join-Path $WorkDirectory 'payload/Swan Remote Support.exe'
     $stagedSignature=Get-AuthenticodeSignature -LiteralPath $stagedMain
     if ($stagedSignature.Status -ne 'Valid') { throw 'Staged inner executable is not signed.' }
     $hash=[Security.Cryptography.SHA256]::Create()
@@ -112,7 +112,7 @@ try {
     $packer=Join-Path $WorkDirectory 'source/libs/portable'
     # Execute only the exact corresponding project source selected by the maintainer.
     # Company profiles and the installer worker cannot supply build commands.
-    Invoke-BuildTool $PythonExe @((Join-Path $packer 'generate.py'),'-f',(Join-Path $WorkDirectory 'payload'),'-o',$packer,'-e','rustdesk.exe','-t','x86_64-pc-windows-msvc')
+    Invoke-BuildTool $PythonExe @((Join-Path $packer 'generate.py'),'-f',(Join-Path $WorkDirectory 'payload'),'-o',$packer,'-e','Swan Remote Support.exe','-t','x86_64-pc-windows-msvc')
     Push-Location $packer
     try {
         Invoke-BuildTool $CargoExe @('test','--locked','--release','--target','x86_64-pc-windows-msvc')
