@@ -40,5 +40,19 @@
   "lab_console_input_diagnosis_pending": true,
   "customer_exe19_qualified": false,
   "production_signing": false,
-  "full_os_lifecycle_qualified": false
+  "full_os_lifecycle_qualified": false,
+  "unapproved_device_authorization_test": {
+    "utc": "2026-11-03T22:28:01.532600+00:00",
+    "fresh_customer19_enrollment_pending": true,
+    "unattended_consent_off": true,
+    "authorized_technician_inventory_excludes_unapproved_device": true,
+    "real_pending_device_grant_with_valid_proof_rejected": 403,
+    "device_approval_group_and_consent_unchanged": true,
+    "session_history_unchanged": true,
+    "signed_profile_revision": 44,
+    "updates_paused": true,
+    "no_successful_grant_or_native_session_created": true,
+    "receiving_device_bypass_qualification": false,
+    "production_publication": false
+  }
 }
