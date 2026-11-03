@@ -1,0 +1,85 @@
+{
+  "recorded_utc": "2026-11-03T15:14:41.487797+00:00",
+  "scope": "Customer MSI explicit upgrade, reboot recovery from stale MSI-moved GUI, and same-release repair on one Server2022 Desktop Experience VM",
+  "source": "a3fedd94e38d902164db90321bcf397c85a6c12b",
+  "version": "1.5.19+87",
+  "os": "Windows Server2022 Standard Evaluation, build20348, Desktop Experience",
+  "lab_signatures_only": true,
+  "first_attempt": {
+    "result": "Preparation refused; not a successful upgrade",
+    "installed_sequence_remained": 23,
+    "target_sequence": 25,
+    "system_prepare_task_result": 1,
+    "pending_install_marker_retained": true,
+    "original_user_processes_survived": true,
+    "read_only_query_full_process_image_name_mismatched_cim_path": true,
+    "actual_images_in_windows_installer_rollback_storage": true,
+    "installer_execution_not_reached": true,
+    "process_identity_guard_not_relaxed": true
+  },
+  "recovery": {
+    "normal_vm_reboot": true,
+    "identity_bootstrap_and_consent_preserved_before_and_after_reboot": true,
+    "original_pending_marker_and_signed_package_retained": true,
+    "manual_state_or_marker_changes": false,
+    "verified_installed18_window_open_before_retry": true,
+    "original_failed_attempt_retained": true
+  },
+  "explicit_upgrade_after_reboot": {
+    "utc": "2026-11-03T15:00:34.4051248Z",
+    "version": "1.5.19",
+    "native_file_version": "1.5.19+87",
+    "sequence": 25,
+    "old_process_gone": true,
+    "original_standard_user_preserved": true,
+    "loaded_images_match_primary": true,
+    "identity_bootstrap_and_consent_preserved": true,
+    "pending_markers_cleared": true,
+    "company_status_and_stop_controls_observed": true,
+    "profile_revision": 44,
+    "consent_revision": 0,
+    "unattended_off": true,
+    "service": "Running",
+    "watch": "Running",
+    "mapped_image_hashes": {
+      "Swan Remote Support.exe": "819c78ae404a88801a8ea65f5f9bc69dba5ed9c7bcf91753a942f2f1c540b07c",
+      "librustdesk.dll": "22df0b04a78e393b6cb79418faa2c1b5a5dd2b9be0360cf915ca638f97b01cad",
+      "flutter_windows.dll": "c87ba5a71afa7b7100c1c9ccc1289009dab812f9de2acc38f9d5103e48c1f204"
+    },
+    "original_screenshot_sha256": "7e2868c52b3f3a27e75b1574c093f70bbdb0e73e577503a3e5ea053dbc7b7505"
+  },
+  "same_exact_release_repair_with_open_window": {
+    "utc": "2026-11-03T15:10:58.6302526Z",
+    "version": "1.5.19",
+    "native_file_version": "1.5.19+87",
+    "sequence": 25,
+    "old_process_gone": true,
+    "original_standard_user_preserved": true,
+    "loaded_images_match_primary": true,
+    "identity_bootstrap_and_consent_preserved": true,
+    "pending_markers_cleared": true,
+    "company_status_and_stop_controls_observed": true,
+    "profile_revision": 44,
+    "consent_revision": 0,
+    "unattended_off": true,
+    "service": "Running",
+    "watch": "Running",
+    "mapped_image_hashes": {
+      "Swan Remote Support.exe": "819c78ae404a88801a8ea65f5f9bc69dba5ed9c7bcf91753a942f2f1c540b07c",
+      "librustdesk.dll": "22df0b04a78e393b6cb79418faa2c1b5a5dd2b9be0360cf915ca638f97b01cad",
+      "flutter_windows.dll": "c87ba5a71afa7b7100c1c9ccc1289009dab812f9de2acc38f9d5103e48c1f204"
+    },
+    "original_screenshot_sha256": "987d1c1e118813aa1336b147eafefa46e755121033645043a32f2c48719f4c18"
+  },
+  "remaining": [
+    "Fresh customer EXE19 production and installation",
+    "Other Windows versions and full installation/update/uninstall/interruption matrix",
+    "Native pending-consent and interruption recovery",
+    "External public transport qualification",
+    "Independent candidate19 build reproduction",
+    "Production signing approval and release checks"
+  ],
+  "complete_windows_matrix_qualified": false,
+  "full_lifecycle_qualified": false,
+  "production_publication": false
+}
