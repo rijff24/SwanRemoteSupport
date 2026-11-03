@@ -31,5 +31,22 @@
   "full_windows_matrix_qualified": false,
   "public_internet_transport_qualified": false,
   "independent_build_reproduction_qualified": false,
-  "production_publication": false
+  "production_publication": false,
+  "unassigned_technician_permission_test": {
+    "utc": "2026-11-03T08:56:04.112891+00:00",
+    "native18_unassigned_mfa_login_observed": true,
+    "native18_unassigned_inventory_empty": true,
+    "server_unassigned_inventory_empty": true,
+    "target_is_real_approved_device": true,
+    "valid_new_proof_public_key_used": true,
+    "unauthorized_attended_grant_status": 403,
+    "unassigned_history_unchanged_empty": true,
+    "device_approval_group_and_consent_unchanged": true,
+    "signed_profile_revision": 44,
+    "updates_remain_paused": true,
+    "no_successful_grant_or_native_session_created": true,
+    "receiving_device_bypass_tests_qualified": false,
+    "production_publication": false
+  },
+  "unassigned_native_inventory_screenshot_sha256": "e8ac9d8cd377e938e3ff254326be92589724399d2bd6ef5319dd79396b7bbe49"
 }
