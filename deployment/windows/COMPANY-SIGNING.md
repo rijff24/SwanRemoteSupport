@@ -1,5 +1,9 @@
 # Optional company signing
 
+For a customer EXE, sign the installed inner executable before rebuilding its
+outer installer with the [customer EXE producer](../../docs/CUSTOMER_EXE_PRODUCER.md).
+Signing only the old outer EXE cannot update or sign its embedded payload.
+
 Company signing is a local operator-controlled integration. The project does
 not provide certificates, approval, shared signing infrastructure or private
 keys. Default distribution consumes unchanged project-signed artifacts.

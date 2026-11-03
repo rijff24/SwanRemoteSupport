@@ -49,8 +49,16 @@ jobs:
         run: |
           python -m unittest discover -s deployment/windows -p test_build_source.py
           python -m unittest discover -s deployment/windows -p test_customer_msi.py
+          python -m pip install --disable-pip-version-check brotli==1.1.0
+          python -m unittest discover -s deployment/windows -p test_customer_exe.py
           mkdir -p component-artifacts
           python deployment/windows/archive-build-source.py . component-artifacts/CompanyComponents-source.zip --components-only
+      - name: Check customer EXE native output handling in Windows PowerShell
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          powershell.exe -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File deployment/windows/test_customer_exe_native_output.ps1 -PythonExe (Get-Command python -CommandType Application).Source
+          if ($LASTEXITCODE -ne 0) { throw 'Customer EXE native-output regression failed.' }
       - name: Reject mismatched maintained Windows binaries and corresponding source
         shell: bash
         run: python -m unittest discover -s deployment/transport -p test_windows_components.py
