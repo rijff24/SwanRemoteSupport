@@ -8249,3 +8249,12 @@ On the existing Windows Server2022 build20348 lab desktop, the company-generated
 A separate native MFA sign-in using an unassigned technician displayed no devices or history. An independent authenticated request with a valid fresh proof key received403 for an attended grant to a real approved device. No successful grant or support session was created, and device approval, group and consent stayed unchanged. Evidence: [technician19 test](evidence/1519-standard-technician-upgrade-and-native-mfa-20261103.json).
 
 This verifies this upgrade/login and server authorization boundary only. Receiving-device bypass and live session tests, clean customer EXE19 installation, interrupted update recovery, the remaining Windows lifecycle matrix, external public transport, independent19 reproduction and production signing remain open.
+
+
+### Candidate19 clean Windows10 customer MSI installation and reboot
+
+A fresh standard Windows10 Pro22H2 x64 installation reached build19045 using the existing verified Microsoft media. First-logon provisioning completed; the stopped disk was inspected read-only and preserved as a hashed, read-only clean baseline with a separate test overlay. Before product setup, the networked overlay had no Swan installation, compiler, Tailscale, trusted lab publisher or VC runtime registration. Automatic logon was disabled and its saved password removed.
+
+After importing only the public disposable lab trust certificates, the existing company-generated customer MSI25 installed native1.5.19, enrolled automatically, synchronized profile44, verified all96 installed files and started the service and watcher with unattended consent off. A normal OS reboot preserved device identity, credential, bootstrap trust, consent and sequence25; service/watch and the shipping verifier passed again. [Evidence](evidence/1519-clean-win10-customer-msi-install-and-reboot-20261103.json).
+
+Graphical runtime remains unqualified on this clean fixture: console keystrokes rejected a saved administrator password that a separate private Windows authentication check accepted. A genuine standard test account was created without changing administrator credentials; USB-only input diagnosis is pending on the same overlay. These installer/service results do not qualify graphical sessions, customer EXE19, the complete Windows10 lifecycle, the remaining OS matrix or production release signing.
