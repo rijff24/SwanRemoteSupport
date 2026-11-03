@@ -1,0 +1,63 @@
+{
+  "recorded_utc": "2026-11-03T13:36:21.189845+00:00",
+  "scope": "Primary native build, unsigned artifacts and exact corresponding-source verification; not signed runtime acceptance",
+  "version": "1.5.19+87",
+  "source": "a3fedd94e38d902164db90321bcf397c85a6c12b",
+  "workflow_run": 41628177194,
+  "windows_job": 125895623171,
+  "build_url": "https://github.com/rijff24/SwanRemoteSupport/actions/runs/41628177194",
+  "windows_job_conclusion": "success",
+  "artifact": {
+    "id": 13231382300,
+    "bytes": 256521762,
+    "sha256": "5d4237325267400a1365ffefb384cb8ebda8fcc2a6747337619d7b8399c7b075"
+  },
+  "source_archive_sha256": "25aa64baba41648a1367b710fc5a62d14b37dfec784940fe8f324c683f2139ee",
+  "public_tracked_source_files_verified": 1372,
+  "generated_bridge_files_verified": 6,
+  "submodule_revisions": {
+    ".": "a3fedd94e38d902164db90321bcf397c85a6c12b",
+    "libs/hbb_common/": "7e1c392c62d39c364127307cd408421dd5f8cfb0"
+  },
+  "all_shipping_manifest_hashes_match": true,
+  "pinned_sdk_version": "3.24.5",
+  "engine_source": "05d5369c04804b9a9b2dc06df0cb85b0efe6f274",
+  "engine_sha256": "c87ba5a71afa7b7100c1c9ccc1289009dab812f9de2acc38f9d5103e48c1f204",
+  "native_transfer_write_regression_log_verified": true,
+  "three_approval_window_regressions_verified": true,
+  "customer_payload_files_extracted_and_msi_manifest_verified": 95,
+  "downloaded_executables_run_on_host": false,
+  "required_native_ci_steps": {
+    "Keep pending customer approvals visible during reconnects": "success",
+    "Reject indefinitely blocked file-transfer writes": "success",
+    "Reject paused support and authorization reuse after resume": "success",
+    "Reject authorization retries and inherited audit destinations": "success",
+    "Reject cross-target and stale-login file-transfer handles": "success",
+    "Verify hardened DLL search supports delayed application libraries": "success",
+    "Build branded client": "success",
+    "Build self-extracting installer": "success",
+    "Reject incoming capture helpers in the technician edition": "success",
+    "Verify service launcher defers desktop DLL loading": "success",
+    "Verify customer MSI starts a headless native service": "success",
+    "Reject unsigned legacy management policy in managed editions": "success",
+    "Reject upstream updater entry points in managed editions": "success",
+    "Reject system-control packets from view-only managed sessions": "success",
+    "Build unsigned customer and technician MSIs with pinned WiX": "success",
+    "Verify unsigned technician MSI installation repair and uninstall": "success",
+    "Build unsigned company server setup with pinned components": "success"
+  },
+  "component_gate": {
+    "source": "12ada256317b55af026ca0540182ca8b7179a1fc",
+    "run": 41624580461,
+    "windows_and_linux_verify_success": true,
+    "actual_windows_powershell_system_broker_test_passed": true,
+    "candidate_changes_since_gate": "Only synchronized Cargo, portable packer, Flutter and workflow version metadata"
+  },
+  "explicit_upgrade_runtime_qualified": false,
+  "same_release_repair_runtime_qualified": false,
+  "live_pending_consent_recovery_qualified": false,
+  "complete_windows_matrix_qualified": false,
+  "independent_native_rebuild_verified": false,
+  "production_signing_approved": false,
+  "production_publication": false
+}
