@@ -36,7 +36,7 @@
     "production_qualified": false
   },
   "native_windows11_session_qualified": false,
-  "repair_reboot_upgrade_uninstall_pending": true,
+  "repair_reboot_upgrade_uninstall_pending": false,
   "production_publication": false,
   "standard_user_technician": {
     "format": "msi",
@@ -50,5 +50,28 @@
     "native_mfa_login_passed": true,
     "authorized_device_inventory_displayed": true,
     "observed_utc": "2026-11-03T00:34:26.532718+00:00"
-  }
+  },
+  "normal_reboot": {
+    "sequence": 19,
+    "version": "1.5.16",
+    "consent_revision": 0,
+    "unattended_consent_off": true,
+    "native_configuration_preserved_through_normal_reboot": true,
+    "service_pid": 3140,
+    "configuration_watch_started_automatically": true,
+    "shipping_verifier_passed": true,
+    "headless_service_has_no_flutter_or_desktop_plugin_module": true,
+    "production_qualified": false,
+    "unexpected_power_loss_event_count": 0,
+    "utc": "2026-11-03T00:55:14.7804998Z",
+    "new_boot_utc": "2026-11-03T00:47:20.5000000Z",
+    "source": "1d04bb71eb34a2111a25aed776de664086ea15aa",
+    "manual_service_or_watcher_restart": false,
+    "normal_restart_event_and_clean_event_log_shutdown_verified": true,
+    "identity_credential_trust_and_consent_preserved": true,
+    "service_started_automatically": true,
+    "kernel_boot_changed": true,
+    "prior_boot_utc": "2026-11-02T22:42:30.5000000Z"
+  },
+  "repair_upgrade_uninstall_pending": true
 }
