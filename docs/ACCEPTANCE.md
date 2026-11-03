@@ -8260,3 +8260,10 @@ After importing only the public disposable lab trust certificates, the existing 
 Graphical runtime remains unqualified on this clean fixture: console keystrokes rejected a saved administrator password that a separate private Windows authentication check accepted. A genuine standard test account was created without changing administrator credentials; USB-only input diagnosis is pending on the same overlay. These installer/service results do not qualify graphical sessions, customer EXE19, the complete Windows10 lifecycle, the remaining OS matrix or production release signing.
 
 The newly enrolled customer remained pending approval with unattended consent off. The otherwise authorized technician could not see it in its authenticated inventory, and a grant request with a fresh valid proof key received403. Device approval/group/consent and session history stayed unchanged. This verifies this server-side enrollment boundary; receiving-device bypass and graphical runtime remain separate tests.
+
+
+### Candidate19 customer EXE producer and corresponding source (2026-11-04 local)
+
+The original retained Windows builder compiled the customer EXE from exact public sourcea3fedd9 around its already signed native19 executable. All six actual native packer tests and all95 embedded-file hashes passed. The existing nonexportable disposable publisher key signed and timestamped the outer EXE. After collection, an independent host parser verified the same95 embedded files and rejected a deliberately wrong inner manifest. The producer sources match the runtime commit exactly; the corresponding-source bundle includes that archive, producer files, toolchain pins, license and build provenance, with every entry verified. [Evidence](evidence/1519-signed-inner-customer-exe-producer-20261104.json).
+
+This establishes producer/signature verification with lab trust only. Company bundle generation, clean EXE19 installation, independent producer reproduction, graphical/live session qualification and production signing remain separate requirements.
