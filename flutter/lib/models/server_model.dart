@@ -61,6 +61,10 @@ class ServerModel with ChangeNotifier {
 
   void cancelApprovalWindowAutoHide() => _approvalWindowAutoHide.cancel();
 
+  void scheduleApprovalWindowAutoHide() {
+    if (isDesktop) _approvalWindowAutoHide.schedule();
+  }
+
   bool get isStart => _isStart;
 
   bool get mediaOk => _mediaOk;
@@ -608,7 +612,7 @@ class ServerModel with ChangeNotifier {
     });
     // Only do the hidden task when on Desktop.
     if (client.authorized && isDesktop) {
-      _approvalWindowAutoHide.schedule();
+      scheduleApprovalWindowAutoHide();
     }
     parent.target?.chatModel
         .updateConnIdOfKey(MessageKey(client.peerId, client.id));
@@ -708,6 +712,7 @@ class ServerModel with ChangeNotifier {
       parent.target?.invokeMethod("cancel_notification", client.id);
       client.authorized = true;
       notifyListeners();
+      scheduleApprovalWindowAutoHide();
     } else {
       bind.cmLoginRes(connId: client.id, res: res);
       parent.target?.invokeMethod("cancel_notification", client.id);
