@@ -65,10 +65,15 @@ publisher, a different certificate, and timestamp URLs containing credentials,
 queries or fragments were rejected. Earlier wrong-input-hash rejection also
 left the input unchanged and created no output.
 
-This is isolated signing integration evidence, not production provider approval.
-MSI signing, hardware/cloud providers, worker consumption and complete signed
-install/update acceptance remain unverified. No lab signing key was exported or
-added to the host's trust stores.
+Subsequent [native1.5.18 producer tests](../../docs/evidence/1518-signed-inner-customer-exe-producer-20261103.json)
+signed the installed customer executable and agent, both MSI editions, the
+technician EXE and a rebuilt customer EXE. The
+[company worker generated all four bundles](../../docs/evidence/1518-company-generated-exe-msi-both-editions-20261103.json)
+from approved lab-signed releases; downloaded payload hashes and signed metadata
+were verified independently. This verifies lab signing and worker consumption.
+Complete installation/update qualification, hardware/cloud providers and
+production provider approval remain separate requirements. No lab signing key
+was exported or added to the host's trust stores.
 
 See [Microsoft SignTool documentation](https://learn.microsoft.com/en-us/windows/win32/seccrypto/signtool)
 for certificate-store selection and RFC3161 signing options.
