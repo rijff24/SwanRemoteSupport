@@ -120,6 +120,137 @@ fn prepare_installation_marker(directory:&Path,envelope:&SignedEnvelope)->Result
 }
 
 #[cfg(any(windows,test))]
+#[derive(Debug,PartialEq,Eq)]
+struct SetupUiOperation { id:String, marker_sha256:String }
+
+#[cfg(any(windows,test))]
+fn setup_ui_operation(directory:&Path,envelope:&SignedEnvelope)->Result<SetupUiOperation> {
+    use std::io::Read;
+    let file=std::fs::File::open(directory.join("pending-install.json"))?;
+    let modified=file.metadata()?.modified()?.duration_since(std::time::UNIX_EPOCH)?.as_nanos();
+    let mut bytes=Vec::new();file.take(2*1024*1024+1).read_to_end(&mut bytes)?;
+    ensure!(bytes.len()<=2*1024*1024,"Setup marker exceeds size limit");
+    let marker:SignedEnvelope=serde_json::from_slice(&bytes)?;
+    ensure!(marker.payload==envelope.payload && marker.signature==envelope.signature,"Another setup owns UI recovery");
+    let marker_sha256=digest(&bytes);
+    // Last-write time distinguishes a new same-release repair from an older
+    // completed transaction, while retries retain the original operation.
+    let id=digest(format!("{marker_sha256}:{modified}").as_bytes())[..32].to_owned();
+    Ok(SetupUiOperation{id,marker_sha256})
+}
+
+#[cfg(test)]
+#[test]
+fn explicit_ui_transaction_distinguishes_retry_repair_and_foreign_marker() {
+    let root=std::env::temp_dir().join(format!("swan-setup-ui-{}",random_token()));
+    std::fs::create_dir(&root).unwrap();
+    let envelope=SignedEnvelope{payload:"fixture payload".into(),signature:"fixture signature".into()};
+    assert!(setup_ui_operation(&root,&envelope).is_err());
+    prepare_installation_marker(&root,&envelope).unwrap();
+    let first=setup_ui_operation(&root,&envelope).unwrap();
+    prepare_installation_marker(&root,&envelope).unwrap();
+    assert_eq!(setup_ui_operation(&root,&envelope).unwrap(),first,"Retry must resume its original task identity");
+    let foreign=SignedEnvelope{payload:"another payload".into(),signature:envelope.signature.clone()};
+    assert!(setup_ui_operation(&root,&foreign).is_err());
+    let marker=root.join("pending-install.json");
+    let file=std::fs::OpenOptions::new().write(true).open(&marker).unwrap();
+    let later=file.metadata().unwrap().modified().unwrap()+std::time::Duration::from_secs(2);
+    file.set_times(std::fs::FileTimes::new().set_modified(later)).unwrap();drop(file);
+    let repair=setup_ui_operation(&root,&envelope).unwrap();
+    assert_eq!(first.marker_sha256,repair.marker_sha256);
+    assert_ne!(first.id,repair.id,"New same-release setup must not reuse a completed transaction");
+    std::fs::write(&marker,b"interrupted marker").unwrap();
+    assert!(setup_ui_operation(&root,&envelope).is_err());
+    std::fs::write(&marker,vec![b' ';2*1024*1024+1]).unwrap();
+    assert!(setup_ui_operation(&root,&envelope).is_err());
+    std::fs::remove_dir_all(root).unwrap();
+}
+
+#[cfg(windows)]
+#[derive(Serialize)]
+struct SetupUiCompletion<'a> {
+    schema:u32, operation_id:&'a str, operation:&'a str,
+    marker_sha256:&'a str, agent_sha256:&'a str, system_context:bool,
+}
+
+#[cfg(windows)]
+fn run_setup_ui_broker(directory:&Path,operation:&str,context:Option<&SetupUiOperation>,agent_hash:&str)->Result<()> {
+    prepare_customer_directory(directory,true)?;
+    let script=directory.join("setup-ui-broker.ps1");
+    publish_download(&script,include_bytes!("../../../deployment/windows/Run-SetupUiTask.ps1"))?;
+    prepare_customer_directory(directory,true)?;
+    let mut command=powershell_command()?;
+    command.args(["-NoLogo","-NoProfile","-NonInteractive","-ExecutionPolicy","Bypass","-File"]).arg(script)
+        .arg("-Directory").arg(directory).arg("-Operation").arg(operation);
+    if let Some(context)=context {
+        command.arg("-OperationId").arg(&context.id).arg("-AgentSha256").arg(agent_hash.to_ascii_lowercase())
+            .arg("-MarkerSha256").arg(&context.marker_sha256);
+    }
+    let mut child=command.stdin(std::process::Stdio::null()).spawn()?;
+    let status=crate::verifier_process::wait_with_message(&mut child,std::time::Duration::from_secs(930),
+        "Explicit setup UI recovery timed out; signed setup remains pending")?;
+    ensure!(status.success(),"Explicit setup UI recovery failed; preserve the signed setup marker and retry verified company setup");
+    Ok(())
+}
+
+#[cfg(windows)]
+fn explicit_setup_ui(directory:&Path,envelope:&SignedEnvelope,release:&Release,operation:&str)->Result<()> {
+    use std::io::Read;
+    ensure!(matches!(operation,"prepare"|"restart"),"Unknown explicit setup UI operation");
+    prepare_customer_directory(directory,true)?;
+    let context=setup_ui_operation(directory,envelope)?;
+    let source=std::fs::File::open(std::env::current_exe()?)?;
+    let mut bytes=Vec::new();source.take(64*1024*1024+1).read_to_end(&mut bytes)?;
+    ensure!(bytes.len()<=64*1024*1024 && digest(&bytes).eq_ignore_ascii_case(&release.agent_sha256),"Setup UI requires the exact signed release agent");
+    let stage=directory.join("setup-ui").join(&context.id);
+    std::fs::create_dir_all(&stage)?;
+    let helper=stage.join("swan-agent.exe");
+    if helper.exists(){ensure!(staged_hash_matches(&helper,&release.agent_sha256)?,"Existing setup UI helper differs");}
+    else{publish_initial_bytes(&helper,&bytes)?;}
+    prepare_customer_directory(directory,true)?;
+    let mut agent_release=release.clone();agent_release.sha256=release.agent_sha256.clone();
+    verify_publisher(&helper,&agent_release)?;
+    run_setup_ui_broker(directory,operation,Some(&context),&release.agent_sha256)
+}
+
+/// Fixed SYSTEM-only task entry point. The parent retains session exclusion;
+/// acquiring its activity lock again here would deadlock explicit setup.
+#[cfg(windows)]
+pub fn complete_setup_ui_task(directory:&Path,operation:&str,operation_id:&str)->Result<()> {
+    ensure!(matches!(operation,"prepare"|"restart"),"Unknown setup UI task operation");
+    prepare_customer_directory(directory,true)?;
+    ensure!(!directory.join("pending-uninstall").exists(),"Uninstall cancels setup UI recovery");
+    let envelope:SignedEnvelope=serde_json::from_slice(&std::fs::read(directory.join("pending-install.json"))?)?;
+    let context=setup_ui_operation(directory,&envelope)?;
+    ensure!(context.id==operation_id,"Setup UI task belongs to another transaction");
+    let state=AgentState::load(directory)?;
+    ensure!(state.bootstrap.edition==Edition::Customer,"Setup UI recovery requires customer edition");
+    let release=installation_release(&state,directory,&envelope,false)?;
+    let helper=directory.join("setup-ui").join(&context.id).join("swan-agent.exe");
+    ensure!(std::fs::canonicalize(std::env::current_exe()?)?==std::fs::canonicalize(&helper)? && staged_hash_matches(&helper,&release.agent_sha256)?,"Setup UI task must use its exact staged signed agent");
+    let target=installed_target(directory,&Edition::Customer)?;
+    if operation=="prepare" {
+        let old_hash=if state.last_release_sequence>0 {
+            let installed:SignedEnvelope=serde_json::from_slice(&std::fs::read(directory.join("installed-release.json"))?)?;
+            validate_previous_release(&state,&installed,state.last_release_sequence)?.installed_sha256
+        }else{
+            if target.exists(){ensure!(staged_hash_matches(&target,&release.installed_sha256)?,"Existing unrecorded software requires an explicit migration before setup");}
+            release.installed_sha256.clone()
+        };
+        customer_ui_recovery(directory,&target,"prepare",&format!("{old_hash},{}",release.installed_sha256).to_ascii_lowercase())?;
+    }else{
+        ensure!(state.last_release_sequence==release.sequence,"UI restoration requires committed installation metadata");
+        verify_installed(directory,&release)?;
+        customer_ui_recovery(directory,&target,"restart","")?;
+    }
+    // The UI helper independently requires SYSTEM even when no window exists.
+    ensure!(!directory.join("pending-uninstall").exists() && setup_ui_operation(directory,&envelope)?==context,"Setup changed during UI recovery");
+    let agent_hash=release.agent_sha256.to_ascii_lowercase();
+    let receipt=SetupUiCompletion {schema:1,operation_id:&context.id,operation,marker_sha256:&context.marker_sha256,agent_sha256:&agent_hash,system_context:true};
+    publish_download(&helper.parent().context("Missing setup helper directory")?.join(format!("{operation}-result.json")),&serde_json::to_vec(&receipt)?)
+}
+
+#[cfg(any(windows,test))]
 fn replace_failed_installation_marker(state:&AgentState,directory:&Path,envelope:&SignedEnvelope)->Result<()> {
     let path=directory.join("pending-install.json");
     let bytes=std::fs::read(&path).context("Explicit setup replacement requires a pending setup")?;
@@ -365,7 +496,10 @@ pub fn commit_uninstall(directory:&Path,edition:&str)->Result<()> {
     let status=embedded_powershell_command(include_str!("../../../deployment/windows/Commit-Uninstall.ps1"),
         &[("Directory",directory.to_str().context("Uninstall state path is not valid Unicode")?),("Edition",edition)])?.status()?;
     ensure!(status.success(),"Uninstall commit cleanup failed");
-    if edition=="customer" {customer_ui_recovery(directory,&installed_target(directory,&Edition::Customer)?,"remove","")?;}
+    if edition=="customer" {
+        run_setup_ui_broker(directory,"cleanup",None,"")?;
+        customer_ui_recovery(directory,&installed_target(directory,&Edition::Customer)?,"remove","")?;
+    }
     Ok(())
 }
 
@@ -932,9 +1066,17 @@ impl AgentState {
         let activity=activity_file(directory)?;fs2::FileExt::try_lock_exclusive(&activity).context("Explicit setup requires all sessions and update helpers to close")?;
         let state=AgentState::load(directory)?;
         if repair {verify_repair_package(&state,directory,envelope,package)?;}else{verify_package(&state,directory,envelope,package)?;}
+        let release=installation_release(&state,directory,envelope,repair)?;
         if replace_failed_setup {replace_failed_installation_marker(&state,directory,envelope)?;}
         else{prepare_installation_marker(directory,envelope)?;}
         archive_cancelled_update(&state,directory)?;
+        if state.bootstrap.edition==Edition::Customer {
+            // Explicit verified setup supersedes a cancelled uninstall only
+            // after its durable setup marker blocks every new session.
+            let uninstall=directory.join("pending-uninstall");
+            if uninstall.exists(){std::fs::remove_file(uninstall)?;}
+            explicit_setup_ui(directory,envelope,&release,"prepare")?;
+        }
         Ok(())
     }
     #[cfg(windows)]
@@ -998,6 +1140,7 @@ impl AgentState {
         let mut latest=AgentState::load(directory)?;
         let release=installation_release(&latest,directory,envelope,repair)?;
         let setup_marker=directory.join("pending-install.json");
+        ensure!(latest.bootstrap.edition!=Edition::Customer || setup_marker.exists(),"Customer installation recording requires prepared verified setup");
         if setup_marker.exists(){
             let pending:SignedEnvelope=serde_json::from_slice(&std::fs::read(&setup_marker)?)?;
             ensure!(pending.payload==envelope.payload && pending.signature==envelope.signature,"Another company installation must be recovered first");
@@ -1008,6 +1151,11 @@ impl AgentState {
         retain_installer(package,&installer_cache(directory,&release),&release)?;
         save_installed_metadata(directory,envelope)?;
         latest.last_release_sequence=release.sequence;latest.save(directory)?;
+        if latest.bootstrap.edition==Edition::Customer {
+            // Keep the blocking marker if restoration fails, including after
+            // metadata commit. Exact same-release completion can then retry.
+            explicit_setup_ui(directory,envelope,&release,"restart")?;
+        }
         // Explicit verified setup takes responsibility for registering and
         // starting its watcher after this command returns.
         let restart_marker=directory.join("configuration-restart.json");
@@ -1364,11 +1512,17 @@ pub(crate) fn test_failed_release_quarantine(state:&AgentState,release:&Release,
         assert!(!preparation.join("pending-install.json").exists());
         assert_eq!(std::fs::read(preparation.join("pending-update.json")).unwrap(),pending_bytes);
         let envelope=SignedEnvelope::sign(&requested,key).unwrap();
-        state.prepare_installation(&preparation,&envelope,&source,false).unwrap();
-        state.prepare_installation(&preparation,&envelope,&source,false).unwrap();
+        // This signed OS-binary fixture is outside canonical customer storage
+        // and is not the release agent. It may arm durable recovery, but must
+        // never reach privileged UI execution. Real broker/installer tests run
+        // separately in disposable Windows environments.
+        assert!(state.prepare_installation(&preparation,&envelope,&source,false).is_err());
+        assert!(state.prepare_installation(&preparation,&envelope,&source,false).is_err());
         assert!(!preparation.join("pending-update.json").exists());
         assert_eq!(std::fs::read(preparation.join("updates/2/cancelled-update.json")).unwrap(),pending_bytes);
-        assert!(preparation.join("pending-uninstall").exists() && preparation.join("pending-install.json").exists());
+        assert!(!preparation.join("pending-uninstall").exists() && preparation.join("pending-install.json").exists());
+        assert!(crate::lock_session(&preparation).is_err(),"UI preparation failure must retain session exclusion");
+        assert!(!preparation.join("setup-ui").exists(),"A noncanonical fixture must not stage a SYSTEM executable");
         assert_eq!(std::fs::read(preparation.join("managed-state.json")).unwrap(),initial_state);
         let mut wrong_publisher=installer.clone();wrong_publisher.publisher="Unapproved publisher".into();
         assert!(retain_installer(&source,&target,&wrong_publisher).is_err());

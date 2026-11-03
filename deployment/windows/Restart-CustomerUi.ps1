@@ -135,12 +135,14 @@ function Restart-VerifiedCustomerUi([string]$StateDirectory,[string]$Path,[switc
     if (-not [Security.Principal.WindowsIdentity]::GetCurrent().IsSystem) { throw 'Customer UI update restart requires SYSTEM.' }
     $directoryPath=[IO.Path]::GetFullPath($StateDirectory).TrimEnd('\')
     $exe=[IO.Path]::GetFullPath($Path)
-    if ([IO.Path]::GetFileName($exe) -cne 'Swan Remote Support.exe' -or (Get-Item -LiteralPath $exe).Attributes -band [IO.FileAttributes]::ReparsePoint) { throw 'Unexpected installed customer executable.' }
+    $executableItem=Get-Item -LiteralPath $exe -ErrorAction SilentlyContinue
+    if ([IO.Path]::GetFileName($exe) -cne 'Swan Remote Support.exe' -or ($executableItem -and ($executableItem.Attributes -band [IO.FileAttributes]::ReparsePoint)) -or (-not $PrepareOnly -and -not $executableItem)) { throw 'Unexpected installed customer executable.' }
     if (Test-Path -LiteralPath (Join-Path $directoryPath 'pending-uninstall')) { throw 'Explicit uninstall cancels customer UI restoration.' }
-    if ($PrepareOnly -and -not (Test-Path -LiteralPath (Join-Path $directoryPath 'pending-update.json'))) { throw 'Customer UI preparation requires a pending update.' }
+    $explicitSetup=Test-Path -LiteralPath (Join-Path $directoryPath 'pending-install.json')
+    if ($PrepareOnly -and -not $explicitSetup -and -not (Test-Path -LiteralPath (Join-Path $directoryPath 'pending-update.json'))) { throw 'Customer UI preparation requires a pending update or verified setup.' }
     # The caller verified this exact signed release while holding session
     # exclusion. Do not restart a newly opened post-commit UI on recovery.
-    $committed=(Get-Item -LiteralPath (Join-Path $directoryPath 'installed-release.json')).LastWriteTimeUtc
+    $committed=if($PrepareOnly){[DateTime]::MinValue}else{(Get-Item -LiteralPath (Join-Path $directoryPath 'installed-release.json')).LastWriteTimeUtc}
     $old=@();$fresh=@{}
     foreach ($process in @(Get-CimInstance Win32_Process -Filter "Name='Swan Remote Support.exe'" -OperationTimeoutSec 30)) {
         if ($process.SessionId -eq 0 -or $process.ExecutablePath -ine $exe) { continue }
@@ -155,7 +157,15 @@ function Restart-VerifiedCustomerUi([string]$StateDirectory,[string]$Path,[switc
     if ($PrepareOnly -and $old.Count -gt 0) {
         $hashes=@($ExpectedHashes.Split(','))
         if ($hashes.Count -ne 2 -or @($hashes | Where-Object { $_ -cnotmatch '^[0-9a-f]{64}$' }).Count) { throw 'Expected signed executable identities are required.' }
-        if ((Get-FileHash -LiteralPath $exe -Algorithm SHA256).Hash.ToLowerInvariant() -cnotin $hashes) { throw 'Customer executable differs from both signed releases.' }
+        if($executableItem){
+            if ((Get-FileHash -LiteralPath $exe -Algorithm SHA256).Hash.ToLowerInvariant() -cnotin $hashes) { throw 'Customer executable differs from both signed releases.' }
+        }else{
+            # Explicit repair may replace a missing file while its old image is
+            # still mapped. Keep the exact path/creation/SID process checks;
+            # require a previously recorded installation for this exception.
+            $installedState=if($explicitSetup){Get-Content -LiteralPath (Join-Path $directoryPath 'managed-state.json') -Raw|ConvertFrom-Json}else{$null}
+            if(-not $installedState -or $installedState.last_release_sequence -le 0){throw 'Missing customer executable requires recorded explicit repair.'}
+        }
     }
     $context=Read-CustomerUiRecoveryTasks $directoryPath $exe
     $prefix=$context.Prefix;$folder=$context.Folder;$pending=$context.Tasks

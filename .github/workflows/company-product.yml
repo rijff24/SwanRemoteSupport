@@ -62,6 +62,12 @@ jobs:
       - name: Reject mismatched maintained Windows binaries and corresponding source
         shell: bash
         run: python -m unittest discover -s deployment/transport -p test_windows_components.py
+      - name: Verify real bounded SYSTEM setup UI task broker
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          powershell.exe -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File deployment/windows/test_setup_ui_broker.ps1
+          if ($LASTEXITCODE -ne 0) { throw 'Explicit setup UI SYSTEM broker checks failed.' }
       - name: Test security and management
         run: cargo +1.90.0 test --manifest-path product/Cargo.toml --workspace --locked
       - name: Verify real HTTPS update streaming and interrupted download recovery

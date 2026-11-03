@@ -26,6 +26,14 @@ async fn main()->Result<()> {
         updates.parent().context("Missing company recovery directory")?.to_owned()
     }else{directory};
     match command {
+        #[cfg(windows)]
+        "setup-ui"=>{
+            let operation=args.get(2).context("Missing internal setup UI operation")?.clone();
+            let task_directory=PathBuf::from(args.get(3).context("Missing internal setup UI directory")?);
+            let operation_id=args.get(4).context("Missing internal setup UI transaction")?.clone();
+            tokio::task::spawn_blocking(move ||swan_agent::update::complete_setup_ui_task(&task_directory,&operation,&operation_id))
+                .await.context("Explicit setup UI task failed")??;
+        }
         "rollback-protocol"=>println!("1"),
         #[cfg(windows)]
         "prepare-customer-directory"=>{
@@ -39,7 +47,9 @@ async fn main()->Result<()> {
             let edition=args.get(2).context("Missing uninstall edition")?;
             ensure!(matches!(edition.as_str(),"customer"|"technician"),"Invalid uninstall edition");
             let directory=PathBuf::from(args.get(3).context("Missing uninstall state directory")?);
-            swan_agent::update::commit_uninstall(&directory,edition)?;
+            let edition=edition.to_owned();
+            tokio::task::spawn_blocking(move ||swan_agent::update::commit_uninstall(&directory,&edition))
+                .await.context("Uninstall commit cleanup failed")??;
         }
         #[cfg(windows)]
         "cancel-update-recovery"|"restore-update-recovery"=>{
