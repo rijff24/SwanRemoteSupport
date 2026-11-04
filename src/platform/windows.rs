@@ -1982,7 +1982,10 @@ pub fn uninstall_me(kill_self: bool) -> ResultType<()> {
         let encoded=crate::encode64(bytes);
         // This fixed script runs inside the existing elevated uninstall batch,
         // before stopping the service or deleting any installed files.
-        format!("\"{}\" -NoLogo -NoProfile -NonInteractive -EncodedCommand {}\r\nif errorlevel 1 exit /b 1\r\n{}",powershell.display(),encoded,commands)
+        let completion=include_str!("../../deployment/windows/Complete-CustomerExeUninstall.ps1");
+        let completion_bytes:Vec<u8>=completion.encode_utf16().flat_map(|word|word.to_le_bytes()).collect();
+        let completion_encoded=crate::encode64(completion_bytes);
+        format!("\"{}\" -NoLogo -NoProfile -NonInteractive -EncodedCommand {}\r\nif errorlevel 1 exit /b 1\r\n{}\r\n\"{}\" -NoLogo -NoProfile -NonInteractive -EncodedCommand {}\r\nif errorlevel 1 exit /b 1",powershell.display(),encoded,commands,powershell.display(),completion_encoded)
     }else{commands};
     run_cmds(commands, true, "uninstall")
 }

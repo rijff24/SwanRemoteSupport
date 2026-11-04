@@ -1,0 +1,40 @@
+{
+  "utc": "2026-11-04T04:22:39.118895+00:00",
+  "runtime_source": "a3fedd94e38d902164db90321bcf397c85a6c12b",
+  "version": "1.5.19",
+  "release_sequence": 28,
+  "os": "Windows10 Pro x64 build19045",
+  "shipping_exe_uninstall_acceptance": "FAILED: configuration agent executable retained",
+  "observed_removal": {
+    "running_agent_count": 0,
+    "main_present": false,
+    "agent_present": true,
+    "pending_uninstall": true,
+    "watcher_present": false,
+    "utc": "2026-11-04T04:17:25.4628682Z",
+    "service_present": false
+  },
+  "no_running_agent_or_remote_service_after_uninstall": true,
+  "original_shipping_test_not_retried": true,
+  "correction": "Embed fixed completion script after native removal; require application/service/task absent and no installed agent process, remove only fixed agent file, retain identity/consent and uninstall cancellation.",
+  "component_test": {
+    "retained_managed_state_byte_identical": true,
+    "uninstall_cancellation_retained": true,
+    "retained_agent_removed": true,
+    "shipping_native20_qualification": false,
+    "source_component_only": true,
+    "utc": "2026-11-04T04:21:06.8068435Z",
+    "rollback_agent_retained_in_protected_fixture": true
+  },
+  "targeted_windows_powershell_tests_passed": [
+    "test_customer_exe_uninstall.ps1",
+    "test_uninstall_commit.ps1"
+  ],
+  "new_source_hashes": {
+    "deployment/windows/Complete-CustomerExeUninstall.ps1": "5990130e3163eea7f8513bac6d8a7ba674eca4fcc6e9b87b546fca80fa4c40c8",
+    "deployment/windows/test_customer_exe_uninstall.ps1": "8734468f6abb0c74ecdf462998c1b548dd0d50ef6eec4b83b06ae38aa3ae42ee"
+  },
+  "corrected_shipping_installer_full_uninstall_retest_pending": true,
+  "full_lifecycle_qualified": false,
+  "production_publication": false
+}
