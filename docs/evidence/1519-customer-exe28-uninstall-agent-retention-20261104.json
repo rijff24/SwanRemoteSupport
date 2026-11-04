@@ -36,5 +36,18 @@
   },
   "corrected_shipping_installer_full_uninstall_retest_pending": true,
   "full_lifecycle_qualified": false,
-  "production_publication": false
+  "production_publication": false,
+  "explicit_reinstall_after_source_component_cleanup": {
+    "no_pending_recovery": true,
+    "service": "Running",
+    "utc": "2026-11-04T04:23:46.0296538Z",
+    "uninstall_cancellation_cleared_only_by_explicit_setup": true,
+    "watch": "Running",
+    "identity_token_bootstrap_consent_preserved": true,
+    "explicit_shipping_repair_reinstall": true,
+    "sequence": 28,
+    "installed_verifier_passed": true,
+    "tailscale_absent": true,
+    "profile_revision": 44
+  }
 }
