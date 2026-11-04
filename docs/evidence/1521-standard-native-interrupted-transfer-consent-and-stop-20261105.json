@@ -1,0 +1,97 @@
+{
+  "test_date_local": "2026-11-05",
+  "timezone": "Africa/Johannesburg",
+  "native_source": "bd331cad1dbe4c45722690c7df70c863a7bd37b5",
+  "version": "1.5.21+89",
+  "environment": {
+    "customer": "Existing Windows 10 Pro x64 build 19045",
+    "technician": "Existing Windows Server 2022 Desktop Experience x64 build 20348",
+    "company_server": "Existing isolated Linux company deployment",
+    "both_windows_accounts_standard": true,
+    "new_vm_or_disk_created": false,
+    "unattended_consent_off": true
+  },
+  "initial_attended_session": {
+    "native_mfa_and_authorized_inventory_observed": true,
+    "named_customer_approval_prompt_observed": true,
+    "customer_accept_clicked": true,
+    "native_remote_desktop_rendered": true,
+    "target_and_technician_bound_to_preflight": true,
+    "server_claimed": true,
+    "server_lease_unexpired": true
+  },
+  "interruption_and_recovery": {
+    "utc": "2026-11-04T22:53:26.254208+00:00",
+    "source": "bd331cad1dbe4c45722690c7df70c863a7bd37b5",
+    "version": "1.5.21+89",
+    "source_file": {
+      "sha256": "920c38da8a311f4e42066cb61f336247245b152f8abdb307ec0c93f1baa5c622",
+      "name": "interruption-random-256MiB.bin",
+      "bytes": 268435456
+    },
+    "received": {
+      "verifier_did_not_copy_files": true,
+      "sidecars_absent": true,
+      "utc": "2026-11-04T22:53:24.8427842Z",
+      "bytes": 268435456,
+      "sha256": "920c38da8a311f4e42066cb61f336247245b152f8abdb307ec0c93f1baa5c622"
+    },
+    "virtual_network_down_utc": "2026-11-04T22:48:35.318138+00:00",
+    "virtual_network_restored_utc": "2026-11-04T22:49:20.396273+00:00",
+    "partial_bytes_observed_before_interruption": 3014656,
+    "original_transfer_ui_observed_incomplete_at_41_percent": true,
+    "desktop_and_file_reapproval_prompts_arrived": true,
+    "desktop_accepted_first_with_file_request_pending": true,
+    "pending_consent_window_stayed_visible": true,
+    "manual_taskbar_restoration": false,
+    "original_transfer_window_completed_after_explicit_reapproval": true,
+    "fresh_send_or_user_transfer_retry": false,
+    "vm_app_or_service_restart_after_transfer_started": false,
+    "exact_resume_offset_independently_measured": false,
+    "full_windows_matrix_qualified": false,
+    "public_internet_transport_qualified": false,
+    "production_publication": false
+  },
+  "customer_stop": {
+    "utc": "2026-11-04T22:57:08.628906+00:00",
+    "version": "1.5.21+89",
+    "actual_standard_customer_stop": true,
+    "previously_live_claimed_desktop_and_file_sessions": 2,
+    "both_same_server_records_closed": true,
+    "device_approval_preserved": true,
+    "unattended_consent_off": true,
+    "observer_did_not_close_sessions": true,
+    "production_publication": false
+  },
+  "native_technician_history": {
+    "utc": "2026-11-04T23:03:40.635Z",
+    "version": "1.5.21+89",
+    "native_session_history_visible": true,
+    "target": "SWAN-C10-18",
+    "current_desktop_and_file_sessions_display_closed": true,
+    "older_interrupted_sessions_display_ended": true,
+    "standard_technician_account": true
+  },
+  "locally_archived_screenshot_sha256": {
+    "customer-attended-request.jpg": "1e3db67c4347379a2785758e7d828c3774b8dba602106943f46ca0d62135e201",
+    "transfer-interrupted-awaiting-reapproval.jpg": "0b9841d84d376c7b1fa742c27d3d869caad4868485537245c8789033ee925e63",
+    "desktop-accepted-file-pending-window-visible.jpg": "8e5d6813741622aa9dcae0b5d2c79f9da64b0f318cbe6263cd4600b9f7c963e4",
+    "file-prompt-visible-after-desktop-accept.jpg": "569bd5f4cfe21985b212264260f4a33fbde1b2b3ce3c49db722c11db837711f9",
+    "original-transfer-finished.jpg": "364931044add6dc53d1ef2ccf19793a063a55654c4c158f8f16f0d3b260d02d6",
+    "customer-stop-live-sessions.jpg": "751e24bf4480dde450e2cadb350538e3cb1d1e66501bce30ebac4f86e8e2dbe4",
+    "technician-authorization-revoked-after-customer-stop.jpg": "105aeccf163d511f10094b85b20c28c198652d4a25379623ae42b0c0aea4fe83",
+    "technician-desktop-closed-by-customer.jpg": "bb978c2bf3eef93895a111f0cd2d37acddb65cb43f13962a30ea884f139eaf97",
+    "technician-current-session-history.jpg": "d1a3df608afd1b3864f35cdca49c34708a8b85bbdb790b766c59c3fd63c74790"
+  },
+  "qualification": {
+    "pending_consent_visibility_regression_passed": true,
+    "same_original_256mib_transfer_completed_after_reapproval": true,
+    "exact_resume_offset_independently_measured": false,
+    "exact_live_30_second_send_timeout_independently_measured": false,
+    "clipboard_uac_or_multiple_monitors_retested_here": false,
+    "automatic_update_retested_here": false,
+    "full_windows_matrix_qualified": false,
+    "external_public_connectivity_qualified": false,
+    "production_publication": false
+  }
+}

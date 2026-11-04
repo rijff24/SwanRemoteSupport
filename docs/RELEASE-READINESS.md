@@ -1,6 +1,17 @@
-# Release readiness — 4 November 2026
+# Release readiness — 5 November 2026
 
-Current app candidate: **1.5.21+89**, public source `bd331ca`. Both technician formats and the customer MSI have package verification. Customer EXE30 was withdrawn after a lab MSI/EXE manifest pairing error; [corrected EXE31 shipping recovery, uninstall/reinstall and compact customer About now pass](evidence/1521-customer-exe31-recovery-uninstall-reinstall-and-about-20261104.json) on the existing Windows10 development VM. [Independent native comparison](evidence/1521-independent-native-original-output-reproduction-20261104.json) matches all eight original unsigned outputs; [existing standard-user technician checks](evidence/1521-standard-technician-upgrade-about-mfa-20261104.json) pass upgrade, About, genuine MFA/inventory and sign-out. Both endpoint About screens and the customer shipping uninstall fix now have genuine app evidence. The remaining current-candidate live-session/permission, desktop-feature and update checks are still open. Finish these on the existing development pair before the final advertised-Windows matrix. Reuse one VM per OS; do not create a VM for each candidate. This remains a development build, without production approval.
+Current app candidate: **1.5.21+89**, public source `bd331ca`. Both technician formats and the customer MSI have package verification. Customer EXE30 was withdrawn after a lab MSI/EXE manifest pairing error; [corrected EXE31 shipping recovery, uninstall/reinstall and compact customer About now pass](evidence/1521-customer-exe31-recovery-uninstall-reinstall-and-about-20261104.json) on the existing Windows10 development VM. [Independent native comparison](evidence/1521-independent-native-original-output-reproduction-20261104.json) matches all eight original unsigned outputs; [existing standard-user technician checks](evidence/1521-standard-technician-upgrade-about-mfa-20261104.json) pass upgrade, About, genuine MFA/inventory and sign-out. Both endpoint About screens and the customer shipping uninstall fix now have genuine app evidence. Remaining permission, desktop-feature and update checks are open; current live-session results follow. Finish these on the existing development pair before the final advertised-Windows matrix. Reuse one VM per OS; do not create a VM for each candidate. This remains a development build, without production approval.
+
+[Current standard-user live checks](evidence/1521-standard-native-interrupted-transfer-consent-and-stop-20261105.json)
+now pass attended desktop access, separate file consent, a real45-second network
+interruption during a256MiB transfer, and original-window completion after fresh
+approval with exact received hashes. Accepting desktop access while file approval
+was pending kept the approval window visible, resolving the previously failing
+native17 regression. Customer Stop closed both live server records and access;
+native technician history displayed Closed. These results qualify this existing
+development pair. They do not close the other permission, desktop-feature,
+update, external-connectivity or final Windows-matrix gates. Exact resumed
+offsets and exact live30-second timeout timing were not measured.
 
 The source-specific historical findings below retain their original scope and do not describe the current deployment policy.
 

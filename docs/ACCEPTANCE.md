@@ -1,12 +1,40 @@
 # Configurable product acceptance report
 
-Evidence through 4 November 2026. **The product is not complete or approved for
+Evidence through 5 November 2026. **The product is not complete or approved for
 production publication.** A passing component test is not evidence of a working
 native support session or a clean-machine installation.
 
 For the current candidate and remaining release gates, start with the compact
 [release-readiness index](RELEASE-READINESS.md). The older checkpoints below
 remain source-specific historical evidence.
+
+## Current standard-user session and interrupted transfer, 5 November
+
+Native **1.5.21+89**, source `bd331ca`, passed attended desktop access on the
+existing Windows10 customer / Server2022 technician pair using standard accounts.
+The technician completed genuine MFA; the customer received the named approval
+request and accepted it before the remote desktop was observed. File transfer
+required its own customer approval.
+
+During a real256MiB transfer, only the customer's virtual network was disconnected
+for45 seconds. The original transfer showed41% and automatically entered fresh
+authorization. After reconnection both approval requests arrived. Accepting the
+desktop first left the approval window visible beyond seven seconds, and the
+pending file request remained accessible through its existing tab. No taskbar
+restoration was needed. Accepting file access completed the original transfer
+without another Send action, an application/service restart or a VM restart.
+The received268435456 bytes matched the independently retained source hash;
+transfer sidecars were absent. This verifies the previously failing consent
+visibility fix on the current native build; it does not measure exact resumed
+offsets or the precise send-timeout deadline.
+
+The customer's Stop control then ended both live sessions. The same two server
+records closed, the technician lost desktop/file access, and native technician
+history displayed those records as Closed. Unattended consent remained off.
+See the [scoped receipt](evidence/1521-standard-native-interrupted-transfer-consent-and-stop-20261105.json).
+No new VM or build was created. Other desktop features, automatic updates,
+external connectivity and the final advertised-Windows matrix retain their
+separate acceptance gates.
 
 ## Customer EXE packaging and setup wait, 4 November
 
