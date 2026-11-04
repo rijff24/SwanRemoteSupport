@@ -1,0 +1,126 @@
+{
+  "utc": "2026-11-04T01:52:27.970763+00:00",
+  "runtime_source": "a3fedd94e38d902164db90321bcf397c85a6c12b",
+  "producer_source": "dbab5fb72b9da1d994a096b91022cb0bc55e1ff3",
+  "customer_sequence": 27,
+  "fresh_installation_qualified": false,
+  "installation_assistance": "Correct stable main filename installed. Stalled old setup required stopping its verified session0 tray; no reinstall. Approval27 subsequently withdrawn.",
+  "post_assistance_installed_verification": {
+    "version": "1.5.19",
+    "watch_state": "Running",
+    "profile_revision": 44,
+    "sequence": 27,
+    "shipping_verifier_passed": true,
+    "assisted_installation_not_clean_acceptance": true,
+    "utc": "2026-11-04T01:03:30.5483318Z",
+    "all_signed_files": 95,
+    "default_unattended_consent_off": true,
+    "service_state": "Running",
+    "production_qualified": false,
+    "enrolled": true,
+    "public_lab_publisher_verified": true,
+    "tailscale_absent": true
+  },
+  "native_mapped_images": {
+    "metadata_only_no_memory_dump": true,
+    "production_qualified": false,
+    "actual_mapped_images_match_primary": true,
+    "assisted_installation_not_clean_acceptance": true,
+    "utc": "2026-11-04T01:07:45.6305150Z",
+    "images": [
+      {
+        "module": "Swan Remote Support.exe",
+        "sha256": "819c78ae404a88801a8ea65f5f9bc69dba5ed9c7bcf91753a942f2f1c540b07c",
+        "matches_primary_or_signed_main": true,
+        "actual_mapped_file": "\\Device\\HarddiskVolume1\\Program Files\\Swan Remote Support\\Swan Remote Support.exe"
+      },
+      {
+        "module": "librustdesk.dll",
+        "sha256": "22df0b04a78e393b6cb79418faa2c1b5a5dd2b9be0360cf915ca638f97b01cad",
+        "matches_primary_or_signed_main": true,
+        "actual_mapped_file": "\\Device\\HarddiskVolume1\\Program Files\\Swan Remote Support\\librustdesk.dll"
+      },
+      {
+        "module": "flutter_windows.dll",
+        "sha256": "c87ba5a71afa7b7100c1c9ccc1289009dab812f9de2acc38f9d5103e48c1f204",
+        "matches_primary_or_signed_main": true,
+        "actual_mapped_file": "\\Device\\HarddiskVolume1\\Program Files\\Swan Remote Support\\flutter_windows.dll"
+      }
+    ],
+    "native_version": "1.5.19+87",
+    "standard_user": true,
+    "native_pid": 6960
+  },
+  "pending_device_denial": {
+    "utc": "2026-11-04T01:05:01.821722+00:00",
+    "fresh_customer19_enrollment_pending": true,
+    "unattended_consent_off": true,
+    "authorized_technician_inventory_excludes_unapproved_device": true,
+    "real_pending_device_grant_with_valid_proof_rejected": 403,
+    "device_approval_group_and_consent_unchanged": true,
+    "session_history_unchanged": true,
+    "signed_profile_revision": 44,
+    "updates_paused": true,
+    "no_successful_grant_or_native_session_created": true,
+    "receiving_device_bypass_qualification": false,
+    "assisted_installation_not_clean_acceptance": true,
+    "production_publication": false
+  },
+  "device_approval": {
+    "utc": "2026-11-04T01:11:37.744736+00:00",
+    "only_test_device_approved": true,
+    "other_devices_unchanged": true,
+    "group_unchanged": true,
+    "unattended_still_off": true
+  },
+  "standard_user_stop_resume_ui_observed": true,
+  "consent_enabled": {
+    "unattended": true,
+    "profile": 44,
+    "sequence": 27,
+    "revision": 1,
+    "utc": "2026-11-04T01:14:14.3190684Z",
+    "phase": "enabled",
+    "local_and_server_consent_match": true,
+    "valid_proof_unattended_grant_status": 200,
+    "previous_grant_closed": false,
+    "no_native_session_claimed": true,
+    "standard_user_native_ui_action": true,
+    "assisted_installation_not_clean_acceptance": true,
+    "production_qualified": false
+  },
+  "consent_revoked": {
+    "unattended": false,
+    "profile": 44,
+    "sequence": 27,
+    "revision": 2,
+    "utc": "2026-11-04T01:15:18.0577299Z",
+    "phase": "revoked",
+    "local_and_server_consent_match": true,
+    "valid_proof_unattended_grant_status": 403,
+    "previous_grant_closed": true,
+    "no_native_session_claimed": true,
+    "standard_user_native_ui_action": true,
+    "assisted_installation_not_clean_acceptance": true,
+    "production_qualified": false
+  },
+  "actual_reboot": {
+    "no_pending_recovery": true,
+    "identity_token_bootstrap_and_consent_preserved": true,
+    "build": "19045",
+    "utc": "2026-11-04T01:40:24.9895500Z",
+    "boot_utc": "2026-11-04T01:27:14.5000000Z",
+    "watch": "Running",
+    "tailscale_absent": true,
+    "service": "Running",
+    "sequence": 27,
+    "gui_verification_pending": true,
+    "shipping_verifier_passed": true,
+    "profile_revision": 44
+  },
+  "post_reboot_gui_qualified": false,
+  "console_limitation": "Saved standard account credential passed Windows LogonUser after reboot; console input rejected it. No password reset. Device state and shipping verifier checks passed over pinned SSH.",
+  "native_session_qualified": false,
+  "complete_windows_matrix_qualified": false,
+  "production_publication": false
+}

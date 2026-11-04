@@ -1,6 +1,6 @@
 # Configurable product acceptance report
 
-Evidence through 31 October 2026. **The product is not complete or approved for
+Evidence through 4 November 2026. **The product is not complete or approved for
 production publication.** A passing component test is not evidence of a working
 native support session or a clean-machine installation.
 
@@ -23,6 +23,28 @@ A real Windows regression returns installer failure7 while its tray-like child
 remains alive; setup-entry trust/elevation tests pass. A newly generated bundle
 and another unassisted clean installation are still required. See the
 [scoped receipt](evidence/1519-corrected-exe-and-setup-descendant-wait-20261104.json).
+
+After that assistance, the real standard-user customer GUI displayed company
+branding and working Stop/Resume controls. The pending device was hidden from
+technicians and a valid-proof grant request returned403. Only this lab device
+was then approved: explicit GUI opt-in synchronized unattended consent to the
+server, and GUI revocation closed the unused unattended grant and rejected a
+new request. A normal reboot preserved identity, trust and revoked consent,
+started the service/watcher, and passed shipping verification. Post-reboot GUI
+login remains unqualified because console input rejected a credential that
+Windows' own credential check accepted. These are scoped lifecycle results,
+not a successful unassisted install or native support session. See the
+[standard-user receipt](evidence/1519-standard-win10-customer-consent-and-reboot-20261104.json).
+
+## Candidate 1.5.19 independent native reproduction, 4 November
+
+Runs41628177194 and41744919308 independently built public source `a3fedd9`.
+The original downloaded archives passed digest/source checks, and all eight
+unsigned shipping files were byte-identical with matching recorded MSVC
+inputs. No shipping binary was normalized or executed by comparison. This
+includes the original customer EXE; the separately corrected signed-inner EXE
+producer and fresh installation still have their own open gates. See the
+[comparison receipt](evidence/1519-independent-native-reproduction-20261104.json).
 
 ## Windows10 customer real interrupted update recovery, 31 October
 
