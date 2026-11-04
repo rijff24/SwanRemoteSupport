@@ -1,6 +1,21 @@
 [CmdletBinding()]
 param([switch]$UnattendedConsent,[switch]$Repair,[switch]$ReplaceFailedSetup,[string]$BootstrapPath,[string]$ConfirmedCompanyDomain,[switch]$RequestElevation)
 $ErrorActionPreference = 'Stop'
+function Invoke-CompanySetupProcess {
+    param([string]$FilePath,[string[]]$ArgumentList,[string]$Verb,[string]$WindowStyle)
+    $start = @{FilePath=$FilePath;ArgumentList=$ArgumentList;PassThru=$true}
+    if ($Verb) { $start.Verb = $Verb }
+    if ($WindowStyle) { $start.WindowStyle = $WindowStyle }
+    # Start-Process -Wait waits for descendants too, including the persistent
+    # tray started by customer installation. The signed outer installer already
+    # waits for its installation child and propagates that child's exit code.
+    $process = Start-Process @start
+    try {
+        $process.WaitForExit()
+        $process.Refresh()
+        return $process.ExitCode
+    } finally { $process.Dispose() }
+}
 if (-not [Environment]::Is64BitProcess) { throw 'Use the 64-bit company setup entry point.' }
 $root = $PSScriptRoot
 if (-not $BootstrapPath) { $BootstrapPath = Join-Path $root 'bootstrap.json' }
@@ -21,9 +36,9 @@ if ($RequestElevation -and $bootstrap.edition -eq 'customer') {
             $arguments += @('-ConfirmedCompanyDomain',('"' + $domain.Host + '"'))
         }
         try {
-            $process = Start-Process -FilePath (Join-Path ([Environment]::GetFolderPath('System')) 'WindowsPowerShell/v1.0/powershell.exe') -ArgumentList $arguments -Verb RunAs -PassThru -Wait
+            $exitCode = Invoke-CompanySetupProcess -FilePath (Join-Path ([Environment]::GetFolderPath('System')) 'WindowsPowerShell/v1.0/powershell.exe') -ArgumentList $arguments -Verb RunAs
         } catch { throw 'Customer setup requires administrator approval. Setup was not started.' }
-        if ($process.ExitCode -ne 0) { throw "Customer setup did not complete ($($process.ExitCode)). Contact your support company before retrying." }
+        if ($exitCode -ne 0) { throw "Customer setup did not complete ($exitCode). Contact your support company before retrying." }
         return
     }
 }
@@ -103,11 +118,11 @@ if ($bootstrap.edition -eq 'customer') {
         }
     }
     if ($installers[0].Extension -eq '.msi') {
-        $process = Start-Process -FilePath $msiExecutable -ArgumentList @($msiOperation,('"' + $installers[0].FullName + '"'),'/passive','/norestart') -PassThru -Wait -WindowStyle Hidden
+        $exitCode = Invoke-CompanySetupProcess -FilePath $msiExecutable -ArgumentList @($msiOperation,('"' + $installers[0].FullName + '"'),'/passive','/norestart') -WindowStyle Hidden
     } else {
-        $process = Start-Process -FilePath $installers[0].FullName -ArgumentList '--silent-install','printer=0' -PassThru -Wait -WindowStyle Hidden
+        $exitCode = Invoke-CompanySetupProcess -FilePath $installers[0].FullName -ArgumentList '--silent-install','printer=0' -WindowStyle Hidden
     }
-    if ($process.ExitCode -notin @(0,3010)) { throw "Installation failed ($($process.ExitCode))." }
+    if ($exitCode -notin @(0,3010)) { throw "Installation failed ($exitCode)." }
     $installed = Join-Path $env:ProgramFiles 'Swan Remote Support/Swan Remote Support.exe'
     if (-not (Test-Path -LiteralPath $installed)) { throw 'Installed executable not found. Verify the package install directory.' }
     $deviceId = (& $installed --get-id | Out-String).Trim()
@@ -122,9 +137,9 @@ if ($bootstrap.edition -eq 'customer') {
     $release = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($releaseEnvelope.payload)) | ConvertFrom-Json
     $portable = Join-Path $editionDirectory 'SwanRemoteSupport-Technician.exe'
     if ($release.format -eq 'msi') {
-        $process = Start-Process -FilePath $msiExecutable -ArgumentList @($msiOperation,('"' + $installers[0].FullName + '"'),'/passive','/norestart',('INSTALLFOLDER="' + $editionDirectory + '"')) -PassThru -Wait -WindowStyle Hidden
-        if ($process.ExitCode -eq 1625) { throw 'Windows Installer policy prevents this per-user technician installation (1625). Contact your company administrator for an approved deployment.' }
-        if ($process.ExitCode -notin @(0,3010)) { throw "Technician MSI installation failed ($($process.ExitCode))." }
+        $exitCode = Invoke-CompanySetupProcess -FilePath $msiExecutable -ArgumentList @($msiOperation,('"' + $installers[0].FullName + '"'),'/passive','/norestart',('INSTALLFOLDER="' + $editionDirectory + '"')) -WindowStyle Hidden
+        if ($exitCode -eq 1625) { throw 'Windows Installer policy prevents this per-user technician installation (1625). Contact your company administrator for an approved deployment.' }
+        if ($exitCode -notin @(0,3010)) { throw "Technician MSI installation failed ($exitCode)." }
         if (-not (Test-Path -LiteralPath $portable)) { throw 'Technician MSI did not install the expected executable.' }
     } elseif ($release.format -eq 'exe' -and $release.sha256 -ceq $release.installed_sha256) {
         Copy-Item -LiteralPath $installers[0].FullName -Destination $portable -Force

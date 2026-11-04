@@ -17,12 +17,16 @@ try {
     function Write-Bootstrap([string]$Edition,[string]$Url) {
         @{edition=$Edition;management_url=$Url}|ConvertTo-Json|Set-Content -LiteralPath $bootstrap -Encoding UTF8
     }
-    $setupTestState=[pscustomobject]@{Calls=@();ExitCode=0;Cancel=$false}
+    $setupTestState=[pscustomobject]@{Calls=@();ExitCode=0;Cancel=$false;Waited=$false}
     function Start-Process {
         param($FilePath,$ArgumentList,$Verb,[switch]$PassThru,[switch]$Wait)
         $setupTestState.Calls+=@{file=$FilePath;arguments=$ArgumentList;verb=$Verb;wait=[bool]$Wait}
         if($setupTestState.Cancel){throw 'Simulated elevation cancellation'}
-        [pscustomobject]@{ExitCode=$setupTestState.ExitCode}
+        $result=[pscustomobject]@{ExitCode=$setupTestState.ExitCode}
+        $result|Add-Member ScriptMethod WaitForExit {$setupTestState.Waited=$true}
+        $result|Add-Member ScriptMethod Refresh {}
+        $result|Add-Member ScriptMethod Dispose {}
+        $result
     }
     function Assert-Rejected([string]$Edition,[string]$Url,[string]$Expected) {
         Write-Bootstrap $Edition $Url
@@ -40,7 +44,7 @@ try {
     if(-not $administrator) {
         Write-Bootstrap 'customer' 'https://company.test'
         & $setup -RequestElevation -ConfirmedCompanyDomain 'company.test' -Repair -ReplaceFailedSetup -UnattendedConsent
-        if($setupTestState.Calls.Count -ne 1 -or $setupTestState.Calls[0].verb -cne 'RunAs' -or -not $setupTestState.Calls[0].wait){throw 'Customer setup did not request one awaited elevation'}
+        if($setupTestState.Calls.Count -ne 1 -or $setupTestState.Calls[0].verb -cne 'RunAs' -or $setupTestState.Calls[0].wait -or -not $setupTestState.Waited){throw 'Customer setup did not await its elevated process independently of descendants'}
         $a=$setupTestState.Calls[0].arguments
         foreach($value in @(('"'+$setup+'"'),('"'+$bootstrap+'"'),'-Repair','-ReplaceFailedSetup','-UnattendedConsent','"company.test"')){if($value -cnotin $a){throw 'Elevation lost a quoted path or explicit setup option'}}
         if('-RequestElevation' -in $a){throw 'Elevation could loop'}
@@ -55,6 +59,45 @@ try {
         if(-not $rejected){throw 'Cancelled elevation did not fail closed'}
     }
     Remove-Item Function:\Start-Process
+
+    # Execute the shipping wait helper against a real installer-like process
+    # that exits unsuccessfully after starting a persistent tray-like child.
+    $tokens=$null;$parseErrors=$null
+    $ast=[Management.Automation.Language.Parser]::ParseFile($setup,[ref]$tokens,[ref]$parseErrors)
+    if($parseErrors.Count){throw 'Shipping setup did not parse'}
+    $helper=$ast.Find({param($node) $node -is [Management.Automation.Language.FunctionDefinitionAst] -and $node.Name -ceq 'Invoke-CompanySetupProcess'},$false)
+    if($null -eq $helper){throw 'Shipping setup wait helper missing'}
+    . ([scriptblock]::Create($helper.Extent.Text))
+    $powerShell=Join-Path ([Environment]::GetFolderPath('System')) 'WindowsPowerShell/v1.0/powershell.exe'
+    $sleeper=Join-Path $root 'owned-tray-fixture.ps1'
+    $parent=Join-Path $root 'owned-installer-fixture.ps1'
+    $childPid=Join-Path $root 'owned-tray.pid'
+    'Start-Sleep -Seconds 30'|Set-Content -LiteralPath $sleeper
+    @'
+param([string]$Sleeper,[string]$ChildPid)
+$start=[Diagnostics.ProcessStartInfo]::new()
+$start.FileName=Join-Path ([Environment]::GetFolderPath('System')) 'WindowsPowerShell/v1.0/powershell.exe'
+$start.Arguments='-NoProfile -NonInteractive -ExecutionPolicy Bypass -File "'+$Sleeper+'"'
+$start.UseShellExecute=$false;$start.CreateNoWindow=$true
+$child=[Diagnostics.Process]::Start($start)
+[IO.File]::WriteAllText($ChildPid,[string]$child.Id)
+Start-Sleep -Milliseconds 500
+exit 7
+'@|Set-Content -LiteralPath $parent
+    $started=[DateTime]::UtcNow;$waitChild=$null
+    $fixtureLocal=$env:LOCALAPPDATA
+    $env:LOCALAPPDATA=$oldLocal
+    try {
+        $exitCode=Invoke-CompanySetupProcess -FilePath $powerShell -ArgumentList @('-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File',('"'+$parent+'"'),'-Sleeper',('"'+$sleeper+'"'),'-ChildPid',('"'+$childPid+'"')) -WindowStyle Hidden
+        if($exitCode -ne 7){throw 'Installer failure exit status was lost'}
+        $waitChild=[Diagnostics.Process]::GetProcessById([int][IO.File]::ReadAllText($childPid))
+        if($waitChild.StartTime.ToUniversalTime() -lt $started -or $waitChild.MainModule.FileName -ine $powerShell){throw 'Fixture child identity differs'}
+        if($waitChild.HasExited -or ([DateTime]::UtcNow-$started).TotalSeconds -ge 20){throw 'Setup waited for its persistent tray descendant'}
+    } finally {
+        $env:LOCALAPPDATA=$fixtureLocal
+        if($null -ne $waitChild){try {if(-not $waitChild.HasExited){$waitChild.Kill();$waitChild.WaitForExit()}}finally{$waitChild.Dispose()}}
+    }
+    Write-Output 'Real installer exit 7 preserved while its owned tray descendant remained running.'
 
     # Exercise the real CMD/Windows PowerShell path with LF bundle text, spaces,
     # apostrophe and ampersand in its folder. The invalid fixture agent must fail

@@ -47,5 +47,34 @@
     "profile44_unchanged_updates_paused": true,
     "production_releases_affected": false
   },
-  "production_publication": false
+  "production_publication": false,
+  "stopped_disk_identity_verification": {
+    "utc": "2026-11-03T23:40:38.727711+00:00",
+    "copied_signed_inner_sha256": "819c78ae404a88801a8ea65f5f9bc69dba5ed9c7bcf91753a942f2f1c540b07c",
+    "copied_as_rustdesk_exe_in_stable_install_directory": true,
+    "signed_pending_install_sequence": 26,
+    "device_enrolled": false,
+    "unattended_consent": false,
+    "profile_revision": 44,
+    "installer_not_retried": true,
+    "vm_normally_stopped": true,
+    "disk_read_only_during_collection": true,
+    "nbd_disconnect_trap_completed": true
+  },
+  "withdrawn_download_and_generation_denials": {
+    "utc": "2026-11-03T23:46:25.520108+00:00",
+    "withdrawn_customer_exe_denials": [
+      {
+        "sequence": 24,
+        "anonymous_download": 404,
+        "new_build_request": 409
+      },
+      {
+        "sequence": 26,
+        "anonymous_download": 404,
+        "new_build_request": 409
+      }
+    ],
+    "no_new_build_job_created": true
+  }
 }

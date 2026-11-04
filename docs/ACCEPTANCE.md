@@ -8,6 +8,22 @@ For the current candidate and remaining release gates, start with the compact
 [release-readiness index](RELEASE-READINESS.md). The older checkpoints below
 remain source-specific historical evidence.
 
+## Customer EXE packaging and setup wait, 4 November
+
+The corrected customer EXE was compiled and lab-signed on Windows 10 using
+runtime source `a3fedd9` and producer source `dbab5fb`. Ten packaging tests,
+six compiled packer tests, exact verification of all 95 embedded filenames and
+hashes, and corresponding-source checks passed. A real clean Windows 10 install
+then copied the stable executable name correctly and started the service, but
+setup stalled because PowerShell's process-tree wait included the persistent
+tray. Stopping only that verified tray allowed enrollment and release recording
+to finish; this assisted result **does not pass clean installation acceptance**.
+Setup now waits for the launched process handle, preserving its exit code.
+A real Windows regression returns installer failure7 while its tray-like child
+remains alive; setup-entry trust/elevation tests pass. A newly generated bundle
+and another unassisted clean installation are still required. See the
+[scoped receipt](evidence/1519-corrected-exe-and-setup-descendant-wait-20261104.json).
+
 ## Windows10 customer real interrupted update recovery, 31 October
 
 The [source-scoped1.5.12 receipt](evidence/1512-win10-real-session-update-deferral-and-interrupted-recovery-20261031.json) records complete local native archive/source verification, both real company-generated lab-signed bundles, a genuine standard-user attended session against the canonical Linux company, and update deferral while that session held the actual Windows activity lock. Customer Stop closed the session and revoked technician access. A subsequent real MSI installation was interrupted by power loss in a disposable disk overlay. Normal boot recovered automatically to1.5.12 and passed shipping installed-file, publisher and MSI-registration checks while preserving identity, trust, branding and disabled unattended consent. Its recovery task removed itself; paused rollout policy32 synchronized. No manual installer, recovery or service-start command repaired the result. This proves interruption after actual MSI client startup and a durable installing receipt, without claiming interruption during a particular file copy. The technician endpoint remained1.5.11; its console account was the built-in Administrator, so this is standard-user customer evidence only. Other OS/edition, external-connectivity and production-signing gates remain open.
@@ -8281,3 +8297,5 @@ The company-generated EXE26 failed its actual fresh installation on the separate
 The native Flutter installer copies the payload directory without renaming its executable. The producer incorrectly packed `rustdesk.exe`; its verifier also normalized that name into the installed manifest name, concealing the mismatch. The correction stages the unchanged signed main bytes under the stable installed name, selects that entry point, and compares embedded filenames literally. Ten packaging tests pass, including directory-copy installation semantics and rejection of the old layout; the corrected verifier also rejects the actual failed signedEXE26. The host PowerShell native-command boundary regression passes. A replacement Windows build, lab signature and fresh/recovery installation tests are still required.
 
 Approvals for customerEXE26 and the earlier same-producer customerEXE24 were withdrawn through the management API. Both release records and failed artifacts remain retained. Other approvals and signed policy44 stayed unchanged; automatic updates stayed paused. This withdrawal applies only to the disposable company lab.
+
+After normal shutdown, read-only disk collection independently hashed the wrongly named installed main file: it exactly matched the already signed native19 executable. The device was not enrolled, consent stayed off and signed pending-install26 remained intact. The withdrawn EXE24/26 bundle URLs both returned404, and new build requests for them returned409 without creating jobs. The host setup failure and original artifacts remain retained.
