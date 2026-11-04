@@ -6,6 +6,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_hbb/common.dart';
 import 'package:flutter_hbb/models/platform_model.dart';
 import 'company_contact_links.dart';
+import 'company_about_button.dart';
 
 /// Company authorization lives in Rust and on the receiver. This view never
 /// receives a bearer token, signing key or reusable device credential.
@@ -237,6 +238,10 @@ class _CompanyTechnicianPageState extends State<CompanyTechnicianPage> {
         ],
         const SizedBox(height: 24),
         const Text('Powered by Swan Remote Support and RustDesk · AGPL-3.0'),
+        CompanyAboutButton(
+          companyName: _company['display_name'] as String? ?? 'Swan Remote Support Technician',
+          loadVersion: () => bind.mainGetVersion(),
+        ),
       ]),
     );
   }

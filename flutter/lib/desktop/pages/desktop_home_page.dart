@@ -1,4 +1,5 @@
 import 'company_contact_links.dart';
+import 'company_about_button.dart';
 import 'dart:async';
 import 'dart:io';
 import 'dart:convert';
@@ -356,6 +357,10 @@ class _DesktopHomePageState extends State<DesktopHomePage>
               Text(
                 'Use the tray icon to view sessions. Powered by Swan Remote Support and RustDesk · AGPL-3.0.',
                 style: Theme.of(context).textTheme.bodySmall,
+              ),
+              CompanyAboutButton(
+                companyName: company['display_name'] as String? ?? swanManagedAppName,
+                loadVersion: () => bind.mainGetVersion(),
               ),
             ],
           ),
