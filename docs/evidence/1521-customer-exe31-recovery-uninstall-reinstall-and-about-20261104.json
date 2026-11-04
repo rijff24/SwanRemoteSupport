@@ -1,0 +1,57 @@
+{
+  "recorded_utc": "2026-11-04T15:41:06.905129+00:00",
+  "source": "bd331cad1dbe4c45722690c7df70c863a7bd37b5",
+  "version": "1.5.21+89",
+  "os_build": "19045",
+  "edition": "customer",
+  "format": "exe",
+  "release_sequence": 31,
+  "corrected_release_uses_same_native_binary_as_failed30": true,
+  "shipping_replace_failed_setup_passed": true,
+  "previous_signed30_receipt_archived_exactly_by_shipping_recovery": true,
+  "identity_token_bootstrap_and_disabled_consent_preserved": true,
+  "shipping_installed_verification_passed": true,
+  "shipping_native_uninstall_removed_main_service_watcher_and_agent": true,
+  "uninstall_retained_identity_consent_and_update_cancellation": true,
+  "manual_product_file_deletion_or_repair": false,
+  "shipping_explicit_repair_reinstall_passed": true,
+  "shipping_setup_cleared_uninstall_cancellation": true,
+  "service_and_watcher_restored": true,
+  "normal_shutdown_and_startup_preserved_identity_and_consent": true,
+  "actual_standard_user_native_gui_verified": true,
+  "mapped_native_executable_protocol_library_and_engine_match_current_build": true,
+  "about_company_name_version_attribution_visible": true,
+  "about_compact_window_wrap_scroll_and_all_three_link_addresses_reachable": true,
+  "about_close_returned_to_customer_controls": true,
+  "standard_user_stop_and_resume_confirmed": true,
+  "unattended_remained_off_with_consent_revision0": true,
+  "lab_one_time_logon_restored_original_secret_registry_and_removed_cleanup_task": true,
+  "new_vm_created": false,
+  "new_native_build_for_manifest_correction": false,
+  "screenshots": [
+    {
+      "purpose": "customer-about-top-observed",
+      "sha256": "2c5d02917cac1e4074e1f423d93f2925333b64cbc1dd963f7918ba5e26464a8f"
+    },
+    {
+      "purpose": "customer-about-scroll-observed",
+      "sha256": "f9afad53f895a4cd0c6357e31510726ccfa35128d159e6328bb32bb3bf543fa6"
+    },
+    {
+      "purpose": "customer-pause-observed",
+      "sha256": "df697d0811ed4f6631437b0c2b0320c4cdb79e1a0a009ce1c000be44abe1a27f"
+    },
+    {
+      "purpose": "customer-resume-observed",
+      "sha256": "2062b59f6593bd9c95fd2ea4879135d01312ca7b1f5204194bb37a6d005cd369"
+    }
+  ],
+  "limits": [
+    "Setup/recovery/reinstall ran under SYSTEM; this is not interactive UAC installer qualification.",
+    "This covers the existing Windows10 development VM, not the final Windows compatibility matrix.",
+    "Stop/Resume was tested without an active remote session; current-candidate live-session enforcement remains separate.",
+    "Unattended opt-in/revocation, file/clipboard/multi-monitor, authorization expiry and interrupted automatic updates still require the final development-session checks.",
+    "Independent custom signed-inner EXE production, external public transport and production signing remain separate gates."
+  ],
+  "production_publication": false
+}

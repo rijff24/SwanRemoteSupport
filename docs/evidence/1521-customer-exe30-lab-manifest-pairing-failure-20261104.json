@@ -1,0 +1,20 @@
+{
+  "recorded_utc": "2026-11-04T14:07:07.728910+00:00",
+  "source": "bd331cad1dbe4c45722690c7df70c863a7bd37b5",
+  "version": "1.5.21",
+  "failed_release": "30-Customer-test",
+  "failure": "Lab release preparation paired the customer EXE with the96-file MSI installed manifest. LICENSE.txt is not in this95-file EXE payload.",
+  "all95_actual_exe_payload_files_hash_matched": true,
+  "shipping_installed_verification_rejected_missing_expected_file": true,
+  "release_sequence_not_committed": true,
+  "last_committed_customer_sequence": 28,
+  "pending_install30_preserved": true,
+  "identity_and_disabled_consent_preserved": true,
+  "wrong_approval_withdrawn": true,
+  "all_other_approvals_and_paused_profile44_preserved": true,
+  "correct_release31_uses_the_same_signed_executable_and_exact95_file_manifest": true,
+  "existing_public_portable_verifier_rejected_wrong96_file_manifest": true,
+  "corrected_bundle_generation_and_recovery_pending": true,
+  "new_vm_or_native_build_created_for_correction": false,
+  "production_publication": false
+}

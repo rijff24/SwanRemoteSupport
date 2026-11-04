@@ -102,6 +102,15 @@ change the embedded payload:
 python deployment/windows/verify-portable-payload.py --package SIGNED_INSTALL_EXE --manifest customer-installed-files.json --output signed-exe-payload-verification.json
 ```
 
+Use this EXE producer's final installed-file manifest as the signed release's
+`installed_files`. Run the command above against the exact list that will be
+signed in that release. The MSI recipe has a different installed-file list,
+including `LICENSE.txt`; reusing that list for an EXE can pass package signature
+and hash checks but fail installed-file verification. Preserve a failed receipt,
+withdraw that release approval, and use a newer corrected signed release with
+explicit `-ReplaceFailedSetup` recovery. Do not delete the blocking receipt or
+change already published metadata.
+
 Keep the build/signing receipts, final installed manifest, source archive and
 producer source revision/file hashes with the release evidence. Publish the
 corresponding source and producer scripts used for the release. Generate signed
