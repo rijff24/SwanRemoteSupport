@@ -127,8 +127,13 @@ jobs:
         shell: pwsh
         run: |
           powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File ./deployment/windows/test_uninstall_commit.ps1
-          powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File ./deployment/windows/test_customer_exe_uninstall.ps1
           if ($LASTEXITCODE -ne 0) { throw 'Uninstall commit checks failed.' }
+      - name: Verify customer EXE uninstall completion
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File ./deployment/windows/test_customer_exe_uninstall.ps1
+          if ($LASTEXITCODE -ne 0) { throw 'Customer EXE uninstall completion checks failed.' }
       - name: Verify private customer state creation and unsafe-state rejection
         if: runner.os == 'Windows'
         shell: pwsh

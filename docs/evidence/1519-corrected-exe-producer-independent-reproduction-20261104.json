@@ -1,0 +1,21 @@
+{
+  "utc": "2026-11-04T04:49:17.379785+00:00",
+  "runtime_source": "a3fedd94e38d902164db90321bcf397c85a6c12b",
+  "producer_source": "dbab5fb72b9da1d994a096b91022cb0bc55e1ff3",
+  "unsigned_primary_and_independent_sha256": "9cc4d6774927c45053f9ae8aafbfbbffad6a4dc0f68f59cc336a505b3732da2c",
+  "signed_inner_sha256": "819c78ae404a88801a8ea65f5f9bc69dba5ed9c7bcf91753a942f2f1c540b07c",
+  "new_source_and_target_directories": true,
+  "compiled_target_cache_not_reused": true,
+  "verified_dependency_source_cache_reused": true,
+  "all_collected_files_hash_verified": true,
+  "exact_public_producer_sources_verified": true,
+  "actual_native_packer_tests_passed": 6,
+  "actual_windows_python_packaging_tests_passed": 10,
+  "embedded_files_independently_verified": 95,
+  "payload_executed_on_collection_host": false,
+  "original_installed_customer_preserved": true,
+  "outer_signing_not_repeated": true,
+  "no_binary_normalization": true,
+  "corrected_producer_reproduction_passed": true,
+  "production_publication": false
+}
