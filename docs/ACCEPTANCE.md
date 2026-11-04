@@ -46,6 +46,28 @@ includes the original customer EXE; the separately corrected signed-inner EXE
 producer and fresh installation still have their own open gates. See the
 [comparison receipt](evidence/1519-independent-native-reproduction-20261104.json).
 
+## Coordinated setup-recipe deployment and recovery, 4 November
+
+The process-wait fix is embedded in both management and worker bundle recipes.
+Windows/Linux component CI passed at source `332af85`; the actual Windows CI
+merge has an identical public tree, and all 256 packaged source files were
+verified. Its canonical Linux image passed fresh-company setup, MFA replay,
+enrollment policy, persistence and backup/restore tests.
+
+A fresh 1,478,222,994-byte encrypted company backup authenticated and restored
+offline. The wrong passphrase created no restore destination; company/transport
+keys, settings, all 48 generated installer files and six TLS identity files
+matched. Updating the existing management image preserved profile44, accounts,
+permissions, device consent, releases/jobs/history and HTTPS/transport container
+identities. The lab-signed Windows worker then updated with its private credential,
+configuration, registry and ACLs preserved. Original binaries and recovery copies
+remain available. The updated pair generated both editions as EXE and MSI; all
+four bundles passed signature, hash, public-bootstrap and exact-recipe checks.
+Customer downloads returned200 and anonymous technician downloads returned401.
+An unassisted clean EXE installation and canonical source332 independent
+reproduction remain separate gates.
+See the [deployment receipt](evidence/332af85-coordinated-management-worker-update-and-recovery-20261104.json).
+
 ## Windows10 customer real interrupted update recovery, 31 October
 
 The [source-scoped1.5.12 receipt](evidence/1512-win10-real-session-update-deferral-and-interrupted-recovery-20261031.json) records complete local native archive/source verification, both real company-generated lab-signed bundles, a genuine standard-user attended session against the canonical Linux company, and update deferral while that session held the actual Windows activity lock. Customer Stop closed the session and revoked technician access. A subsequent real MSI installation was interrupted by power loss in a disposable disk overlay. Normal boot recovered automatically to1.5.12 and passed shipping installed-file, publisher and MSI-registration checks while preserving identity, trust, branding and disabled unattended consent. Its recovery task removed itself; paused rollout policy32 synchronized. No manual installer, recovery or service-start command repaired the result. This proves interruption after actual MSI client startup and a durable installing receipt, without claiming interruption during a particular file copy. The technician endpoint remained1.5.11; its console account was the built-in Administrator, so this is standard-user customer evidence only. Other OS/edition, external-connectivity and production-signing gates remain open.
@@ -8321,3 +8343,18 @@ The native Flutter installer copies the payload directory without renaming its e
 Approvals for customerEXE26 and the earlier same-producer customerEXE24 were withdrawn through the management API. Both release records and failed artifacts remain retained. Other approvals and signed policy44 stayed unchanged; automatic updates stayed paused. This withdrawal applies only to the disposable company lab.
 
 After normal shutdown, read-only disk collection independently hashed the wrongly named installed main file: it exactly matched the already signed native19 executable. The device was not enrolled, consent stayed off and signed pending-install26 remained intact. The withdrawn EXE24/26 bundle URLs both returned404, and new build requests for them returned409 without creating jobs. The host setup failure and original artifacts remain retained.
+
+
+### Candidate19 corrected customer EXE28 clean installation and reboot
+
+The corrected producer from dbab5fb and company setup recipe from332af85 generated customer EXE28 around the unchanged signed native19 runtime. On a separate product-free Windows10 Pro x64 build19045 overlay, a single elevated shipping setup invocation installed successfully without terminating the tray, renaming executables, starting services manually or retrying installation. All95 installed files passed shipping verification; the new device enrolled with unattended consent off, profile44 and sequence28. The service and configuration watcher ran without Tailscale. A real subsequent OS reboot preserved device identity, token, bootstrap trust and consent; verification, service and watcher passed again.
+
+The pending device remained absent from technician inventory, and a valid-proof grant request received403 without changing approval, consent or session history. [Clean-install evidence](evidence/1519-customer-exe28-unassisted-clean-install-20261104.json). This supersedes earlier pending clean-EXE statements for this particular OS and corrected package. Interactive elevation, the fresh standard-user graphical checks, full repair/uninstall/session lifecycle, other Windows versions and production qualification remain separate requirements.
+
+### Coordinated management and worker update to332af85
+
+The exact canonical Linux deployment recipe built source332af85 and passed fresh-company runtime tests. Before updating the existing lab company, an encrypted complete backup was authenticated in an isolated offline restore: a wrong passphrase was rejected, both databases were valid, configuration and keys were preserved, and48 installer artifacts plus six TLS identity files matched. The live management update preserved the existing company state. The Windows worker then upgraded to the matching lab-signed binary while preserving its protected configuration and customer identity/consent.
+
+That worker generated both customer and technician EXE/MSI bundles with the current seven public setup scripts. All four bundles passed independent profile, signature, hash, bootstrap and exact-source verification. Customer downloads were public; technician downloads required authentication. Updates stayed paused. [Coordinated update and recovery evidence](evidence/332af85-coordinated-management-worker-update-and-recovery-20261104.json). This does not qualify independent canonical binary reproduction, the complete Windows matrix or production signing.
+
+A separate shipping `-Repair` invocation on that EXE28 installation also passed. Device identity, token, bootstrap trust, consent and release sequence28 stayed unchanged; profile44, installed-file verification, running service/watcher and absence of pending recovery were confirmed. No manual tray termination or file changes were needed. Uninstall, interactive elevation and the remaining lifecycle/session cases are still unqualified.
