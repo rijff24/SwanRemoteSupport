@@ -8,6 +8,28 @@ For the current candidate and remaining release gates, start with the compact
 [release-readiness index](RELEASE-READINESS.md). The older checkpoints below
 remain source-specific historical evidence.
 
+## Current direct TCP authorization denial, 5 November
+
+The installed **1.5.21+89** customer rejected a real direct TCP/protobuf login
+with `Company session authorization denied`. The test temporarily enabled the
+owned lab receiver's direct listener, verified its native executable owner,
+and received a fresh native password salt/challenge through a loopback forward.
+It sent a legacy-style password response using that challenge, with no company
+credential or signed session grant. The response was the explicit company
+authorization error, not a connection timeout or a blocked network route.
+
+No company grant or enrolled control device was created. Customer and technician
+identity, device credentials, trust, consent and exact native binaries were
+preserved. The timed rollback restored the exact original direct option and
+removed its task; the listener and owned forwarding rule are absent afterward.
+The separate publisher-signed stock client's window stayed black, so its
+graphical result is **inconclusive**, not a denial pass. Its owned processes
+were stopped. The earlier genuine stock ID-connection denial remains linked,
+with six complete receiving/authorization source files verified unchanged
+between that test's source and the current runtime source. See the
+[direct-wire and preservation receipt](evidence/1521-native-direct-ip-denial-and-preservation-20261105.json).
+This does not qualify external public connectivity or the Windows release matrix.
+
 ## Current standard-user session and interrupted transfer, 5 November
 
 Native **1.5.21+89**, source `bd331ca`, passed attended desktop access on the
