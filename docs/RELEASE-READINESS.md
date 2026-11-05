@@ -20,6 +20,15 @@ are signed, approved or installed. Native22+90 was also never approved or instal
 and is superseded. Reproduction, runtime branding, genuine byte-changing automatic
 updates and final qualification remain open.
 
+[Small real MSVC compiler fixtures](evidence/1522-msvc-lambda-path-controls-20261105.json)
+then isolated a source-path effect on lambda RTTI names. Same-path output matched
+across two CI jobs, but relocation changed original bytes. Experimental compiler
+determinism/path mapping, compiler-level Brepro, path trimming and relative input
+names did not restore raw equality in that fixture. These are failed hypotheses,
+not an application fix. Effective Flutter C++ commands and SDK/source paths still
+need investigation; no further full native build or signing has been started.
+
+
 [Current management evidence](evidence/1522-management-reproduction-upgrade-and-probe-20261105.json)
 now records the corrected compiled Windows checker passing all15 public cases,
 including valid DER and PEM trust. Two separate Windows component builds also
