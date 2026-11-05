@@ -12,9 +12,13 @@ title/approval tests passed; the Rust branding log was omitted from the original
 artifact and is verified from the retained original completed job log instead.
 Future CI uploads include it. All95 customer payload files were extracted without
 execution and matched the verified manifest. The one [independent rebuild](https://github.com/rijff24/SwanRemoteSupport/actions/runs/41970609821)
-is running from the exact same source. Native22+90 was never approved or installed
+passed its build/tests from the exact same source, but the [original-byte comparison](https://github.com/rijff24/SwanRemoteSupport/actions/runs/41976573481)
+**failed**. Both source/bridge proofs and recorded MSVC inputs match. The server
+installer, management, agent and worker match; the customer/technician EXE and MSI
+outputs differ. Payload-level diagnosis is in progress. No candidate22 packages
+are signed, approved or installed. Native22+90 was also never approved or installed
 and is superseded. Reproduction, runtime branding, genuine byte-changing automatic
-updates and final qualification of the replacement remain open.
+updates and final qualification remain open.
 
 [Current management evidence](evidence/1522-management-reproduction-upgrade-and-probe-20261105.json)
 now records the corrected compiled Windows checker passing all15 public cases,

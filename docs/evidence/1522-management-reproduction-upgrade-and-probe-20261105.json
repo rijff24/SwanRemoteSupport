@@ -102,7 +102,7 @@
     "superseded_by_branding_fix_source": "ca16998e6a51a7d2c4737e69b2b731b0b3cf2eba",
     "replacement_version": "1.5.22+91",
     "replacement_build": 41964194947,
-    "replacement_build_runtime_and_reproduction": "Primary verified; independent rebuild running; installed runtime pending",
+    "replacement_build_runtime_and_reproduction": "Reproduction FAILED; payload-level diagnosis in progress. No22 installation, approval or signing.",
     "replacement_build_result": "success",
     "replacement_artifact": 13389315447,
     "replacement_artifact_bytes": 256777570,
@@ -114,7 +114,81 @@
     "branding_test_log_omitted_from_original_artifact": true,
     "future_ci_log_retention_fix_source": "2fc96a4",
     "all_95_customer_payload_files_extracted_without_execution_and_manifest_verified": true,
-    "independent_rebuild": 41970609821
+    "independent_rebuild": 41970609821,
+    "independent_rebuild_result": "Both native builds completed successfully",
+    "original_comparison_run": 41976573481,
+    "original_comparison_result": "FAILED: customer/technician installer bytes differ",
+    "original_comparison_report_artifact": 13391927383,
+    "original_comparison_report_digest": "sha256:111cf00f307fdf556ba4cd0268ce7aaf3d30f457796f4212337ac7f8e25aa2bf",
+    "all_eight_original_outputs_identical": false,
+    "recorded_msvc_inputs_identical": true,
+    "original_output_comparison": [
+      {
+        "path": "SwanRemoteSupport-1.5.22-customer-x64-unsigned.msi",
+        "first_sha256": "d848c4e8fc8ca92ee15c2d3a791fc48087bafbd349c635c0dcee03eae270e0fe",
+        "second_sha256": "de18a6ff8fcff44c14d00cbd5baf43099cfc595872c59b96627f535474f149ff",
+        "first_bytes": 34013184,
+        "second_bytes": 34041856,
+        "identical": false
+      },
+      {
+        "path": "SwanRemoteSupport-1.5.22-technician-x64-unsigned.exe",
+        "first_sha256": "767ecaaf90b4c6216f17581f65df5e4945a178e475e56ea33365aeb2bc292dfb",
+        "second_sha256": "91fe1d2f7b68f2fd0ec2a4e946307ea33cf8890e77912c832df99bcf3fb11aa3",
+        "first_bytes": 24284672,
+        "second_bytes": 24285184,
+        "identical": false
+      },
+      {
+        "path": "SwanRemoteSupport-1.5.22-technician-x64-unsigned.msi",
+        "first_sha256": "9b513ea8badcb4debcceabe79dd9f663cf5db9911110b2935a448e0a33a36656",
+        "second_sha256": "295e1a12875873dc2d182b5b80fc16596506c1f39bfa6345a70ed20af9a7d82a",
+        "first_bytes": 31780864,
+        "second_bytes": 31780864,
+        "identical": false
+      },
+      {
+        "path": "SwanRemoteSupport-1.5.22-x64-unsigned-install.exe",
+        "first_sha256": "767ecaaf90b4c6216f17581f65df5e4945a178e475e56ea33365aeb2bc292dfb",
+        "second_sha256": "91fe1d2f7b68f2fd0ec2a4e946307ea33cf8890e77912c832df99bcf3fb11aa3",
+        "first_bytes": 24284672,
+        "second_bytes": 24285184,
+        "identical": false
+      },
+      {
+        "path": "SwanServerSetup-UNSIGNED-TEST.exe",
+        "first_sha256": "40a7280832259bd6aa9dc555d5e0fdd54c54dab2d01a5bf6c3ebfe95ae5e9592",
+        "second_sha256": "40a7280832259bd6aa9dc555d5e0fdd54c54dab2d01a5bf6c3ebfe95ae5e9592",
+        "first_bytes": 66129408,
+        "second_bytes": 66129408,
+        "identical": true
+      },
+      {
+        "path": "swan-agent.exe",
+        "first_sha256": "6c0ee8581baf04e5effee63647e6f9cb52780dbbe51fe34f8d828e8fde170f73",
+        "second_sha256": "6c0ee8581baf04e5effee63647e6f9cb52780dbbe51fe34f8d828e8fde170f73",
+        "first_bytes": 5862912,
+        "second_bytes": 5862912,
+        "identical": true
+      },
+      {
+        "path": "swan-management.exe",
+        "first_sha256": "00cab63adbf5f6bbaab40e27c86933fc884ff644a5a5587cfbd9f1a234db95b2",
+        "second_sha256": "00cab63adbf5f6bbaab40e27c86933fc884ff644a5a5587cfbd9f1a234db95b2",
+        "first_bytes": 9378816,
+        "second_bytes": 9378816,
+        "identical": true
+      },
+      {
+        "path": "swan-worker.exe",
+        "first_sha256": "7f87133666aa6a37ccb03287c74b0730bafa53cfb1c86fe87f51b04db0eecd7e",
+        "second_sha256": "7f87133666aa6a37ccb03287c74b0730bafa53cfb1c86fe87f51b04db0eecd7e",
+        "first_bytes": 4901376,
+        "second_bytes": 4901376,
+        "identical": true
+      }
+    ],
+    "signing_remains_gated": true
   },
   "remaining_boundaries": [
     "Finish current native app and update qualification on existing development pair before final Windows matrix",
