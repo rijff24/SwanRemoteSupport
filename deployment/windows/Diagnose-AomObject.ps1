@@ -13,6 +13,7 @@ $actual=(& git -C $env:VCPKG_ROOT rev-parse HEAD|Out-String).Trim()
 if($LASTEXITCODE -or $actual -cne $baseline){throw 'vcpkg source differs from application pin'}
 $overlay=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../../res/vcpkg'))
 New-Item -ItemType Directory -Path (Join-Path $root 'evidence') -Force|Out-Null
+@{image_version=$env:ImageVersion;processors=@(Get-CimInstance Win32_Processor|Select-Object Name,Manufacturer,Architecture,NumberOfCores,NumberOfLogicalProcessors);os=Get-CimInstance Win32_OperatingSystem|Select-Object Version,BuildNumber}|ConvertTo-Json -Depth 4|Set-Content -LiteralPath (Join-Path $root 'evidence/runner-compiler-context.json') -Encoding UTF8
 & (Join-Path $PSScriptRoot 'Record-MsvcToolchain.ps1') -Output (Join-Path $root 'evidence/native-msvc-toolchain.json')
 $env:VCPKG_BINARY_SOURCES='clear'
 $env:VCPKG_DEFAULT_HOST_TRIPLET='x64-windows-static'
@@ -103,6 +104,19 @@ foreach($label in @('first','second')){
     Copy-Item -LiteralPath $releaseObjects[0].FullName -Destination $object
     $repeats+=@{index=$index;object=[IO.Path]::GetFileName($object);sha256=(Get-FileHash -LiteralPath $object).Hash.ToLowerInvariant();original_source_bytes_unchanged=$true;actual_compiler_invocation_observed=$true}
    }
+   $dependencyLines=& $make -C $release -t deps $target
+   if($LASTEXITCODE){throw 'Cannot inspect actual MSVC dependency records'}
+   $dependencyLines|Set-Content -LiteralPath (Join-Path $repeatDirectory 'actual-ninja-dependencies.log') -Encoding UTF8
+   $headers=@($dependencyLines|Where-Object {$_ -match '^    (.+)$'}|ForEach-Object {$_.Trim()}|Sort-Object -Unique)
+   if($headers.Count -lt 10 -or $headers.Count -gt 3000){throw 'Unexpected actual translation-unit dependency set'}
+   $inputRecords=@()
+   foreach($path in $headers){
+    $resolved=if([IO.Path]::IsPathRooted($path)){$path}else{Join-Path $release $path}
+    $item=Get-Item -LiteralPath $resolved
+    if($item.PSIsContainer){throw 'Unexpected directory in compiler dependency set'}
+    $inputRecords+=@{path=$item.FullName;bytes=$item.Length;sha256=(Get-FileHash -LiteralPath $item.FullName).Hash.ToLowerInvariant()}
+   }
+   @{scope='Actual files recorded by Ninja from MSVC showIncludes; source/header contents are not published';files=$inputRecords}|ConvertTo-Json -Depth 5|Set-Content -LiteralPath (Join-Path $repeatDirectory 'actual-compiler-inputs.json') -Encoding UTF8
   }finally{
    $sourceFile.LastWriteTimeUtc=$originalTime
    foreach($key in $originalEnvironment.Keys){[Environment]::SetEnvironmentVariable($key,$originalEnvironment[$key],'Process')}

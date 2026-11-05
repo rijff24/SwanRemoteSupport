@@ -9,6 +9,10 @@ permissions:
 jobs:
   aom:
     runs-on: windows-2022
+    strategy:
+      fail-fast: false
+      matrix:
+        replica: [first-runner, independent-runner]
     timeout-minutes: 45
     env:
       VCPKG_COMMIT_ID: 120deac3062162151622ca4860575a33844ba10b
@@ -31,7 +35,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
-          name: aom-object-diagnostic-UNSIGNED-TEST
+          name: aom-object-diagnostic-${{ matrix.replica }}-UNSIGNED-TEST
           path: ${{ runner.temp }}/swan-aom-object-diagnostic/evidence/**
           if-no-files-found: warn
           retention-days: 90
