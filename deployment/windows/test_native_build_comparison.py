@@ -151,6 +151,63 @@ class NativeBuildComparisonTests(unittest.TestCase):
             self.assertIsInstance(storage_argument, str)
 
 
+class ClientWrapperInputTests(unittest.TestCase):
+    expected = {"script_sha256": "a" * 64, "original_canonical_sha256": "b" * 64,
+                "patched_source_sha256": "c" * 64}
+
+    def receipt(self):
+        return {"engine_revision": "a18df97ca57a249df5d8d68cd0820600223ce262",
+                "patch_script_sha256": self.expected["script_sha256"],
+                "original_canonical_sha256": self.expected["original_canonical_sha256"],
+                "engine_binaries_changed": False, "shipping_pe_normalization": False,
+                "files": [{"path": "bin/cache/artifacts/engine/common/cpp_client_wrapper/core_implementations.cc",
+                           "patched_sha256": "c" * 64}]}
+
+    def verify(self, value):
+        memory = io.BytesIO()
+        with zipfile.ZipFile(memory, "w") as archive:
+            if value is not None:
+                archive.writestr("flutter-client-wrapper-repro.json", json.dumps(value))
+        memory.seek(0)
+        with zipfile.ZipFile(memory) as archive:
+            return comparison.verify_client_wrapper(archive, self.expected)
+
+    def test_reviewed_source_patch_identity_is_retained(self):
+        self.assertEqual(self.verify(self.receipt())["patched_source_sha256"], ["c" * 64])
+
+    def test_missing_receipt_does_not_qualify_new_source(self):
+        with self.assertRaises(comparison.VerificationError):
+            self.verify(None)
+
+    def test_unreviewed_engine_preimage_script_and_binary_rewrites_rejected(self):
+        for key, value in (("engine_revision", "other-engine"), ("patch_script_sha256", "d" * 64),
+                           ("original_canonical_sha256", "e" * 64), ("engine_binaries_changed", True),
+                           ("shipping_pe_normalization", True)):
+            with self.subTest(key=key):
+                receipt = self.receipt()
+                receipt[key] = value
+                with self.assertRaises(comparison.VerificationError):
+                    self.verify(receipt)
+
+    def test_unsafe_and_duplicate_source_paths_rejected(self):
+        for path in ("../core_implementations.cc", "C:/cache/cpp_client_wrapper/core_implementations.cc",
+                     "bin/cache/artifacts/engine/../cpp_client_wrapper/core_implementations.cc"):
+            receipt = self.receipt()
+            receipt["files"][0]["path"] = path
+            with self.assertRaises(comparison.VerificationError):
+                self.verify(receipt)
+        receipt = self.receipt()
+        receipt["files"] *= 2
+        with self.assertRaises(comparison.VerificationError):
+            self.verify(receipt)
+
+    def test_self_consistent_but_unreviewed_patched_source_rejected(self):
+        receipt = self.receipt()
+        receipt["files"][0]["patched_sha256"] = "f" * 64
+        with self.assertRaises(comparison.VerificationError):
+            self.verify(receipt)
+
+
 class MsvcInputIdentityTests(unittest.TestCase):
     def manifest(self):
         paths = ["bin/Hostx64/x64/" + n for n in ("cl.exe", "c1xx.dll", "c2.dll", "link.exe")]

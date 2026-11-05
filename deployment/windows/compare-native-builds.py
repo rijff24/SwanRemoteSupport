@@ -4,6 +4,7 @@ This verifier never installs or executes artifact contents. Source text checkout
 line endings are recorded separately; shipping binaries are never normalized.
 """
 import argparse
+import ast
 import hashlib
 import io
 import json
@@ -130,8 +131,57 @@ def verify_source(archive, tracked, repositories, epoch):
                         and git_hash(normalized.replace(b"\n", b"\r\n")) != blob):
                     raise VerificationError("Original public source blob differs")
                 conversions.append(name)
+        wrapper_input = None
+        script = "deployment/windows/patch-flutter-client-wrapper.py"
+        fixture = "deployment/windows/fixtures/flutter-sdk-3.24.5/core_implementations.cc"
+        if script in tracked:
+            if fixture not in tracked:
+                raise VerificationError("Reviewed client-wrapper source preimage missing")
+            tree = ast.parse(source.read("source/" + script).decode("utf-8-sig"))
+            pins = [node.value.value for node in tree.body if isinstance(node, ast.Assign)
+                    and len(node.targets) == 1 and isinstance(node.targets[0], ast.Name)
+                    and node.targets[0].id == "PATCHED_SHA256" and isinstance(node.value, ast.Constant)]
+            if len(pins) != 1 or not isinstance(pins[0], str) or not re.fullmatch(r"[0-9a-f]{64}", pins[0]):
+                raise VerificationError("Reviewed patched client-wrapper source pin missing")
+            wrapper_input = {"script_sha256": manifest["files"][script]["sha256"],
+                             "patched_source_sha256": pins[0],
+                             "original_canonical_sha256": hashlib.sha256(
+                                 source.read("source/" + fixture).replace(b"\r\n", b"\n")).hexdigest()}
     return {"tracked_files_verified": len(tracked), "bridge_hashes": bridges,
+            "client_wrapper_patch_input": wrapper_input,
             "declared_source_text_checkout_conversions": conversions}
+
+
+def verify_client_wrapper(archive, expected):
+    if expected is None:
+        return None
+    name = "flutter-client-wrapper-repro.json"
+    if name not in archive.namelist() or archive.getinfo(name).file_size > 64 * 1024:
+        raise VerificationError("Reviewed client-wrapper patch receipt missing or excessive")
+    receipt = json.loads(archive.read(name).decode("utf-8-sig"))
+    if (receipt.get("engine_revision") != "a18df97ca57a249df5d8d68cd0820600223ce262"
+            or receipt.get("original_canonical_sha256") != expected["original_canonical_sha256"]
+            or receipt.get("patch_script_sha256") != expected["script_sha256"]
+            or receipt.get("engine_binaries_changed") is not False
+            or receipt.get("shipping_pe_normalization") is not False):
+        raise VerificationError("Client-wrapper receipt differs from reviewed public inputs")
+    files = receipt.get("files")
+    if not isinstance(files, list) or not 1 <= len(files) <= 4:
+        raise VerificationError("Unexpected client-wrapper source set")
+    seen, hashes = set(), set()
+    for item in files:
+        if not isinstance(item, dict):
+            raise VerificationError("Invalid patched client-wrapper source entry")
+        path = item.get("path", "")
+        if (not isinstance(path, str) or not path.startswith("bin/cache/artifacts/engine/")
+                or "\\" in path or ":" in path or any(p in ("", ".", "..") for p in path.split("/"))
+                or not path.endswith("/cpp_client_wrapper/core_implementations.cc") or path in seen
+                or item.get("patched_sha256") != expected["patched_source_sha256"]):
+            raise VerificationError("Unsafe or invalid patched client-wrapper source identity")
+        seen.add(path)
+        hashes.add(item["patched_sha256"])
+    return {"original_canonical_sha256": expected["original_canonical_sha256"],
+            "patched_source_sha256": sorted(hashes), "source_files": len(files)}
 
 
 def verify_msvc_inputs(archive, required):
@@ -183,6 +233,10 @@ def compare(first, second, checkout, revision):
         proof = [verify_source(z, tracked, repositories, epoch) for z in (a, b)]
         if proof[0]["bridge_hashes"] != proof[1]["bridge_hashes"]:
             raise VerificationError("Independently generated bridge bytes differ")
+        wrapper = [verify_client_wrapper(z, p["client_wrapper_patch_input"])
+                   for z, p in zip((a, b), proof)]
+        if wrapper[0] != wrapper[1]:
+            raise VerificationError("Reviewed client-wrapper compilation inputs differ")
         toolchains = [verify_msvc_inputs(z, "deployment/windows/Record-MsvcToolchain.ps1" in tracked)
                       for z in (a, b)]
         outputs = [{n for n in ns if "/" not in n and n.lower().endswith((".exe", ".msi", ".dll"))} for ns in names]
@@ -205,7 +259,7 @@ def compare(first, second, checkout, revision):
                             "second_bytes": b.getinfo(name).file_size,
                             "identical": left == right and a.getinfo(name).file_size == b.getinfo(name).file_size})
     return {"schema": 1, "source_commit": revision, "source_date_epoch": epoch, "source_proofs": proof,
-            "msvc_input_proofs": toolchains,
+            "msvc_input_proofs": toolchains, "client_wrapper_input_proofs": wrapper,
             "recorded_msvc_inputs_identical": (toolchains[0]["input_identity_sha256"] == toolchains[1]["input_identity_sha256"]
                                                if all(toolchains) else None),
             "outputs": records, "all_shipping_bytes_identical": all(r["identical"] for r in records),

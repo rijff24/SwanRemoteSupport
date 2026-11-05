@@ -25,8 +25,15 @@ then isolated a source-path effect on lambda RTTI names. Same-path output matche
 across two CI jobs, but relocation changed original bytes. Experimental compiler
 determinism/path mapping, compiler-level Brepro, path trimming and relative input
 names did not restore raw equality in that fixture. These are failed hypotheses,
-not an application fix. Effective Flutter C++ commands and SDK/source paths still
-need investigation; no further full native build or signing has been started.
+not an application fix. A subsequent [actual SDK reply-callable fixture](https://github.com/rijff24/SwanRemoteSupport/actions/runs/41983906171)
+passed with identical raw executables at relocated source paths after replacing
+the anonymous callback with a named callable. Its stub C API checks lifetime,
+payload, duplicate replies, unavailable-engine handling and concurrent replies;
+it does not qualify real engine sessions. Candidate **1.5.22+92** integrates that
+source-only patch with exact upstream and patched-source pins, archived receipts,
+and independent comparison checks. Five source-trust and sixteen comparison
+tests pass locally. Actual cached SDK application, full native reproduction and
+installed runtime checks remain required. No candidate22 signing has started.
 
 
 [Current management evidence](evidence/1522-management-reproduction-upgrade-and-probe-20261105.json)

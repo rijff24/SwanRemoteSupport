@@ -26,6 +26,19 @@ directory and PowerShell 7. The independently pinned source-engine selector
 continues to verify the matching SDK snapshot compiler before replacing runtime
 files.
 
+After SDK precaching, native builds run
+`python deployment/windows/patch-flutter-client-wrapper.py --sdk SDK_DIRECTORY --receipt artifacts/flutter-client-wrapper-repro.json`.
+It verifies the reviewed upstream client-wrapper source hash before replacing
+one anonymous reply callable with an equivalent named type. The named callable
+keeps MSVC source paths out of its RTTI identity. Engine binaries are unchanged.
+The upstream source fixture and BSD license are included under
+`deployment/windows/fixtures/flutter-sdk-3.24.5/`; the patch script and its receipt
+are retained with corresponding source and build artifacts. Unknown source or
+SDK revisions fail closed. Independent comparison checks the receipt against
+the archived public patch inputs as well as all original shipping bytes.
+The standalone compiler/callback checks do not replace complete native rebuild
+comparison or installed runtime qualification.
+
 Native CI also retains `native-msvc-toolchain.json`: hashes of the default x64
 MSVC compiler, headers and libraries, sorted ordinally for a portable identity.
 Independent comparisons require and validate this record when the pinned source

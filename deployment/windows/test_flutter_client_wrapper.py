@@ -26,6 +26,7 @@ class WrapperPatchTests(unittest.TestCase):
         data = ORIGINAL.read_bytes().replace(b"\r\n", b"\n")
         self.assertEqual(hashlib.sha256(data).hexdigest(), patcher.ORIGINAL_SHA256)
         patched = patcher.transform(data)
+        self.assertEqual(hashlib.sha256(patched).hexdigest(), patcher.PATCHED_SHA256)
         self.assertEqual(patched, patcher.transform(data.replace(b"\n", b"\r\n")))
         self.assertTrue(patched.startswith(b"// Copyright 2013 The Flutter Authors."))
         self.assertIn(b"BSD-style license", patched)

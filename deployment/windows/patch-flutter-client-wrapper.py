@@ -6,6 +6,7 @@ from pathlib import Path
 
 ENGINE = "a18df97ca57a249df5d8d68cd0820600223ce262"
 ORIGINAL_SHA256 = "48214b6261812361168f49d7a073a079b188709e8b29fdd1785307f9eef43989"
+PATCHED_SHA256 = "4ecdd3b3ace7672043ffbcddd157324915f21854d2c7885cbdaf73fdac6731a0"
 UPSTREAM = ("https://github.com/flutter/engine/blob/" + ENGINE
             + "/shell/platform/common/client_wrapper/core_implementations.cc")
 
@@ -60,7 +61,10 @@ def transform(data):
     marker = "namespace flutter {\n"
     if text.count(marker) != 1:
         raise ValueError("Unexpected Flutter wrapper namespace")
-    return text.replace(marker, marker + NAMED_REPLY, 1).encode("utf-8")
+    result = text.replace(marker, marker + NAMED_REPLY, 1).encode("utf-8")
+    if hashlib.sha256(result).hexdigest() != PATCHED_SHA256:
+        raise ValueError("Patched Flutter wrapper differs from reviewed output")
+    return result
 
 
 def patch(sdk, receipt):

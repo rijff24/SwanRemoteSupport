@@ -153,6 +153,15 @@ jobs:
           cd "$(dirname "$(dirname "$(which flutter)")")"
           git apply flutter_3.24.4_dropdown_menu_enableFilter.diff
 
+      - name: Pin the named Flutter client-wrapper reply callable
+        shell: pwsh
+        run: |
+          python3 -m unittest discover -s deployment/windows -p test_flutter_client_wrapper.py
+          if ($LASTEXITCODE -ne 0) { throw 'Flutter reply-wrapper source trust regressions failed.' }
+          New-Item -ItemType Directory -Path artifacts -Force | Out-Null
+          python3 deployment/windows/patch-flutter-client-wrapper.py --sdk "$env:FLUTTER_ROOT" --receipt artifacts/flutter-client-wrapper-repro.json
+          if ($LASTEXITCODE -ne 0) { throw 'Reviewed Flutter reply-wrapper source patch failed.' }
+
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9 # v1
         with:
@@ -474,6 +483,7 @@ jobs:
             artifacts/native-managed-branding-tests.log
             artifacts/native-msvc-toolchain.json
             artifacts/flutter-sdk-identity.json
+            artifacts/flutter-client-wrapper-repro.json
             artifacts/native-managed-updater-tests.log
             artifacts/native-managed-pause-tests.log
             artifacts/native-managed-subsession-tests.log
@@ -550,6 +560,7 @@ jobs:
             artifacts/native-msvc-toolchain.json
             artifacts/*.msi.build.json
             artifacts/flutter-sdk-identity.json
+            artifacts/flutter-client-wrapper-repro.json
             artifacts/*.msi.installed-files.json
             artifacts/SHA256SUMS.txt
             artifacts/swan-*.exe
