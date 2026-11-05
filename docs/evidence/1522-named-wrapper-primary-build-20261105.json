@@ -84,6 +84,16 @@
     "containing_exception_table_function_rva_hex": ["ddde20", "dddf8d"],
     "rdata_ascii_string_sets_identical": true,
     "instruction_origin_not_yet_identified": true,
+    "subsequent_source_correspondence": {
+      "library": "Pinned AOM AV1 codec",
+      "source_commit": "10aece4157eb79315da205f39e19bf6ab3ee30d0",
+      "source_unit": "av1/encoder/encodeframe_utils.c",
+      "source_unit_canonical_sha256": "e36cdda0a1090348a297082be1e3c328885790244db7683ba1e3f025914933d8",
+      "function": "av1_update_inter_mode_stats",
+      "evidence": "Disassembly matches the four arguments, NEWMV/GLOBALMV/NEARESTMV values16/15/13, context masks/shifts7/3/4, and three sequential adaptive CDF updates. The different instructions decode as mov eax,r11d and mov rax,r11.",
+      "scope": "Source correspondence; linked COFF symbol/object proof still required. No application or dependency source fix is claimed.",
+      "next_diagnostic": ".github/workflows/aom-repro-diagnostic.yml builds only this pinned dependency twice with separate build roots and compiled cache disabled, retaining original source, compiler inputs and encodeframe_utils objects."
+    },
     "no_binary_normalization_or_signing": true
   },
   "candidate22_signed_approved_or_installed": false,
