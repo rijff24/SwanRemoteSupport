@@ -23,10 +23,10 @@ jobs:
           vcpkgDirectory: C:\vcpkg
           vcpkgGitCommitId: 120deac3062162151622ca4860575a33844ba10b
           doNotCache: true
-      - name: Build only the pinned AV1 dependency twice without compiled cache
+      - name: Build pinned AV1 and repeatedly compile its original source unit
         shell: pwsh
         run: |
-          ./deployment/windows/Diagnose-AomObject.ps1 -WorkDirectory (Join-Path $env:RUNNER_TEMP 'swan-aom-object-diagnostic')
+          ./deployment/windows/Diagnose-AomObject.ps1 -WorkDirectory (Join-Path $env:RUNNER_TEMP 'swan-aom-object-diagnostic') -RepeatCompiles 24
       - name: Preserve raw objects and effective compiler inputs
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
