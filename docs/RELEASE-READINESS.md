@@ -42,8 +42,14 @@ covers1,417 public source files, all six original generated bridge inputs,
 the patch receipt and compiled branding/approval/transfer logs. CI technician MSI
 lifecycle and customer headless-service checks passed. The one [exact-source
 independent rebuild](https://github.com/rijff24/SwanRemoteSupport/actions/runs/41996756641)
-is running from the pinned source tag. Reproduction is still unproven; no +92
-package is signed, approved or installed. Existing development VMs remain on21.
+passed from the pinned source tag after retrying only its failed Windows job:
+the initial attempt hit an HTTP504 dependency download before app compilation.
+The [original-output comparison](https://github.com/rijff24/SwanRemoteSupport/actions/runs/42009952812)
+then **failed**: server setup and all three backend programs match, but the four
+endpoint packages differ. Public-source, bridge, MSVC and patched-wrapper input
+proofs match. The named-wrapper change alone has not fixed full-app reproduction.
+Payload diagnosis continues; no further full build is started on that assumption.
+No +92 package is signed, approved or installed. Existing development VMs remain on21.
 
 
 [Current management evidence](evidence/1522-management-reproduction-upgrade-and-probe-20261105.json)
