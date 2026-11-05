@@ -23,7 +23,7 @@ class WrapperPatchTests(unittest.TestCase):
         return sdk, source, Path(directory) / "receipt.json"
 
     def test_reviewed_upstream_and_both_source_line_endings(self):
-        data = ORIGINAL.read_bytes()
+        data = ORIGINAL.read_bytes().replace(b"\r\n", b"\n")
         self.assertEqual(hashlib.sha256(data).hexdigest(), patcher.ORIGINAL_SHA256)
         patched = patcher.transform(data)
         self.assertEqual(patched, patcher.transform(data.replace(b"\n", b"\r\n")))
