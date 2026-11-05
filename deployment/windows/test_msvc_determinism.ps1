@@ -36,15 +36,18 @@ int main() {
   return calls == 1 ? 0 : 1;
 }
 '@
-function Build-Fixture([string]$label,[string]$folder,[bool]$deterministic) {
+function Build-Fixture([string]$label,[string]$folder,[bool]$deterministic,[string]$mode='default') {
  $directory=Join-Path $root $folder
  if(-not(Test-Path -LiteralPath $directory)){New-Item -ItemType Directory -Path $directory|Out-Null}
  $cpp=Join-Path $directory 'fixture.cpp'
  [IO.File]::WriteAllText($cpp,$source,[Text.UTF8Encoding]::new($false))
  $arguments=@('/nologo','/WX','/std:c++17','/O2','/EHsc','/MT','/GR','/DNDEBUG')+@($include|ForEach-Object {'/I'+$_})
  if($deterministic){$arguments+=@('/experimental:deterministic',('/pathmap:'+$directory+'=C:\swan-repro-fixture'))}
- $arguments+=@(('/Fo'+(Join-Path $directory 'fixture.obj')),('/Fe'+(Join-Path $directory 'fixture.exe')),$cpp,'/link','/Brepro','/INCREMENTAL:NO','/PDBALTPATH:fixture.pdb','/MANIFEST:NO')+@($libraries|ForEach-Object {'/LIBPATH:'+$_})
- if(@($arguments|Where-Object {$_ -ceq $cpp}).Count -ne 1 -or @($arguments|Where-Object {$_ -ceq '/link'}).Count -ne 1){throw 'Compiler argument boundaries invalid'}
+ if($mode -ceq 'brepro'){$arguments+='/Brepro'}
+ if($mode -ceq 'trim'){$arguments+=('/d1trimfile:'+$directory+'\')}
+ $sourceArgument=if($mode -ceq 'relative'){'fixture.cpp'}else{$cpp}
+ $arguments+=@(('/Fo'+(Join-Path $directory 'fixture.obj')),('/Fe'+(Join-Path $directory 'fixture.exe')),$sourceArgument,'/link','/Brepro','/INCREMENTAL:NO','/PDBALTPATH:fixture.pdb','/MANIFEST:NO')+@($libraries|ForEach-Object {'/LIBPATH:'+$_})
+ if(@($arguments|Where-Object {$_ -ceq $sourceArgument}).Count -ne 1 -or @($arguments|Where-Object {$_ -ceq '/link'}).Count -ne 1){throw 'Compiler argument boundaries invalid'}
  $arguments|ConvertTo-Json|Set-Content -LiteralPath (Join-Path $root ($label+'.arguments.json')) -Encoding utf8
  $start=[Diagnostics.ProcessStartInfo]::new()
  $start.FileName=$compiler
@@ -74,12 +77,19 @@ $runs=@(
  (Build-Fixture 'link-only-relocated-first' 'control-a' $false),
  (Build-Fixture 'link-only-relocated-second' 'control-b' $false),
  (Build-Fixture 'deterministic-relocated-first' 'fixed-a' $true),
- (Build-Fixture 'deterministic-relocated-second' 'fixed-b' $true)
+ (Build-Fixture 'deterministic-relocated-second' 'fixed-b' $true),
+ (Build-Fixture 'compiler-brepro-first' 'brepro-a' $true 'brepro'),
+ (Build-Fixture 'compiler-brepro-second' 'brepro-b' $true 'brepro'),
+ (Build-Fixture 'trimfile-first' 'trim-a' $true 'trim'),
+ (Build-Fixture 'trimfile-second' 'trim-b' $true 'trim'),
+ (Build-Fixture 'relative-source-first' 'relative-a' $false 'relative'),
+ (Build-Fixture 'relative-source-second' 'relative-b' $false 'relative')
 )
 $controlDiffers=$runs[2].sha256 -cne $runs[3].sha256
 $fixedMatches=$runs[4].sha256 -ceq $runs[5].sha256
-$report=@{scope='Real standalone MSVC callback/RTTI/path fixture; not the Flutter app or complete native release';compiler_sha256=(Get-FileHash -LiteralPath $compiler).Hash.ToLowerInvariant();toolset=$version;windows_sdk=$sdkVersion;same_path_link_only_matches=($runs[0].sha256 -ceq $runs[1].sha256);relocated_link_only_control_differs=$controlDiffers;relocated_compiler_deterministic_matches=$fixedMatches;shipping_binary_normalization=$false;runs=$runs;full_native_reproduction_required=$true;production_approved=$false}
+$candidates=@{experimental_and_pathmap=$fixedMatches;compiler_brepro=($runs[6].sha256 -ceq $runs[7].sha256);trimfile=($runs[8].sha256 -ceq $runs[9].sha256);relative_source=($runs[10].sha256 -ceq $runs[11].sha256)}
+$report=@{scope='Real standalone MSVC callback/RTTI/path fixture; not the Flutter app or complete native release';compiler_sha256=(Get-FileHash -LiteralPath $compiler).Hash.ToLowerInvariant();toolset=$version;windows_sdk=$sdkVersion;same_path_link_only_matches=($runs[0].sha256 -ceq $runs[1].sha256);relocated_link_only_control_differs=$controlDiffers;relocated_compiler_deterministic_matches=$fixedMatches;candidate_raw_byte_matches=$candidates;shipping_binary_normalization=$false;runs=$runs;full_native_reproduction_required=$true;production_approved=$false}
 $report|ConvertTo-Json -Depth 8|Set-Content -LiteralPath (Join-Path $root 'report.json') -Encoding utf8
 if(-not $controlDiffers){throw 'Relocation control did not demonstrate the embedded path difference'}
-if(-not $fixedMatches){throw 'Compiler determinism/path mapping did not produce identical raw fixture bytes'}
+if(-not @($candidates.Values|Where-Object {$_}).Count){throw 'None of the tested compiler/path controls produced identical raw relocated fixture bytes'}
 Write-Output 'Real MSVC relocated callback/RTTI fixture passed with original bytes; full native reproduction remains required.'
