@@ -67,6 +67,7 @@ async fn enrollment_mfa_and_grants_fail_closed() {
     let store=Arc::new(Store::open(&directory).unwrap());let app=router(store.clone());
     assert_eq!(request(&app,"/api/v1/devices","GET",None,Value::Null).await.0,StatusCode::UNAUTHORIZED);
     assert_eq!(request(&app,"/api/v1/network/check","POST",None,Value::Null).await.0,StatusCode::UNAUTHORIZED);
+    assert_eq!(request(&app,"/api/v1/network/bootstrap","GET",None,Value::Null).await.0,StatusCode::UNAUTHORIZED);
     let secret=Secret::generate_secret().to_encoded().to_string();
     let generator=TOTP::new(Algorithm::SHA1,6,1,30,Secret::Encoded(secret.clone()).to_bytes().unwrap()).unwrap();
     let time=now();let setup_token=std::fs::read_to_string(directory.join("setup-token.txt")).unwrap();
@@ -79,6 +80,14 @@ async fn enrollment_mfa_and_grants_fail_closed() {
     let login=json!({"username":"admin","password":"correct horse battery staple","totp_code":generator.generate((time/30+1)*30)});
     let (status,result)=request(&app,"/api/v1/login","POST",None,login.clone()).await;assert_eq!(status,StatusCode::OK);
     let admin=result["token"].as_str().unwrap();
+    let (status,probe_bootstrap)=request(&app,"/api/v1/network/bootstrap","GET",Some(admin),Value::Null).await;
+    assert_eq!(status,StatusCode::OK);
+    let bootstrap:swan_agent::Bootstrap=serde_json::from_value(probe_bootstrap.clone()).unwrap();bootstrap.validate().unwrap();
+    let fields=probe_bootstrap.as_object().unwrap().keys().map(String::as_str).collect::<std::collections::BTreeSet<_>>();
+    assert_eq!(fields,["schema","edition","company_id","management_url","profile_public_key","release_public_key"].into_iter().collect());
+    assert!(bootstrap.release_public_key.is_empty());
+    let (_,public_status)=request(&app,"/api/v1/status","GET",None,Value::Null).await;
+    assert_eq!(bootstrap.profile_public_key,public_status["profile_public_key"]);
     assert_eq!(request(&app,"/api/v1/sessions","GET",None,Value::Null).await.0,StatusCode::UNAUTHORIZED);
     assert_eq!(request(&app,"/api/v1/login","POST",None,login).await.0,StatusCode::UNAUTHORIZED,"MFA codes are single-use");
     let (_,device)=request(&app,"/api/v1/enroll","POST",None,json!({"name":"Customer test PC","rustdesk_id":"123456789","unattended_consent":false})).await;
@@ -140,6 +149,7 @@ async fn enrollment_mfa_and_grants_fail_closed() {
     let tech_generator=TOTP::new(Algorithm::SHA1,6,1,30,Secret::Encoded(tech_secret.into()).to_bytes().unwrap()).unwrap();
     let (_,tech_login)=request(&app,"/api/v1/login","POST",None,json!({"username":"technician","password":"another long strong password","totp_code":tech_generator.generate(now())})).await;
     let technician=tech_login["token"].as_str().unwrap();
+    assert_eq!(request(&app,"/api/v1/network/bootstrap","GET",Some(technician),Value::Null).await.0,StatusCode::UNAUTHORIZED,"Only company administrators may export network bootstrap information");
     assert_eq!(request(&app,"/api/v1/users","GET",Some(technician),Value::Null).await.0,StatusCode::UNAUTHORIZED);
     assert_eq!(request(&app,"/api/v1/network/check","POST",Some(technician),Value::Null).await.0,StatusCode::UNAUTHORIZED,"Only company administrators may probe configured endpoints");
     assert_eq!(request(&app,"/api/v1/grants","POST",Some(technician),json!({"device_id":device_id,"proof_public_key":STANDARD.encode(proof.verifying_key().as_bytes()),"unattended":false})).await.0,StatusCode::FORBIDDEN,"Technicians need explicit group access");

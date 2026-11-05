@@ -12,6 +12,7 @@ swan-agent = { path = "../agent" }
 anyhow.workspace = true
 serde.workspace = true
 serde_json.workspace = true
+reqwest.workspace = true
 base64.workspace = true
 ed25519-dalek.workspace = true
 rand.workspace = true

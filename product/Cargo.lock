@@ -1644,6 +1644,7 @@ dependencies = [
  "hex",
  "http-body-util",
  "rand 0.8.8",
+ "reqwest",
  "rusqlite",
  "serde",
  "serde_json",

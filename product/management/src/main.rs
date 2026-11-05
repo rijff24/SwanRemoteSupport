@@ -1,6 +1,7 @@
 mod service;
 mod backup;
 mod network;
+mod network_probe;
 #[cfg(test)]
 mod tests;
 use anyhow::{Context, Result};
@@ -37,7 +38,10 @@ fn main() -> Result<()> {
     }
     #[cfg(windows)]
     if std::env::args().any(|a|a=="--service") {return windows::dispatch();}
-    anyhow::ensure!(matches!(std::env::args().nth(1).as_deref(),None|Some("backup"|"restore"|"prepare-profile-key"|"activate-profile-key")),
+    if std::env::args().skip(1).collect::<Vec<_>>()==["check-network","--help"] {
+        println!("{}",network_probe::USAGE);return Ok(());
+    }
+    anyhow::ensure!(matches!(std::env::args().nth(1).as_deref(),None|Some("backup"|"restore"|"prepare-profile-key"|"activate-profile-key"|"check-network")),
         "Unknown management command; no server started");
     // This is the executable entrypoint, not a helper within an existing runtime.
     let runtime=tokio::runtime::Runtime::new()?;
@@ -60,6 +64,14 @@ fn main() -> Result<()> {
 async fn run(stop:tokio::sync::oneshot::Receiver<()>)->Result<()> {
     let data = PathBuf::from(std::env::var("SWAN_DATA_DIR").unwrap_or_else(|_| "swan-data".into()));
     let args:Vec<String>=std::env::args().collect();
+    // A standalone probe uses only a public bootstrap. Never open company
+    // storage, create setup keys or start a listener for this command.
+    if args.get(1).map(String::as_str)==Some("check-network") {
+        let report=network_probe::run(&args[2..]).await?;
+        println!("{}",serde_json::to_string_pretty(&report)?);
+        anyhow::ensure!(report["requested_checks_passed"]==true,"One or more requested network checks failed; inspect the JSON report");
+        return Ok(());
+    }
     if matches!(args.get(1).map(String::as_str),Some("backup"|"restore")) {
         let path=PathBuf::from(args.get(2).context("Usage: swan-management backup|restore FILE")?);
         let passphrase=std::env::var("SWAN_BACKUP_PASSPHRASE").context("Set SWAN_BACKUP_PASSPHRASE for this process")?;

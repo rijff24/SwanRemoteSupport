@@ -178,6 +178,7 @@ pub fn router(store:Shared)->Router {
         .route("/api/v1/logout",post(logout))
         .route("/api/v1/profile",get(profile).put(save_profile))
         .route("/api/v1/network/check",post(network_check))
+        .route("/api/v1/network/bootstrap",get(network_bootstrap))
         .route("/api/v1/users",get(users).post(create_user))
         .route("/api/v1/users/{id}/disable",post(disable_user))
         .route("/api/v1/enroll",post(enroll))
@@ -222,6 +223,13 @@ async fn network_check(State(s):State<Shared>,headers:HeaderMap)->ApiResult {
     let profile=s.profile()?;
     let result=crate::network::check(&profile,&s.key.verifying_key()).await?;
     s.audit(&actor,"network.checked",&profile.company_id)?;Ok(Json(result))
+}
+async fn network_bootstrap(State(s):State<Shared>,headers:HeaderMap)->ApiResult {
+    let actor=s.user(&headers,true)?;s.rate("network-bootstrap",10)?;
+    let profile=s.profile()?;
+    let bootstrap=swan_agent::Bootstrap{schema:SCHEMA,edition:Edition::Customer,company_id:profile.company_id.clone(),management_url:profile.management_url,profile_public_key:STANDARD.encode(s.key.verifying_key().as_bytes()),release_public_key:String::new()};
+    s.audit(&actor,"network.bootstrap_downloaded",&profile.company_id)?;
+    Ok(Json(serde_json::to_value(bootstrap)?))
 }
 #[derive(Deserialize)]
 struct Setup { profile:CompanyProfile, username:String,password:String,totp_secret:String,totp_code:String }
