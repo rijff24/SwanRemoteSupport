@@ -61,7 +61,10 @@ int main() {
   if(-not $body.Contains($lambda)){throw 'Named callable fixture preimage differs'}
   $body=$body.Replace($lambda,'  SwanCompilerFixture::Consumer consumer{&calls};')
  }
- [IO.File]::WriteAllText($cpp,$body,[Text.UTF8Encoding]::new($false))
+ if($mode -ceq 'sdk-reply'){
+  & python3 (Join-Path $PSScriptRoot 'emit-flutter-reply-fixture.py') --output $cpp
+  if($LASTEXITCODE){throw 'Actual SDK reply callable fixture generation failed'}
+ }else{[IO.File]::WriteAllText($cpp,$body,[Text.UTF8Encoding]::new($false))}
  $arguments=@('/nologo','/WX','/std:c++17','/O2','/EHsc','/MT','/GR','/DNDEBUG')+@($include|ForEach-Object {'/I'+$_})
  if($deterministic){$arguments+=@('/experimental:deterministic',('/pathmap:'+$directory+'=C:\swan-repro-fixture'))}
  if($mode -ceq 'brepro'){$arguments+='/Brepro'}
@@ -86,8 +89,18 @@ int main() {
  if($process.ExitCode -ne 0){throw ('Real MSVC fixture failed: '+$label)}
  $process.Dispose()
  $exe=Join-Path $directory 'fixture.exe'
- $result=@(& $exe)
- if($LASTEXITCODE -ne 0 -or $result.Count -ne 3 -or $result[2] -cne '1'){throw 'Compiled callback fixture did not run correctly'}
+ $runStart=[Diagnostics.ProcessStartInfo]::new()
+ $runStart.FileName=$exe
+ $runStart.UseShellExecute=$false
+ $runStart.RedirectStandardOutput=$true
+ $runStart.RedirectStandardError=$true
+ $run=[Diagnostics.Process]::Start($runStart)
+ $runOutput=$run.StandardOutput.ReadToEndAsync();$runError=$run.StandardError.ReadToEndAsync()
+ if(-not $run.WaitForExit(30000)){$run.Kill($true);throw 'Compiled callback fixture timed out'}
+ $result=@($runOutput.GetAwaiter().GetResult().Split([char[]]"`r`n",[StringSplitOptions]::RemoveEmptyEntries))
+ [IO.File]::WriteAllText((Join-Path $root ($label+'.runtime.log')),$runError.GetAwaiter().GetResult())
+ if($run.ExitCode -ne 0 -or $result.Count -ne 3 -or $result[2] -cne '1'){throw 'Compiled callback fixture did not run correctly'}
+ $run.Dispose()
  $saved=Join-Path $root ($label+'.exe')
  Copy-Item -LiteralPath $exe -Destination $saved
  return @{label=$label;sha256=(Get-FileHash -LiteralPath $saved).Hash.ToLowerInvariant();bytes=(Get-Item -LiteralPath $saved).Length;source_sha256=(Get-FileHash -LiteralPath $cpp).Hash.ToLowerInvariant();embedded_source_path=$result[0];lambda_type=$result[1];callback_passed=$true;compiler_arguments=$arguments}
@@ -106,13 +119,16 @@ $runs=@(
  (Build-Fixture 'relative-source-first' 'relative-a' $false 'relative'),
  (Build-Fixture 'relative-source-second' 'relative-b' $false 'relative'),
  (Build-Fixture 'named-callable-first' 'named-a' $true 'named'),
- (Build-Fixture 'named-callable-second' 'named-b' $true 'named')
+ (Build-Fixture 'named-callable-second' 'named-b' $true 'named'),
+ (Build-Fixture 'sdk-reply-first' 'sdk-a' $true 'sdk-reply'),
+ (Build-Fixture 'sdk-reply-second' 'sdk-b' $true 'sdk-reply')
 )
 $controlDiffers=$runs[2].sha256 -cne $runs[3].sha256
 $fixedMatches=$runs[4].sha256 -ceq $runs[5].sha256
-$candidates=@{experimental_and_pathmap=$fixedMatches;compiler_brepro=($runs[6].sha256 -ceq $runs[7].sha256);trimfile=($runs[8].sha256 -ceq $runs[9].sha256);relative_source=($runs[10].sha256 -ceq $runs[11].sha256);named_callable=($runs[12].sha256 -ceq $runs[13].sha256)}
+$candidates=@{experimental_and_pathmap=$fixedMatches;compiler_brepro=($runs[6].sha256 -ceq $runs[7].sha256);trimfile=($runs[8].sha256 -ceq $runs[9].sha256);relative_source=($runs[10].sha256 -ceq $runs[11].sha256);named_callable=($runs[12].sha256 -ceq $runs[13].sha256);actual_sdk_reply_callable=($runs[14].sha256 -ceq $runs[15].sha256)}
 $report=@{scope='Real standalone MSVC callback/RTTI/path fixture; not the Flutter app or complete native release';compiler_sha256=(Get-FileHash -LiteralPath $compiler).Hash.ToLowerInvariant();toolset=$version;windows_sdk=$sdkVersion;same_path_link_only_matches=($runs[0].sha256 -ceq $runs[1].sha256);relocated_link_only_control_differs=$controlDiffers;relocated_compiler_deterministic_matches=$fixedMatches;candidate_raw_byte_matches=$candidates;shipping_binary_normalization=$false;runs=$runs;full_native_reproduction_required=$true;production_approved=$false}
 $report|ConvertTo-Json -Depth 8|Set-Content -LiteralPath (Join-Path $root 'report.json') -Encoding utf8
 if(-not $controlDiffers){throw 'Relocation control did not demonstrate the embedded path difference'}
 if(-not $candidates.named_callable -or $runs[12].lambda_type -cne $runs[13].lambda_type){throw 'Named callable did not produce identical raw relocated fixture bytes and type identity'}
+if(-not $candidates.actual_sdk_reply_callable -or $runs[14].lambda_type -cne $runs[15].lambda_type){throw 'Actual SDK reply callable behavior or raw relocated bytes failed'}
 Write-Output 'Real MSVC relocated callback/RTTI fixture passed with original bytes; full native reproduction remains required.'

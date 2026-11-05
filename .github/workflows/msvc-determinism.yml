@@ -5,6 +5,10 @@ on:
     paths:
       - .github/workflows/msvc-determinism.yml
       - deployment/windows/test_msvc_determinism.ps1
+      - deployment/windows/patch-flutter-client-wrapper.py
+      - deployment/windows/test_flutter_client_wrapper.py
+      - deployment/windows/emit-flutter-reply-fixture.py
+      - deployment/windows/fixtures/flutter_reply_handler.cpp.in
 permissions:
   contents: read
 jobs:
@@ -17,7 +21,10 @@ jobs:
           persist-credentials: false
       - name: Compare actual callback and RTTI bytes across build directories
         shell: pwsh
-        run: ./deployment/windows/test_msvc_determinism.ps1 -WorkDirectory (Join-Path $env:RUNNER_TEMP 'swan-msvc-repro-fixture')
+        run: |
+          python3 -m unittest discover -s deployment/windows -p test_flutter_client_wrapper.py
+          if ($LASTEXITCODE) { throw 'Client-wrapper source trust regressions failed.' }
+          ./deployment/windows/test_msvc_determinism.ps1 -WorkDirectory (Join-Path $env:RUNNER_TEMP 'swan-msvc-repro-fixture')
       - name: Retain original fixture outputs and diagnostics
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
