@@ -86,8 +86,12 @@ preserved company records and unchanged transport/TLS containers. Offline full
 restore matched all57 installer files,6 TLS identity files and deployment keys.
 The restored existing company then passed MFA/replay rejection, original-key
 profile signing and device/user/release/build persistence across restart in a
-network-disabled container. That copy is stopped and retained; restored HTTPS
-and native sessions remain separate. Updates remain paused. No production
+network-disabled container. [Restored-company HTTPS and real MFA](evidence/1522-restored-company-https-mfa-20261105.json)
+subsequently passed in that isolated namespace using the original CA/hostname
+trust and profile signing key. MFA replay and anonymous export were rejected;
+authenticated public bootstrap export passed. Both restored services are stopped
+and retained; the original four live company services remain running unchanged.
+Native restored sessions and external transport remain separate. Updates remain paused. No production
 publication is implied.
 
 [Current standard-user live checks](evidence/1521-standard-native-interrupted-transfer-consent-and-stop-20261105.json)
