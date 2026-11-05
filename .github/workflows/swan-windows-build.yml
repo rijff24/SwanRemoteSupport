@@ -33,6 +33,8 @@ jobs:
 
   generate-bridge:
     uses: ./.github/workflows/bridge.yml
+    with:
+      include_windows_arm64: false
 
   build-topmost-window:
     uses: ./.github/workflows/third-party-RustDeskTempTopMostWindow.yml

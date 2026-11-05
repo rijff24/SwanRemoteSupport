@@ -59,6 +59,9 @@ The build also verifies that the installed library stayed unchanged and that
 the bundled native DLL matches the original compiled DLL. These records are
 under `native-aom-inputs/` in the unsigned artifacts. Independent comparison of
 all original shipping outputs and runtime qualification remain mandatory.
+The x64 release requests only its Flutter 3.22.3-generated bridge, used with the
+pinned 3.24.5 SDK. It does not wait for the separate upstream Flutter 3.44 ARM64
+bridge. Other shared-workflow callers retain both bridge jobs by default.
 
 
 Successful company-product CI jobs export `CompanyComponents-<runner>-UNSIGNED-TEST`
