@@ -6,10 +6,15 @@ Next candidate **1.5.22+91**, source `ca16998`, fixes company window and tray
 labels while preserving stable service/configuration names and device identity.
 It uses trusted signed cached branding for display only; expired policy still
 cannot authorize access. The single [native build](https://github.com/rijff24/SwanRemoteSupport/actions/runs/41964194947)
-is pending. Native22+90 built and passed offline source/archive checks, but was
-never approved or installed and is superseded by this branding fix. Reproduction,
-runtime branding, genuine byte-changing automatic updates and final qualification
-of the replacement remain open.
+passed. Its256,777,570-byte original archive, manifest,1,406 public source files
+and six generated bridges are verified. New compiled Rust branding and Flutter
+title/approval tests passed; the Rust branding log was omitted from the original
+artifact and is verified from the retained original completed job log instead.
+Future CI uploads include it. All95 customer payload files were extracted without
+execution and matched the verified manifest. The one [independent rebuild](https://github.com/rijff24/SwanRemoteSupport/actions/runs/41970609821)
+is running from the exact same source. Native22+90 was never approved or installed
+and is superseded. Reproduction, runtime branding, genuine byte-changing automatic
+updates and final qualification of the replacement remain open.
 
 [Current management evidence](evidence/1522-management-reproduction-upgrade-and-probe-20261105.json)
 now records the corrected compiled Windows checker passing all15 public cases,

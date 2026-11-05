@@ -102,7 +102,19 @@
     "superseded_by_branding_fix_source": "ca16998e6a51a7d2c4737e69b2b731b0b3cf2eba",
     "replacement_version": "1.5.22+91",
     "replacement_build": 41964194947,
-    "replacement_build_runtime_and_reproduction": "pending"
+    "replacement_build_runtime_and_reproduction": "Primary verified; independent rebuild running; installed runtime pending",
+    "replacement_build_result": "success",
+    "replacement_artifact": 13389315447,
+    "replacement_artifact_bytes": 256777570,
+    "replacement_artifact_digest": "sha256:d15041e05701744d8269d2e82aa340d1b58fc6034980dc3a97a8291d71ff94ee",
+    "replacement_complete_public_source_files": 1406,
+    "replacement_generated_bridges": 6,
+    "original_archive_hash_manifest_and_regression_checks_passed": true,
+    "branding_test_original_completed_job_log_sha256": "a28446e4a661ce06d40548a6a22b3bb6b651133674feb94186bc6dbd55842738",
+    "branding_test_log_omitted_from_original_artifact": true,
+    "future_ci_log_retention_fix_source": "2fc96a4",
+    "all_95_customer_payload_files_extracted_without_execution_and_manifest_verified": true,
+    "independent_rebuild": 41970609821
   },
   "remaining_boundaries": [
     "Finish current native app and update qualification on existing development pair before final Windows matrix",
