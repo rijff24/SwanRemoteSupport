@@ -1,0 +1,40 @@
+{
+  "date": "2026-11-05",
+  "scope": "Windows regression harness correction, not corrected-candidate acceptance",
+  "prior_fixture_failure": "TCP port reservation succeeded, but Windows denied UDP binding with EACCES for the same port.",
+  "change": "Reserve adjacent TCP NAT/ID ports and matching UDP ID port together; retry at most32 random loopback candidates without changing host firewall or reserved ranges. Close failed reservations.",
+  "old_binary_control": {
+    "passed": true,
+    "old_binary_control": true,
+    "corrected_windows_binary_qualified": false,
+    "known_old_der_failure_expected": true,
+    "checks": [
+      "help",
+      "known-old-der-failure",
+      "trusted-private",
+      "trusted-pem",
+      "private-cannot-qualify-outside",
+      "expired",
+      "future",
+      "zero-revision",
+      "wrong-company",
+      "tampered",
+      "redirect",
+      "wrong-pinned-key",
+      "certificate-hostname-mismatch",
+      "untrusted-ca",
+      "insecure-option-rejected",
+      "malformed-udp"
+    ],
+    "management_sha256": "6e47bf0ff56e163c03713ce30c8ba73ec7886ecacc141d8cd073902e954fe578",
+    "no_company_state_created": true,
+    "no_request_credentials": true,
+    "real_https_and_ed25519": true,
+    "transport_peers": "scripted fixture; not native sessions",
+    "native_or_external_connectivity_qualified": false
+  },
+  "public_script_sha256": "817daecdb967e1abd6163ef387f4f67a6a9d65b0adeef3048aac1687227869ad",
+  "control_adjustment": "Expect the known old DER failure, then use PEM for the remaining cases. Public CI fixture still requires both DER and PEM to succeed.",
+  "corrected_windows_binary_qualified": false,
+  "new_vm_or_installer_or_company_state": false
+}

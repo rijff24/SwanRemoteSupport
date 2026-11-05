@@ -22,14 +22,26 @@ const listen = (server, port = 0) => new Promise((resolve, reject) => {
   server.once('error', reject); server.listen(port, '127.0.0.1', () => { server.removeListener('error', reject); resolve(server.address().port); });
 });
 const tcp = () => net.createServer(socket => { ++transportConnections; socket.end(); });
-async function adjacentTcpPorts() {
-  for (let attempt=0; attempt<10; ++attempt) {
-    const nat=tcp(), id=tcp(); const port=await listen(nat);
+async function reserveDiagnosticPorts() {
+  // Windows may reserve UDP ranges independently of TCP. Reserve the complete
+  // fixture before returning, and retry boundedly without changing host policy.
+  for (let attempt=0; attempt<32; ++attempt) {
+    const nat=tcp(), id=tcp(), socket=dgram.createSocket('udp4');
+    const port=crypto.randomInt(20000,45000); let complete=false;
     try {
-      if (port===65535) continue;
-      await listen(id,port+1); listeners.push(nat,id); return port;
-    } catch (error) { if (error.code!=='EADDRINUSE') throw error; }
-    finally { if (!id.listening) await new Promise(resolve => nat.close(resolve)); }
+      await listen(nat,port); await listen(id,port+1);
+      await new Promise((resolve,reject) => {
+        socket.once('error',reject);
+        socket.bind(port+1,'127.0.0.1',() => {socket.removeListener('error',reject);resolve();});
+      });
+      complete=true; listeners.push(nat,id); return {port,socket};
+    } catch (error) { if (!['EADDRINUSE','EACCES'].includes(error.code)) throw error; }
+    finally {
+      if (!complete) {
+        socket.close();
+        for (const listener of [id,nat]) if (listener.listening) await new Promise(resolve => listener.close(resolve));
+      }
+    }
   }
   throw new Error('No adjacent loopback TCP fixture ports available');
 }
@@ -75,14 +87,13 @@ async function command(label, args, expected, expectedReport) {
   checks.push(label);
 }
 async function main() {
-  const natPort = await adjacentTcpPorts();
+  const reserved = await reserveDiagnosticPorts(), natPort = reserved.port;
+  udp=reserved.socket; udpOpen=true;
   const relay = tcp(); listeners.push(relay); const relayPort = await listen(relay);
-  udp = dgram.createSocket('udp4');
   udp.on('message', (bytes, peer) => {
     assert.deepEqual(bytes, Buffer.from([0x7a,0x06,0x12,0x01,0x00,0x1a,0x01,0x00]));
     udp.send(mode === 'malformed-udp' ? Buffer.from([0]) : Buffer.from([0x82,0x01,0x02,0x08,0x02]), peer.port, peer.address);
   });
-  await new Promise((resolve,reject) => {udp.once('error',reject); udp.bind(natPort+1,'127.0.0.1',resolve);}); udpOpen = true;
   const httpsPort = await listen(server); listeners.push(server);
   const brand = {display_name:'Probe fixture',primary_color:'#007777',logo_svg:'<svg/>',support_url:'',consent_text:'Approve support.',support_contacts:'',shortcuts:[]};
   const now = Math.floor(Date.now()/1000), url = `https://localhost:${httpsPort}`;
