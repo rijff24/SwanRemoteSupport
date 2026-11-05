@@ -958,6 +958,11 @@ pub fn main_get_option(key: String) -> String {
 }
 
 pub fn main_get_option_sync(key: String) -> SyncReturn<String> {
+    #[cfg(feature = "swan_custom")]
+    if key == "managed-company-display-name" {
+        // Computed from signed state, not from a writable local option.
+        return SyncReturn(crate::managed::display_name());
+    }
     SyncReturn(get_option(key))
 }
 

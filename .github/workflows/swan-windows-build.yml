@@ -209,9 +209,16 @@ jobs:
         shell: pwsh
         working-directory: flutter
         run: |
-          flutter test --reporter expanded test/approval_window_auto_hide_test.dart 2>&1 | Tee-Object -FilePath ../artifacts/native-customer-approval-window-tests.log
+          flutter test --reporter expanded test/approval_window_auto_hide_test.dart test/company_window_title_test.dart 2>&1 | Tee-Object -FilePath ../artifacts/native-customer-approval-window-tests.log
           if ($LASTEXITCODE -ne 0) { throw 'Customer approval-window regression failed.' }
           if ((Get-Content ../artifacts/native-customer-approval-window-tests.log -Raw) -notmatch 'All tests passed!') { throw 'Expected customer approval tests did not complete.' }
+
+      - name: Verify signed display branding preserves internal identity
+        shell: pwsh
+        run: |
+          cargo test --release --lib --features "flutter,swan_custom,hwcodec,vram" managed::branding_tests::signed_display_names_do_not_change_identity_or_authorize_expired_policy -- --exact 2>&1 | Tee-Object -FilePath artifacts/native-managed-branding-tests.log
+          if ($LASTEXITCODE -ne 0) { throw 'Signed company display branding regression failed.' }
+          if ((Get-Content artifacts/native-managed-branding-tests.log -Raw) -notmatch '1 passed; 0 failed') { throw 'Expected signed company branding test did not execute.' }
 
       - name: Reject unsigned legacy management policy in managed editions
         shell: pwsh

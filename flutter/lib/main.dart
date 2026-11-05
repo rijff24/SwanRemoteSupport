@@ -24,6 +24,7 @@ import 'package:provider/provider.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'common.dart';
+import 'common/company_window_title.dart';
 import 'consts.dart';
 import 'mobile/pages/home_page.dart';
 import 'mobile/pages/server_page.dart';
@@ -429,9 +430,37 @@ class App extends StatefulWidget {
 }
 
 class _AppState extends State<App> with WidgetsBindingObserver {
+  Timer? _brandingTimer;
+  bool _refreshingBranding = false;
+  String _visibleAppName = '';
+
+  Future<void> _refreshBranding() async {
+    if (_refreshingBranding || !mounted) return;
+    _refreshingBranding = true;
+    try {
+      final name = getVisibleAppName();
+      if (name == _visibleAppName) return;
+      final title = await windowManager.getTitle();
+      if (!mounted) return;
+      final renamed = companyWindowTitle(title, _visibleAppName, name);
+      if (renamed != title) await windowManager.setTitle(renamed);
+      if (mounted) setState(() => _visibleAppName = name);
+    } catch (_) {
+      // A closing native window can disappear before the title request completes.
+      debugPrint('Company window title refresh could not complete.');
+    } finally {
+      _refreshingBranding = false;
+    }
+  }
+
   @override
   void initState() {
     super.initState();
+    if (isDesktop) {
+      _visibleAppName = getVisibleAppName();
+      _brandingTimer = Timer.periodic(
+          const Duration(seconds: 30), (_) => _refreshBranding());
+    }
     WidgetsBinding.instance.window.onPlatformBrightnessChanged = () {
       final userPreference = MyTheme.getThemeModePreference();
       if (userPreference != ThemeMode.system) return;
@@ -458,6 +487,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
 
   @override
   void dispose() {
+    _brandingTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -502,7 +532,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
           debugShowCheckedModeBanner: false,
           title: isWeb
               ? '${bind.mainGetAppNameSync()} Web Client V2 (Preview)'
-              : bind.mainGetAppNameSync(),
+              : getVisibleAppName(),
           theme: MyTheme.lightTheme,
           darkTheme: MyTheme.darkTheme,
           themeMode: MyTheme.currentThemeMode(),

@@ -3035,8 +3035,14 @@ int versionCmp(String v1, String v2) {
   return bind.versionToNumber(v: v1) - bind.versionToNumber(v: v2);
 }
 
+String getVisibleAppName() {
+  if (!isDesktop) return bind.mainGetAppNameSync();
+  final name = bind.mainGetOptionSync(key: 'managed-company-display-name');
+  return name.isEmpty ? bind.mainGetAppNameSync() : name;
+}
+
 String getWindowName({WindowType? overrideType}) {
-  final name = bind.mainGetAppNameSync();
+  final name = getVisibleAppName();
   switch (overrideType ?? kWindowType) {
     case WindowType.Main:
       return name;

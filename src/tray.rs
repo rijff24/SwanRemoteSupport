@@ -8,6 +8,13 @@ use std::sync::{Arc, Mutex};
 #[cfg(windows)]
 use std::time::Duration;
 
+fn display_name() -> String {
+    #[cfg(feature = "swan_custom")]
+    { crate::managed::display_name() }
+    #[cfg(not(feature = "swan_custom"))]
+    { crate::get_app_name() }
+}
+
 pub fn start_tray() {
     if crate::ui_interface::get_builtin_option(hbb_common::config::keys::OPTION_HIDE_TRAY) == "Y" {
         #[cfg(not(target_os = "macos"))]
@@ -74,13 +81,13 @@ fn make_tray() -> hbb_common::ResultType<()> {
         if count == 0 {
             format!(
                 "{} {}",
-                crate::get_app_name(),
+                display_name(),
                 translate("Service is running".to_owned()),
             )
         } else {
             format!(
                 "{} - {}\n{}",
-                crate::get_app_name(),
+                display_name(),
                 translate("Ready".to_owned()),
                 translate("{".to_string() + &format!("{count}") + "} sessions"),
             )
@@ -238,6 +245,7 @@ fn make_tray() -> hbb_common::ResultType<()> {
 #[tokio::main(flavor = "current_thread")]
 async fn start_query_session_count(sender: std::sync::mpsc::Sender<Data>) {
     let mut last_count = 0;
+    let mut branding_refresh = std::time::Instant::now();
     loop {
         if let Ok(mut c) = crate::ipc::connect(1000, "").await {
             let mut timer = crate::rustdesk_interval(tokio::time::interval(Duration::from_secs(1)));
@@ -251,8 +259,9 @@ async fn start_query_session_count(sender: std::sync::mpsc::Sender<Data>) {
                             }
 
                             Ok(Some(Data::ControlledSessionCount(count))) => {
-                                if count != last_count {
+                                if count != last_count || branding_refresh.elapsed() >= Duration::from_secs(30) {
                                     last_count = count;
+                                    branding_refresh = std::time::Instant::now();
                                     sender.send(Data::ControlledSessionCount(count)).ok();
                                 }
                             }

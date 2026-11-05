@@ -398,6 +398,78 @@ pub async fn login(challenge:&str,target:&str,local_ticket:&str)->ResultType<Vec
     Ok(ManagedLogin::prove(envelope,&key,challenge).to_wire()?)
 }
 
+/// Visible branding only. Never use this name for services, paths or device identity.
+pub fn display_name() -> String {
+    let name = AgentState::load_for_refresh(&swan_agent::state_directory())
+        .and_then(|state| display_name_from_state(&state));
+    // A verified cached profile can supply offline branding, never authorization.
+    match name {
+        Ok(name) if !name.trim().is_empty() => name,
+        _ => crate::get_app_name(),
+    }
+}
+
+fn display_name_from_state(state: &AgentState) -> ResultType<String> {
+    let profile = state.display_profile()?;
+    Ok(if state.bootstrap.edition == Edition::Technician {
+        profile.technician.display_name.clone()
+    } else {
+        profile.customer.display_name.clone()
+    })
+}
+
+#[cfg(test)]
+mod branding_tests {
+    use super::*;
+    use hbb_common::base64::{self, Engine};
+    use protocol::{Branding, CompanyProfile};
+
+    #[test]
+    fn signed_display_names_do_not_change_identity_or_authorize_expired_policy() {
+        let key = protocol::signing_key_from_hex(&"07".repeat(32)).unwrap();
+        let public = base64::engine::general_purpose::STANDARD.encode(key.verifying_key().as_bytes());
+        let now = protocol::now();
+        let mut profile = CompanyProfile {
+            schema: 1, company_id: "test-company".into(), revision: 1,
+            issued_at: now - 1000, expires_at: now - 1,
+            management_url: "https://support.example.com".into(),
+            rendezvous: "support.example.com".into(), relay: "support.example.com".into(),
+            transport_public_key: public.clone(),
+            customer: Branding::default(), technician: Branding::default(),
+            allow_unattended: false, updates_paused: true, rollout_percent: 100,
+            maintenance_start_utc: 0, maintenance_end_utc: 0,
+            update_channel: "test".into(), next_profile_public_key: None,
+        };
+        profile.customer.display_name = "Company Customer".into();
+        profile.technician.display_name = "Company Technician".into();
+        let mut state = AgentState {
+            bootstrap: swan_agent::Bootstrap {
+                schema: 1, edition: Edition::Customer, company_id: profile.company_id.clone(),
+                management_url: profile.management_url.clone(),
+                profile_public_key: public.clone(), release_public_key: public,
+            },
+            profile: SignedEnvelope::sign(&profile, &key).unwrap(), accepted_revision: 1,
+            device_id: Some("unchanged-device".into()), device_token: None,
+            unattended_consent: false, consent_revision: 0, last_release_sequence: 0,
+        };
+        let internal_name = crate::get_app_name();
+        assert_eq!(display_name_from_state(&state).unwrap(), "Company Customer");
+        assert!(state.company_profile().is_err());
+        state.bootstrap.edition = Edition::Technician;
+        assert_eq!(display_name_from_state(&state).unwrap(), "Company Technician");
+        assert_eq!(state.device_id.as_deref(), Some("unchanged-device"));
+        assert_eq!(crate::get_app_name(), internal_name);
+        state.accepted_revision = 2;
+        assert!(display_name_from_state(&state).is_err());
+        state.accepted_revision = 1;
+        state.bootstrap.company_id = "other-company".into();
+        assert!(display_name_from_state(&state).is_err());
+        state.bootstrap.company_id = profile.company_id;
+        state.profile.signature = "invalid-signature".into();
+        assert!(display_name_from_state(&state).is_err());
+    }
+}
+
 pub fn overview()->String {
     let state=AgentState::load_for_refresh(&swan_agent::state_directory());
     match state {
