@@ -35,6 +35,16 @@ and independent comparison checks. Five source-trust and sixteen comparison
 tests pass locally. Actual cached SDK application, full native reproduction and
 installed runtime checks remain required. No candidate22 signing has started.
 
+The [full +92 primary build and original artifact verification](evidence/1522-named-wrapper-primary-build-20261105.json)
+now pass: the actual pinned SDK source patch compiled, all native jobs completed,
+and the original256,841,594-byte archive matches its GitHub digest. Verification
+covers1,417 public source files, all six original generated bridge inputs,
+the patch receipt and compiled branding/approval/transfer logs. CI technician MSI
+lifecycle and customer headless-service checks passed. The one [exact-source
+independent rebuild](https://github.com/rijff24/SwanRemoteSupport/actions/runs/41996756641)
+is running from the pinned source tag. Reproduction is still unproven; no +92
+package is signed, approved or installed. Existing development VMs remain on21.
+
 
 [Current management evidence](evidence/1522-management-reproduction-upgrade-and-probe-20261105.json)
 now records the corrected compiled Windows checker passing all15 public cases,

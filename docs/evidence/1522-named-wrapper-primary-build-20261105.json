@@ -1,0 +1,55 @@
+{
+  "date": "2026-11-05",
+  "candidate": "1.5.22+92",
+  "source": "b0959da31f6e7e37e81aed7ce69de47e6d5ed428",
+  "primary_run": 41986403374,
+  "primary_native_job": 127112041115,
+  "primary_workflow_and_all_jobs_passed": true,
+  "artifact": {
+    "id": 13400430054,
+    "bytes": 256841594,
+    "sha256": "bdb3462d8639a8851514b00a55ef644b42b0a109a7010d93f2299bc9870a6f6d",
+    "original_archive_downloaded_once_and_digest_verified": true,
+    "public_source_files_verified": 1417,
+    "generated_bridge_files_verified_against_original_input_artifact": 6,
+    "bridge_input_artifact": 13396815675,
+    "all_declared_checksum_entries_verified": true,
+    "three_loose_backend_binaries_match_previously_reproduced_unchanged_component_sources": true
+  },
+  "actual_sdk_wrapper": {
+    "engine_revision": "a18df97ca57a249df5d8d68cd0820600223ce262",
+    "upstream_canonical_source_sha256": "48214b6261812361168f49d7a073a079b188709e8b29fdd1785307f9eef43989",
+    "patched_source_sha256": "4ecdd3b3ace7672043ffbcddd157324915f21854d2c7885cbdaf73fdac6731a0",
+    "cached_source_files_patched": 1,
+    "receipt_verified_against_exact_archived_public_patch_inputs": true,
+    "engine_dll_unchanged": true,
+    "shipping_binary_normalization": false
+  },
+  "actual_compiled_logs_verified": [
+    "Rust signed display names preserve identity and reject expired authorization",
+    "Four Flutter approval/title tests including live company window rename",
+    "Three bounded transfer-write tests"
+  ],
+  "ci_installer_checks_passed": [
+    "Technician MSI installation repair and uninstall",
+    "Customer MSI headless native service startup",
+    "Pinned company server setup packaging"
+  ],
+  "verification_harness_correction": "The initial local verifier incorrectly required the installer/source checksum file to list three loose backend binaries. Its coverage now matches the actual workflow; the original ZIP digest is verified and each backend hash additionally matches previously reproduced unchanged component sources. No package bytes or declared hashes changed.",
+  "retained_old_originals_regression": "The updated verifier still rejects exactly four of eight shipping outputs from the two original ca16998 builds, while preserving matching public-source, bridge and MSVC proofs. The prior reproduction failure remains valid.",
+  "independent_run": 41996756641,
+  "independent_source_ref": "swan-lab-native22-wrapper-repro-b0959da",
+  "independent_status_at_observation": "in_progress",
+  "independent_reproduction_verified": false,
+  "candidate22_signed_approved_or_installed": false,
+  "new_vms_created": 0,
+  "remaining": [
+    "Finish exact-source independent build and compare all eight original shipping outputs",
+    "Prepare fresh signing inputs only after full original-byte reproduction passes",
+    "Installed live branding and genuine byte-changing update checks on existing development pair",
+    "Remaining native security and desktop acceptance checks",
+    "External direct and relay qualification and final advertised Windows matrix",
+    "Production signing approval and release qualification"
+  ],
+  "production_qualified": false
+}
