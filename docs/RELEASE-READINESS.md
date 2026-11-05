@@ -2,18 +2,26 @@
 
 Current app candidate: **1.5.21+89**, public source `bd331ca`. Both technician formats and the customer MSI have package verification. Customer EXE30 was withdrawn after a lab MSI/EXE manifest pairing error; [corrected EXE31 shipping recovery, uninstall/reinstall and compact customer About now pass](evidence/1521-customer-exe31-recovery-uninstall-reinstall-and-about-20261104.json) on the existing Windows10 development VM. [Independent native comparison](evidence/1521-independent-native-original-output-reproduction-20261104.json) matches all eight original unsigned outputs; [existing standard-user technician checks](evidence/1521-standard-technician-upgrade-about-mfa-20261104.json) pass upgrade, About, genuine MFA/inventory and sign-out. Both endpoint About screens and the customer shipping uninstall fix now have genuine app evidence. Remaining permission, desktop-feature and update checks are open; current live-session results follow. Finish these on the existing development pair before the final advertised-Windows matrix. Reuse one VM per OS; do not create a VM for each candidate. This remains a development build, without production approval.
 
-Next candidate **1.5.22+90** prepares the company connection checker and a distinct
-native package for the remaining automatic-upgrade tests. It retains the current
-native behavior and engine; no new native build or installed-upgrade pass is
-implied by the version change. A real compiled Windows checker test found that
-the initial CA loader silently treated binary DER as an empty PEM trust list,
-rejecting a valid Windows-exported company CA. The loader now selects DER
-explicitly and requires a nonempty PEM certificate bundle. The new Windows
-executable regression covers both encodings, invalid profile trust/lifetime,
-certificate hostname/issuer rejection, refused redirects, malformed UDP and
-absence of company state or account credentials. The corrected Windows binary
-must pass this test before deployment. The earlier local canonical image build
-was cancelled after this finding; it was never installed into the company.
+Next candidate **1.5.22+91**, source `ca16998`, fixes company window and tray
+labels while preserving stable service/configuration names and device identity.
+It uses trusted signed cached branding for display only; expired policy still
+cannot authorize access. The single [native build](https://github.com/rijff24/SwanRemoteSupport/actions/runs/41964194947)
+is pending. Native22+90 built and passed offline source/archive checks, but was
+never approved or installed and is superseded by this branding fix. Reproduction,
+runtime branding, genuine byte-changing automatic updates and final qualification
+of the replacement remain open.
+
+[Current management evidence](evidence/1522-management-reproduction-upgrade-and-probe-20261105.json)
+now records the corrected compiled Windows checker passing all15 public cases,
+including valid DER and PEM trust. Two cold canonical Linux builds produced
+identical raw management executables and source contexts using the pinned
+published recipe; full OCI identifiers differ. Real fresh-company setup, MFA,
+enrollment, persistence and backup/restore passed. After a fresh encrypted full
+backup, the existing company upgraded to the canonical image with real HTTPS/MFA,
+preserved company records and unchanged transport/TLS containers. Offline full
+restore matched all57 installer files,6 TLS identity files and deployment keys;
+activating that restored existing company and checking MFA/signing remains
+separate. Updates remain paused. No production publication is implied.
 
 [Current standard-user live checks](evidence/1521-standard-native-interrupted-transfer-consent-and-stop-20261105.json)
 now pass attended desktop access, separate file consent, a real45-second network
@@ -43,9 +51,10 @@ paths presented as outside-network qualification are rejected. The initial CI
 build-context test caught an omitted source-file allowlist entry; both Docker
 filters now include that file, and an actual directory-context scratch export
 includes every required public input while excluding all private canaries.
-Canonical server builds, Windows execution and the new administration download
-flow still need qualification. The live company remains on its previous server
-build; external direct/relay sessions are not qualified by this checker.
+Canonical server builds, compiled Windows execution, and authenticated public-only
+bootstrap export now have the scoped evidence above. The live company is on the
+reproduced canonical server. New native sessions against that server remain to
+be checked; external direct/relay sessions are not qualified by this checker.
 
 The source-specific historical findings below retain their original scope and do not describe the current deployment policy.
 

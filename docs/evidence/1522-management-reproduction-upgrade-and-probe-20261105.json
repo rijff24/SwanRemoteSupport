@@ -1,0 +1,69 @@
+{
+  "date": "2026-11-05",
+  "source": "6a0c02af89191283f9839ce429c587daa1ed0f03",
+  "scope": "Owned isolated development lab; not production or external Internet qualification",
+  "canonical_linux": {
+    "primary_image": "sha256:878e6e9b327a511a64eacee043b7516a24fba09f0261842bdbc2a8099a1b60b8",
+    "independent_image": "sha256:ce2ba3141d7b3c2877236fe0757b6c62b18e7798bfc44a2c641cbccb6f2f9008",
+    "management_sha256": "2318b9242277944e2f3df93a5e1dcf4ace0d542da20007498e660f87e3b5de9e",
+    "management_bytes": 11092600,
+    "cold_builds_raw_binary_and_source_bytes_identical": true,
+    "whole_oci_byte_reproduction": false,
+    "official_pinned_builder_and_public_canonical_recipe": true,
+    "fresh_company_setup_mfa_replay_enrollment_restart_backup_restore": "passed",
+    "anonymous_bootstrap_denied_and_admin_six_public_fields": "passed"
+  },
+  "windows_checker": {
+    "component_source": "e57414562756e7abf50678d77926ec3e94d94340",
+    "component_workflow": 41948266237,
+    "management_sha256": "00cab63adbf5f6bbaab40e27c86933fc884ff644a5a5587cfbd9f1a234db95b2",
+    "exact_corresponding_source_files_verified": 261,
+    "current_public_fifteen_case_fixture": "passed",
+    "valid_der_and_pem": "passed",
+    "invalid_profile_trust_lifetime_company_redirect_tls_and_udp": "rejected",
+    "fixture_peers_are_not_native_session_evidence": true,
+    "no_credentials_or_company_state_created": true
+  },
+  "canonical_image_checker": {
+    "real_existing_company_https_and_pinned_profile": "passed",
+    "four_tcp_ports_and_actual_native_stateless_udp_response": "passed",
+    "der_and_pem_ca": "passed",
+    "wrong_key_untrusted_ca_private_as_outside_claim": "rejected",
+    "external_direct_relay_and_nat_traversal_qualified": false
+  },
+  "full_backup_restore": {
+    "encrypted_archive_bytes": 1736617357,
+    "encrypted_archive_sha256": "0899d65013ecac5eeff3010ad68d518aafedc7f973a0f6085e2bc2261c25841f",
+    "passphrase_kept_separately_with_restricted_local_acl": true,
+    "wrong_password_rejected_before_destination": true,
+    "restored_database_headers_keys_and_actual_deployment_configuration_match": true,
+    "all_57_installer_files_and_6_tls_identity_files_match": true,
+    "offline_no_restored_network_or_server_started": true,
+    "full_existing_company_live_restored_mfa_and_signing_test": "pending"
+  },
+  "existing_company_upgrade": {
+    "old_image": "sha256:c8fe75f7c46155dac622464a206153c16c880459a7a4b6366a96bbe90aab1dc9",
+    "new_image_is_canonical_primary": true,
+    "real_https_fresh_mfa_and_trusted_profile": "passed",
+    "company_records_identity_consent_roles_workers_jobs_releases_sessions_preserved": true,
+    "transport_and_https_container_ids_preserved": true,
+    "updates_remain_paused": true,
+    "new_admin_bootstrap_route_and_anonymous_denial": "passed",
+    "agent_and_worker_unsigned_raw_bytes_unchanged_from_previous_components": true,
+    "native_sessions_against_updated_management": "pending"
+  },
+  "app_candidate": {
+    "verified_unsigned_build_1_5_22_90": 41951834320,
+    "installed_or_approved": false,
+    "superseded_by_branding_fix_source": "ca16998e6a51a7d2c4737e69b2b731b0b3cf2eba",
+    "replacement_version": "1.5.22+91",
+    "replacement_build": 41964194947,
+    "replacement_build_runtime_and_reproduction": "pending"
+  },
+  "remaining_boundaries": [
+    "Finish current native app and update qualification on existing development pair before final Windows matrix",
+    "No production signing approval or publication",
+    "No external Internet direct or relay session qualification",
+    "No claim that the final advertised Windows compatibility matrix is complete"
+  ]
+}
