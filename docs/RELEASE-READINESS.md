@@ -19,9 +19,12 @@ published recipe; full OCI identifiers differ. Real fresh-company setup, MFA,
 enrollment, persistence and backup/restore passed. After a fresh encrypted full
 backup, the existing company upgraded to the canonical image with real HTTPS/MFA,
 preserved company records and unchanged transport/TLS containers. Offline full
-restore matched all57 installer files,6 TLS identity files and deployment keys;
-activating that restored existing company and checking MFA/signing remains
-separate. Updates remain paused. No production publication is implied.
+restore matched all57 installer files,6 TLS identity files and deployment keys.
+The restored existing company then passed MFA/replay rejection, original-key
+profile signing and device/user/release/build persistence across restart in a
+network-disabled container. That copy is stopped and retained; restored HTTPS
+and native sessions remain separate. Updates remain paused. No production
+publication is implied.
 
 [Current standard-user live checks](evidence/1521-standard-native-interrupted-transfer-consent-and-stop-20261105.json)
 now pass attended desktop access, separate file consent, a real45-second network

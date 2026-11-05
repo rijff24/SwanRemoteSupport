@@ -39,7 +39,20 @@
     "restored_database_headers_keys_and_actual_deployment_configuration_match": true,
     "all_57_installer_files_and_6_tls_identity_files_match": true,
     "offline_no_restored_network_or_server_started": true,
-    "full_existing_company_live_restored_mfa_and_signing_test": "pending"
+    "full_existing_company_live_restored_mfa_and_signing_test": "passed in a later network-none rehearsal",
+    "restored_runtime": {
+      "original_company_mfa_and_replay_rejection": "passed",
+      "actual_profile_signature_matches_original_trust_pin": true,
+      "paused_profile44_branding_and_policy_preserved": true,
+      "device_user_release_build_records_preserved_across_restart": true,
+      "anonymous_bootstrap_denied_admin_public_export_passed": true,
+      "runtime_uid": 10001,
+      "network": "none; test HTTP entered only the isolated network namespace",
+      "host_ports_and_cloned_transport": false,
+      "restored_https_and_native_sessions": "not tested",
+      "stopped_and_storage_retained": true,
+      "test_transport_findings": "The first two harness attempts closed or waited for stdin/EOF incorrectly. The final harness reads the framed HTTP response before closing BusyBox nc stdin; prior failed attempts and stopped-container proofs are retained. No passing claim is made for those attempts."
+    }
   },
   "existing_company_upgrade": {
     "old_image": "sha256:c8fe75f7c46155dac622464a206153c16c880459a7a4b6366a96bbe90aab1dc9",
