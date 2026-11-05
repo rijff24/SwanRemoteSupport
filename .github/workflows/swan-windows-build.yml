@@ -471,6 +471,7 @@ jobs:
             artifacts/native-dll-search-tests.log
             artifacts/native-transfer-write-timeout-tests.log
             artifacts/native-customer-approval-window-tests.log
+            artifacts/native-managed-branding-tests.log
             artifacts/native-msvc-toolchain.json
             artifacts/flutter-sdk-identity.json
             artifacts/native-managed-updater-tests.log
@@ -545,6 +546,7 @@ jobs:
             artifacts/native-dll-search-tests.log
             artifacts/native-transfer-write-timeout-tests.log
             artifacts/native-customer-approval-window-tests.log
+            artifacts/native-managed-branding-tests.log
             artifacts/native-msvc-toolchain.json
             artifacts/*.msi.build.json
             artifacts/flutter-sdk-identity.json
