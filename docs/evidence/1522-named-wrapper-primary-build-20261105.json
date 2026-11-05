@@ -117,6 +117,38 @@
       "stale_binary_cache_hypothesis_not_supported": true,
       "next": "Repeat compilation of the exact AV1 translation unit with captured compiler inputs before choosing a source/compiler fix. No additional whole-app candidate or signing is justified yet."
     },
+    "subsequent_unchanged_translation_unit_repeats": {
+      "single_host_run": 42018100979,
+      "single_host_source": "5ac84a838f5cea97c78c6a2048277c54751b922c",
+      "single_host_job": 127213622186,
+      "single_host_artifact": 13411051533,
+      "single_host_artifact_sha256": "9b409c9fe8bcc4626d26b53cacccea793308e2f82fac76f21c4f6d45fc891446",
+      "single_host_repeat_compiles": 24,
+      "independent_hosts_run": 42021792028,
+      "independent_hosts_source": "4760923f828376a6b0637eac91872dddc292583d",
+      "independent_host_jobs": [127226094853, 127226095154],
+      "independent_host_artifacts": [
+        {"id":13412048621,"bytes":5388574,"sha256":"34439cb58ac2e149a2d363ddcb45d8783a1f519a9624a03281d037ed50fd61de"},
+        {"id":13412412144,"bytes":5388574,"sha256":"1543afc30661dd5695a804f0bde7ba5f1768fde4fcd88c081d5073099fbaf85f"}
+      ],
+      "independent_host_repeat_compiles_each": 24,
+      "all_three_jobs_passed": true,
+      "all_original_archives_and_repeat_object_hashes_verified": true,
+      "actual_original_ninja_command_and_selected_compiler_environment_retained": true,
+      "unchanged_actual_translation_unit_recompiled": true,
+      "total_repeat_compiles": 72,
+      "all_original_function_code_bytes_identical": true,
+      "original_function_code_sha256_including_unresolved_terminal_relocation": "1278ac11313ba2abe5b46fee3490712afd39a68fd1bac0fa0034a4f56a9a02bc",
+      "all_match_first_dll_before_recorded_terminal_relocation": true,
+      "second_dll_variant_reproduced": false,
+      "independent_hosts_actual_source_and_header_files_each": 109,
+      "independent_hosts_all_actual_input_paths_and_hashes_match": true,
+      "independent_host_images": ["20261101.353.1", "20261026.347.1"],
+      "independent_host_cpu_names": ["AMD EPYC 7763", "AMD EPYC 9V74"],
+      "compiler_or_dependency_source_fix_applied": false,
+      "scope": "These repeat tests do not explain or fix the original full-build mismatch. Original endpoint builds did not retain AV1 objects/static libraries or actual include hashes before linking.",
+      "next": "Capture actual AV1 compiled objects, installed static library and final DLL provenance within the endpoint build context. Do not treat the isolated stable repeats as full-app reproduction or apply an unproved compiler flag."
+    },
     "no_binary_normalization_or_signing": true
   },
   "candidate22_signed_approved_or_installed": false,
