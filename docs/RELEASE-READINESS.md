@@ -53,7 +53,7 @@ without execution. All95 files per archive match their original MSI manifests;
 94 raw files now match between builds, including the launcher, plugin DLLs,
 engine and Dart payload. The sole mismatch is `librustdesk.dll`:73 bytes differ,
 including one code byte,68 bytes in `.rdata` and four header bytes. Its other
-seven sections match. The code difference is isolated to RVA`0xddde2e`, but its
+six sections match. The code difference is isolated to RVA`0xddde2e`, but its
 object/function origin is not identified yet. No byte normalization is applied.
 Diagnosis continues; no further full build is started on a guessed fix.
 No +92 package is signed, approved or installed. Existing development VMs remain on21.

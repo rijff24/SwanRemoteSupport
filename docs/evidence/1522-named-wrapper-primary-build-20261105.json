@@ -76,7 +76,7 @@
     "text_section_differing_bytes": 1,
     "rdata_section_differing_bytes": 68,
     "remaining_header_differing_bytes": 4,
-    "other_seven_sections_identical": true,
+    "other_six_sections_identical": true,
     "text_difference_file_offset_hex": "ddd22e",
     "text_difference_rva_hex": "ddde2e",
     "first_code_bytes_hex": "418bc3",
