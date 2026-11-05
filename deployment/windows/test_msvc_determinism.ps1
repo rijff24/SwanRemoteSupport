@@ -40,7 +40,28 @@ function Build-Fixture([string]$label,[string]$folder,[bool]$deterministic,[stri
  $directory=Join-Path $root $folder
  if(-not(Test-Path -LiteralPath $directory)){New-Item -ItemType Directory -Path $directory|Out-Null}
  $cpp=Join-Path $directory 'fixture.cpp'
- [IO.File]::WriteAllText($cpp,$source,[Text.UTF8Encoding]::new($false))
+ $body=$source
+ if($mode -ceq 'named'){
+  $body=$body.Replace('int main() {',@'
+namespace SwanCompilerFixture {
+struct Consumer {
+  unsigned* calls;
+  void operator()(const std::uint8_t* data, std::size_t size) {
+    *calls += (data != nullptr && size != 0) ? 1 : 0;
+  }
+};
+}
+int main() {
+'@)
+  $lambda=@'
+  auto consumer = [&calls](const std::uint8_t* data, std::size_t size) {
+    calls += (data != nullptr && size != 0) ? 1 : 0;
+  };
+'@
+  if(-not $body.Contains($lambda)){throw 'Named callable fixture preimage differs'}
+  $body=$body.Replace($lambda,'  SwanCompilerFixture::Consumer consumer{&calls};')
+ }
+ [IO.File]::WriteAllText($cpp,$body,[Text.UTF8Encoding]::new($false))
  $arguments=@('/nologo','/WX','/std:c++17','/O2','/EHsc','/MT','/GR','/DNDEBUG')+@($include|ForEach-Object {'/I'+$_})
  if($deterministic){$arguments+=@('/experimental:deterministic',('/pathmap:'+$directory+'=C:\swan-repro-fixture'))}
  if($mode -ceq 'brepro'){$arguments+='/Brepro'}
@@ -83,13 +104,15 @@ $runs=@(
  (Build-Fixture 'trimfile-first' 'trim-a' $true 'trim'),
  (Build-Fixture 'trimfile-second' 'trim-b' $true 'trim'),
  (Build-Fixture 'relative-source-first' 'relative-a' $false 'relative'),
- (Build-Fixture 'relative-source-second' 'relative-b' $false 'relative')
+ (Build-Fixture 'relative-source-second' 'relative-b' $false 'relative'),
+ (Build-Fixture 'named-callable-first' 'named-a' $true 'named'),
+ (Build-Fixture 'named-callable-second' 'named-b' $true 'named')
 )
 $controlDiffers=$runs[2].sha256 -cne $runs[3].sha256
 $fixedMatches=$runs[4].sha256 -ceq $runs[5].sha256
-$candidates=@{experimental_and_pathmap=$fixedMatches;compiler_brepro=($runs[6].sha256 -ceq $runs[7].sha256);trimfile=($runs[8].sha256 -ceq $runs[9].sha256);relative_source=($runs[10].sha256 -ceq $runs[11].sha256)}
+$candidates=@{experimental_and_pathmap=$fixedMatches;compiler_brepro=($runs[6].sha256 -ceq $runs[7].sha256);trimfile=($runs[8].sha256 -ceq $runs[9].sha256);relative_source=($runs[10].sha256 -ceq $runs[11].sha256);named_callable=($runs[12].sha256 -ceq $runs[13].sha256)}
 $report=@{scope='Real standalone MSVC callback/RTTI/path fixture; not the Flutter app or complete native release';compiler_sha256=(Get-FileHash -LiteralPath $compiler).Hash.ToLowerInvariant();toolset=$version;windows_sdk=$sdkVersion;same_path_link_only_matches=($runs[0].sha256 -ceq $runs[1].sha256);relocated_link_only_control_differs=$controlDiffers;relocated_compiler_deterministic_matches=$fixedMatches;candidate_raw_byte_matches=$candidates;shipping_binary_normalization=$false;runs=$runs;full_native_reproduction_required=$true;production_approved=$false}
 $report|ConvertTo-Json -Depth 8|Set-Content -LiteralPath (Join-Path $root 'report.json') -Encoding utf8
 if(-not $controlDiffers){throw 'Relocation control did not demonstrate the embedded path difference'}
-if(-not @($candidates.Values|Where-Object {$_}).Count){throw 'None of the tested compiler/path controls produced identical raw relocated fixture bytes'}
+if(-not $candidates.named_callable -or $runs[12].lambda_type -cne $runs[13].lambda_type){throw 'Named callable did not produce identical raw relocated fixture bytes and type identity'}
 Write-Output 'Real MSVC relocated callback/RTTI fixture passed with original bytes; full native reproduction remains required.'
