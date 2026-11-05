@@ -22,7 +22,38 @@
     "valid_der_and_pem": "passed",
     "invalid_profile_trust_lifetime_company_redirect_tls_and_udp": "rejected",
     "fixture_peers_are_not_native_session_evidence": true,
-    "no_credentials_or_company_state_created": true
+    "no_credentials_or_company_state_created": true,
+    "independent_component_comparison": {
+      "previous_run": 41948266237,
+      "current_run": 41951800979,
+      "source": "6a0c02af89191283f9839ce429c587daa1ed0f03",
+      "source_files_verified": 261,
+      "all_three_unsigned_component_bytes_identical": true,
+      "shipping_byte_normalization": false,
+      "compiled_runtime_unchanged_source_diff": [
+        "deployment/windows/test-network-probe.js",
+        "docs/evidence/network-probe-windows-port-reservation-control-20261105.json"
+      ],
+      "components": {
+        "swan-management.exe": {
+          "identical": true,
+          "sha256": "00cab63adbf5f6bbaab40e27c86933fc884ff644a5a5587cfbd9f1a234db95b2",
+          "bytes": 9378816
+        },
+        "swan-agent.exe": {
+          "identical": true,
+          "sha256": "6c0ee8581baf04e5effee63647e6f9cb52780dbbe51fe34f8d828e8fde170f73",
+          "bytes": 5862912
+        },
+        "swan-worker.exe": {
+          "identical": true,
+          "sha256": "7f87133666aa6a37ccb03287c74b0730bafa53cfb1c86fe87f51b04db0eecd7e",
+          "bytes": 4901376
+        }
+      },
+      "current_ci_fifteen_case_checker_fixture_passed": true,
+      "installed_signed_files_not_compared": true
+    }
   },
   "canonical_image_checker": {
     "real_existing_company_https_and_pinned_profile": "passed",
@@ -77,6 +108,7 @@
     "Finish current native app and update qualification on existing development pair before final Windows matrix",
     "No production signing approval or publication",
     "No external Internet direct or relay session qualification",
-    "No claim that the final advertised Windows compatibility matrix is complete"
+    "No claim that the final advertised Windows compatibility matrix is complete",
+    "Inherited Full Flutter CI41951800985 fails only its deferred i686 Windows job126997550230: the legacy Rust1.75 toolchain cannot parse Cargo.lock version4. This does not establish Windows x64 success; dedicated pinned Rust1.90 app build41964194947 remains required."
   ]
 }

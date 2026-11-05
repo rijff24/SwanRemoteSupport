@@ -13,7 +13,13 @@ of the replacement remain open.
 
 [Current management evidence](evidence/1522-management-reproduction-upgrade-and-probe-20261105.json)
 now records the corrected compiled Windows checker passing all15 public cases,
-including valid DER and PEM trust. Two cold canonical Linux builds produced
+including valid DER and PEM trust. Two separate Windows component builds also
+produced identical raw management, agent and worker binaries, with261 exact
+corresponding source files verified and the current checker fixture passing.
+The inherited32-bit Windows job fails because its legacy Rust1.75 toolchain
+cannot parse the version4 lockfile;32-bit Windows is deferred. This is not an
+x64 app pass: the dedicated pinned Rust1.90 native build remains required.
+Two cold canonical Linux builds produced
 identical raw management executables and source contexts using the pinned
 published recipe; full OCI identifiers differ. Real fresh-company setup, MFA,
 enrollment, persistence and backup/restore passed. After a fresh encrypted full
