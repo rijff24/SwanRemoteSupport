@@ -58,6 +58,16 @@ object/function origin is not identified yet. No byte normalization is applied.
 Diagnosis continues; no further full build is started on a guessed fix.
 No +92 package is signed, approved or installed. Existing development VMs remain on21.
 
+The scoped follow-up repeated the original AV1 translation unit72 times,
+including independent Windows runners with different processors and images.
+All function code matched the first DLL variant; all109 actual source/header
+inputs matched between the independent runners. The second DLL variant remains
+unexplained. Unreleased **1.5.22+93** therefore adds capture of the actual AV1
+object/static library/compiler inputs inside the full endpoint build, verifies
+the original compiled DLL reaches the bundle unchanged, and requires fresh
+compiled outputs. No codec or compiler workaround is applied. This is an input
+provenance improvement, not a claim that reproduction or runtime checks passed.
+
 
 [Current management evidence](evidence/1522-management-reproduction-upgrade-and-probe-20261105.json)
 now records the corrected compiled Windows checker passing all15 public cases,

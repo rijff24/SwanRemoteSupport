@@ -22,7 +22,7 @@ env:
   FLUTTER_VERSION: "3.24.5"
   FLUTTER_ENGINE_SHA256: "ec8cabf36ee4ff24c8d98de25b00e70781eb03876265aee84d0fe554a110036e"
   VCPKG_COMMIT_ID: "120deac3062162151622ca4860575a33844ba10b"
-  VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
+  VCPKG_BINARY_SOURCES: "clear"
   VERSION: "1.5.22"
 
 jobs:
@@ -169,17 +169,19 @@ jobs:
           targets: x86_64-pc-windows-msvc
           components: rustfmt
 
-      - name: Cache Rust build
-        uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
-        with:
-          prefix-key: windows-2022-swan-x64
-
       - name: Set up pinned vcpkg
         uses: lukka/run-vcpkg@b1a0dd252f06b9e25b3c022a9a03bd7a427fb6a2 # v11
         with:
           vcpkgDirectory: C:\vcpkg
           vcpkgGitCommitId: "${{ env.VCPKG_COMMIT_ID }}"
-          doNotCache: false
+          doNotCache: true
+
+      - name: Require fresh endpoint and native-library outputs
+        shell: pwsh
+        run: |
+          if ((Test-Path target) -or (Test-Path (Join-Path $env:VCPKG_ROOT 'installed/x64-windows-static/lib/aom.lib'))) {
+            throw 'Release verification requires a fresh runner without restored compiled endpoint or AV1 outputs.'
+          }
 
       - name: Install native dependencies
         env:
@@ -202,6 +204,11 @@ jobs:
           python3 deployment/windows/archive-build-source.py . artifacts/SwanRemoteSupport-build-source.zip
           if ($LASTEXITCODE -ne 0) { throw 'Exact build input archive failed.' }
 
+      - name: Retain actual AV1 object and static-library inputs before linking
+        shell: pwsh
+        run: |
+          ./deployment/windows/Capture-NativeAomInputs.ps1 -OutputDirectory artifacts/native-aom-inputs
+
       - name: Record exact default MSVC compiler library and header inputs
         shell: pwsh
         run: |
@@ -212,7 +219,22 @@ jobs:
         run: |
           python3 .\build.py --portable --flutter --skip-portable-pack --hwcodec --vram
           if ($LASTEXITCODE -ne 0) { throw 'Native or Flutter application build failed.' }
+          $capture = Get-Content artifacts/native-aom-inputs/capture.json -Raw | ConvertFrom-Json
+          $installedLibraryHash = (Get-FileHash -LiteralPath $capture.installed_library_path).Hash.ToLowerInvariant()
+          if ($installedLibraryHash -cne $capture.files.'aom.lib'.sha256) { throw 'AV1 library changed during endpoint compilation.' }
+          $rustLibrary = Get-FileHash target/release/librustdesk.dll
+          $bundleLibrary = Get-FileHash flutter/build/windows/x64/runner/Release/librustdesk.dll
+          if ($rustLibrary.Hash -cne $bundleLibrary.Hash) { throw 'Bundled native DLL differs from the original compiled Rust DLL.' }
+          @{compiled_native_dll_sha256=$rustLibrary.Hash.ToLowerInvariant();bundled_native_dll_sha256=$bundleLibrary.Hash.ToLowerInvariant();static_library_unchanged=$true;shipping_bytes_rewritten=$false} | ConvertTo-Json | Set-Content artifacts/native-aom-inputs/endpoint-link-provenance.json -Encoding UTF8
           Move-Item .\flutter\build\windows\x64\runner\Release .\swan-client
+
+      - name: Preserve native input diagnosis when endpoint compilation fails
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: native-aom-inputs-failed-native-build
+          path: artifacts/native-aom-inputs/**
+          if-no-files-found: warn
 
       - name: Keep pending customer approvals visible during reconnects
         shell: pwsh
@@ -482,6 +504,7 @@ jobs:
             artifacts/native-customer-approval-window-tests.log
             artifacts/native-managed-branding-tests.log
             artifacts/native-msvc-toolchain.json
+            artifacts/native-aom-inputs/**
             artifacts/flutter-sdk-identity.json
             artifacts/flutter-client-wrapper-repro.json
             artifacts/native-managed-updater-tests.log
@@ -558,6 +581,7 @@ jobs:
             artifacts/native-customer-approval-window-tests.log
             artifacts/native-managed-branding-tests.log
             artifacts/native-msvc-toolchain.json
+            artifacts/native-aom-inputs/**
             artifacts/*.msi.build.json
             artifacts/flutter-sdk-identity.json
             artifacts/flutter-client-wrapper-repro.json

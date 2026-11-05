@@ -48,6 +48,18 @@ SDK files or prove which compiler commands CMake executed; preserve that
 limitation in release evidence. Reproducibility still requires matching original
 shipping bytes, not normalized binaries or matching compiler labels alone.
 
+The Windows release workflow now requires fresh compiled outputs and builds
+native dependencies with compiled binary caches disabled. It does not restore
+Rust target outputs. This makes the source-build input boundary explicit; it
+does not establish the cause of an older mismatch. Before endpoint compilation,
+`Capture-NativeAomInputs.ps1` retains the actual pinned AV1 source unit, release
+object, installed static library, generated compiler commands and hashes of
+headers actually used by MSVC. Upstream attribution accompanies the library.
+The build also verifies that the installed library stayed unchanged and that
+the bundled native DLL matches the original compiled DLL. These records are
+under `native-aom-inputs/` in the unsigned artifacts. Independent comparison of
+all original shipping outputs and runtime qualification remain mandatory.
+
 
 Successful company-product CI jobs export `CompanyComponents-<runner>-UNSIGNED-TEST`
 artifacts containing the management service, configuration agent and worker,
