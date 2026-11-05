@@ -26,5 +26,6 @@ jobs:
           path: |
             ${{ runner.temp }}/swan-msvc-repro-fixture/report.json
             ${{ runner.temp }}/swan-msvc-repro-fixture/*.log
+            ${{ runner.temp }}/swan-msvc-repro-fixture/*.arguments.json
             ${{ runner.temp }}/swan-msvc-repro-fixture/*.exe
           if-no-files-found: warn

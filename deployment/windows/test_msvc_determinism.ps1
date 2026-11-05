@@ -43,7 +43,9 @@ function Build-Fixture([string]$label,[string]$folder,[bool]$deterministic) {
  [IO.File]::WriteAllText($cpp,$source,[Text.UTF8Encoding]::new($false))
  $arguments=@('/nologo','/WX','/std:c++17','/O2','/EHsc','/MT','/GR','/DNDEBUG')+@($include|ForEach-Object {'/I'+$_})
  if($deterministic){$arguments+=@('/experimental:deterministic',('/pathmap:'+$directory+'=C:\swan-repro-fixture'))}
- $arguments+=@('/Fo'+(Join-Path $directory 'fixture.obj'),'/Fe'+(Join-Path $directory 'fixture.exe'),$cpp,'/link','/Brepro','/INCREMENTAL:NO','/PDBALTPATH:fixture.pdb','/MANIFEST:NO')+@($libraries|ForEach-Object {'/LIBPATH:'+$_})
+ $arguments+=@(('/Fo'+(Join-Path $directory 'fixture.obj')),('/Fe'+(Join-Path $directory 'fixture.exe')),$cpp,'/link','/Brepro','/INCREMENTAL:NO','/PDBALTPATH:fixture.pdb','/MANIFEST:NO')+@($libraries|ForEach-Object {'/LIBPATH:'+$_})
+ if(@($arguments|Where-Object {$_ -ceq $cpp}).Count -ne 1 -or @($arguments|Where-Object {$_ -ceq '/link'}).Count -ne 1){throw 'Compiler argument boundaries invalid'}
+ $arguments|ConvertTo-Json|Set-Content -LiteralPath (Join-Path $root ($label+'.arguments.json')) -Encoding utf8
  $start=[Diagnostics.ProcessStartInfo]::new()
  $start.FileName=$compiler
  $start.WorkingDirectory=$directory
