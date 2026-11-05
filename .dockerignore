@@ -35,6 +35,7 @@ product/management/src/**
 !product/management/src/service.rs
 !product/management/src/installation_reporting.rs
 !product/management/src/network.rs
+!product/management/src/network_probe.rs
 !product/management/src/backup.rs
 !product/management/src/backup_stream.rs
 !product/management/src/windows.rs

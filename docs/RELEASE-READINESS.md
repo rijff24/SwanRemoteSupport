@@ -22,6 +22,18 @@ removed. The stock graphical control stayed black and is not counted as passed.
 Its earlier genuine ID-based denial has separately verified unchanged receiving
 source; external routing and final OS qualification remain open.
 
+The new [company-run connection checker](NETWORK-CHECK.md) has
+[scoped Linux development evidence](evidence/company-network-probe-development-20261105.json):
+real trusted HTTPS, pinned signed profiles, four TCP ports and a stateless native
+UDP rejection response. Wrong profile keys, untrusted certificates and private
+paths presented as outside-network qualification are rejected. The initial CI
+build-context test caught an omitted source-file allowlist entry; both Docker
+filters now include that file, and an actual directory-context scratch export
+includes every required public input while excluding all private canaries.
+Canonical server builds, Windows execution and the new administration download
+flow still need qualification. The live company remains on its previous server
+build; external direct/relay sessions are not qualified by this checker.
+
 The source-specific historical findings below retain their original scope and do not describe the current deployment policy.
 
 [Native1.5.14 real automatic update](evidence/1514-real-automatic-msi-update-and-ui-restart-failure-20261102.json) installed and verified the exact signed MSI while preserving identity, trust and consent, but **failed customer UI recovery**. MSI renamed the mapped old image into rollback storage; the exact kernel-path guard rejected termination, and an advanced PowerShell failure returned an incorrect success status. Updates are paused at profile40. Pre-MSI process shutdown and explicit helper error propagation are draft fixes; production and full update acceptance remain blocked on their verification.
