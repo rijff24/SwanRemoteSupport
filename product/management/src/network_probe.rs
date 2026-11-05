@@ -34,8 +34,15 @@ pub async fn run(args:&[String])->Result<Value>{
     let mut client=reqwest::Client::builder().https_only(true).redirect(reqwest::redirect::Policy::none()).connect_timeout(Duration::from_secs(3)).timeout(Duration::from_secs(5));
     if let Some(path)=options.ca {
         let bytes=read_limited(&path,1024*1024).await?;
-        let certificate=reqwest::Certificate::from_pem(&bytes).or_else(|_|reqwest::Certificate::from_der(&bytes)).context("Invalid company CA certificate")?;
-        client=client.add_root_certificate(certificate);
+        // Rustls defers from_pem parsing: DER can look like an empty, successful
+        // PEM parse. X.509 DER starts with an ASN.1 SEQUENCE; select it explicitly.
+        if bytes.first()==Some(&0x30) {
+            client=client.add_root_certificate(reqwest::Certificate::from_der(&bytes).context("Invalid company DER CA certificate")?);
+        } else {
+            let certificates=reqwest::Certificate::from_pem_bundle(&bytes).context("Invalid company PEM CA certificate")?;
+            ensure!(!certificates.is_empty(),"Company CA file contains no certificates");
+            for certificate in certificates {client=client.add_root_certificate(certificate);}
+        }
     }
     let mut response=client.build()?.get(format!("{}/api/v1/profile",bootstrap.management_url.trim_end_matches('/'))).send().await.context("Company HTTPS request failed")?.error_for_status()?;
     let mut bytes=Vec::new();while let Some(chunk)=response.chunk().await?{

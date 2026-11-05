@@ -1,0 +1,48 @@
+{
+  "date": "2026-11-05",
+  "old_public_source": "4f3cd3ab15b5c210e0f5096dc945882adb4026a3",
+  "old_component_workflow": 41943862252,
+  "old_component_ci": "Linux deployment and both OS component jobs succeeded; standalone Windows certificate-format execution was separate.",
+  "corresponding_source_files_verified_per_component_archive": 259,
+  "old_windows_management_sha256": "6e47bf0ff56e163c03713ce30c8ba73ec7886ecacc141d8cd073902e954fe578",
+  "windows_compiled_finding": {
+    "real_tls_fixture": true,
+    "company_ca_format": "DER exported by Windows",
+    "result": "Rejected valid issuer with UnknownIssuer before transport checks",
+    "test_failed_closed": true,
+    "invalid_trust_accepted": false,
+    "company_server_or_installation_started": false
+  },
+  "root_cause_reference": "https://docs.rs/reqwest/0.12.28/src/reqwest/tls.rs.html",
+  "fix": "Select X.509 DER explicitly; parse PEM bundles and require at least one certificate. No insecure TLS option or machine trust-store modification.",
+  "fixed_source_sha256": {
+    "product/management/src/network_probe.rs": "9cdb4ec94171b4fbcf7007cc331b6036306cdf4c6cbfde680ac0be350b7fd89e",
+    "deployment/windows/test-network-probe.js": "ddf0352ba07590c79b478ea8045a9da7d28717da3b8fb01fcb6ba83d3cf4cb56",
+    "deployment/windows/test_network_probe.ps1": "9d5b4558f6448fdee4f985c814f0e1e19e9adf046c3ef32bef3db74a69f0e699"
+  },
+  "fixed_linux_development_validation": {
+    "network_tests_passed": 4,
+    "real_router_authorization_test_passed": 1,
+    "compiled_development_binary": true,
+    "existing_company_https_and_pinned_profile": true,
+    "der_ca_passed": true,
+    "pem_ca_passed": true,
+    "four_tcp_and_native_stateless_udp_passed": true,
+    "outside_private_path_rejected": true,
+    "wrong_profile_key_untrusted_ca_and_insecure_option_rejected": true,
+    "read_only_unprivileged_probe_and_no_company_state": true
+  },
+  "cancelled_local_canonical_build": {
+    "source": "4f3cd3a",
+    "exit": 130,
+    "reason": "Avoid completing or deploying known CA-format defect after Windows finding",
+    "live_company_unchanged": true
+  },
+  "next_candidate": "1.5.22+90",
+  "limits": [
+    "Corrected compiled Windows execution remains pending; prepared fixture is not a passing result.",
+    "New native packages, automatic upgrades, canonical deployment and independent reproduction remain pending.",
+    "Scripted TLS regression peers do not qualify native support sessions or public NAT/relay operation.",
+    "Final Windows compatibility sweep remains deferred until app completion; no new VM created."
+  ]
+}

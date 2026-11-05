@@ -2,6 +2,19 @@
 
 Current app candidate: **1.5.21+89**, public source `bd331ca`. Both technician formats and the customer MSI have package verification. Customer EXE30 was withdrawn after a lab MSI/EXE manifest pairing error; [corrected EXE31 shipping recovery, uninstall/reinstall and compact customer About now pass](evidence/1521-customer-exe31-recovery-uninstall-reinstall-and-about-20261104.json) on the existing Windows10 development VM. [Independent native comparison](evidence/1521-independent-native-original-output-reproduction-20261104.json) matches all eight original unsigned outputs; [existing standard-user technician checks](evidence/1521-standard-technician-upgrade-about-mfa-20261104.json) pass upgrade, About, genuine MFA/inventory and sign-out. Both endpoint About screens and the customer shipping uninstall fix now have genuine app evidence. Remaining permission, desktop-feature and update checks are open; current live-session results follow. Finish these on the existing development pair before the final advertised-Windows matrix. Reuse one VM per OS; do not create a VM for each candidate. This remains a development build, without production approval.
 
+Next candidate **1.5.22+90** prepares the company connection checker and a distinct
+native package for the remaining automatic-upgrade tests. It retains the current
+native behavior and engine; no new native build or installed-upgrade pass is
+implied by the version change. A real compiled Windows checker test found that
+the initial CA loader silently treated binary DER as an empty PEM trust list,
+rejecting a valid Windows-exported company CA. The loader now selects DER
+explicitly and requires a nonempty PEM certificate bundle. The new Windows
+executable regression covers both encodings, invalid profile trust/lifetime,
+certificate hostname/issuer rejection, refused redirects, malformed UDP and
+absence of company state or account credentials. The corrected Windows binary
+must pass this test before deployment. The earlier local canonical image build
+was cancelled after this finding; it was never installed into the company.
+
 [Current standard-user live checks](evidence/1521-standard-native-interrupted-transfer-consent-and-stop-20261105.json)
 now pass attended desktop access, separate file consent, a real45-second network
 interruption during a256MiB transfer, and original-window completion after fresh
