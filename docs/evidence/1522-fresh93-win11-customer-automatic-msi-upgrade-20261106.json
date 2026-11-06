@@ -1,0 +1,30 @@
+{
+  "automatic_standard_user_frontend_relaunched": true,
+  "service_running": true,
+  "identity_enrollment_trust_and_consent_preserved": true,
+  "lab_publisher_valid": true,
+  "manual_installer_or_update_command_invoked": false,
+  "profile_revision": 45,
+  "from_sequence": 19,
+  "production_signing": false,
+  "utc": "2026-11-06T09:26:46.3257768Z",
+  "shipping_verifier_passed": true,
+  "edition": "customer",
+  "no_pending_or_failed_recovery": true,
+  "to_version": "1.5.22+93",
+  "exact_signed_installed_bytes": true,
+  "to_sequence": 32,
+  "application_source": "d5eeaa918fbb2510148d041297be99dbdc169360",
+  "os_fixture": "Existing Windows11 EnterpriseEval x64; registry build26300, desktop watermark26100; no other OS compatibility qualified",
+  "package_format": "msi",
+  "visible_company_branding_observed_before_and_after": true,
+  "original_paused_policy_and_all_release_approvals_restored": {
+    "utc": "2026-11-06T09:25:31.672145+00:00",
+    "revision": 46,
+    "original_policy_and_all_approvals_restored": true,
+    "updates_paused": true
+  },
+  "technician_upgrade_qualified": false,
+  "public_direct_and_relay_qualified": false,
+  "production_publication": false
+}
