@@ -1,0 +1,9 @@
+{
+  "utc": "2026-11-06T13:12:11.008066+00:00",
+  "public_files_exported": 56,
+  "new_runtime_source_included": true,
+  "private_canaries_exported": false,
+  "base_image": "scratch",
+  "external_downloads": false,
+  "passed": true
+}
