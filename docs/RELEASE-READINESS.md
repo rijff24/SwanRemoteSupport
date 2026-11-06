@@ -29,9 +29,16 @@ The captured AV1 object is present byte-for-byte in the installed static library
 the function prefix before its recorded terminal relocation is present once in
 the original packaged DLL. This traces build provenance, not reproducibility.
 The [independent exact-source build](https://github.com/rijff24/SwanRemoteSupport/actions/runs/42169429003)
-has started; original-output comparison remains pending. No +93 package is
-signed, installed, approved or published. The historical +92 mismatch remains
-unexplained.
+and [original-output comparison](evidence/1522-fresh-x64-independent-comparison-20261106.json)
+now pass. All eight original unsigned shipping outputs match byte-for-byte,
+including both endpoint formats, server setup and the three backend programs.
+Both 1,421-file source proofs, six bridge inputs, recorded MSVC inputs and SDK
+wrapper proofs match. No shipping-byte normalization was applied. The original
+comparison report is pinned by its GitHub artifact digest. The historical +92
+mismatch cause remains unexplained; this is a passing fresh-output +93 rebuild,
+not proof of that earlier cause. Private lab signing has started after local
+report verification; no +93 package is installed, approved or published, and no
+production signing or Windows 11 runtime qualification is claimed.
 
 Current app candidate: **1.5.21+89**, public source `bd331ca`. Both technician formats and the customer MSI have package verification. Customer EXE30 was withdrawn after a lab MSI/EXE manifest pairing error; [corrected EXE31 shipping recovery, uninstall/reinstall and compact customer About now pass](evidence/1521-customer-exe31-recovery-uninstall-reinstall-and-about-20261104.json) on the existing Windows10 development VM. [Independent native comparison](evidence/1521-independent-native-original-output-reproduction-20261104.json) matches all eight original unsigned outputs; [existing standard-user technician checks](evidence/1521-standard-technician-upgrade-about-mfa-20261104.json) pass upgrade, About, genuine MFA/inventory and sign-out. Both endpoint About screens and the customer shipping uninstall fix now have genuine app evidence. Remaining permission, desktop-feature and update checks are open; current live-session results follow. Finish these on the existing development pair before the final advertised-Windows matrix. Reuse one VM per OS; do not create a VM for each candidate. This remains a development build, without production approval.
 

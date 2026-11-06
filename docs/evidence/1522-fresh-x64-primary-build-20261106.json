@@ -56,11 +56,13 @@
     "production_qualified": false
   },
   "independent_run": 42169429003,
-  "independent_run_result": "pending",
-  "reproducibility_proven": false,
+  "independent_run_result": "success",
+  "reproducibility_proven": true,
   "downloaded_executables_run": false,
   "candidate_installed": false,
   "production_signed": false,
   "production_published": false,
-  "scope": "Original archive/source and build provenance verification only. No current Windows11 runtime qualification or explanation of historical +92 mismatch."
+  "scope": "All eight original unsigned outputs independently reproduced from exact public source with source/bridge/MSVC/wrapper verification. No Windows11 runtime qualification or production signing. Historical +92 mismatch cause remains unexplained.",
+  "comparison_run": 42177470881,
+  "comparison_artifact_digest": "sha256:804b09e97e675ad1e32c316b5f0380beb2bd26f8637320aa4a6fab3cfccb78eb"
 }
