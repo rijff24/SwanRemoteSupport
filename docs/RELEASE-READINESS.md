@@ -36,8 +36,11 @@ Both 1,421-file source proofs, six bridge inputs, recorded MSVC inputs and SDK
 wrapper proofs match. No shipping-byte normalization was applied. The original
 comparison report is pinned by its GitHub artifact digest. The historical +92
 mismatch cause remains unexplained; this is a passing fresh-output +93 rebuild,
-not proof of that earlier cause. Private lab signing has started after local
-report verification; no +93 package is installed, approved or published, and no
+not proof of that earlier cause. [Private lab signing and output collection](evidence/1522-fresh93-lab-signed-packages-20261106.json)
+now pass for both MSIs, the technician EXE and customer executable/agent inputs.
+Original bytes and timestamp receipts were checked; the existing key stayed
+non-exportable. The separate customer EXE producer is running from the same
+public source. No +93 package is installed, approved or published, and no
 production signing or Windows 11 runtime qualification is claimed.
 
 Current app candidate: **1.5.21+89**, public source `bd331ca`. Both technician formats and the customer MSI have package verification. Customer EXE30 was withdrawn after a lab MSI/EXE manifest pairing error; [corrected EXE31 shipping recovery, uninstall/reinstall and compact customer About now pass](evidence/1521-customer-exe31-recovery-uninstall-reinstall-and-about-20261104.json) on the existing Windows10 development VM. [Independent native comparison](evidence/1521-independent-native-original-output-reproduction-20261104.json) matches all eight original unsigned outputs; [existing standard-user technician checks](evidence/1521-standard-technician-upgrade-about-mfa-20261104.json) pass upgrade, About, genuine MFA/inventory and sign-out. Both endpoint About screens and the customer shipping uninstall fix now have genuine app evidence. Remaining permission, desktop-feature and update checks are open; current live-session results follow. Finish these on the existing development pair before the final advertised-Windows matrix. Reuse one VM per OS; do not create a VM for each candidate. This remains a development build, without production approval.
