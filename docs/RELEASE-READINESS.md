@@ -19,7 +19,7 @@ Public direct/relay operation without Tailscale and valid production signatures
 remain required. Linux and Windows server deployment instructions remain in scope;
 deferring Windows endpoint versions does not remove company hosting.
 
-The [fresh-input +93 primary build](https://github.com/rijff24/SwanRemoteSupport/actions/runs/42079677235)
+The [fresh-input +93 primary build evidence](evidence/1522-fresh-x64-primary-build-20261106.json)
 passed from exact public source `d5eeaa918fbb2510148d041297be99dbdc169360`.
 Its original unsigned archive SHA256 is
 `030303d1e0f736f68c2b238fb3ee0e15e71d9c7099c0bb608b20416b2d89e51a`.
