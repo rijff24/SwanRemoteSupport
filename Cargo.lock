@@ -7356,7 +7356,7 @@ dependencies = [
 
 [[package]]
 name = "rustdesk"
-version = "1.5.22"
+version = "1.5.23"
 dependencies = [
  "android-wakelock",
  "android_logger",

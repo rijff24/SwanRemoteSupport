@@ -2,7 +2,7 @@
 param(
     [Parameter(Mandatory=$true)][string]$Directory,
     [Parameter(Mandatory=$true)][string]$Executable,
-    [ValidateSet('prepare','restart','remove')][string]$Operation='restart',
+    [ValidateSet('prepare','restart','remove','uninstall')][string]$Operation='restart',
     [string]$ExpectedHashes=''
 )
 $ErrorActionPreference='Stop'
@@ -131,18 +131,22 @@ function Remove-CustomerUiRecoveryTasks([string]$StateDirectory,[string]$Path) {
     foreach ($task in $context.Tasks.Values) { $context.Folder.DeleteTask($task.TaskName,0) }
 }
 
-function Restart-VerifiedCustomerUi([string]$StateDirectory,[string]$Path,[switch]$PrepareOnly) {
+function Restart-VerifiedCustomerUi([string]$StateDirectory,[string]$Path,[switch]$PrepareOnly,[switch]$UninstallPrepare) {
     if (-not [Security.Principal.WindowsIdentity]::GetCurrent().IsSystem) { throw 'Customer UI update restart requires SYSTEM.' }
     $directoryPath=[IO.Path]::GetFullPath($StateDirectory).TrimEnd('\')
     $exe=[IO.Path]::GetFullPath($Path)
     $executableItem=Get-Item -LiteralPath $exe -ErrorAction SilentlyContinue
     if ([IO.Path]::GetFileName($exe) -cne 'Swan Remote Support.exe' -or ($executableItem -and ($executableItem.Attributes -band [IO.FileAttributes]::ReparsePoint)) -or (-not $PrepareOnly -and -not $executableItem)) { throw 'Unexpected installed customer executable.' }
-    if (Test-Path -LiteralPath (Join-Path $directoryPath 'pending-uninstall')) { throw 'Explicit uninstall cancels customer UI restoration.' }
+    $cancelled=Test-Path -LiteralPath (Join-Path $directoryPath 'pending-uninstall')
+    if ($UninstallPrepare -and (-not $PrepareOnly -or -not $cancelled)) { throw 'Customer UI uninstall preparation requires explicit cancellation.' }
+    if ($cancelled -and -not $UninstallPrepare) { throw 'Explicit uninstall cancels customer UI restoration.' }
     $explicitSetup=Test-Path -LiteralPath (Join-Path $directoryPath 'pending-install.json')
-    if ($PrepareOnly -and -not $explicitSetup -and -not (Test-Path -LiteralPath (Join-Path $directoryPath 'pending-update.json'))) { throw 'Customer UI preparation requires a pending update or verified setup.' }
+    if ($PrepareOnly -and -not $UninstallPrepare -and -not $explicitSetup -and -not (Test-Path -LiteralPath (Join-Path $directoryPath 'pending-update.json'))) { throw 'Customer UI preparation requires a pending update or verified setup.' }
     # The caller verified this exact signed release while holding session
     # exclusion. Do not restart a newly opened post-commit UI on recovery.
-    $committed=if($PrepareOnly){[DateTime]::MinValue}else{(Get-Item -LiteralPath (Join-Path $directoryPath 'installed-release.json')).LastWriteTimeUtc}
+    $record=Join-Path $directoryPath 'installed-release.json'
+    # A bare MSI can be rolled back before company setup records a release.
+    $committed=if($PrepareOnly -or -not (Test-Path -LiteralPath $record)){[DateTime]::MinValue}else{(Get-Item -LiteralPath $record).LastWriteTimeUtc}
     $old=@();$fresh=@{}
     foreach ($process in @(Get-CimInstance Win32_Process -Filter "Name='Swan Remote Support.exe'" -OperationTimeoutSec 30)) {
         if ($process.SessionId -eq 0 -or $process.ExecutablePath -ine $exe) { continue }
@@ -154,7 +158,7 @@ function Restart-VerifiedCustomerUi([string]$StateDirectory,[string]$Path,[switc
         if (-not $PrepareOnly -and $created -ge $committed) { $fresh[$sid]=$true;continue }
         $old+=@{Pid=[int]$process.ProcessId;Sid=$sid;Created=$created}
     }
-    if ($PrepareOnly -and $old.Count -gt 0) {
+    if ($PrepareOnly -and -not $UninstallPrepare -and $old.Count -gt 0) {
         $hashes=@($ExpectedHashes.Split(','))
         if ($hashes.Count -ne 2 -or @($hashes | Where-Object { $_ -cnotmatch '^[0-9a-f]{64}$' }).Count) { throw 'Expected signed executable identities are required.' }
         if($executableItem){
@@ -192,7 +196,9 @@ function Restart-VerifiedCustomerUi([string]$StateDirectory,[string]$Path,[switc
     }
     # Recovery tasks are durable before any old process is stopped. Their action
     # runs only as that existing user, with no password or elevated token.
-    if (Test-Path -LiteralPath (Join-Path $directoryPath 'pending-uninstall')) { throw 'Explicit uninstall cancels customer UI restoration.' }
+    if ((Test-Path -LiteralPath (Join-Path $directoryPath 'pending-uninstall')) -and -not $UninstallPrepare) { throw 'Explicit uninstall cancels customer UI restoration.' }
+    # MSI must close these images before RemoveFiles can move them into Config.Msi.
+    # Keep the same kernel path, creation-time and owner checks for every process.
     Stop-OwnedCustomerUi $old $exe
     if ($PrepareOnly) {
         @{old_processes_closed=@($old).Count;restarts_disabled_until_verified_commit=$true;credentials_used=$false} | ConvertTo-Json -Compress
@@ -212,5 +218,5 @@ function Restart-VerifiedCustomerUi([string]$StateDirectory,[string]$Path,[switc
 
 if ($MyInvocation.InvocationName -ne '.') {
     if ($Operation -eq 'remove') { Remove-CustomerUiRecoveryTasks $Directory $Executable }
-    else { Restart-VerifiedCustomerUi $Directory $Executable -PrepareOnly:($Operation -eq 'prepare') }
+    else { Restart-VerifiedCustomerUi $Directory $Executable -PrepareOnly:($Operation -in @('prepare','uninstall')) -UninstallPrepare:($Operation -eq 'uninstall') }
 }

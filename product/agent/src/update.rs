@@ -607,11 +607,19 @@ pub fn uninstall_cancellation(directory:&Path,restore:bool,customer:bool)->Resul
 #[cfg(windows)]
 pub fn configuration_task_removal(directory:&Path,restore:bool)->Result<()> {
     validate_uninstall_directory(directory,true)?;
-    if !restore {uninstall_cancellation(directory,false,true)?;}
+    if !restore {
+        uninstall_cancellation(directory,false,true)?;
+        customer_ui_recovery(directory,&installed_target(directory,&Edition::Customer)?,"uninstall","")?;
+    }
     let script=if restore {include_str!("../../../deployment/windows/Restore-Configuration.ps1")}else{include_str!("../../../deployment/windows/Remove-Configuration.ps1")};
     let status=embedded_powershell_command(script,&[("Directory",directory.to_str().context("Configuration state path is not valid Unicode")?)])?.status()?;
     ensure!(status.success(),"Company configuration task cleanup failed");
-    if restore {uninstall_cancellation(directory,true,true)?;}
+    if restore {
+        uninstall_cancellation(directory,true,true)?;
+        if !directory.join("pending-uninstall").exists() {
+            customer_ui_recovery(directory,&installed_target(directory,&Edition::Customer)?,"restart","")?;
+        }
+    }
     Ok(())
 }
 

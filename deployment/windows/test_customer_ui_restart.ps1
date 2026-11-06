@@ -78,6 +78,10 @@ $rejected=$false
 try { Restart-VerifiedCustomerUi $Directory $exe -PrepareOnly | Out-Null } catch { $rejected=$true }
 Require $rejected 'Preparation without pending update was accepted.'
 Require-OriginalProcesses
+$rejected=$false
+try { Restart-VerifiedCustomerUi $Directory $exe -PrepareOnly -UninstallPrepare | Out-Null } catch { $rejected=$true }
+Require $rejected 'Uninstall preparation without explicit cancellation was accepted.'
+Require-OriginalProcesses
 [IO.File]::WriteAllText((Join-Path $Directory 'pending-update.json'),'{}')
 $ExpectedHashes=('0'*64)+','+('0'*64)
 $rejected=$false
@@ -131,6 +135,35 @@ foreach ($process in $fresh) {
     $current=Get-CimInstance Win32_Process -Filter ('ProcessId='+$process.Pid)
     Require ($null -ne $current -and $current.CreationDate.ToUniversalTime() -eq $process.Created) 'Fresh UI was stopped on retry.'
 }
+# Exercise the uninstall boundary against real mapped images before MSI removes
+# them, then simulate rollback using only this private fixture's marker.
+Remove-Item -LiteralPath (Join-Path $Directory 'pending-update.json')
+[IO.File]::WriteAllText((Join-Path $Directory 'pending-uninstall'),'')
+$closed=Restart-VerifiedCustomerUi $Directory $exe -PrepareOnly -UninstallPrepare | ConvertFrom-Json
+Require ($closed.old_processes_closed -gt 0) 'Uninstall preparation left the real customer UI running.'
+$preparedTask=Get-ScheduledTask -TaskName $name
+Require ($preparedTask.State -eq 'Disabled' -and @($preparedTask.Triggers|Where-Object {$null -ne $_}).Count -eq 0) 'Uninstall could relaunch the UI before commit or rollback.'
+foreach ($process in $fresh) {
+    $current=Get-CimInstance Win32_Process -Filter ('ProcessId='+$process.Pid)
+    Require ($null -eq $current -or $current.CreationDate.ToUniversalTime() -ne $process.Created) 'Uninstall retained an original mapped UI image.'
+}
+$remaining=@(Get-CimInstance Win32_Process -Filter "Name='Swan Remote Support.exe'"|Where-Object {$_.SessionId -gt 0 -and $_.ExecutablePath -ieq $exe}|Where-Object {(Invoke-CimMethod -InputObject $_ -MethodName GetOwnerSid).Sid -eq $sid})
+Require ($remaining.Count -eq 0) 'Uninstall retained another mapped customer UI image.'
+$rejected=$false
+try { Restart-VerifiedCustomerUi $Directory $exe | Out-Null } catch { $rejected=$true }
+Require $rejected 'Cancelled uninstall allowed a UI restart before rollback.'
+Remove-Item -LiteralPath (Join-Path $Directory 'pending-uninstall')
+# A raw MSI may not have a release record yet; rollback must still reopen its UI.
+Remove-Item -LiteralPath (Join-Path $Directory 'installed-release.json')
+$rollback=Restart-VerifiedCustomerUi $Directory $exe | ConvertFrom-Json
+Require ($sid -in $rollback.user_restarts_requested) 'Uninstall rollback lost the original user UI.'
+$deadline=[DateTime]::UtcNow.AddSeconds(90)
+do {
+    $restored=@(Get-CimInstance Win32_Process -Filter "Name='Swan Remote Support.exe'"|Where-Object {$_.SessionId -gt 0 -and $_.ExecutablePath -ieq $exe}|Where-Object {(Invoke-CimMethod -InputObject $_ -MethodName GetOwnerSid).Sid -eq $sid})
+    if($restored.Count -gt 0 -and -not(Get-ScheduledTask $name -ErrorAction SilentlyContinue)){break}
+    if([DateTime]::UtcNow -ge $deadline){throw 'Uninstall rollback did not restore the standard-user UI and clean up its task.'}
+    Start-Sleep -Seconds 2
+}while($true)
 $action=Get-CustomerUiAction $exe $sid $name
 New-OwnedFixtureTask $name $action | Out-Null
 $sentinel='SwanLab UI sentinel '+($name -replace '^Swan Customer UI ','')
@@ -145,6 +178,11 @@ Require ((Get-Service -Name 'Swan Remote Support').Status -eq $serviceBefore -an
 @{
     native_wrong_creation_path_and_sid_rejected=$true
     preparation_requires_pending_update_and_signed_executable_identity=$true
+    uninstall_requires_explicit_cancellation=$true
+    uninstall_closes_real_ui_before_file_removal=$true
+    uninstall_disables_ui_until_commit_or_rollback=$true
+    uninstall_rollback_restores_standard_user_ui=$true
+    uninstall_rollback_handles_unconfigured_msi=$true
     real_pre_msi_stop_keeps_disabled_durable_recovery_task=$true
     foreign_task_unchanged=$true
     restart_intent_durable_before_stop=$true

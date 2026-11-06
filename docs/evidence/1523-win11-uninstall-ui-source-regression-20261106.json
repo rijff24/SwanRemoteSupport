@@ -1,0 +1,32 @@
+{
+  "fresh_gui_preserved_on_retry": true,
+  "uninstall_disables_ui_until_commit_or_rollback": true,
+  "real_pre_msi_stop_keeps_disabled_durable_recovery_task": true,
+  "automatic_update_qualified": false,
+  "unrelated_task_preserved": true,
+  "restart_intent_survives_stop_before_launch": true,
+  "uninstall_rollback_restores_standard_user_ui": true,
+  "preparation_requires_pending_update_and_signed_executable_identity": true,
+  "utc": "2026-11-06T11:23:55.0156551Z",
+  "native_wrong_creation_path_and_sid_rejected": true,
+  "real_standard_user_gui_relaunched": true,
+  "foreign_task_unchanged": true,
+  "restart_intent_durable_before_stop": true,
+  "passwords_or_privileged_user_tokens_used": false,
+  "temporary_task_self_deleted": true,
+  "uninstall_rollback_handles_unconfigured_msi": true,
+  "uninstall_requires_explicit_cancellation": true,
+  "owned_task_removed_on_uninstall": true,
+  "uninstall_closes_real_ui_before_file_removal": true,
+  "service_and_payload_unchanged": true,
+  "candidate": "1.5.23+94",
+  "helper_and_test_source_sha256": {
+    "Restart-CustomerUi.ps1": "73e7329f3a78e7a3c4fc45e83c031ca4599b9760544d4b0ac7979f9000b7b171",
+    "test_customer_ui_restart.ps1": "476171486483558456419d19acfbe8e4416c286c5c6357c64033b698ff7ff9b0"
+  },
+  "actual_system_task_exit": 0,
+  "real_windows11_standard_user_gui": true,
+  "scope": "Standalone exact-source UI helper regression against the installed1.5.22+93 customer on the existing Windows11 VM; private fixture state only",
+  "rust_glue_and_rebuilt_msi_qualified": false,
+  "production_publication": false
+}

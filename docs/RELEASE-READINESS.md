@@ -2,6 +2,20 @@
 
 ## First publication: Windows 11 x64
 
+**Publication blocker found in current +93:** [real Windows11 MSI uninstall/reinstall regression](evidence/1522-fresh93-win11-msi-uninstall-ui-regression-20261106.json).
+MSI removed files, service, watcher and registration but left customer UI processes
+running from Windows Installer rollback storage. The next EXE setup retained its
+signed recovery marker and correctly refused those unexpected kernel image paths.
+Manual guarded lab cleanup allowed explicit EXE33 setup to finish with its exact
+95-file payload, original identity and consent intact. This is not an automatic
+lifecycle pass. Candidate **1.5.23+94** closes UI before removal and restores it on rollback. Its
+[real Windows11 standard-user helper regression](evidence/1523-win11-uninstall-ui-source-regression-20261106.json)
+passes, including refusal without cancellation, disabled restart tasks, rollback
+without an existing release record, preserved service/payload, and rejection of
+wrong process creation time, path, SID and foreign tasks. This is helper-level
+evidence; rebuilt native Rust glue, signed MSI uninstall/reinstall and release
+reproduction remain required. No newer installer is approved or published.
+
 The first endpoint release targets **Windows 11 x64 only**, following the revised
 release scope of 6 November. Windows 10 and Windows Server qualification is
 deferred to subsequent releases; historical tests below are evidence, not first
