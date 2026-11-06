@@ -1,0 +1,99 @@
+{
+  "source": "d5eeaa918fbb2510148d041297be99dbdc169360",
+  "candidate": "1.5.22+93",
+  "windows_endpoint_targets": [
+    "windows_11"
+  ],
+  "customer_exe": {
+    "producer_source": "d5eeaa918fbb2510148d041297be99dbdc169360",
+    "unsigned_outer_sha256": "fa56f0435042c31105ff0df8bc5c6ef2ce712acc6aa8be8f24379f9b8d58ec59",
+    "signed_outer_sha256": "eb29d8f1bced5561740224e40e29f2cfe85fa830f8bed46dc227521e59bc04a2",
+    "signed_inner_sha256": "744c4237b4e49fae47c6d5d42f0ad2a61c1a1a80daddc47e962bc163f75b6192",
+    "installed_manifest_sha256": "1dd8a2113828d110384668440ccbe16684963cc31a116be9c21bd254b099155b",
+    "publisher_certificate_sha256": "c797e22798a8afa94496ea0e8668b6e5ee4a4fc9f639b8200d5e1071e6925ec3",
+    "actual_native_packer_tests_passed": 6,
+    "actual_windows_python_packaging_tests_passed": 10,
+    "embedded_files": 95,
+    "independent_original_bytes_verified": true,
+    "signed_payload_verified_again_on_host": true,
+    "wrong_signed_inner_manifest_rejected_on_real_signed_package": true,
+    "public_producer_sources_exactly_match_executed_files": true
+  },
+  "four_company_bundles": [
+    {
+      "edition": "technician",
+      "format": "exe",
+      "sequence": 28,
+      "job_id": "97d7d0e9-133c-4f31-94a4-1e881fea2a83",
+      "bundle_sha256": "2816b55bff6b74192c6c3782b931eb8fc83cb0b2e98ee2403481c7128effa009",
+      "bytes": 26281154,
+      "public_bootstrap_only": true,
+      "profile_and_release_signatures_verified": true,
+      "offline_signature_mutation_check": true,
+      "seven_source_texts_exact": true,
+      "signed_payload_hashes_verified": true,
+      "anonymous_status": 401,
+      "download_status": 200
+    },
+    {
+      "edition": "customer",
+      "format": "msi",
+      "sequence": 32,
+      "job_id": "661ad2d8-c593-4503-aa51-f297c83e9ee9",
+      "bundle_sha256": "24d5066b68eab45b522439cb5843db835ab8468a91fca2e2ef53e171b5ddbf31",
+      "bytes": 32826823,
+      "public_bootstrap_only": true,
+      "profile_and_release_signatures_verified": true,
+      "offline_signature_mutation_check": true,
+      "seven_source_texts_exact": true,
+      "signed_payload_hashes_verified": true,
+      "anonymous_status": 200,
+      "download_status": 200
+    },
+    {
+      "edition": "technician",
+      "format": "msi",
+      "sequence": 29,
+      "job_id": "a81ec53a-8359-4670-b50e-3d1ca3602087",
+      "bundle_sha256": "33c482118e9b955d88f7f87cb4b52d4dbd5caea6a9b022362871b8f0ef679dde",
+      "bytes": 30624959,
+      "public_bootstrap_only": true,
+      "profile_and_release_signatures_verified": true,
+      "offline_signature_mutation_check": true,
+      "seven_source_texts_exact": true,
+      "signed_payload_hashes_verified": true,
+      "anonymous_status": 401,
+      "download_status": 200
+    },
+    {
+      "edition": "customer",
+      "format": "exe",
+      "sequence": 33,
+      "job_id": "9b62d7e1-4a64-4f66-89cf-3ac3ee1f4345",
+      "bundle_sha256": "6d4a7cdb662a5b6ab6dd863d6f736da8a80e861ebbbb2844dc39348f0059d436",
+      "bytes": 26295173,
+      "public_bootstrap_only": true,
+      "profile_and_release_signatures_verified": true,
+      "offline_signature_mutation_check": true,
+      "seven_source_texts_exact": true,
+      "signed_payload_hashes_verified": true,
+      "anonymous_status": 200,
+      "download_status": 200
+    }
+  ],
+  "release_import_security": {
+    "invalid_signatures_rejected": true,
+    "request_cannot_override_operator_release_key": true,
+    "unapproved_builds_rejected_without_job_creation": true,
+    "signed_profile_policy_unchanged": true,
+    "automatic_updates_paused": true
+  },
+  "existing_worker_reused": true,
+  "private_keys_exported": false,
+  "lab_signing_only": true,
+  "installer_executed": false,
+  "windows11_runtime_qualified": false,
+  "internet_connectivity_qualified": false,
+  "production_publication": false,
+  "scope": "Actual company worker generation and HTTPS downloads after source and signature verification. EXE and MSI use their own payload manifests. Lab publisher only; Windows11 lifecycle/session/update testing remains open."
+}

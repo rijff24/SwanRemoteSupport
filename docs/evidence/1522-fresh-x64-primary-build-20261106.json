@@ -1,0 +1,68 @@
+{
+  "candidate": "1.5.22+93",
+  "source": "d5eeaa918fbb2510148d041297be99dbdc169360",
+  "workflow_run": 42079677235,
+  "workflow_url": "https://github.com/rijff24/SwanRemoteSupport/actions/runs/42079677235",
+  "original_unsigned_artifact": {
+    "artifact": 13445521816,
+    "digest": "sha256:030303d1e0f736f68c2b238fb3ee0e15e71d9c7099c0bb608b20416b2d89e51a",
+    "expected_bytes": 278979525,
+    "source": "d5eeaa918fbb2510148d041297be99dbdc169360"
+  },
+  "tracked_source_files_verified": 1421,
+  "all_six_original_bridge_inputs_verified": true,
+  "all_declared_manifest_hashes_verified": true,
+  "compiled_branding_approval_transfer_logs_verified": true,
+  "shipping_sha256": {
+    "SwanRemoteSupport-1.5.22-customer-x64-unsigned.msi": "6ff296f30323534820161c516b4fd5da848c66db2bd3c351a4858698ac9a6234",
+    "SwanRemoteSupport-1.5.22-technician-x64-unsigned.exe": "030232ad3c486a20d43729dae14a26f65dd9205d2589bf7eecc85914f542a230",
+    "SwanRemoteSupport-1.5.22-technician-x64-unsigned.msi": "d8ffe486f1a3e4667d149ddf8761a750f7a67858a409ce9a18616668afca7f08",
+    "SwanRemoteSupport-1.5.22-x64-unsigned-install.exe": "030232ad3c486a20d43729dae14a26f65dd9205d2589bf7eecc85914f542a230",
+    "SwanServerSetup-UNSIGNED-TEST.exe": "0bdd06fabae186d5a95ccd0ab2e9bc86011d27424564afabd516a198b486873b",
+    "swan-agent.exe": "6c0ee8581baf04e5effee63647e6f9cb52780dbbe51fe34f8d828e8fde170f73",
+    "swan-management.exe": "00cab63adbf5f6bbaab40e27c86933fc884ff644a5a5587cfbd9f1a234db95b2",
+    "swan-worker.exe": "7f87133666aa6a37ccb03287c74b0730bafa53cfb1c86fe87f51b04db0eecd7e"
+  },
+  "av1_trace": {
+    "source": "d5eeaa918fbb2510148d041297be99dbdc169360",
+    "run": 42079677235,
+    "original_installed_library_sha256": "65eea89b4a2ff6b22939e69b8a04e61c64ce34b9779c1c91c176d1359cb6a515",
+    "original_object_sha256": "072718e365b6dd404ae1b0e12eff30852f92727a4656f0a4520a63bae82fbec4",
+    "archive_members": 332,
+    "exact_object_matches_in_installed_library": [
+      {
+        "member": "/10078",
+        "archive_offset": 34002834,
+        "bytes": 491979
+      }
+    ],
+    "symbol": "av1_update_inter_mode_stats",
+    "function_bytes": 365,
+    "function_code_sha256_with_original_terminal_relocation": "1278ac11313ba2abe5b46fee3490712afd39a68fd1bac0fa0034a4f56a9a02bc",
+    "original_dll_sha256": "8c35aedb98f6ac9bf4b98d6727e246cb94f0b86919766713a6f26f76e096f09e",
+    "original_function_prefix_matches_in_dll_before_recorded_terminal_relocation": [
+      {
+        "file_offset": "0xddd220",
+        "rva": "0xddde20"
+      }
+    ],
+    "compiled_and_bundled_dll_hashes_match_extracted_original_payload": true,
+    "matches_previous_dll_variants": [
+      true,
+      false
+    ],
+    "no_normalization_or_execution_of_downloaded_binaries": true,
+    "independent_reproduction_verified": false,
+    "production_qualified": false
+  },
+  "independent_run": 42169429003,
+  "independent_run_result": "success",
+  "reproducibility_proven": true,
+  "downloaded_executables_run": false,
+  "candidate_installed": false,
+  "production_signed": false,
+  "production_published": false,
+  "scope": "All eight original unsigned outputs independently reproduced from exact public source with source/bridge/MSVC/wrapper verification. No Windows11 runtime qualification or production signing. Historical +92 mismatch cause remains unexplained.",
+  "comparison_run": 42177470881,
+  "comparison_artifact_digest": "sha256:804b09e97e675ad1e32c316b5f0380beb2bd26f8637320aa4a6fab3cfccb78eb"
+}

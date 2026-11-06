@@ -1,0 +1,37 @@
+{
+  "source": "361d7c362de7f67b7b7456d33bf0191736eec7d5",
+  "os": "Windows Server 2016 Desktop Experience build 14393",
+  "scope": "Owned independent-company lab; original peer database and company configuration preserved",
+  "lab_signed_windows_management": true,
+  "production_signing": false,
+  "pre_migration_backup": {
+    "format": "SWANBK2",
+    "bytes": 154965880,
+    "sha256": "cd56a5a2aa3c127ceea9e20aab0b9965402e8c0dacc122fdf5e12bdd6d26de52",
+    "actual_legacy_database_and_wal_included": true,
+    "management_identity_tls_receipt_and_five_installer_artifacts_restored_in_isolation": true,
+    "sqlite_integrity_schema_and_all_committed_rows_match": true,
+    "table_row_counts": {"peer": 1},
+    "logical_peer_dataset_sha256": "13e74304b8b72a3c06061e2f3f38b96c15482823b8d525033ae8444077b56840",
+    "wrong_password_and_tamper_tests_repeated_in_this_rehearsal": false
+  },
+  "actual_offline_migration": {
+    "signed_windows_cli_used": true,
+    "services_stopped_normally_and_resumed": true,
+    "original_legacy_database_and_wal_preserved": true,
+    "all_migrated_committed_peer_records_match_restored_backup": true,
+    "canonical_database_reported_by_running_rendezvous": true,
+    "https_admin_mfa_and_signed_profile_verified": true,
+    "device_approval_revoked_consent_release_approvals_workers_preserved": true,
+    "company_transport_keys_and_worker_credential_preserved": true,
+    "corresponding_source_installed": true
+  },
+  "remaining": [
+    "Full encrypted backup from canonical transport storage",
+    "Populated running-stack restore and guarded rollback",
+    "Fresh native remote session after migration and recovery"
+  ],
+  "public_internet_connectivity_qualified": false,
+  "production_publication": false,
+  "full_product_acceptance_complete": false
+}

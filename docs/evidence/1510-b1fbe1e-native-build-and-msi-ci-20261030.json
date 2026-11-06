@@ -1,0 +1,64 @@
+{
+  "utc": "2026-10-30T03:18:03.076033+00:00",
+  "source": "b1fbe1e2419c3e749663746c74442d1fe864302d",
+  "version": "1.5.10+78",
+  "workflow_run": 40988690083,
+  "workflow_url": "https://github.com/rijff24/SwanRemoteSupport/actions/runs/40988690083",
+  "native_job": 123848833939,
+  "native_job_conclusion": "success",
+  "artifact": 12950288879,
+  "artifact_bytes": 256197933,
+  "artifact_sha256": "dc97a1b997edfd6aa725562b2f0c90485e2c11791d4a5274150c73c19969640b",
+  "complete_public_source_and_six_generated_bridge_files_verified": true,
+  "public_source_file_count": 1302,
+  "manifest_hashes_match": true,
+  "pinned_sdk_and_independently_reproduced_engine_verified": true,
+  "required_native_regression_step_conclusions": {
+    "Reject paused support and authorization reuse after resume": "success",
+    "Reject authorization retries and inherited audit destinations": "success",
+    "Reject cross-target and stale-login file-transfer handles": "success",
+    "Verify hardened DLL search supports delayed application libraries": "success",
+    "Build branded client": "success",
+    "Reject incoming capture helpers in the technician edition": "success",
+    "Verify service launcher defers desktop DLL loading": "success",
+    "Verify customer MSI starts a headless native service": "success",
+    "Reject unsigned legacy management policy in managed editions": "success",
+    "Reject upstream updater entry points in managed editions": "success",
+    "Reject system-control packets from view-only managed sessions": "success",
+    "Build unsigned customer and technician MSIs with pinned WiX": "success",
+    "Verify unsigned technician MSI installation repair and uninstall": "success",
+    "Build unsigned company server setup with pinned components": "success"
+  },
+  "lifecycle_artifact": {
+    "id": 12951205314,
+    "sha256": "sha256:4cc151e6ba3080391313e8c1717fa62f3207bb042a5ac6dc7f0035c6264093bf",
+    "bytes": 98201
+  },
+  "actual_unsigned_ci_lifecycle": {
+    "customer": {
+      "passed": true,
+      "package_sha256": "d4545f75aec2618065b32b11c65bafaef470904977f4e0c45c2731eb5da0e6f8",
+      "scope": "Fresh administrative MSI install/start and service module inspection, then uninstall on disposable CI; no cold reboot, enrollment, signature acceptance or remote session",
+      "service_running_without_manual_start": true,
+      "no_desktop_engine_or_plugin_modules": true,
+      "uninstall_verified": true
+    },
+    "technician": {
+      "passed": true,
+      "package_sha256": "033aefa2cecc720e57b73b94daa6860a38b67df563350d3fbbb588f50f276a96",
+      "windows": "Windows Server 2022 Datacenter",
+      "build": "20348",
+      "install": true,
+      "repair": true,
+      "uninstall": true,
+      "scope": "MSI payload lifecycle under the CI account; no enrollment, standard-user GUI, signature acceptance or remote session"
+    }
+  },
+  "limits": [
+    "Single native build; independent full native reproduction remains pending.",
+    "CI installs were unsigned and unenrolled. Lab signatures, enrolled-machine upgrade and normal reboot qualification remain separate.",
+    "The intermittent Server2019 1.5.9 cold-start failure is not cleared by these results."
+  ],
+  "production_publication": false,
+  "full_product_acceptance_complete": false
+}

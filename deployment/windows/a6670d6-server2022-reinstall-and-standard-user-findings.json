@@ -1,0 +1,102 @@
+{
+  "recorded_utc": "2026-10-27T22:25:40.249109+00:00",
+  "application_source": "a6670d6e5b846be079f7cc0688c55ee9fb07431a",
+  "version": "1.5.4",
+  "sequence": 7,
+  "os": "Windows Server 2022 Standard Evaluation Desktop Experience 20348.587",
+  "fresh_pristine_os_install_claimed": false,
+  "baseline": "Previously tested endpoint after uninstall: only original zero-byte pending-uninstall marker remained; no application, service or enrollment state. Marker was preserved for shipping setup to handle.",
+  "setup": {
+    "version": "1.5.4",
+    "watch_state": "Running",
+    "profile_revision": 14,
+    "sequence": 7,
+    "shipping_verifier_passed": true,
+    "utc": "2026-10-27T22:00:40.0547516Z",
+    "all_signed_files": 96,
+    "default_unattended_consent_off": true,
+    "service_state": "Running",
+    "production_qualified": false,
+    "enrolled": true,
+    "public_lab_publisher_verified": true,
+    "tailscale_absent": true
+  },
+  "enrollment": {
+    "utc": "2026-10-27T22:02:17.219799+00:00",
+    "version": "1.5.4",
+    "sequence": 7,
+    "actual_enrolled_customer": "Server2022",
+    "pending_inventory_hidden": true,
+    "pending_grant_status": 403,
+    "explicit_company_approval_verified": true,
+    "authorized_inventory_visible": true,
+    "unassigned_inventory_hidden": true,
+    "unassigned_grant_status": 403,
+    "unattended_without_consent_status": 403,
+    "other_device_records_unchanged": true,
+    "no_successful_grant_or_native_session_created": true,
+    "production_qualified": false
+  },
+  "package_rejections": {
+    "source": "a6670d6e5b846be079f7cc0688c55ee9fb07431a",
+    "production_qualified": false,
+    "test_metadata_not_imported_or_published": true,
+    "version": "1.5.4",
+    "utc": "2026-10-27T22:03:08.8838989Z",
+    "no_installer_or_update_handoff": true,
+    "installed_payload_still_verifies": true,
+    "sequence": 7,
+    "exact_signed_repair_control_accepted": true,
+    "rejections": [
+      {
+        "expected_reason_verified": true,
+        "case": "tampered-hash",
+        "rejected": true
+      },
+      {
+        "expected_reason_verified": true,
+        "case": "bad-signature",
+        "rejected": true
+      },
+      {
+        "expected_reason_verified": true,
+        "case": "wrong-publisher",
+        "rejected": true
+      },
+      {
+        "expected_reason_verified": true,
+        "case": "wrong-certificate",
+        "rejected": true
+      },
+      {
+        "expected_reason_verified": true,
+        "case": "replayed-release",
+        "rejected": true
+      }
+    ],
+    "identity_credential_consent_and_sequence_unchanged": true,
+    "original_installer_unchanged": true
+  },
+  "standard_user_consent": {
+    "utc": "2026-10-27T22:17:20.771729+00:00",
+    "actual_standard_user_native_consent_ui_enabled_then_revoked": true,
+    "server_enabled_then_revoked_independently_verified": true,
+    "new_unattended_grant_after_revocation_status": 403,
+    "no_remote_session_started": true,
+    "production_qualified": false
+  },
+  "standard_user_native_branding_visible": true,
+  "actual_customer_shortcut_launched": true,
+  "startup_without_msi_repair_passed": false,
+  "ordinary_user_stop_without_elevation_passed": false,
+  "stop_elevation_prompt_canceled_without_admin_credentials": true,
+  "full_os_or_remote_feature_acceptance": false,
+  "production_publication": false,
+  "shortcut_repair_detection": [
+    {
+      "event_id": 1004,
+      "feature": "Customer",
+      "keypath_reported_unavailable": "C:\\ProgramData\\SwanRemoteSupport\\swan-agent.exe"
+    }
+  ]
+}

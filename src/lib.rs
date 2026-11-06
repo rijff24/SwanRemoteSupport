@@ -28,6 +28,8 @@ pub mod ipc;
 )))]
 pub mod ui;
 mod version;
+#[cfg(test)]
+mod build_metadata;
 pub use version::*;
 #[cfg(any(target_os = "android", target_os = "ios", feature = "flutter"))]
 mod bridge_generated;
@@ -58,6 +60,8 @@ mod whiteboard;
 
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 mod updater;
+#[cfg(feature = "swan_custom")]
+mod managed;
 
 mod ui_cm_interface;
 mod ui_interface;

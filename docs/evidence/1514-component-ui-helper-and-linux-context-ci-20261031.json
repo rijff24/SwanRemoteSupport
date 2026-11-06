@@ -1,0 +1,53 @@
+{
+  "utc": "2026-10-31T07:57:46.603468+00:00",
+  "component_source": "0aac973c028c0be0e20cf38c78cdcbd40b4fe2b6",
+  "native_build_source": "dde38c9ae213969041fe1cd4f5c4565d910de087",
+  "only_source_difference": [
+    ".dockerignore",
+    "deployment/linux/Dockerfile.dockerignore"
+  ],
+  "component_agent_rust_and_embedded_helper_identical_between_sources": true,
+  "workflow_run": 41180429246,
+  "jobs": [
+    {
+      "id": 124476571092,
+      "name": "linux-deployment",
+      "conclusion": "success"
+    },
+    {
+      "id": 124476571217,
+      "name": "maintained-windows-transport/windows-2022",
+      "conclusion": "success"
+    },
+    {
+      "id": 124477814749,
+      "name": "verify/ubuntu-24.04",
+      "conclusion": "success"
+    },
+    {
+      "id": 124477814809,
+      "name": "verify/windows-2022",
+      "conclusion": "success"
+    }
+  ],
+  "checks": {
+    "windows_and_linux_workspace_tests_passed": true,
+    "real_child_ui_helper_timeout_preserves_recovery_diagnostic_and_reaps_child_on_windows": true,
+    "windows_compiled_components_passed": true,
+    "windows_incompressible_backup_above_former_512MiB_limit_passed": true,
+    "linux_deny_by_default_context_contains_new_embedded_helper_and_excludes_private_canaries": true,
+    "linux_management_image_build_fresh_company_persistence_https_transport_and_complete_recovery_passed": true
+  },
+  "earlier_failure": {
+    "source": "dde38c9ae213969041fe1cd4f5c4565d910de087",
+    "job": 124476335870,
+    "missing_public_embedded_source": "deployment/windows/Restart-CustomerUi.ps1",
+    "fixed_by_adding_exact_public_helper_to_both_allowlists": true
+  },
+  "limits": [
+    "Component CI does not qualify the complete native Windows1.5.14 shipping packages.",
+    "The real13-to14 standard-user customer automatic MSI upgrade is still pending.",
+    "Disposable workflow MSI fixtures are separate from every advertised clean-OS qualification."
+  ],
+  "production_publication": false
+}

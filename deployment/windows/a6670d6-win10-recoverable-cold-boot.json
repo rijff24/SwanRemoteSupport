@@ -1,0 +1,42 @@
+{
+  "application_source": "a6670d6e5b846be079f7cc0688c55ee9fb07431a",
+  "version": "1.5.4",
+  "sequence": 7,
+  "normal_shutdown_completed_before_recovery": false,
+  "original_disk_and_two_whole_vm_snapshots_preserved": true,
+  "original_disk_read_only": true,
+  "separate_private_cold_overlay": true,
+  "simultaneous_duplicate_vm": false,
+  "guest_memory_mib": 3072,
+  "controller_checkpoint_timeout_recovered_by_independent_monitor_check": true,
+  "verified_checks": {
+    "identity_credential_and_trust_preserved": true,
+    "windows_generated_cache_matches_current_system": true,
+    "private_key_exported": false,
+    "unattended_consent_disabled": true,
+    "recoverable_cold_overlay": true,
+    "no_recovery_markers": true,
+    "consent_revision": 2,
+    "customer_service": "Running",
+    "existing_lab_private_key_nonexportable": true,
+    "shipping_verifier_passed": true,
+    "service_account": "LocalSystem",
+    "utc": "2026-10-28T01:14:04.5817531Z",
+    "release_sequence": 7,
+    "watch_state": "Running",
+    "existing_lab_private_key_present": true,
+    "service_start_mode": "Auto",
+    "credentials_disclosed": false,
+    "normal_shutdown_qualification": false
+  },
+  "full_normal_reboot_acceptance_claimed": false,
+  "new_1_5_5_runtime_qualification_claimed": false,
+  "production_qualified": false,
+  "subsequent_normal_shutdown": {
+    "after_lab_signing_completed": true,
+    "qemu_exit_utc": "2026-10-28T02:18:17.781311+00:00",
+    "qemu_exit_code": 0,
+    "forced_app_close": false,
+    "subsequent_boot_verified": false
+  }
+}

@@ -1,0 +1,104 @@
+#include <cstdint>
+#include <cstdio>
+#include <functional>
+#include <iostream>
+#include <memory>
+#include <mutex>
+#include <thread>
+#include <typeinfo>
+
+struct FlutterDesktopMessageResponseHandle {};
+struct FlutterDesktopMessenger {
+  std::recursive_mutex mutex;
+  bool available = true;
+  unsigned references = 0, releases = 0, locks = 0, unlocks = 0, sends = 0;
+  const std::uint8_t* data = nullptr;
+  std::size_t size = 0;
+};
+FlutterDesktopMessenger* FlutterDesktopMessengerAddRef(FlutterDesktopMessenger* m) {
+  ++m->references;
+  return m;
+}
+void FlutterDesktopMessengerRelease(FlutterDesktopMessenger* m) {
+  --m->references;
+  ++m->releases;
+}
+FlutterDesktopMessenger* FlutterDesktopMessengerLock(FlutterDesktopMessenger* m) {
+  m->mutex.lock();
+  ++m->locks;
+  return m;
+}
+void FlutterDesktopMessengerUnlock(FlutterDesktopMessenger* m) {
+  ++m->unlocks;
+  m->mutex.unlock();
+}
+bool FlutterDesktopMessengerIsAvailable(FlutterDesktopMessenger* m) {
+  return m->available;
+}
+void FlutterDesktopMessengerSendResponse(
+    FlutterDesktopMessenger* m, const FlutterDesktopMessageResponseHandle*,
+    const std::uint8_t* data, std::size_t size) {
+  ++m->sends;
+  m->data = data;
+  m->size = size;
+}
+namespace flutter {
+@NAMED_REPLY@
+}
+using Reply = std::function<void(const std::uint8_t*, std::size_t)>;
+bool Check(bool value, const char* label) {
+  if (!value) std::fprintf(stderr, "Reply fixture failed: %s\n", label);
+  return value;
+}
+struct InvokeReply {
+  Reply* reply;
+  void operator()() { (*reply)(nullptr, 0); }
+};
+bool RunSemantics() {
+  FlutterDesktopMessageResponseHandle handle;
+  const std::uint8_t bytes[] = {1, 2, 3};
+  FlutterDesktopMessenger m;
+  {
+    auto owner = std::shared_ptr<FlutterDesktopMessenger>(
+        FlutterDesktopMessengerAddRef(&m), &FlutterDesktopMessengerRelease);
+    Reply reply = flutter::internal::SwanBinaryReplyHandler(owner, &handle);
+    Reply copy = reply;
+    reply = nullptr;
+    owner.reset();
+    if (!Check(m.references == 1 && m.releases == 0, "copied callback retains messenger")) return false;
+    copy(bytes, sizeof(bytes));
+    copy(nullptr, 0);
+    if (!Check(m.sends == 1 && m.data == bytes && m.size == sizeof(bytes), "one response, exact payload")) return false;
+    if (!Check(m.locks == 2 && m.unlocks == 2, "duplicate path unlocks")) return false;
+  }
+  if (!Check(m.references == 0 && m.releases == 1, "last callback releases messenger")) return false;
+  FlutterDesktopMessenger unavailable;
+  unavailable.available = false;
+  {
+    auto owner = std::shared_ptr<FlutterDesktopMessenger>(
+        FlutterDesktopMessengerAddRef(&unavailable), &FlutterDesktopMessengerRelease);
+    Reply reply = flutter::internal::SwanBinaryReplyHandler(owner, &handle);
+    reply(bytes, sizeof(bytes));
+    if (!Check(unavailable.sends == 0 && unavailable.locks == 1 && unavailable.unlocks == 1,
+               "destroyed engine drops reply and unlocks")) return false;
+  }
+  if (!Check(unavailable.references == 0 && unavailable.releases == 1, "unavailable engine reference released")) return false;
+  FlutterDesktopMessenger concurrent;
+  {
+    auto owner = std::shared_ptr<FlutterDesktopMessenger>(
+        FlutterDesktopMessengerAddRef(&concurrent), &FlutterDesktopMessengerRelease);
+    Reply reply = flutter::internal::SwanBinaryReplyHandler(owner, &handle);
+    std::thread workers[4];
+    for (auto& worker : workers) worker = std::thread(InvokeReply{&reply});
+    for (auto& worker : workers) worker.join();
+    if (!Check(concurrent.sends == 1 && concurrent.data == nullptr && concurrent.size == 0,
+               "concurrent empty replies serialize to one send")) return false;
+    if (!Check(concurrent.locks == 4 && concurrent.unlocks == 4, "concurrent paths unlock")) return false;
+  }
+  return Check(concurrent.references == 0 && concurrent.releases == 1, "concurrent callback reference released");
+}
+int main() {
+  if (!RunSemantics()) return 1;
+  std::printf("%s\n%s\n1\n", __FILE__, typeid(flutter::internal::SwanBinaryReplyHandler).name());
+  return 0;
+}

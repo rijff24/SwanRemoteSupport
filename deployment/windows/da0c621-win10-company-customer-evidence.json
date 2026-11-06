@@ -1,0 +1,93 @@
+{
+  "application_source": "da0c621845057bed321a98a1886ef15891e431a9",
+  "management_source": "761b5c56cca8cd7eecb65d3438de0d6f0075bd4e",
+  "test_only": true,
+  "production_publication": false,
+  "bundle_sha256": "65da4aa12d9934de118a0f1df73b92eb2c5e79e84349736f4661911ad5d3dfb0",
+  "public_customer_download_status": 200,
+  "bootstrap_public_fields_only": true,
+  "profile_and_release_signatures_verified": true,
+  "exact_bundled_source_texts_verified": 7,
+  "installer_sha256": "c53626be8ed32f4678d1c7cc1a4b88ca53a07a86f94d36e94b61e68d5f9f06a2",
+  "installed_executable_sha256": "ec9ce7e5b475ef64a19d08fca3bd843f2b2540d0206e416c87055012f4c2ab59",
+  "agent_sha256": "c7bfac26344a8f46aa2238b631e3be25785eaaeb5fd721cbf844c438be4d6206",
+  "installed_state": {
+    "consent_revision": 0,
+    "utc": "2026-10-27T05:56:02.7460549Z",
+    "profile_revision": 5,
+    "credential_disclosed": false,
+    "release_sequence": 4,
+    "customer_service_running": true,
+    "unattended_consent": false,
+    "automatic_local_system_service": true,
+    "manual_server_address_edit": false,
+    "tailscale_service_absent": true,
+    "os": {
+      "caption": "Microsoft Windows 10 Pro",
+      "architecture": "64-bit",
+      "build": "19045",
+      "version": "10.0.19045"
+    },
+    "pending_install_absent": true,
+    "installed_hashes_and_publishers_verified": true,
+    "device_token_present": true
+  },
+  "authorization": {
+    "utc": "2026-10-27T05:57:49.302574+00:00",
+    "unique_fresh_native_enrollment": true,
+    "pending_device_inventory_hidden": true,
+    "pending_device_grant_status": 403,
+    "explicit_company_approval_verified": true,
+    "authorized_group_inventory_visible": true,
+    "unassigned_inventory_hidden": true,
+    "unassigned_grant_status": 403,
+    "unattended_without_consent_status": 403,
+    "unattended_consent_remains_false": true,
+    "existing_server19_device_record_unchanged": true,
+    "automatic_updates_paused": true,
+    "native_session_tested": false,
+    "no_successful_grant_created_by_this_test": true,
+    "production_publication": false
+  },
+  "original_setup_records": [
+    {
+      "sha256": "eba9bfcc61a017f4dd3a6d66533d308421e544df77e47354de7c274a6907865b",
+      "name": "setup-start.json",
+      "bytes": 174
+    },
+    {
+      "sha256": "b9c8f984e1dbb10cc3d85148335ef9341f8eae96e44beeb46a5e36cbfbd7868f",
+      "name": "setup-result.json",
+      "bytes": 530
+    },
+    {
+      "sha256": "30682401c1f1c0ed26af27b889cd895463c7af076b39b04c1059bad3c5bedb4c",
+      "name": "private-lab-network-preparation.json",
+      "bytes": 380
+    },
+    {
+      "sha256": "03f561f75170d7787ba280b464f7b7e1ab5a8cf75e358daaa4664980201c2e0c",
+      "name": "idle-msi-preflight.json",
+      "bytes": 230
+    },
+    {
+      "sha256": "aeea8f1742fe99667993a9b89a029912c94904cf33a0fe9c6b82574eadd7d448",
+      "name": "Install-GeneratedWin10Customer.ps1",
+      "bytes": 4976
+    }
+  ],
+  "private_lab_dns_and_public_ca_provisioned": true,
+  "tls_verification_disabled": false,
+  "limitations": [
+    "Standard Microsoft Windows 10 Pro 22H2 x64 VM; no licensed-evaluation or production-activation claim.",
+    "This uses the existing signed 1.5.1 baseline. It does not qualify 1.5.2 installation or upgrades.",
+    "Private laboratory name resolution and public CA trust were provisioned separately; public Internet hosting is unproven.",
+    "Approval and negative grant results are management API checks; no native Windows 10 support session is claimed.",
+    "Cold reboot, customer repair/uninstall, standard-user behavior and desktop features remain separate tests."
+  ],
+  "retained_preflight_failures": [
+    "An overbroad guard refused an idle Windows Installer service before creating setup state.",
+    "A later guard path-regex error also stopped before setup.",
+    "The successful preflight accepted only the exact idle service command, required available service stop control and an unowned execute mutex; no service or installer was stopped."
+  ]
+}

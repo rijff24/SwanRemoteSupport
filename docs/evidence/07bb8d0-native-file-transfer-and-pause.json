@@ -1,0 +1,101 @@
+{
+  "recorded_utc": "2026-10-28T22:23:43.900278+00:00",
+  "application_source": "07bb8d0b99e2be002a30e5d97eebe67a9c2794ad",
+  "application_version": "1.5.7",
+  "technician_os": "Windows Server2019 17763.3650 x64",
+  "customer_os": "Windows Server2016 14393 x64",
+  "owned_administrator_desktops": true,
+  "fixtures": [
+    {
+      "role": "customer",
+      "filename": "customer-source.bin",
+      "source_sha256": "1f77ab6689527546b4a60f2cc2ac8c095282c90a6bc84a0fac790ffcd143f3c4",
+      "utc": "2026-10-28T21:53:12.6949026Z",
+      "destination_empty": true,
+      "bytes": 1048576
+    },
+    {
+      "role": "technician",
+      "filename": "technician-source.bin",
+      "source_sha256": "3ea501bf5c49f31ad34b04ae10cd26c1c8c069356666c60af29506e21f2792d8",
+      "utc": "2026-10-28T21:53:20.8264062Z",
+      "destination_empty": true,
+      "bytes": 1048576
+    }
+  ],
+  "native_file_transfer": {
+    "desktop_and_file_transfer_approved_separately_on_customer": true,
+    "opened_from_the_native_desktop_session_toolbar": true,
+    "no_password_or_legacy_credential_entered_for_transfer": true,
+    "both_directions_reported_finished_one_of_one_in_native_ui": true,
+    "customer_connection_manager_reported_both_directions_finished": true,
+    "receiving_directories_initially_empty": true,
+    "destination_files_written_only_by_native_swan_transfer": true
+  },
+  "independent_binary_verification": [
+    {
+      "actual_received_file_verified": true,
+      "utc": "2026-10-28T22:01:23.2698716Z",
+      "destination_was_empty_before_native_ui": true,
+      "bytes": 1048576,
+      "actual_sha256": "1f77ab6689527546b4a60f2cc2ac8c095282c90a6bc84a0fac790ffcd143f3c4",
+      "direction": "customer-to-technician"
+    },
+    {
+      "actual_received_file_verified": true,
+      "utc": "2026-10-28T22:03:04.3609398Z",
+      "destination_was_empty_before_native_ui": true,
+      "bytes": 1048576,
+      "actual_sha256": "3ea501bf5c49f31ad34b04ae10cd26c1c8c069356666c60af29506e21f2792d8",
+      "direction": "technician-to-customer"
+    }
+  ],
+  "claimed_grants_before_pause": {
+    "utc": "2026-10-28T22:03:53.677305+00:00",
+    "independently_claimed_grant_count": 2,
+    "both_attended_and_lease_current": true,
+    "separate_customer_approval_for_desktop_and_file_transfer_observed": true,
+    "server_source_unchanged": true
+  },
+  "customer_stop": {
+    "utc": "2026-10-28T22:04:13.170743+00:00",
+    "both_original_claimed_grants_closed": true,
+    "original_grant_count": 2,
+    "no_manual_server_revocation_used": true
+  },
+  "receiving_device_after_stop": {
+    "renewal_statuses": [
+      403,
+      403
+    ],
+    "standard_user_test": false,
+    "unattended_consent_off": true,
+    "customer_pause_persisted": true,
+    "version": "1.5.7",
+    "utc": "2026-10-28T22:16:05.3588782Z",
+    "same_running_service_and_watch": true,
+    "both_closed_grant_renewals_denied": true,
+    "sequence": 9,
+    "shipping_verifier_passed": true,
+    "profile_revision": 14
+  },
+  "findings": {
+    "client_reconnect_attempt_after_authorization_closure_observed": true,
+    "reconnect_cancelled_and_old_grants_cannot_renew": true,
+    "receiver_logs_showed_managed_authorization_unavailable_for_both_connections": true,
+    "legacy_derived_http_audit_attempts_failed_in_owned_lab": true,
+    "new_candidate_source_disables_authorization_retries_and_legacy_audit_targets": true,
+    "new_guards_native_test_execution_and_runtime_verification_pending": true
+  },
+  "original_private_log_sha256": {
+    "technician-actual-edition-after-stop.private.json": "d6cac9744cb9163ad30d00bee3818b11f664b9394119ccc630426db6aa17fd75",
+    "customer-actual-edition-after-stop.private.json": "43bb18152a3a38a114469a9770e3f61300a9fd310b56e27ef4be4b8f58aa0410"
+  },
+  "limits": [
+    "Two distinct1MiB files; no large, directory, interrupted or clipboard-file transfer qualification.",
+    "No remote UAC, multiple displays, ordinary-account transfer or six-version compatibility qualification.",
+    "Loopback company endpoints and isolated lab VMs; no public Internet or direct-path qualification.",
+    "The1.5.8 native identity build remains separate; it does not yet contain the subsequent retry/audit guards.",
+    "No production signing, publication or completed product acceptance."
+  ]
+}

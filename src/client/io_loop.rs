@@ -58,6 +58,14 @@ use std::{
     },
 };
 
+fn bound_file_transfer_writes(peer: &mut Stream, conn_type: ConnType) {
+    if conn_type == ConnType::FILE_TRANSFER {
+        // A blocked write otherwise prevents the loop's no-data timer and UI
+        // cancellation messages from running after a network interruption.
+        peer.set_send_timeout(30_000);
+    }
+}
+
 pub struct Remote<T: InvokeUiSession> {
     handler: Session<T>,
     audio_sender: MediaSender,
@@ -136,6 +144,17 @@ impl<T: InvokeUiSession> Remote<T> {
     }
 
     pub async fn io_loop(&mut self, key: &str, token: &str, round: u32) {
+        // Cover connection establishment as well as the authenticated session.
+        // Each loop owns its lock, so retries and multiple windows cannot let
+        // installation race a connection or retain a lock after disconnection.
+        #[cfg(feature = "swan_custom")]
+        let _managed_activity = match swan_agent::lock_session(&swan_agent::state_directory()) {
+            Ok(activity) => activity,
+            Err(_) => {
+                self.handler.msgbox("error", "Company update in progress", "Wait for company setup or update recovery to finish before connecting.", "");
+                return;
+            }
+        };
         #[cfg(target_os = "windows")]
         let _file_clip_context_holder = {
             // `is_port_forward()` will not reach here, but we still check it for clarity.
@@ -179,6 +198,7 @@ impl<T: InvokeUiSession> Remote<T> {
         .await
         {
             Ok(((mut peer, direct, pk, kcp, stream_type), (feedback, rendezvous_server))) => {
+                bound_file_transfer_writes(&mut peer, conn_type);
                 self.handler
                     .connection_round_state
                     .lock()
@@ -2545,5 +2565,55 @@ impl Drop for VideoThread {
     fn drop(&mut self) {
         // since channels are buffered, messages sent before the disconnect will still be properly received.
         *self.discard_queue.write().unwrap() = true;
+    }
+}
+
+#[cfg(test)]
+mod transfer_write_tests {
+    use super::*;
+    use hbb_common::tcp::FramedStream;
+
+    fn blocked_stream() -> (Stream, tokio::io::DuplexStream) {
+        let (writer, reader) = tokio::io::duplex(64);
+        (
+            Stream::Tcp(FramedStream::from(writer, "127.0.0.1:1".parse().unwrap())),
+            reader,
+        )
+    }
+
+    #[hbb_common::tokio::test(crate = "hbb_common::tokio")]
+    async fn unbounded_control_reproduces_write_backpressure() {
+        let (mut peer, _reader) = blocked_stream();
+        bound_file_transfer_writes(&mut peer, ConnType::DEFAULT_CONN);
+        assert!(time::timeout(Duration::from_millis(150), peer.send_raw(vec![0; 4096]))
+            .await
+            .is_err());
+    }
+
+    #[hbb_common::tokio::test(crate = "hbb_common::tokio")]
+    async fn blocked_file_write_returns_a_timeout() {
+        let (mut peer, _reader) = blocked_stream();
+        bound_file_transfer_writes(&mut peer, ConnType::FILE_TRANSFER);
+        let started = Instant::now();
+        let error = time::timeout(Duration::from_secs(35), peer.send_raw(vec![0; 4096]))
+            .await
+            .expect("File writes must return before the outer test deadline")
+            .expect_err("A full, unread transport must time out");
+        assert!(started.elapsed() >= Duration::from_secs(29));
+        assert!(error.to_string().contains("deadline"), "{error}");
+    }
+
+    #[hbb_common::tokio::test(crate = "hbb_common::tokio")]
+    async fn responsive_file_write_preserves_framed_bytes() {
+        let (writer, reader) = tokio::io::duplex(1024);
+        let address = "127.0.0.1:1".parse().unwrap();
+        let mut peer = Stream::Tcp(FramedStream::from(writer, address));
+        let mut receiver = Stream::Tcp(FramedStream::from(reader, address));
+        bound_file_transfer_writes(&mut peer, ConnType::FILE_TRANSFER);
+        let expected = b"Swan bounded file transfer frame";
+        peer.send_raw(expected.to_vec()).await.unwrap();
+        let received = time::timeout(Duration::from_secs(1), receiver.next())
+            .await.unwrap().unwrap().unwrap();
+        assert_eq!(&received[..], &expected[..]);
     }
 }

@@ -1,0 +1,8 @@
+{
+  "repository": "https://github.com/flutter/engine",
+  "revision": "a18df97ca57a249df5d8d68cd0820600223ce262",
+  "path": "shell/platform/common/client_wrapper/core_implementations.cc",
+  "sha256": "48214b6261812361168f49d7a073a079b188709e8b29fdd1785307f9eef43989",
+  "license": "LICENSE",
+  "purpose": "Reviewed upstream preimage for fail-closed source-only reply-handler patch tests"
+}

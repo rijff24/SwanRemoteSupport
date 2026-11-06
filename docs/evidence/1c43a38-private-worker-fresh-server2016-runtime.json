@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "date": "2026-10-29",
+  "component_source": "1c43a382c87b05e44caff1c6c2bef4cf0b0bb6fc",
+  "installer_helpers_unchanged_at": "9fa5e8aa6a846ce015362de8082da5c938d79ff8",
+  "os": "Windows Server 2016 Standard Evaluation, x64, build 14393, Desktop Experience",
+  "fixture": "Independent writable clone of verified clean pre-product OS baseline; normal boot, no memory snapshot",
+  "fresh_install": {
+    "product_services_and_state_absent_before_install": true,
+    "shipped_install_worker_and_read_configuration_helpers": true,
+    "lab_signed_worker_publisher_verified": true,
+    "company_https_and_profile_key_verified": true,
+    "service_running_automatic_local_system": true,
+    "service_registry_contains_public_configuration_path_only": true,
+    "private_configuration_validated_by_shipped_helper": true
+  },
+  "standard_user": {
+    "actual_temporary_standard_user_token": true,
+    "public_control_file_read_succeeded": true,
+    "private_worker_configuration_read_denied": true,
+    "temporary_account_removed": true,
+    "password_not_persisted_or_printed": true
+  },
+  "normal_reboot": {
+    "new_boot_time_verified": true,
+    "automatic_service_running": true,
+    "private_configuration_receipt_and_executable_hashes_preserved": true,
+    "compiled_configuration_validation_passed": true
+  },
+  "real_build": {
+    "approved_release": "1.5.9 Customer test",
+    "original_worker_temporarily_stopped_to_exclude_other_builders": true,
+    "completed_after_normal_reboot": true,
+    "local_output_hash_equals_server_download": true,
+    "anonymous_customer_download_verified": true,
+    "eleven_unchanged_payload_entries_match_prior_verified_bundle": true,
+    "installer_executed_in_this_test": false
+  },
+  "failed_attempt_and_correction": {
+    "initial_job_failed_without_publishing_package": true,
+    "fresh_guest_missing_lab_release_publisher_dns_and_public_ca": true,
+    "verified_release_https_after_guest_only_lab_mapping_and_public_ca_import": true,
+    "one_new_build_completed_after_correction": true,
+    "initial_failed_job_retained": true
+  },
+  "cleanup": {
+    "original_company_worker_and_management_running": true,
+    "separate_test_worker_revoked_and_token_rejected_401": true,
+    "no_active_builds_cancelled": true,
+    "test_service_stopped_and_set_manual": true,
+    "normal_guest_shutdown_requested": true,
+    "test_disk_and_private_evidence_retained": true,
+    "host_trust_unchanged": true
+  },
+  "boundaries": {
+    "lab_signing_only": true,
+    "production_publication": false,
+    "public_internet_connectivity_qualified": false,
+    "all_supported_windows_versions_qualified": false,
+    "full_product_acceptance_complete": false
+  }
+}

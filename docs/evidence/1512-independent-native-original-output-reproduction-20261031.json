@@ -1,0 +1,102 @@
+{
+  "recorded_utc": "2026-10-31T01:21:30.231607+00:00",
+  "source": "94284db24b8993344c12cae0a8baa95f82dc0e02",
+  "primary_run": 41139949964,
+  "independent_run": 41148252538,
+  "comparison": {
+    "utc": "2026-10-31T01:20:28.194434+00:00",
+    "source": "94284db24b8993344c12cae0a8baa95f82dc0e02",
+    "comparison_run": 41154793523,
+    "comparison_artifact": 13024272255,
+    "comparison_artifact_digest": "sha256:261cbdb4cc2aca70e4c697166790b41142745c20a06dd549aa5b73b60b6107ed",
+    "report_sha256": "ce3d3bfb22110fba9ee2d6bb64737a66781b81a68662f5c66ab9ebda072a8570",
+    "shipping_outputs_identical": 8,
+    "source_files_per_build": 1325,
+    "bridge_files_per_build": 6,
+    "msvc_files_per_build": [
+      618,
+      618
+    ],
+    "first_archive_matches_github_pinned_metadata": true,
+    "first_archive_local_full_verification_pending": true,
+    "second_large_local_download_started": false,
+    "runtime_qualified": false,
+    "production_publication": false
+  },
+  "shipping_outputs": [
+    {
+      "path": "SwanRemoteSupport-1.5.12-customer-x64-unsigned.msi",
+      "first_sha256": "d4f359b6bfa966a6fa66ea81e38abf6649f3dfca03568af7f36b7323f006b19a",
+      "second_sha256": "d4f359b6bfa966a6fa66ea81e38abf6649f3dfca03568af7f36b7323f006b19a",
+      "first_bytes": 33902592,
+      "second_bytes": 33902592,
+      "identical": true
+    },
+    {
+      "path": "SwanRemoteSupport-1.5.12-technician-x64-unsigned.exe",
+      "first_sha256": "ca243a9f783448ef729b05ce64d4aa21eca61be6f16df4fd268be1b4b4b1e864",
+      "second_sha256": "ca243a9f783448ef729b05ce64d4aa21eca61be6f16df4fd268be1b4b4b1e864",
+      "first_bytes": 24274432,
+      "second_bytes": 24274432,
+      "identical": true
+    },
+    {
+      "path": "SwanRemoteSupport-1.5.12-technician-x64-unsigned.msi",
+      "first_sha256": "9cd0a32d899d6d7514f8a126ab157ef799db25ee8d33dbc3cabe6091514bffc9",
+      "second_sha256": "9cd0a32d899d6d7514f8a126ab157ef799db25ee8d33dbc3cabe6091514bffc9",
+      "first_bytes": 31637504,
+      "second_bytes": 31637504,
+      "identical": true
+    },
+    {
+      "path": "SwanRemoteSupport-1.5.12-x64-unsigned-install.exe",
+      "first_sha256": "ca243a9f783448ef729b05ce64d4aa21eca61be6f16df4fd268be1b4b4b1e864",
+      "second_sha256": "ca243a9f783448ef729b05ce64d4aa21eca61be6f16df4fd268be1b4b4b1e864",
+      "first_bytes": 24274432,
+      "second_bytes": 24274432,
+      "identical": true
+    },
+    {
+      "path": "SwanServerSetup-UNSIGNED-TEST.exe",
+      "first_sha256": "66a4252e15c168240836f20188bca4e0d53ac7d4f1ba25d9791475f7db2370f6",
+      "second_sha256": "66a4252e15c168240836f20188bca4e0d53ac7d4f1ba25d9791475f7db2370f6",
+      "first_bytes": 65881088,
+      "second_bytes": 65881088,
+      "identical": true
+    },
+    {
+      "path": "swan-agent.exe",
+      "first_sha256": "7bcd945aa4edc6dbd85ffb121bc52c9a928e9fcd2f9fc8849c8f686370d5d7a7",
+      "second_sha256": "7bcd945aa4edc6dbd85ffb121bc52c9a928e9fcd2f9fc8849c8f686370d5d7a7",
+      "first_bytes": 5756416,
+      "second_bytes": 5756416,
+      "identical": true
+    },
+    {
+      "path": "swan-management.exe",
+      "first_sha256": "8249a0685e70326d3a4c5f666493e0e419a6ce04c21e4011478d459b5ed16d28",
+      "second_sha256": "8249a0685e70326d3a4c5f666493e0e419a6ce04c21e4011478d459b5ed16d28",
+      "first_bytes": 9130496,
+      "second_bytes": 9130496,
+      "identical": true
+    },
+    {
+      "path": "swan-worker.exe",
+      "first_sha256": "79d16d6998285438f07b12b15740be5adc70d9a13d7b7726dfd9586c777aea50",
+      "second_sha256": "79d16d6998285438f07b12b15740be5adc70d9a13d7b7726dfd9586c777aea50",
+      "first_bytes": 4900352,
+      "second_bytes": 4900352,
+      "identical": true
+    }
+  ],
+  "compiled_standard_user_recovery_fixture_uses_same_original_agent_bytes": true,
+  "original_unsigned_agent_sha256": "7bcd945aa4edc6dbd85ffb121bc52c9a928e9fcd2f9fc8849c8f686370d5d7a7",
+  "lab_signed_agent_sha256": "b6a679a2129caf70dcd89958055985043a199f8a2960d7f3bb91754249fce349",
+  "local_full_primary_archive_verification_pending": true,
+  "limits": [
+    "The small comparison artifact is digest-verified; full original archives and corresponding source were checked by the pinned comparison workflow",
+    "The original primary archive is still downloading locally; this receipt does not claim local complete archive verification",
+    "Unsigned build reproduction does not qualify signed installers, enrolled upgrades, interrupted recovery or the Windows OS matrix"
+  ],
+  "production_publication": false
+}

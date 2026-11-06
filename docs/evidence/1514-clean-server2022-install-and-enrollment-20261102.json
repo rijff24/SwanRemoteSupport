@@ -1,0 +1,60 @@
+{
+  "date": "2026-11-02",
+  "source": "dde38c9ae213969041fe1cd4f5c4565d910de087",
+  "candidate": "1.5.14+82",
+  "clean_os": "Windows Server2022 Standard Evaluation, Desktop Experience, x64, build20348",
+  "original_clean_os_preserved_with_separate_copy_on_write_disk": true,
+  "installation": {
+    "version": "1.5.14",
+    "watch_state": "Running",
+    "profile_revision": 40,
+    "sequence": 17,
+    "shipping_verifier_passed": true,
+    "utc": "2026-11-02T15:46:54.1287387Z",
+    "all_signed_files": 96,
+    "default_unattended_consent_off": true,
+    "service_state": "Running",
+    "production_qualified": false,
+    "enrolled": true,
+    "public_lab_publisher_verified": true,
+    "tailscale_absent": true
+  },
+  "enrollment_and_authorization": {
+    "utc": "2026-11-02T15:54:31.540189+00:00",
+    "version": "1.5.14",
+    "sequence": 17,
+    "actual_enrolled_customer": "Server2022",
+    "pending_inventory_hidden": true,
+    "pending_grant_status": 403,
+    "explicit_company_approval_verified": true,
+    "authorized_inventory_visible": true,
+    "unassigned_inventory_hidden": true,
+    "unassigned_grant_status": 403,
+    "unattended_without_consent_status": 403,
+    "other_device_records_unchanged": true,
+    "no_successful_grant_or_native_session_created": true,
+    "production_qualified": false
+  },
+  "connectivity_scope": "Private isolated company lab with its explicit public-certificate/DNS fixtures; installer automatically consumed company bootstrap. External public NAT traversal is not qualified.",
+  "limits": [
+    "Real native sessions and customer consent UI were not exercised on this fresh installation.",
+    "A genuine standard technician OS account is prepared; technician installation/login are still pending.",
+    "Does not qualify native1.5.16 or every Windows release."
+  ],
+  "production_publication": false,
+  "controlled_repair": {
+    "version": "1.5.14",
+    "identity_token_bootstrap_consent_and_revision_preserved": true,
+    "customer_service_and_watcher_running": true,
+    "controlled_missing_signed_license_rejected": true,
+    "sequence": 17,
+    "shipping_verifier_passed": true,
+    "utc": "2026-11-02T16:12:14.9460821Z",
+    "production_publication": false,
+    "no_pending_recovery": true,
+    "unmodified_company_repair_restored_exact_file": true,
+    "interactive_gui_recovery_not_tested": true,
+    "os_build": 20348,
+    "no_manual_msi_or_service_repair": true
+  }
+}

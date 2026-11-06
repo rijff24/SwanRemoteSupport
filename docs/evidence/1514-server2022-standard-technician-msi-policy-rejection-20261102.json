@@ -1,0 +1,39 @@
+{
+  "utc": "2026-11-02T17:17:34.067783+00:00",
+  "source": "dde38c9ae213969041fe1cd4f5c4565d910de087",
+  "version": "1.5.14",
+  "sequence": 17,
+  "os": "Clean Windows Server2022 Standard Evaluation Desktop Experience x64 build20348",
+  "execution": "Actual initialized standard-user desktop; installer ran through Limited/Interactive task under the verified non-administrator SID.",
+  "result": "FAILED: Windows Installer policy error1625",
+  "failure": {
+    "error": "Windows Installer policy prevents this per-user technician installation (1625). Contact your company administrator for an approved deployment.",
+    "utc": "2026-11-02T17:02:01.1735778Z",
+    "passed": false
+  },
+  "machine_policy": {
+    "AlwaysInstallElevated": null,
+    "DisableUserInstalls": null,
+    "EnableUserControl": null,
+    "DisableMSI": null
+  },
+  "standard_user_policy": {
+    "AlwaysInstallElevated": null,
+    "DisableUserInstalls": null,
+    "EnableUserControl": null,
+    "DisableMSI": null
+  },
+  "policy_changed": false,
+  "always_install_elevated_enabled": false,
+  "no_technician_executable_installed": true,
+  "original_pending_msi_setup_preserved": {
+    "format": "msi",
+    "sequence": 17,
+    "version": "1.5.14"
+  },
+  "customer_service_unchanged_running": true,
+  "next_test": "Explicitly company-approved EXE distribution; not a silent fallback or MSI policy modification.",
+  "msi_deployment_limit": "Standard-user unmanaged MSI installation is not qualified on this Server2022 baseline; company-managed deployment or another approved format is required.",
+  "policy_reference": "https://learn.microsoft.com/en-us/windows/win32/msi/disablemsi",
+  "production_publication": false
+}

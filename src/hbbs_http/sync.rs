@@ -273,6 +273,14 @@ async fn start_hbbs_sync_async() {
     }
 }
 
+#[cfg(feature = "swan_custom")]
+fn heartbeat_url() -> String {
+    // Managed editions use authenticated company APIs and signed profiles.
+    // The legacy Pro API may use HTTP and accept unsigned strategy options.
+    String::new()
+}
+
+#[cfg(not(feature = "swan_custom"))]
 fn heartbeat_url() -> String {
     let url = crate::common::get_api_server(
         Config::get_option("api-server"),
@@ -284,6 +292,12 @@ fn heartbeat_url() -> String {
     format!("{}/api/heartbeat", url)
 }
 
+#[cfg(feature = "swan_custom")]
+fn handle_config_options(_config_options: HashMap<String, String>) {
+    // Even a legacy sync response must never replace signed company policy.
+}
+
+#[cfg(not(feature = "swan_custom"))]
 fn handle_config_options(config_options: HashMap<String, String>) {
     let mut options = Config::get_options();
     let default_settings = config::DEFAULT_SETTINGS.read().unwrap().clone();
@@ -307,4 +321,24 @@ fn handle_config_options(config_options: HashMap<String, String>) {
 #[cfg(not(any(target_os = "ios")))]
 pub fn is_pro() -> bool {
     PRO.lock().unwrap().clone()
+}
+
+#[cfg(all(test, feature = "swan_custom"))]
+mod managed_sync_tests {
+    use super::*;
+
+    #[test]
+    fn managed_sync_rejects_legacy_endpoint_and_unsigned_options() {
+        assert!(heartbeat_url().is_empty());
+        let key = "swan-unsigned-policy-regression-test";
+        let previous = Config::get_option(key);
+        let mut options = HashMap::new();
+        options.insert(key.to_owned(), "unsigned-remote-policy".to_owned());
+        handle_config_options(options);
+        let actual = Config::get_option(key);
+        if actual != previous {
+            Config::set_option(key.to_owned(), previous.clone());
+        }
+        assert_eq!(actual, previous);
+    }
 }

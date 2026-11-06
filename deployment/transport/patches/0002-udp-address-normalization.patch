@@ -1,0 +1,36 @@
+--- a/src/udp.rs
++++ b/src/udp.rs
+@@ -43,6 +43,17 @@
+     }
+     socket.bind(&addr.into())?;
+     Ok(socket)
++}
++
++fn destination_for_socket(local: SocketAddr, destination: SocketAddr) -> SocketAddr {
++    match (local, destination) {
++        // Winsock rejects an AF_INET sockaddr on an AF_INET6 socket with
++        // WSAEFAULT (10014), even when IPV6_V6ONLY is disabled.
++        (SocketAddr::V6(_), SocketAddr::V4(address)) => SocketAddr::V6(
++            std::net::SocketAddrV6::new(address.ip().to_ipv6_mapped(), address.port(), 0, 0),
++        ),
++        (_, destination) => destination,
++    }
+ }
+ 
+ impl FramedSocket {
+@@ -100,6 +111,7 @@
+         match self {
+             Self::Direct(f) => {
+                 if let TargetAddr::Ip(addr) = addr {
++                    let addr = destination_for_socket(f.get_ref().local_addr()?, addr);
+                     f.send((send_data, addr)).await?
+                 }
+             }
+@@ -120,6 +132,7 @@
+         match self {
+             Self::Direct(f) => {
+                 if let TargetAddr::Ip(addr) = addr {
++                    let addr = destination_for_socket(f.get_ref().local_addr()?, addr);
+                     f.send((Bytes::from(msg), addr)).await?
+                 }
+             }

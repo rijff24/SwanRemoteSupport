@@ -1,0 +1,31 @@
+{
+  "os": "Windows Server2019 x64 build 17763.3650",
+  "installed_hash_and_signature_valid_after_resume": true,
+  "customer_window_initially_not_responding": true,
+  "customer_window_later_responsive_while_offline": true,
+  "full_product_acceptance": false,
+  "management_offline_started_utc": "2026-10-26T19:51:37.281183Z",
+  "application_source": "da0c621845057bed321a98a1886ef15891e431a9",
+  "resume_control_restored_customer_service": true,
+  "stop_control_changed_to_resume": true,
+  "device_identity_preserved": true,
+  "profile_revision_after_resume": 2,
+  "guest_free_memory_mib_at_observation": 444,
+  "customer_service_absent_after_stop": true,
+  "company_identity_preserved": true,
+  "management_restored_utc": "2026-10-26T21:56:44.1364+02:00",
+  "consent_preserved": true,
+  "worker_preserved_during_stop": true,
+  "limitations": [
+    "The customer window initially became unresponsive, then recovered. Support-control state changes were delayed. Root cause and acceptable latency remain unresolved.",
+    "This was a 2GiB disposable guest with 444MiB free at the recorded observation. Resource pressure is a hypothesis, not an established cause.",
+    "No active remote session was running. Immediate session termination, standard-user controls, offline authorization denial and complete restart/upgrade behavior are not qualified.",
+    "The original Linux management container restarted automatically and retained its identity and branding revision. This is a service-restart check, not encrypted backup/restore."
+  ],
+  "guest_process_health_observation_utc": "2026-10-26T19:55:27.9961828Z",
+  "cached_updated_branding_visible": true,
+  "date": "2026-10-26",
+  "native_customer_started_during_offline_window": true,
+  "release_sequence_after_resume": 1,
+  "original_resume_record_sha256": "76ab1f00db976dbf252d1f18ac247858231548e8372608b45b50f8a5dbab660c"
+}

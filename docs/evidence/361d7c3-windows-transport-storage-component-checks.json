@@ -1,0 +1,60 @@
+{
+  "utc": "2026-10-29T19:24:35.687708+00:00",
+  "source": "361d7c362de7f67b7b7456d33bf0191736eec7d5",
+  "run": 40930580611,
+  "workflow_url": "https://github.com/rijff24/SwanRemoteSupport/actions/runs/40930580611",
+  "jobs": [
+    {
+      "id": 123647616688,
+      "name": "linux-deployment",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 123647617319,
+      "name": "maintained-windows-transport / transport (windows-2022)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 123647618746,
+      "name": "technician-msi-lifecycle",
+      "status": "completed",
+      "conclusion": "skipped"
+    },
+    {
+      "id": 123652448502,
+      "name": "verify (windows-2022)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 123652448694,
+      "name": "verify (ubuntu-24.04)",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ],
+  "windows_named_regressions_passed": [
+    "backup::tests::transport_migration_recovers_stopped_wal_without_changing_source_or_keys",
+    "backup::tests::transport_migration_refuses_existing_target_active_management_and_corrupt_source",
+    "backup::tests::transport_migration_refuses_a_running_windows_database_writer",
+    "components::tests::legacy_transport_database_requires_explicit_migration"
+  ],
+  "windows_job_log_sha256": "b2ca0e314b9089fe63994c01fb0133ad69b5ea9e2aaf0cd6fe37dbf195b6aaec",
+  "windows_artifact": {
+    "id": 12922249929,
+    "archive_sha256": "f46ad102d48fc45d052864e99e4937e4f46bfa623e61173a981aada4fb5e025e",
+    "public_source_files_verified": 242,
+    "rustc": "rustc 1.90.0 (1159e78c4 2025-09-14)\nbinary: rustc\ncommit-hash: 1159e78c4747b02ef996e55082b704c09b970588\ncommit-date: 2025-09-14\nhost: x86_64-pc-windows-msvc\nrelease: 1.90.0\nLLVM version: 20.1.8\n",
+    "sha256": {
+      "swan-management.exe": "772cb5a490452742d39342e34decc82b3f3be1a2cad1ece6f348ab3972771038",
+      "swan-agent.exe": "9706c97188ffdf878dabfb57e7853c4292caff7c318c9011ce6431220daf7b8c",
+      "swan-worker.exe": "5dbf2a0f2048c9831212cc4a0e8b3a6b454330a1035c1aec5ab011103136cde7",
+      "CompanyComponents-source.zip": "0cfd93a07436bd724d6612040bd0513f9877e7db396d1f4097a065fa9a1a758c"
+    }
+  },
+  "downloaded_executables_executed": false,
+  "actual_windows_company_migration_and_populated_restore_pending": true,
+  "production_publication": false
+}

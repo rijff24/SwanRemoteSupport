@@ -1,0 +1,33 @@
+{
+  "recorded_utc": "2026-10-30T22:42:35.932976+00:00",
+  "candidate_version": "1.5.12+80",
+  "regression_scope": "Exact Windows recovery principal SID resolution and real task lifecycle; compiled shipping recovery still pending",
+  "source_file_sha256": {
+    "Update-RecoveryTask.ps1": "c3a4b364552d32017aa8d293a58b01a988f1cd9049f6cfac19f43a7773defe7a",
+    "test_update_recovery_task.ps1": "efa44d56856fe1ee99baee8ee1d5b2de4aa7db289dac564226221bbc75e6e20a"
+  },
+  "local_windows_powershell5_regression_passed": true,
+  "server2019_actual_regression": {
+    "limited_run_level_requested": true,
+    "standard_user_qualification": false,
+    "existing_shipping_task14_inspection_passed_without_mutation": true,
+    "shipping_recovery_task14_retained": true,
+    "real_isolated_registration_inspection_and_removal_passed": true,
+    "utc": "2026-10-30T22:40:45.5764041Z",
+    "shipping1_5_11_agent_replaced": false,
+    "embedded_fix_build_still_required": true,
+    "exact_sid_alias_and_foreign_identity_checks_passed": true,
+    "actual_token_is_administrator": true
+  },
+  "server2019_task_last_result": 0,
+  "real_existing_sequence14_task_inspection_readonly_passed": true,
+  "original_shipping_tasks_not_removed_by_regression": true,
+  "first_lab_fixture_assumption_corrected": "Requested Limited task run level does not filter the built-in Administrator token on this lab server. First fixture exited before testing; second records the actual administrator token and does not claim standard-user qualification.",
+  "collector_correction": "Converted diagnostic file content to plain text summary after an initial PowerShell extended-string serialization expanded object metadata. Only compact explicit result fields are used as acceptance evidence.",
+  "limits": [
+    "Candidate guard tested as source; new embedded signed agent and durable interrupted-update recovery remain pending.",
+    "Standard-user recovery qualification remains separate.",
+    "No production signing or publication."
+  ],
+  "production_publication": false
+}

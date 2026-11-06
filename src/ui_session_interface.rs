@@ -1662,7 +1662,13 @@ impl<T: InvokeUiSession> Session<T> {
     }
 
     pub fn get_conn_token(&self) -> Option<String> {
-        self.lc.read().unwrap().get_conn_token()
+        #[cfg(feature = "swan_custom")]
+        {
+            let peer=self.lc.read().unwrap().get_id().to_owned();
+            crate::managed::subsession_handle(&self.password,&peer)
+        }
+        #[cfg(not(feature = "swan_custom"))]
+        {self.lc.read().unwrap().get_conn_token()}
     }
 
     pub fn printer_response(&self, id: i32, path: String, printer_name: String) {

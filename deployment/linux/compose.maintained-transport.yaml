@@ -1,0 +1,13 @@
+# Explicit candidate deployment; never run against existing company volumes
+# without the documented backup and migration procedure.
+services:
+  hbbs:
+    image: swan-transport:maintained-test
+    build:
+      context: ../..
+      dockerfile: deployment/transport/Dockerfile
+  hbbr:
+    image: swan-transport:maintained-test
+    build:
+      context: ../..
+      dockerfile: deployment/transport/Dockerfile

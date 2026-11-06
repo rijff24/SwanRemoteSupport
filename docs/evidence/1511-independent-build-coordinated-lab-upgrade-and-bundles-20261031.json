@@ -1,0 +1,101 @@
+{
+  "recorded_utc": "2026-10-30T22:06:33.745882+00:00",
+  "source": "7b60309374389a1b0f8d859f8c164d6cf355353f",
+  "native_reproduction": {
+    "utc": "2026-10-30T18:22:17.763016+00:00",
+    "source": "7b60309374389a1b0f8d859f8c164d6cf355353f",
+    "comparison_run": 41105207916,
+    "comparison_artifact": 13000342682,
+    "comparison_artifact_digest": "sha256:0a9dd41d6018fefc13830ca1aeaf83183849fe54b61c22da96880c19edf6dc3d",
+    "report_sha256": "f31d495ffa7e4325e1def99ae6e4e8ca385d0f72bbc8654b4559ec46bd384625",
+    "shipping_outputs_identical": 8,
+    "source_files_per_build": 1314,
+    "bridge_files_per_build": 6,
+    "msvc_files_per_build": [
+      618,
+      618
+    ],
+    "first_archive_matches_locally_verified_original": true,
+    "second_large_local_download_started": false,
+    "runtime_qualified": false,
+    "production_publication": false
+  },
+  "owned_lab_management_upgrade": {
+    "utc": "2026-10-30T18:21:02.019000+00:00",
+    "source": "7b60309374389a1b0f8d859f8c164d6cf355353f",
+    "image": "sha256:60113e9b1ef69249bc409f22e49a7dd8fec73d5dc5a9f54f0a943d0ae9f3fdfa",
+    "fresh_encrypted_backup_verified": true,
+    "schema_source_unchanged": true,
+    "real_https_health_and_fresh_mfa": true,
+    "company_profile26_paused_updates_identity_consent_roles_workers_releases_jobs_sessions_preserved": true,
+    "transport_and_https_container_ids_preserved": true,
+    "lab_cached_toolchain_image_only": true,
+    "native_session_and_new_worker_recipe_still_pending": true,
+    "production_publication": false
+  },
+  "owned_lab_worker_upgrade": {
+    "source": "7b60309374389a1b0f8d859f8c164d6cf355353f",
+    "registry_public_path_only": true,
+    "private_configuration_credential_acl_and_customer_identity_consent_preserved": true,
+    "production_publication": false,
+    "utc": "2026-10-30T18:22:12.3507009Z",
+    "new_signed_worker_running_automatic": true,
+    "actual_new_bundle_generation_pending": true,
+    "previous_binary_receipt_and_configuration_retained_inside_private_guest": true,
+    "worker_sha256": "8b85306e565c5f95dee049d3ab2c0275abbd06129688e0d5eb0de8d678d25564",
+    "compiled_existing_configuration_check_passed": true
+  },
+  "fresh_preupgrade_encrypted_backup": {
+    "utc": "2026-10-30T18:14:45.215165+00:00",
+    "bytes": 787780875,
+    "sha256": "e43348733447317b3611ea8c15db261a9bcc97975d5b2c36c22ab09fa7256242",
+    "encrypted_copy_hash_matched": true,
+    "separate_passphrase": true
+  },
+  "company_bundles": {
+    "utc": "2026-10-30T22:06:05.200111+00:00",
+    "editions": [
+      {
+        "edition": "customer",
+        "job_id": "0bf732e1-f0d4-49f2-aa99-c69aee767cdd",
+        "bundle_sha256": "8f308fb9b23ca6b43f288735654c418a5bf803d9e1f382df033c14007648f2de",
+        "bytes": 32721210,
+        "public_bootstrap_only": true,
+        "profile_and_release_signatures_verified": true,
+        "offline_signature_mutation_check": true,
+        "seven_source_texts_exact": true,
+        "signed_payload_hashes_verified": true,
+        "anonymous_status": 200,
+        "download_status": 200
+      },
+      {
+        "edition": "technician",
+        "job_id": "e1b8fce5-ca83-4245-964b-480e65e9a202",
+        "bundle_sha256": "1d37f064ddaf6d0f4a0c3473cb41ede09e98c2afa7d62fe45fc9b7fcc2eac670",
+        "bytes": 30522021,
+        "public_bootstrap_only": true,
+        "profile_and_release_signatures_verified": true,
+        "offline_signature_mutation_check": true,
+        "seven_source_texts_exact": true,
+        "signed_payload_hashes_verified": true,
+        "anonymous_status": 401,
+        "download_status": 200
+      }
+    ],
+    "management_deployment_unchanged_during_bundle_generation": true,
+    "application_source": "7b60309374389a1b0f8d859f8c164d6cf355353f",
+    "independent_company": true,
+    "updates_paused": true,
+    "installer_executed": false,
+    "native_session_qualified": false,
+    "production_publication": false
+  },
+  "upgrade_fixture_correction": "First attempt restored the original image because it compared volatile issued_at/expires_at. Diagnosis showed all company profile settings equal. Second attempt verified the active Ed25519 signature, validity and stable settings; upgrade passed.",
+  "bounds": [
+    "Lab signing only; no production publisher approval.",
+    "Linux image uses verified cached toolchain; canonical OCI reproducibility remains open.",
+    "Company deployment remains private lab only; public NAT/relay unqualified.",
+    "Endpoint1.5.11 update and full OS/desktop acceptance remain open."
+  ],
+  "production_publication": false
+}

@@ -1,0 +1,263 @@
+# Company server backup and restore
+
+Supply `SWAN_DATA_DIR` and `SWAN_BACKUP_PASSPHRASE` to the management process
+through private environment configuration. Keep the passphrase separate from
+the backup file. It must contain at least 16 characters. These commands never
+accept a passphrase on the command line.
+
+Management-only export remains available:
+
+```text
+swan-management backup company.swan-backup
+```
+
+For a deployment export, replace the path placeholders with company-controlled
+paths. Omit `--tls-identity` only when HTTPS identity will be reissued separately.
+The TLS identity argument accepts one existing file, such as a PFX or PEM bundle.
+Use `--tls-directory HTTPS_STORAGE_DIRECTORY` for the complete certificate-service
+storage tree, including ACME account and certificate files. For Caddy, supply its
+persistent data directory. Stop certificate renewal and other writes to this tree
+for the duration of export. Export reads it without stopping or modifying services.
+
+```text
+swan-management backup company.swan-backup --transport-directory TRANSPORT_DATA --deployment-env PRIVATE_ENV_FILE --tls-identity TLS_IDENTITY_FILE
+```
+
+Alternatively, replace the final option with `--tls-directory HTTPS_STORAGE_DIRECTORY`.
+Both options can be included when the deployment uses separate storage and identity files.
+Add `--installer-artifacts-directory COMPANY_DATA/artifacts` to preserve generated
+customer and technician bundles and their existing download links. Pause builds
+and uploads, and keep management configuration changes stopped during this export.
+Only regular files named with canonical build UUIDs and `.zip` are accepted;
+unfinished `.partial` uploads cause export to fail. Installer files share the
+64 GiB expanded-content and 4096-file limits with the rest of the archive. If those
+limits are exceeded, keep the installer directory in a separate protected backup
+and restore it with the matching management database. Management-only export
+omits these files, so its restored build records alone cannot serve old downloads.
+Directory exports reject symbolic links, Windows reparse points, special files,
+unsafe paths, and more than 4096 total files. The 64 GiB total plaintext limit applies.
+When the company data directory contains `Caddyfile`, export also encrypts that
+HTTPS configuration and restore places it back in the replacement data directory.
+Keep configuration edits stopped during export. Older archives without this
+file remain supported; reconstruct and validate their HTTPS recipe before use.
+
+When present, the Windows service ownership receipt `installation.json` is also
+encrypted and restored. It must be a nonempty regular file no larger than 64 KiB;
+links, directories and oversized receipts fail export. Restore applies the same
+size bound before publishing files. This preserves the metadata needed by the
+owned server removal/maintenance checks. Restore does not register services,
+change firewall rules or trust the receipt's paths automatically. Validate its
+install/data paths and rule ownership against the actual replacement service;
+a different machine/layout can require a receipt from its matching installation.
+
+Backups containing this receipt require a management reader with receipt support.
+Earlier SWANBK2 readers reject the additional entry safely. Retain the matching
+management binary/source and an earlier compatible backup when planning rollback.
+Older archives without a receipt still restore, but their Windows service
+ownership metadata must be retained or reconstructed from a matching installation
+before maintenance/removal; they do not establish complete Windows recovery.
+
+
+Stop transport services before exporting their directory, and keep them stopped
+until export completes. The directory must contain both `id_ed25519` and
+`id_ed25519.pub`. When present, `db_v2.sqlite3` and its WAL or rollback journal
+are copied into private temporary storage, recovered there, and snapshotted using
+SQLite's backup API. This preserves committed WAL changes when the stopped
+source is mounted read-only and cannot create shared-memory files. Export does
+not write into that source. Transport database inputs share a 512 MiB copy limit.
+Management uses the same API for its database, including committed WAL data.
+Schema version 2 keeps active and pending profile-signing keys in that database;
+the original `profile-key.hex` file alone is insufficient after rotation. See
+[profile key rotation](PROFILE_KEY_ROTATION.md) for the migration and maintenance procedure.
+Stop configuration changes during the export when a coordinated snapshot of
+the separately stored environment, TLS identity and transport data is needed.
+The export does not stop or modify running transport services.
+
+Earlier Windows managed deployments could leave the rendezvous database in
+the RustDesk LocalService profile rather than this transport directory. Such an
+archive can preserve transport keys while omitting peer records. The corrected
+Windows launcher pins `DB_URL` inside company storage; startup and full transport
+export reject an unmigrated legacy database. Follow the stopped-service
+[Windows database migration procedure](../deployment/windows/SERVER-COMPONENTS.md)
+before upgrading an affected deployment, then create and restore-test a new
+backup. This correction does not add missing records to an older archive.
+
+New exports use the `SWANBK2` format: AES-256-GCM through RustCrypto's
+[STREAM implementation](https://docs.rs/aead/0.5.2/aead/stream/struct.Encryptor.html),
+an Argon2-derived key, a fresh random salt and nonce, and authenticated 1 MiB
+segments. A mandatory authenticated final segment rejects truncation; ordering
+is authenticated by STREAM. The complete format header is associated data.
+Existing backup files are never overwritten. Readers also accept `SWANBK1`
+archives within their original 1 GiB encrypted / 512 MiB expanded limits.
+**Older management binaries cannot restore SWANBK2.** Retain the exact matching
+management binary/source with backups, and retain a tested legacy backup when
+planning a downgrade.
+
+Export creates a private disk-backed plaintext ZIP inside the company data
+directory, then encrypts it in bounded chunks. Restore decrypts to a private
+sibling staging directory and checks every path, expanded size and ZIP CRC
+before renaming the fully extracted directory into the requested target. A
+wrong password, modified/truncated backup, invalid entry or extraction failure
+leaves the target untouched. Its parent directory must already exist.
+Temporary archives, database snapshots and partial encrypted output are removed
+on ordinary failure and success. A power loss or forced process termination can
+leave private `.swan-backup-*` staging or `backup-*.sqlite3` snapshots; inspect and
+remove only those owned remnants after confirming no backup/restore is active.
+Use encrypted storage, restricted directory permissions and adequate free disk
+space (allow the archive plus expanded contents during restore). Restored keys
+remain private to the invoking account, SYSTEM and Administrators on Windows,
+or mode 0700 directories / 0600 files on Unix. This is a company-state backup,
+not a general-purpose filesystem backup tool.
+
+The new format, legacy compatibility and above-limit recovery regressions must
+pass on Linux and Windows before deployment. Large tests explicitly generate
+and restore a 513 MiB incompressible installer fixture; their CI logs are retained.
+Full deployment restore and interrupted-operation rehearsals remain separate
+gates; the new implementation alone does not establish those results.
+
+Restore into an **empty directory** while the replacement management service
+is stopped and its public endpoints are unavailable:
+
+```text
+swan-management restore company.swan-backup
+```
+
+Set `SWAN_DATA_DIR` to that empty replacement directory before running restore.
+The restorer authenticates and validates the archive before publishing restored contents.
+It permits fixed management filenames and validated relative paths under
+`tls-storage/` and canonical build ZIPs under `artifacts/`, rejects duplicate or Windows-colliding names, file/directory
+conflicts and incomplete key pairs, and protects restored files with private Unix permissions or Windows
+ACLs for the invoking account, SYSTEM and Administrators.
+
+Management files restore directly. Deployment extras are staged in that same
+protected directory; restore never overwrites external service files:
+
+| Restored file | Destination to configure before exposing the server |
+| --- | --- |
+| `transport-id_ed25519` | Transport data directory as `id_ed25519` |
+| `transport-id_ed25519.pub` | Transport data directory as `id_ed25519.pub` |
+| `transport-db.sqlite3` | Transport data directory as `db_v2.sqlite3` |
+| `deployment.env` | Private deployment environment configuration |
+| `tls-identity` | Company HTTPS identity location, or replace through certificate reissuance |
+| `tls-storage/` | Complete HTTPS service data directory; copy while that service is stopped |
+| `Caddyfile` | HTTPS recipe in the replacement company data directory; validate paths and hostnames before starting |
+| `installation.json` | Windows ownership receipt; validate against actual service/install/data paths and owned firewall rules before maintenance/removal |
+| `artifacts/` | Generated installers in the replacement company data directory; verify stored hashes and both public/customer and protected/technician download behavior |
+
+Keep transport services stopped while placing their restored data. Preserve
+private ownership and permissions appropriate to the service accounts. Use the
+same application release first, then perform administrator-controlled upgrades.
+Current restores also accept older management-only three-file backups; older
+restorers cannot consume the extended deployment archive.
+
+Before exposing the restored deployment, verify the transport and profile trust
+keys, database integrity, MFA login, device identities, consent, permissions and
+release approvals. Reconcile any revocations made after the backup. Installed
+clients reject profiles older than their cached revision, so recover a profile
+revision newer than those clients have accepted before attempting normal sync.
+These restore rehearsals and migration rollback checks remain release gates.
+
+## Isolated restore rehearsal
+
+The Server 2016 MSVC CLI from `9fa5e8a` now has a separate
+[full Windows recovery receipt](evidence/9fa5e8a-windows-full-backup-running-restore-rollback.json).
+It covers the Windows ownership receipt, management and transport keys, complete
+HTTPS storage, service environment and four installers. The authenticated restore
+was started at the existing canonical data path, verified over HTTPS with MFA and
+original public/protected downloads, then rolled back to the preserved original
+directory and verified again. No transport database existed in that source;
+this test does not prove recovery of a populated Windows transport database.
+It also does not establish different-machine recovery or schema migration rollback.
+
+The subsequent
+[maintained Windows stack upgrade](evidence/9fa5e8a-windows-maintained-stack-upgrade.json)
+retained that tested backup and switched management and pinned transport together.
+Normal binary/transport rollback and roll-forward preserved company trust and
+authorization. The database remained at schema 3; this was not a database downgrade.
+The final company stack runs the maintained transport, whose real IPv4/IPv6 UDP
+registration passes. Native relay sessions and public Internet reachability remain
+separate acceptance requirements.
+
+On29October local time, the actual Linux company at schema2 passed a management
+image upgrade, rollback and roll-forward. Its legacy archive and a new SWANBK2
+archive were each restored separately using the new binary, preserving trust,
+MFA, five devices, consent, all16 installers and actual public/protected download
+behavior. Restore copies were stopped without cloned transport. See the
+[scoped receipt](evidence/67b5c69-company-backup-and-rollback.json).
+
+The generated513MiB CLI fixture additionally passed a512MiB address-space cap,
+ordinary write-error cleanup, a real SIGKILL during authenticated restore staging,
+and successful retry. Interrupted contents were not published; leftover plaintext
+staging retained private permissions and was not silently deleted by the retry.
+The fixture explicitly cleaned its own remnants afterward. A file-size limit
+injected the write error; this was not a full-filesystem or host-power-loss test.
+Windows full-company restore and future schema-downgrade recovery remain separate.
+
+`node deployment/windows/test-server-restore.js ORIGINAL_PRIVATE_ENV
+RESTORED_PRIVATE_ENV` checks two separately running local HTTPS test servers.
+Use only the isolated fixture created by `test-company-lifecycle.js`; its private
+administrator credentials and customer state must remain in protected test
+directories. Never point this harness at a company production deployment.
+
+The actual management CLI at `20f88e3` exported and restored that fixture with
+its private deployment environment and TLS identity. Hash comparisons preserved
+the profile-signing material, setup token, environment and TLS identity. The
+restored SQLite database passed `PRAGMA quick_check`. The restored server passed
+real HTTPS verification of signed configuration, administrator MFA, accounts,
+device state, group capabilities, and denial of a revoked device and its session
+grant. Private results are recorded in the restored test directory.
+
+This does not demonstrate live hbbs/hbbr recovery, certificate renewal, recovery
+of changes after the backup, profile revision reconciliation or migration
+rollback. Those remain acceptance requirements.
+
+The extended storage component test additionally preserves nested certificate
+private-key and ACME account fixtures through encrypted export and restore.
+It does not demonstrate a running Caddy service restoring or renewing certificates.
+
+The extended HTTPS rotation rehearsal additionally passed actual CLI export and
+restore of a rotated management database, deployment environment and the local
+HTTPS PFX/certificate storage. Its replacement HTTPS proxy serves using the
+restored identity; rotated profile trust, device credentials and closed-grant
+denial survive. Both original/restored fixture processes stop afterward. This
+remains isolated local TLS evidence; ACME renewal and live transport restore
+are still unverified.
+
+The Linux `test_container_stack.py` rehearsal now additionally restores actual
+pinned RustDesk transport keys/database and Caddy storage, alongside management
+and private deployment settings, from one encrypted archive. It starts replacement
+management, rendezvous, relay and HTTPS containers on separate volumes. The
+original CA still validates HTTPS, signed company configuration and transport
+identity remain unchanged, and enrollment, consent, MFA replay protection,
+logout and device revocation survive. The original deployment starts again and
+retains its pending device despite revocation in the replacement. Private key
+contents never leave the volumes. This supersedes the earlier local transport
+restore limitation above; remote desktop sessions, public ACME renewal,
+post-backup reconciliation and migration rollback remain unverified.
+
+The compiled, lab-signed `0a541c7` Windows management executable also passed an
+isolated Server 2016 management-only export/restore rehearsal. The restored
+server retained identical signed profile bytes, signing/setup files, accounts,
+devices, worker revocation state and approved releases. Administrator MFA worked
+on both servers and replay was denied. Existing-backup overwrite, nonempty restore,
+wrong passwords and a changed ciphertext byte were rejected; authentication failures
+created no target files. This rehearsal used guest-loopback HTTP for API comparisons
+and did not exercise transport, TLS restoration or database migration rollback.
+
+The updated native Windows management build at `b0cb740` then passed the same
+rehearsal with `--installer-artifacts-directory`. Its replacement Server 2016
+server served one customer bundle publicly and two technician bundles only after
+authentication; unauthenticated technician requests returned 401. All downloaded
+files matched their pre-backup recorded SHA-256 hashes. Trust, accounts, worker
+state, releases and MFA/replay protections remained intact. This uses a locally
+built GNU executable with the disposable lab publisher, and guest-loopback HTTP;
+it does not establish production signing, public connectivity or live transport recovery.
+
+The current MSVC build from `11faae3` also passed that Server 2016 rehearsal with
+four retained bundles: one public customer download and three authenticated
+technician downloads, including the newer eleven-entry MSI bundle. All hashes,
+trust/configuration/authorization comparisons and negative restore/MFA checks
+passed. Its lab-signed executable and both isolated foreground processes were
+verified, with existing service statuses preserved. This remains guest-loopback
+management evidence; native transport/TLS restore, migration rollback and
+production publication require their own verification.

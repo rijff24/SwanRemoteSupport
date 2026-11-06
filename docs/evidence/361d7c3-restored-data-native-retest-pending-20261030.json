@@ -1,0 +1,42 @@
+{
+  "management_source": "361d7c362de7f67b7b7456d33bf0191736eec7d5",
+  "native_application_source": "aff8ff61e3fbd6f34c4cf0bb9de6e330ec6e0521",
+  "os": "Windows Server 2016 Desktop Experience build 14393",
+  "restored_populated_company_data_activated_for_native_retest": true,
+  "newer_original_data_retained_for_return": true,
+  "activation_checks": {
+    "normal_owned_service_stops_only": true,
+    "company_and_worker_running": true,
+    "https_admin_mfa_verified": true,
+    "signed_profile_approved_device_revoked_consent_releases_workers_preserved": true,
+    "all_five_installer_download_hashes_match": true,
+    "known_customer_download_public": true,
+    "known_technician_anonymous_download_rejected_401": true,
+    "no_live_session": true
+  },
+  "native_retest": {
+    "fresh_native_mfa_not_completed": true,
+    "new_attended_session_not_requested": true,
+    "technician_not_responding_observed": true,
+    "cause_not_established": true,
+    "same_lab_had_intermittent_ssh_and_https_timeouts": true,
+    "substantial_host_wsl_disk_waits_observed": true,
+    "guest_memory_sample_available_mib": 816,
+    "guest_memory_sample_pages_per_second": 893.9091698892476,
+    "idle_customer_later_exited_normally": true,
+    "company_verified_https_profile_responded_after_customer_shutdown": true,
+    "owned_technician_launcher_restarted_after_sid_and_privilege_verification": true,
+    "launcher_observed_running_without_native_gui_at_last_check": true,
+    "cached_guest_disk_reads_enabled_for_next_customer_boot_with_guest_flushes_preserved": true,
+    "test_passed": false
+  },
+  "limitations": [
+    "Disk contention is observed, not a proven explanation of the native UI hang.",
+    "Earlier native acceptance after rollback remains separate from this incomplete restored-data test.",
+    "No public Internet connectivity, different-host recovery or production signing claim."
+  ],
+  "follow_up_native_session_completed_evidence": "361d7c3-windows-native-active-restored-data-20261030.json",
+  "original_incomplete_observation_preserved": true,
+  "production_publication": false,
+  "full_product_acceptance_complete": false
+}

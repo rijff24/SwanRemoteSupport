@@ -1,0 +1,32 @@
+{
+  "source": "a96cd4c4d8bf7cdc1d9b03c5457c2a57862fb2a2",
+  "jobs": [
+    {
+      "job_id": 123183023333,
+      "tests": {
+        "reports_reject_unbounded_or_conflicting_status_and_active_content": true,
+        "reports_are_owned_permission_filtered_and_never_authorize_sessions": true,
+        "schema_two_upgrade_requires_backup_and_restores_original_schema_and_keys": true,
+        "failed_schema_upgrade_rolls_back_all_ddl": true
+      },
+      "browser_status_contract": true
+    },
+    {
+      "job_id": 123183023315,
+      "tests": {
+        "reports_reject_unbounded_or_conflicting_status_and_active_content": true,
+        "reports_are_owned_permission_filtered_and_never_authorize_sessions": true,
+        "schema_two_upgrade_requires_backup_and_restores_original_schema_and_keys": true,
+        "failed_schema_upgrade_rolls_back_all_ddl": true
+      },
+      "browser_status_contract": true
+    }
+  ],
+  "push_run": 40793147431,
+  "pull_request_run": 40793153438,
+  "all_six_windows_linux_deployment_jobs_passed": true,
+  "customer_and_technician_senders_connected": false,
+  "live_company_migrated_to_schema3": false,
+  "actual_client_reporting_or_automatic_rollout_qualified": false,
+  "production_publication": false
+}

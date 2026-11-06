@@ -1,0 +1,41 @@
+name: Check Windows service bootstrap
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/check-service-bootstrap.yml
+      - flutter/windows/runner/service_bootstrap.*
+      - deployment/windows/service-bootstrap-tests/**
+      - deployment/windows/test_service_bootstrap.ps1
+permissions:
+  contents: read
+jobs:
+  scm-loader:
+    runs-on: windows-2022
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - name: Compile isolated service fixtures
+        shell: pwsh
+        run: |
+          cmake -S deployment/windows/service-bootstrap-tests -B bootstrap-build -A x64
+          if ($LASTEXITCODE) { throw 'CMake configuration failed' }
+          cmake --build bootstrap-build --config Release
+          if ($LASTEXITCODE) { throw 'Fixture build failed' }
+      - name: Exercise real service manager and loader boundary
+        shell: pwsh
+        run: |
+          ./deployment/windows/test_service_bootstrap.ps1 -BuildDirectory bootstrap-build/Release -OutputDirectory "$env:RUNNER_TEMP/bootstrap-results"
+      - name: Collect fixture source, unsigned binaries and receipts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-service-bootstrap-unsigned-fixtures
+          path: |
+            bootstrap-build/Release/*.exe
+            bootstrap-build/Release/*.dll
+            deployment/windows/test_service_bootstrap.ps1
+            deployment/windows/service-bootstrap-tests/
+            flutter/windows/runner/service_bootstrap.*
+            ${{ runner.temp }}/bootstrap-results/**
+          if-no-files-found: error

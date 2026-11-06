@@ -1,0 +1,56 @@
+{
+  "schema": 1,
+  "date": "2026-11-05",
+  "scope": "Development Linux management network checker; not production or external NAT qualification",
+  "base_commit": "4dd3c1f2bd6925f78b4439e966e96dbaae73a78d",
+  "source_files_sha256": {
+    "product/Cargo.lock": "64ff396bc3d0628aafa7649ac10e56d7a73386caa8dcb8ca9caf7b2ee0b8652e",
+    "product/management/Cargo.toml": "96ef5a7eef51ed266f37d8ca1c0a41cdd834409c51385802d54a873fc0521773",
+    "product/management/src/main.rs": "9d00e35b48f952961a7a198d22ba8000c71b6fa15fa543ae4805b81959306d86",
+    "product/management/src/network.rs": "9bd4a0ed73d10d0e09baeda2c91121447558c7c14d425606ca56b88fea7cfa10",
+    "product/management/src/network_probe.rs": "56910321aa9befef5f7dd82174982087b7c9441e81285f867a42a235b021db66",
+    "product/management/src/service.rs": "4b12212c991fa7dbc13e6c0c54e0d2602de8dc45ae674d6da0be086d6d23e151",
+    "product/management/src/tests.rs": "3e0894f2a7800f1b64c53efd7d34e9178cc3188674f4e3b8bb7eaa525e261635",
+    "product/management/web/app.js": "464a8308e7e6046cfb3fd4797e04bf989859894dc2952122619d1b2afd756338",
+    "docs/NETWORK-CHECK.md": "c038f7848b9bdb726bac4c528beaa118d804fbecc2e7b41b15322301b7f1b5d7"
+  },
+  "build": {
+    "rust": "1.90.0",
+    "offline_locked": true,
+    "production_builder": false,
+    "network_and_cli_tests_passed": 4,
+    "real_management_router_authorization_tests_passed": 1,
+    "management_binary_built": true,
+    "initial_failures": [
+      "New role test expected 403 but existing administrator-only routes deliberately return 401; assertion corrected without changing permissions.",
+      "TCP-only TestNatRequest was incorrectly used over UDP; live test rejected it. Replaced with pinned stateless empty-ID rejection, before peer lookup or mutation."
+    ]
+  },
+  "live_existing_company": {
+    "https_hostname_and_ca_validated": true,
+    "pinned_company_profile_signature_validated": true,
+    "tcp_endpoints_passed": 4,
+    "native_udp_stateless_rejection_passed": true,
+    "ordinary_uid": 10001,
+    "container_read_only": true,
+    "data_directory": "Unwritable sentinel; no company Store opened",
+    "wrong_profile_key_rejected": true,
+    "untrusted_company_ca_rejected": true,
+    "insecure_option_rejected": true,
+    "private_path_rejected_for_outside_network": true,
+    "help_without_server_start_passed": true
+  },
+  "other_checks": [
+    "JavaScript syntax",
+    "Company setup/editor contracts",
+    "Installation status UI tests",
+    "git diff --check"
+  ],
+  "limits": [
+    "No new VM, company deployment, enrollment, transport patch or native build.",
+    "Administrator download route covered by real router tests; new browser flow not yet accepted live.",
+    "Windows execution, canonical component builds/reproduction and coordinated deployment remain untested for this change.",
+    "Outside-vantage flag is operator declaration; no independent attestation or external direct/relay qualification.",
+    "UDP reply is unauthenticated connectivity diagnostic, not proof of trust or NAT traversal."
+  ]
+}

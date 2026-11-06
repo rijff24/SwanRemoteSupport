@@ -1,0 +1,7 @@
+{$SWAN_HOST} {
+    reverse_proxy management:8080
+    header Strict-Transport-Security "max-age=31536000"
+    request_body {
+        max_size 512MB
+    }
+}

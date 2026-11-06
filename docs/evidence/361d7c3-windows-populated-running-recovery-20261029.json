@@ -1,0 +1,48 @@
+{
+  "source": "361d7c362de7f67b7b7456d33bf0191736eec7d5",
+  "os": "Windows Server 2016 Desktop Experience build 14393",
+  "scope": "Owned lab, same company VM, canonical populated transport storage",
+  "lab_signed_windows_management": true,
+  "canonical_backup": {
+    "format": "SWANBK2",
+    "bytes": 154966061,
+    "sha256": "ded42e848eaf1d8cfb1f6271812c47213d42003116d8e65c08f7008ae3cd2069",
+    "populated_transport_database_included": true,
+    "management_configuration_and_keys_tls_service_environment_receipt_included": true,
+    "installer_artifacts": 5,
+    "strong_passphrase_stored_separately": true,
+    "services_resumed_after_export": true
+  },
+  "isolated_restore": {
+    "actual_signed_windows_cli": true,
+    "sqlite_integrity_schema_and_all_committed_peer_records_match": true,
+    "trust_keys_https_material_receipt_environment_and_five_installers_verified": true,
+    "original_company_worker_pids_and_credential_preserved": true,
+    "wrong_password_and_tamper_tests_repeated_in_this_rehearsal": false,
+    "template_receipt_carried_stale_installed_source_label": true,
+    "actual_installed_source_verified_by_migration_binary_hash_and_export": "361d7c362de7f67b7b7456d33bf0191736eec7d5"
+  },
+  "running_restore_and_rollback": {
+    "restored_data_used_at_canonical_company_path": true,
+    "restored_flat_peer_database_mapped_to_transport_storage": true,
+    "normal_owned_service_stops_only": true,
+    "receipt_firewall_ownership_and_service_environment_checked": true,
+    "https_admin_mfa_verified_in_both_states": true,
+    "signed_profile_approved_device_revoked_consent_releases_workers_preserved_in_both_states": true,
+    "all_five_installer_download_hashes_match_in_both_states": true,
+    "known_customer_download_public_in_both_states": true,
+    "known_technician_anonymous_download_rejected_401_in_both_states": true,
+    "actual_running_restored_peer_database_integrity_schema_and_all_rows_match": true,
+    "table_row_counts": {"peer": 1},
+    "logical_peer_dataset_sha256": "13e74304b8b72a3c06061e2f3f38b96c15482823b8d525033ae8444077b56840",
+    "original_company_data_canonical_again": true,
+    "restored_running_copy_retained": true,
+    "company_and_worker_running": true,
+    "no_data_deleted": true
+  },
+  "native_reconnection_after_migration_and_recovery_pending": true,
+  "different_host_recovery_qualified": false,
+  "public_internet_connectivity_qualified": false,
+  "production_publication": false,
+  "full_product_acceptance_complete": false
+}

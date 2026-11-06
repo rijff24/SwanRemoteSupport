@@ -1,0 +1,29 @@
+{
+  "utc": "2026-10-29T10:40:59.573931+00:00",
+  "verifier_public_base_source": "371ce03dc11a410e727ce3f6b6dde50a81f6c7ba",
+  "actual_inputs_from_source_verified_windows_build": 40826572438,
+  "independent_matching_binary_build": 40802355602,
+  "verification": {
+    "maintained_transport": true,
+    "verified_source_files": 140,
+    "source_tree_sha256": "c0d40c3b122dfe740fbea5946f3bba9fb67734b57e80c8b7fb4ee3cdcef85541",
+    "project_revision": "0140beef7b40a0e72af9b30d68421494e32e697d",
+    "sha256": {
+      "hbbs.exe": "2f3b865dea3e2439f732829e19562533044e7b83a050530e0c11341786b047be",
+      "hbbr.exe": "97ead452f1c5484fa78d2d7f6b0954c116f32d00d0a6cdd045806806df124bc0",
+      "caddy.exe": "586d4a4cd74bdfd2951b6b81766a32904ffa69c4f1c3d521da3870a2120f1d31",
+      "Caddy-LICENSE.txt": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "RustDesk-LICENSE.txt": "8486a10c4393cee1c25392769ddd3b2d6c242d6ec7928e1414efff7dfb2f07ef",
+      "transport-build-source.zip": "fe39ef7652f13c389e5bf1bf5f5f951ec3746dda6055555dcffe90efcafc20ea",
+      "server-components.json": "3985c7103e9c257e9f6b29be1d433c43f4b31baf8b2b134f647766616d4e04be",
+      "THIRD-PARTY.txt": "e7dd36429f84f0fd07a2134c6998a445b080624807524906fefc6537cda33e84"
+    },
+    "supplier_executables_run": false,
+    "production_publication": false
+  },
+  "actual_stock_hbbs_rejected_before_output": true,
+  "changed_actual_source_rejected_before_output": true,
+  "server_installer_not_built_or_installed_by_this_test": true,
+  "production_publication": false,
+  "immutable_recipe_restored_to_public_revision": "928a53e6ac58cd4387156417f3613a71028f52e5"
+}

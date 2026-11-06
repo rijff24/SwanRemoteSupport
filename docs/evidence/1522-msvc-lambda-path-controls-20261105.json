@@ -1,0 +1,25 @@
+{
+  "date": "2026-11-05",
+  "scope": "Actual standalone MSVC callback/RTTI/source-path fixture; does not qualify the Flutter app or full native release",
+  "fixture_source": "147937229ad8f9f5ab10b6f9ddaf41fed3ca1066",
+  "fixture_run": 41980763281,
+  "previous_valid_fixture_run": 41980016970,
+  "initial_harness_argument_failure_run": 41979631708,
+  "compiler_sha256": "fe251ef50a1545b1b0835ee17b1e785459712b38d79e45b5c1d3d28970a36619",
+  "toolset": "14.44.35207",
+  "windows_sdk": "10.0.26100.0",
+  "same_path_repeat_raw_bytes_identical": true,
+  "same_fixed_path_raw_fixture_hash_also_matches_previous_ci_job": true,
+  "relocation_changes_lambda_type_identifiers_and_original_exe_bytes": true,
+  "tested_controls_raw_byte_equality": {
+    "experimental_and_pathmap": false,
+    "trimfile": false,
+    "compiler_brepro": false,
+    "relative_source": false
+  },
+  "compiler_modes_not_applied_to_application": true,
+  "no_shipping_bytes_normalized": true,
+  "no_new_full_native_build_or_signing_after_mismatch": true,
+  "next_required_evidence": "Capture effective Flutter C++ compiler paths/commands/SDK inputs and constrain actual compilation paths; the apparent fixed checkout path alone has not explained the two original app results. Do not apply failed flags or claim a whole-app fix.",
+  "production_qualified": false
+}

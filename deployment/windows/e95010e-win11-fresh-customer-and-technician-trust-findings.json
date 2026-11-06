@@ -1,0 +1,142 @@
+{
+  "application_source": "e95010e31f58840572b4080b69f18c9dd55adb4e",
+  "version": "1.5.5",
+  "release_sequence": 8,
+  "os": "Windows 11 Enterprise Evaluation x64 26300.9457",
+  "fresh_customer_install": {
+    "version": "1.5.5",
+    "watch_state": "Running",
+    "profile_revision": 14,
+    "sequence": 8,
+    "shipping_verifier_passed": true,
+    "utc": "2026-10-28T04:33:12.7183731Z",
+    "all_signed_files": 96,
+    "default_unattended_consent_off": true,
+    "service_state": "Running",
+    "production_qualified": false,
+    "enrolled": true,
+    "public_lab_publisher_verified": true,
+    "tailscale_absent": true
+  },
+  "enrollment_and_authorization": {
+    "utc": "2026-10-28T04:34:22.520324+00:00",
+    "version": "1.5.5",
+    "sequence": 8,
+    "actual_enrolled_customer": "Windows11",
+    "pending_inventory_hidden": true,
+    "pending_grant_status": 403,
+    "explicit_company_approval_verified": true,
+    "authorized_inventory_visible": true,
+    "unassigned_inventory_hidden": true,
+    "unassigned_grant_status": 403,
+    "unattended_without_consent_status": 403,
+    "other_device_records_unchanged": true,
+    "no_successful_grant_or_native_session_created": true,
+    "production_qualified": false
+  },
+  "technician_standard_user_attempt": {
+    "genuine_non_administrator_token": true,
+    "always_install_elevated_not_enabled": true,
+    "initial_limited_password_task_never_ran": true,
+    "limited_interactive_task_used_after_owned_user_first_logon": true,
+    "original_test_task_reached_30_minute_deadline": true,
+    "extraction_and_verified_bootstrap_preserved": true,
+    "guarded_pre_msi_continuation_failed_closed": true,
+    "failure": "Publisher verification exceeded 120-second budget",
+    "technician_msi_not_launched": true,
+    "technician_executable_absent": true,
+    "no_pending_install_or_update_marker": true,
+    "customer_identity_credential_and_consent_preserved": true,
+    "fresh_technician_install_passed": false
+  },
+  "independent_read_only_standard_user_trust_diagnostic": [
+    {
+      "utc": "2026-10-28T06:44:04.1688145Z",
+      "stage": "started",
+      "value": ""
+    },
+    {
+      "utc": "2026-10-28T06:44:11.3045778Z",
+      "stage": "ordinary_token_verified",
+      "value": ""
+    },
+    {
+      "utc": "2026-10-28T06:44:11.3829506Z",
+      "stage": "before_resolve_path",
+      "value": ""
+    },
+    {
+      "utc": "2026-10-28T06:44:11.4035133Z",
+      "stage": "before_file_hash",
+      "value": ""
+    },
+    {
+      "utc": "2026-10-28T06:45:18.4321547Z",
+      "stage": "file_hash_completed",
+      "value": "9EF49B8D60DE7E9B7A86C88AD54B77390834A921CC24A472BAC893534CEB064A"
+    },
+    {
+      "utc": "2026-10-28T06:45:18.4321547Z",
+      "stage": "before_package_authenticode",
+      "value": ""
+    },
+    {
+      "utc": "2026-10-28T06:45:18.7504732Z",
+      "stage": "package_authenticode_completed",
+      "value": "Valid"
+    },
+    {
+      "utc": "2026-10-28T06:45:18.8763948Z",
+      "stage": "package_signer_thumbprint",
+      "value": "AF817683AA78C45F318B05DD13101CBECC744362"
+    },
+    {
+      "utc": "2026-10-28T06:45:18.8763948Z",
+      "stage": "before_windows_authenticode",
+      "value": ""
+    },
+    {
+      "utc": "2026-10-28T06:45:18.9937085Z",
+      "stage": "windows_authenticode_completed",
+      "value": "Valid"
+    },
+    {
+      "utc": "2026-10-28T06:45:18.9959353Z",
+      "stage": "completed",
+      "value": ""
+    }
+  ],
+  "source_fix": {
+    "package_publisher_verification_budget_seconds": 300,
+    "signature_hash_publisher_and_certificate_checks_retained": true,
+    "timeout_still_fails_closed_and_reaps_verifier": true,
+    "installed_fix_tested": false,
+    "application_source": "07bb8d0b99e2be002a30e5d97eebe67a9c2794ad",
+    "candidate_version": "1.5.7",
+    "component_checks": {
+      "windows_and_linux_workflow": 40647664923,
+      "conclusion": "success",
+      "push_workflow": 40647659405,
+      "local_source_archive_tests": 5,
+      "local_installer_metadata_tests": 6
+    },
+    "native_build": {
+      "run_id": 40647688419,
+      "last_observed_status": "in_progress",
+      "observed_utc": "2026-10-28T07:23:22.875992+00:00",
+      "independent_reproduction_not_yet_run": true
+    }
+  },
+  "production_qualified": false,
+  "remaining": [
+    "Rebuild exact public source and verify independent outputs.",
+    "Sign test packages using retained nonexportable lab key.",
+    "Install actual generated technician bundle as ordinary Windows11 user.",
+    "Complete native GUI, reboot, lifecycle and remote-feature qualification."
+  ],
+  "lab_cleanup": {
+    "normal_guest_shutdown_exit": 0,
+    "normal_guest_shutdown_utc": "2026-10-28T07:07:55.464867+00:00",
+    "original_clean_os_and_current_partial_technician_state_preserved": true
+  }
+}

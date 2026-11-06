@@ -1,0 +1,30 @@
+{
+  "private_reader": {
+    "source": "1c43a382c87b05e44caff1c6c2bef4cf0b0bb6fc",
+    "only_fake_credential": true,
+    "utc": "2026-10-29T09:00:56.4597808Z",
+    "powershell": "5.1.14393.693",
+    "app_container_read_rejected": true,
+    "os_build": 14393,
+    "compiled_worker_test": false,
+    "same_process_two_private_reads": true,
+    "worker_still_stopped": true,
+    "company_service_unchanged": true
+  },
+  "migration_rejection": {
+    "positive_migration_not_tested": true,
+    "no_configuration_or_journal_created": true,
+    "installed_executable_and_receipt_unchanged": true,
+    "utc": "2026-10-29T09:02:28.7430618Z",
+    "old_credential_rejected_by_real_https": true,
+    "company_still_running": true,
+    "os_build": 14393,
+    "unregistered_replacement_rejected": true,
+    "migration_script_sha256": "8e74670983e4f004910e6c06ac9220f62c08428326d03a91696918b1124889d3",
+    "worker_still_stopped": true,
+    "parser_note": "Windows WhatIf module import messages preceded JSON; original successful invocation retained, not repeated"
+  },
+  "positive_signed_worker_migration_completed": false,
+  "authenticated_build_and_reboot_completed": false,
+  "production_publication": false
+}

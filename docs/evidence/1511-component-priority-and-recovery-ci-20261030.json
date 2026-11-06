@@ -1,0 +1,20 @@
+{
+  "source": "7b60309374389a1b0f8d859f8c164d6cf355353f",
+  "workflow_run": 41079208688,
+  "workflow_url": "https://github.com/rijff24/SwanRemoteSupport/actions/runs/41079208688",
+  "status": "completed",
+  "conclusion": "success",
+  "linux_verify_job": 124147606887,
+  "windows_verify_job": 124147607305,
+  "linux_and_windows_security_management_tests_passed": true,
+  "real_windows_below_normal_parent_normal_helper_regression_passed": true,
+  "windows_priority_test": "update::tests::powershell_verifier_does_not_inherit_background_priority",
+  "windows_large_backup_explicit_ignored_test_passed": true,
+  "linux_real_large_backup_cli_passed": true,
+  "pinned_maintained_windows_transport_build_passed": true,
+  "linux_company_deployment_rehearsal_passed": true,
+  "native1511_build": 41079284199,
+  "native1511_build_completed": false,
+  "installed1511_update_flow_qualified": false,
+  "production_publication": false
+}

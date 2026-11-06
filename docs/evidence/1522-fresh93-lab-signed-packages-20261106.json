@@ -1,0 +1,36 @@
+{
+  "source": "d5eeaa918fbb2510148d041297be99dbdc169360",
+  "candidate": "1.5.22+93",
+  "unsigned_reproduction_evidence": "1522-fresh-x64-independent-comparison-20261106.json",
+  "primary_run": 42079677235,
+  "independent_run": 42169429003,
+  "comparison_run": 42177470881,
+  "lab_only": true,
+  "intended_endpoint_windows_versions": [
+    "windows_11"
+  ],
+  "verified_input_files": 217,
+  "all_five_signatures_valid": true,
+  "nonexportable_existing_lab_key_verified": true,
+  "private_key_exported": false,
+  "original_inputs_unchanged": true,
+  "publisher": "Swan Disposable Lab Publisher 20261027",
+  "publisher_certificate_sha256": "c797e22798a8afa94496ea0e8668b6e5ee4a4fc9f639b8200d5e1071e6925ec3",
+  "output_sha256": {
+    "signed_customer_msi_sha256": "85cfbcc617f26fe2cf0a8c4dd1de8e410b6e332ad7cacb19f95ae51650abac52",
+    "signed_customer_executable_sha256": "744c4237b4e49fae47c6d5d42f0ad2a61c1a1a80daddc47e962bc163f75b6192",
+    "signed_technician_msi_sha256": "ca1901bcf8dbc6eb9441f9acc0bfc563dfe9248214b09999ecf76289c6001587",
+    "signed_technician_executable_sha256": "618faf8c9abf70011e7bb254375862f883c61db0e6737246371b2525c4728442",
+    "signed_agent_sha256": "4441b3c15816cf50588b2dd24bf9375c87b2227d8adfdfb60621c6f2c552dd67"
+  },
+  "original_records_hash_verified": 19,
+  "customer_installed_manifest_files": 96,
+  "timestamp_receipts_verified": true,
+  "task_has_no_recurring_triggers": true,
+  "company_updates_paused": true,
+  "customer_exe_producer_running_separately": true,
+  "packages_installed": false,
+  "production_signing": false,
+  "production_publication": false,
+  "limits": "Lab signature and packaging evidence only. No Windows11 runtime, internet connectivity or production publisher qualification."
+}

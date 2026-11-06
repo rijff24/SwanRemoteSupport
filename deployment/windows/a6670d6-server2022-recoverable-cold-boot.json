@@ -1,0 +1,39 @@
+{
+  "application_source": "a6670d6e5b846be079f7cc0688c55ee9fb07431a",
+  "version": "1.5.4",
+  "sequence": 7,
+  "os": "Windows Server 2022 Standard Evaluation Desktop Experience 20348.587",
+  "verified_utc": "2026-10-27T23:45:27.7923788Z",
+  "recovery": {
+    "normal_shutdown_before_recovery_completed": false,
+    "original_disk_and_two_full_vm_checkpoints_preserved": true,
+    "cold_boot_used_separate_copy_on_write_overlay": true,
+    "original_disk_read_only": true,
+    "simultaneous_duplicate_guest": false,
+    "guest_memory_increased_from_2_to_3_gib": true,
+    "cause_of_original_shutdown_and_remote_administration_stall_established": false
+  },
+  "read_only_shipping_checks": {
+    "same_enrolled_device_identity": true,
+    "credential_present_not_exported": true,
+    "unattended_consent_off": true,
+    "consent_revision": 2,
+    "profile_revision": 14,
+    "installed_release_sequence": 7,
+    "shipping_verify_installed_passed": true,
+    "signed_file_count": 96,
+    "agent_signature_and_existing_lab_publisher_verified": true,
+    "service_running_automatically": true,
+    "configuration_watcher_running_automatically": true
+  },
+  "subsequent_shutdown": {
+    "request_utc": "2026-10-27T23:45:51.2559307Z",
+    "normal_shutdown_without_forcing_apps": true,
+    "qemu_exit_utc": "2026-10-27T23:46:11.150273+00:00",
+    "qemu_exit_code": 0,
+    "subsequent_boot_verified": false
+  },
+  "full_normal_reboot_cycle_acceptance_claimed": false,
+  "new_1_5_5_fixes_tested": false,
+  "production_qualified": false
+}

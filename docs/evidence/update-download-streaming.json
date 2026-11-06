@@ -1,0 +1,27 @@
+{
+  "date": "2026-10-29",
+  "scope": "Endpoint update download, staged hash inspection and verified recovery-cache copying",
+  "local_linux_agent_tests": {"passed": 33, "failed": 0, "ignored_https_fixture": 1},
+  "windows_https_workflow": 40825894779,
+  "windows_https_job": 123288805479,
+  "windows_https_source": "6fb0c3c",
+  "windows_https_step_result": "success",
+  "passed": [
+    "Bounded two-chunk channel writes downloads to a private staging file on a blocking worker",
+    "Only explicit completion and the signed expected hash allow atomic publication",
+    "Wrong hash, disconnected producer and size-limit failure retain previous complete download and remove staging",
+    "Staged hash inspection uses a64KiB buffer",
+    "Final local tests also cover copying and hashing recovery files in64KiB chunks, retaining the old target on failure",
+    "Real Windows HTTPS redirects, wrong-hash rejection, truncated response rejection and declared oversize rejection",
+    "Real Windows HTTPS16MiB streamed response matches its hash",
+    "Artifact requests carry no authorization header or cookies",
+    "Temporary TLS identity uses a distinct CA and server leaf; neither is installed as a trusted root"
+  ],
+  "test_fixture_correction": "The first Windows HTTPS fixture failed while using one CA-marked certificate as its server identity. A separate leaf and failure diagnostics were added; the corrected HTTPS step passed. Other jobs in that workflow were still running when recorded.",
+  "limits": [
+    "Final recovery-copy refinement has local Linux test evidence; its Windows CI remains pending",
+    "No native automatic installation or interrupted MSI recovery qualified by these tests",
+    "No production publisher or release approval",
+    "No measured peak-memory qualification for a full native upgrade"
+  ]
+}

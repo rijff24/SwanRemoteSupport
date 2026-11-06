@@ -1,0 +1,123 @@
+{
+  "source": "e11093ba76701d0542114c040095f76684b49250",
+  "versions": "1.5.17+85 both native endpoints",
+  "desktop": {
+    "utc": "2026-11-03T02:01:39.033747+00:00",
+    "session_id_sha256": "f59c9d85520a4cd0174c8fb720159ddf0ed861edec6b7900b2024639f833b9b1",
+    "claimed": true,
+    "closed": false,
+    "new_target_bound_grants": 1,
+    "superseded_attempts_closed": 0,
+    "exactly_one_active_native_session": true,
+    "lease_until": 1793671551,
+    "target_and_technician_bound_to_preflight": true,
+    "unattended_disabled": true,
+    "native_customer_waited_for_standard_user_approval": true,
+    "native_desktop_rendered_after_customer_accept": true,
+    "remote_pointer_test_folder_navigation_correlated_on_both_desktops": true,
+    "versions": "1.5.17+85 both native endpoints",
+    "company_source": "94284db24b8993344c12cae0a8baa95f82dc0e02",
+    "native_source": "e11093ba76701d0542114c040095f76684b49250",
+    "session_still_active": true,
+    "update_coordination_and_transfer_pending": true,
+    "production_publication": false
+  },
+  "roundtrip64": {
+    "utc": "2026-11-03T02:17:04.238104+00:00",
+    "source": "e11093ba76701d0542114c040095f76684b49250",
+    "mode": "roundtrip64",
+    "source_file": {
+      "sha256": "c75977e80ae1956899fcdb1a4bd7e8dff2bb40076d41eb9789c4c4480bfb4a29",
+      "name": "large-random-64MiB.bin",
+      "bytes": 67108864
+    },
+    "received": [
+      {
+        "no_sidecars": true,
+        "sha256": "c75977e80ae1956899fcdb1a4bd7e8dff2bb40076d41eb9789c4c4480bfb4a29",
+        "bytes": 67108864,
+        "role": "customer"
+      },
+      {
+        "no_sidecars": true,
+        "sha256": "c75977e80ae1956899fcdb1a4bd7e8dff2bb40076d41eb9789c4c4480bfb4a29",
+        "bytes": 67108864,
+        "role": "technician"
+      }
+    ],
+    "exact_source_hashes_verified": true,
+    "files_copied_by_verifier": false,
+    "production_publication": false
+  },
+  "network_interruption": {
+    "utc": "2026-11-03T02:17:37.135884+00:00",
+    "vm": "owned Windows10 protected overlay",
+    "only_virtual_customer_adapter": true,
+    "original_backing_disk_untouched": true,
+    "expected_bytes": 268435456,
+    "state": "virtual network restored; native transfer recovery inspection pending",
+    "network_down_requested": true,
+    "network_restored": true,
+    "production_publication": false,
+    "partial": {
+      "observed_utc": "2026-11-03T02:19:19.7583119Z",
+      "bytes": 2490368,
+      "event": "partial"
+    },
+    "network_down_utc": "2026-11-03T02:19:20.023851+00:00",
+    "network_restored_utc": "2026-11-03T02:20:05.111457+00:00"
+  },
+  "consent_visibility_qualification": {
+    "passed": false,
+    "desktop_and_file_reapproval_prompts_arrived": true,
+    "desktop_accepted_first_with_file_request_pending": true,
+    "approval_manager_minimized_with_pending_file_consent": true,
+    "checked_after_at_least_five_seconds": true,
+    "technician_file_window_waited_for_acceptance": true,
+    "failure_cause": "Approval/elevation button callbacks call windowManager.minimize directly, bypassing the timed guard."
+  },
+  "diagnostic_recovery": {
+    "manual_taskbar_restoration_of_existing_consent_window": true,
+    "existing_pending_file_consent_explicitly_accepted": true,
+    "file_session_cancelled_or_reopened": false,
+    "fresh_user_transfer_retry": false,
+    "application_service_or_vm_restart": false,
+    "byte_resume_offset_measured": false,
+    "exact_live_30_second_write_timeout_proven": false,
+    "result": {
+      "utc": "2026-11-03T02:36:38.650995+00:00",
+      "source": "e11093ba76701d0542114c040095f76684b49250",
+      "mode": "forward256",
+      "source_file": {
+        "sha256": "920c38da8a311f4e42066cb61f336247245b152f8abdb307ec0c93f1baa5c622",
+        "name": "interruption-random-256MiB.bin",
+        "bytes": 268435456
+      },
+      "received": [
+        {
+          "no_sidecars": true,
+          "sha256": "920c38da8a311f4e42066cb61f336247245b152f8abdb307ec0c93f1baa5c622",
+          "bytes": 268435456,
+          "role": "customer"
+        }
+      ],
+      "exact_source_hashes_verified": true,
+      "files_copied_by_verifier": false,
+      "production_publication": false
+    }
+  },
+  "stop": {
+    "utc": "2026-11-03T02:38:42.666537+00:00",
+    "no_live_authorization_leases": true,
+    "customer_stop_clicked": true,
+    "native_source": "e11093ba76701d0542114c040095f76684b49250",
+    "no_vm_app_service_restart": true
+  },
+  "candidate18_change": {
+    "compiled_or_live_tested": false,
+    "all_three_direct_minimize_callbacks_removed": true,
+    "normal_acceptance_and_elevation_schedule_pending_consent_guard": true,
+    "source_architecture_regression_rejects_actual17_callbacks": true
+  },
+  "production_publication": false
+}

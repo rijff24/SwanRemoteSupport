@@ -165,11 +165,7 @@ class ConnectionManagerState extends State<ConnectionManager>
   Widget build(BuildContext context) {
     final serverModel = Provider.of<ServerModel>(context);
     pointerHandler(PointerEvent e) {
-      if (serverModel.cmHiddenTimer != null) {
-        serverModel.cmHiddenTimer!.cancel();
-        serverModel.cmHiddenTimer = null;
-        debugPrint("CM hidden timer has been canceled");
-      }
+      serverModel.cancelApprovalWindowAutoHide();
     }
 
     return serverModel.clients.isEmpty
@@ -1008,7 +1004,6 @@ class _CmControlPanel extends StatelessWidget {
             color: MyTheme.accent,
             onClick: () {
               handleElevate(context);
-              windowManager.minimize();
             },
             icon: Icon(
               Icons.security_rounded,
@@ -1068,7 +1063,6 @@ class _CmControlPanel extends StatelessWidget {
           child: buildButton(context, color: Colors.green[700], onClick: () {
             handleAccept(context);
             handleElevate(context);
-            windowManager.minimize();
           },
               text: 'Accept and Elevate',
               icon: Icon(
@@ -1091,7 +1085,6 @@ class _CmControlPanel extends StatelessWidget {
                       color: MyTheme.accent,
                       onClick: () {
                         handleAccept(context);
-                        windowManager.minimize();
                       },
                       text: 'Accept',
                       textColor: Colors.white,
@@ -1189,6 +1182,7 @@ class _CmControlPanel extends StatelessWidget {
     final model = Provider.of<ServerModel>(context, listen: false);
     model.setShowElevation(false);
     bind.cmElevatePortable(connId: client.id);
+    model.scheduleApprovalWindowAutoHide();
   }
 
   void handleClose() async {

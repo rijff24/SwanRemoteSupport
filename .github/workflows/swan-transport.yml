@@ -1,0 +1,75 @@
+name: Verify and build candidate Swan transport
+on:
+  workflow_call:
+    inputs:
+      windows_only:
+        type: boolean
+        default: false
+  workflow_dispatch:
+  pull_request:
+    paths: ['deployment/transport/**', '.github/workflows/swan-transport.yml']
+permissions:
+  contents: read
+concurrency:
+  group: swan-transport-${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}
+  cancel-in-progress: false
+jobs:
+  transport:
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ${{ fromJSON(inputs.windows_only && '["windows-2022"]' || '["windows-2022","ubuntu-24.04"]') }}
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - name: Checkout pinned public transport source and submodule
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          repository: rustdesk/rustdesk-server
+          ref: 9bae9f2f39d92c4b4ba2e28e089da5071897b22e
+          submodules: recursive
+          path: transport-source
+          persist-credentials: false
+      - name: Install pinned Rust
+        run: rustup toolchain install 1.90.0 --profile minimal
+      - name: Install Linux build dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pkg-config libssl-dev libsodium-dev
+      - name: Add regression to clean pinned source
+        run: python deployment/transport/prepare_source.py transport-source tests
+      - name: Reproduce Windows failure and verify IPv4 and IPv6 controls
+        run: python deployment/transport/check_baseline.py transport-source
+      - name: Apply reviewed destination normalization
+        run: python deployment/transport/prepare_source.py transport-source fix
+      - name: Verify actual shared UDP message and raw send paths
+        run: python deployment/transport/check_baseline.py transport-source fixed
+      - name: Preserve exact public build inputs
+        run: python deployment/transport/archive_source.py transport-source transport-artifacts/transport-build-source.zip
+      - name: Build candidate rendezvous and relay executables
+        working-directory: transport-source
+        run: cargo +1.90.0 build --release --locked --bin hbbs --bin hbbr
+      - name: Retain regression evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: transport-regression-${{ matrix.os }}
+          path: transport-source/swan-evidence/**
+          if-no-files-found: ignore
+      - name: Retain unsigned candidate and source
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: swan-transport-candidate-${{ matrix.os }}
+          path: |
+            transport-source/target/release/hbbs
+            transport-source/target/release/hbbs.exe
+            transport-source/target/release/hbbr
+            transport-source/target/release/hbbr.exe
+            transport-source/SWAN-SOURCE.json
+            transport-artifacts/transport-build-source.zip
+          if-no-files-found: error

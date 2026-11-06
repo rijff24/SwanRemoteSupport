@@ -1,0 +1,200 @@
+{
+  "date": "2026-11-05",
+  "source": "6a0c02af89191283f9839ce429c587daa1ed0f03",
+  "scope": "Owned isolated development lab; not production or external Internet qualification",
+  "canonical_linux": {
+    "primary_image": "sha256:878e6e9b327a511a64eacee043b7516a24fba09f0261842bdbc2a8099a1b60b8",
+    "independent_image": "sha256:ce2ba3141d7b3c2877236fe0757b6c62b18e7798bfc44a2c641cbccb6f2f9008",
+    "management_sha256": "2318b9242277944e2f3df93a5e1dcf4ace0d542da20007498e660f87e3b5de9e",
+    "management_bytes": 11092600,
+    "cold_builds_raw_binary_and_source_bytes_identical": true,
+    "whole_oci_byte_reproduction": false,
+    "official_pinned_builder_and_public_canonical_recipe": true,
+    "fresh_company_setup_mfa_replay_enrollment_restart_backup_restore": "passed",
+    "anonymous_bootstrap_denied_and_admin_six_public_fields": "passed"
+  },
+  "windows_checker": {
+    "component_source": "e57414562756e7abf50678d77926ec3e94d94340",
+    "component_workflow": 41948266237,
+    "management_sha256": "00cab63adbf5f6bbaab40e27c86933fc884ff644a5a5587cfbd9f1a234db95b2",
+    "exact_corresponding_source_files_verified": 261,
+    "current_public_fifteen_case_fixture": "passed",
+    "valid_der_and_pem": "passed",
+    "invalid_profile_trust_lifetime_company_redirect_tls_and_udp": "rejected",
+    "fixture_peers_are_not_native_session_evidence": true,
+    "no_credentials_or_company_state_created": true,
+    "independent_component_comparison": {
+      "previous_run": 41948266237,
+      "current_run": 41951800979,
+      "source": "6a0c02af89191283f9839ce429c587daa1ed0f03",
+      "source_files_verified": 261,
+      "all_three_unsigned_component_bytes_identical": true,
+      "shipping_byte_normalization": false,
+      "compiled_runtime_unchanged_source_diff": [
+        "deployment/windows/test-network-probe.js",
+        "docs/evidence/network-probe-windows-port-reservation-control-20261105.json"
+      ],
+      "components": {
+        "swan-management.exe": {
+          "identical": true,
+          "sha256": "00cab63adbf5f6bbaab40e27c86933fc884ff644a5a5587cfbd9f1a234db95b2",
+          "bytes": 9378816
+        },
+        "swan-agent.exe": {
+          "identical": true,
+          "sha256": "6c0ee8581baf04e5effee63647e6f9cb52780dbbe51fe34f8d828e8fde170f73",
+          "bytes": 5862912
+        },
+        "swan-worker.exe": {
+          "identical": true,
+          "sha256": "7f87133666aa6a37ccb03287c74b0730bafa53cfb1c86fe87f51b04db0eecd7e",
+          "bytes": 4901376
+        }
+      },
+      "current_ci_fifteen_case_checker_fixture_passed": true,
+      "installed_signed_files_not_compared": true
+    }
+  },
+  "canonical_image_checker": {
+    "real_existing_company_https_and_pinned_profile": "passed",
+    "four_tcp_ports_and_actual_native_stateless_udp_response": "passed",
+    "der_and_pem_ca": "passed",
+    "wrong_key_untrusted_ca_private_as_outside_claim": "rejected",
+    "external_direct_relay_and_nat_traversal_qualified": false
+  },
+  "full_backup_restore": {
+    "encrypted_archive_bytes": 1736617357,
+    "encrypted_archive_sha256": "0899d65013ecac5eeff3010ad68d518aafedc7f973a0f6085e2bc2261c25841f",
+    "passphrase_kept_separately_with_restricted_local_acl": true,
+    "wrong_password_rejected_before_destination": true,
+    "restored_database_headers_keys_and_actual_deployment_configuration_match": true,
+    "all_57_installer_files_and_6_tls_identity_files_match": true,
+    "offline_no_restored_network_or_server_started": true,
+    "full_existing_company_live_restored_mfa_and_signing_test": "passed in a later network-none rehearsal",
+    "restored_runtime": {
+      "original_company_mfa_and_replay_rejection": "passed",
+      "actual_profile_signature_matches_original_trust_pin": true,
+      "paused_profile44_branding_and_policy_preserved": true,
+      "device_user_release_build_records_preserved_across_restart": true,
+      "anonymous_bootstrap_denied_admin_public_export_passed": true,
+      "runtime_uid": 10001,
+      "network": "none; test HTTP entered only the isolated network namespace",
+      "host_ports_and_cloned_transport": false,
+      "restored_https_and_native_sessions": "not tested",
+      "stopped_and_storage_retained": true,
+      "test_transport_findings": "The first two harness attempts closed or waited for stdin/EOF incorrectly. The final harness reads the framed HTTP response before closing BusyBox nc stdin; prior failed attempts and stopped-container proofs are retained. No passing claim is made for those attempts."
+    }
+  },
+  "existing_company_upgrade": {
+    "old_image": "sha256:c8fe75f7c46155dac622464a206153c16c880459a7a4b6366a96bbe90aab1dc9",
+    "new_image_is_canonical_primary": true,
+    "real_https_fresh_mfa_and_trusted_profile": "passed",
+    "company_records_identity_consent_roles_workers_jobs_releases_sessions_preserved": true,
+    "transport_and_https_container_ids_preserved": true,
+    "updates_remain_paused": true,
+    "new_admin_bootstrap_route_and_anonymous_denial": "passed",
+    "agent_and_worker_unsigned_raw_bytes_unchanged_from_previous_components": true,
+    "native_sessions_against_updated_management": "pending"
+  },
+  "app_candidate": {
+    "verified_unsigned_build_1_5_22_90": 41951834320,
+    "installed_or_approved": false,
+    "superseded_by_branding_fix_source": "ca16998e6a51a7d2c4737e69b2b731b0b3cf2eba",
+    "replacement_version": "1.5.22+91",
+    "replacement_build": 41964194947,
+    "replacement_build_runtime_and_reproduction": "Reproduction FAILED; payload-level diagnosis in progress. No22 installation, approval or signing.",
+    "replacement_build_result": "success",
+    "replacement_artifact": 13389315447,
+    "replacement_artifact_bytes": 256777570,
+    "replacement_artifact_digest": "sha256:d15041e05701744d8269d2e82aa340d1b58fc6034980dc3a97a8291d71ff94ee",
+    "replacement_complete_public_source_files": 1406,
+    "replacement_generated_bridges": 6,
+    "original_archive_hash_manifest_and_regression_checks_passed": true,
+    "branding_test_original_completed_job_log_sha256": "a28446e4a661ce06d40548a6a22b3bb6b651133674feb94186bc6dbd55842738",
+    "branding_test_log_omitted_from_original_artifact": true,
+    "future_ci_log_retention_fix_source": "2fc96a4",
+    "all_95_customer_payload_files_extracted_without_execution_and_manifest_verified": true,
+    "independent_rebuild": 41970609821,
+    "independent_rebuild_result": "Both native builds completed successfully",
+    "original_comparison_run": 41976573481,
+    "original_comparison_result": "FAILED: customer/technician installer bytes differ",
+    "original_comparison_report_artifact": 13391927383,
+    "original_comparison_report_digest": "sha256:111cf00f307fdf556ba4cd0268ce7aaf3d30f457796f4212337ac7f8e25aa2bf",
+    "all_eight_original_outputs_identical": false,
+    "recorded_msvc_inputs_identical": true,
+    "original_output_comparison": [
+      {
+        "path": "SwanRemoteSupport-1.5.22-customer-x64-unsigned.msi",
+        "first_sha256": "d848c4e8fc8ca92ee15c2d3a791fc48087bafbd349c635c0dcee03eae270e0fe",
+        "second_sha256": "de18a6ff8fcff44c14d00cbd5baf43099cfc595872c59b96627f535474f149ff",
+        "first_bytes": 34013184,
+        "second_bytes": 34041856,
+        "identical": false
+      },
+      {
+        "path": "SwanRemoteSupport-1.5.22-technician-x64-unsigned.exe",
+        "first_sha256": "767ecaaf90b4c6216f17581f65df5e4945a178e475e56ea33365aeb2bc292dfb",
+        "second_sha256": "91fe1d2f7b68f2fd0ec2a4e946307ea33cf8890e77912c832df99bcf3fb11aa3",
+        "first_bytes": 24284672,
+        "second_bytes": 24285184,
+        "identical": false
+      },
+      {
+        "path": "SwanRemoteSupport-1.5.22-technician-x64-unsigned.msi",
+        "first_sha256": "9b513ea8badcb4debcceabe79dd9f663cf5db9911110b2935a448e0a33a36656",
+        "second_sha256": "295e1a12875873dc2d182b5b80fc16596506c1f39bfa6345a70ed20af9a7d82a",
+        "first_bytes": 31780864,
+        "second_bytes": 31780864,
+        "identical": false
+      },
+      {
+        "path": "SwanRemoteSupport-1.5.22-x64-unsigned-install.exe",
+        "first_sha256": "767ecaaf90b4c6216f17581f65df5e4945a178e475e56ea33365aeb2bc292dfb",
+        "second_sha256": "91fe1d2f7b68f2fd0ec2a4e946307ea33cf8890e77912c832df99bcf3fb11aa3",
+        "first_bytes": 24284672,
+        "second_bytes": 24285184,
+        "identical": false
+      },
+      {
+        "path": "SwanServerSetup-UNSIGNED-TEST.exe",
+        "first_sha256": "40a7280832259bd6aa9dc555d5e0fdd54c54dab2d01a5bf6c3ebfe95ae5e9592",
+        "second_sha256": "40a7280832259bd6aa9dc555d5e0fdd54c54dab2d01a5bf6c3ebfe95ae5e9592",
+        "first_bytes": 66129408,
+        "second_bytes": 66129408,
+        "identical": true
+      },
+      {
+        "path": "swan-agent.exe",
+        "first_sha256": "6c0ee8581baf04e5effee63647e6f9cb52780dbbe51fe34f8d828e8fde170f73",
+        "second_sha256": "6c0ee8581baf04e5effee63647e6f9cb52780dbbe51fe34f8d828e8fde170f73",
+        "first_bytes": 5862912,
+        "second_bytes": 5862912,
+        "identical": true
+      },
+      {
+        "path": "swan-management.exe",
+        "first_sha256": "00cab63adbf5f6bbaab40e27c86933fc884ff644a5a5587cfbd9f1a234db95b2",
+        "second_sha256": "00cab63adbf5f6bbaab40e27c86933fc884ff644a5a5587cfbd9f1a234db95b2",
+        "first_bytes": 9378816,
+        "second_bytes": 9378816,
+        "identical": true
+      },
+      {
+        "path": "swan-worker.exe",
+        "first_sha256": "7f87133666aa6a37ccb03287c74b0730bafa53cfb1c86fe87f51b04db0eecd7e",
+        "second_sha256": "7f87133666aa6a37ccb03287c74b0730bafa53cfb1c86fe87f51b04db0eecd7e",
+        "first_bytes": 4901376,
+        "second_bytes": 4901376,
+        "identical": true
+      }
+    ],
+    "signing_remains_gated": true
+  },
+  "remaining_boundaries": [
+    "Finish current native app and update qualification on existing development pair before final Windows matrix",
+    "No production signing approval or publication",
+    "No external Internet direct or relay session qualification",
+    "No claim that the final advertised Windows compatibility matrix is complete",
+    "Inherited Full Flutter CI41951800985 fails only its deferred i686 Windows job126997550230: the legacy Rust1.75 toolchain cannot parse Cargo.lock version4. This does not establish Windows x64 success; dedicated pinned Rust1.90 app build41964194947 remains required."
+  ]
+}

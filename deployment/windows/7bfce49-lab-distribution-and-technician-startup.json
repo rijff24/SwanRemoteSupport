@@ -1,0 +1,151 @@
+{
+  "schema": 1,
+  "source": "7bfce49aba857e035663f19cb25353828204e9c0",
+  "version": "1.5.3",
+  "profile_revision": 5,
+  "release_sequence": 6,
+  "reproduction": {
+    "utc": "2026-10-27T11:56:30.019805+00:00",
+    "source": "7bfce49aba857e035663f19cb25353828204e9c0",
+    "comparison_run": 40499642535,
+    "comparison_artifact": 12731698656,
+    "comparison_artifact_digest": "sha256:b318dcc23fb92f987d86a1ef8fbe7d4ac3ddf99bf66a483d8e21db944b7e1352",
+    "report_sha256": "895777057d7544fe9f0c6624abfafd16738e02739085bfdeccb9fecb87392220",
+    "shipping_outputs_identical": 8,
+    "source_files_per_build": 1211,
+    "bridge_files_per_build": 6,
+    "msvc_files_per_build": [
+      618,
+      618
+    ],
+    "first_archive_matches_locally_verified_original": true,
+    "second_large_local_download_started": false,
+    "runtime_qualified": false,
+    "production_publication": false
+  },
+  "lab_signing": {
+    "all_seven_outputs_valid": true,
+    "key_nonexportable_independently_verified": true,
+    "private_key_exported": false,
+    "original_records_verified": 23,
+    "existing_public_certificate_sha256": "c797e22798a8afa94496ea0e8668b6e5ee4a4fc9f639b8200d5e1071e6925ec3",
+    "output_hashes": {
+      "signed_customer_msi_sha256": "a86006a39b951b356446a92b6129806ea9ab5952b4a52024aca06d7a95b546a0",
+      "signed_customer_executable_sha256": "99a9f55f06530126b34b2de87351647b34f9e7aa518c03747536a4d58b4118e6",
+      "signed_technician_msi_sha256": "3e1daa746f4e94d9a59dbe1763c543cbf0b789080df68b100e852d37c23d8126",
+      "signed_technician_executable_sha256": "dcc03e66aa6b423e0083e1b11865e0850ffa86ec5aca125670283868f1f8df6b",
+      "signed_agent_sha256": "45b54d0d8cd966e14f6389d018216f24770205550444332b86def7745caaf1c0",
+      "signed_management_sha256": "798ddf0df404029dda3e64c9bfa921c47a7f40fd4ef1e402e6446b13e1cb1573",
+      "signed_worker_sha256": "b4785729d9718693bd5bc891246eba55a206f6d47d0a521d9ed398401530da74"
+    }
+  },
+  "company_bundles": {
+    "utc": "2026-10-27T12:00:36.798945+00:00",
+    "editions": [
+      {
+        "edition": "customer",
+        "job_id": "ff8cd83e-7653-41d6-b22a-6100ddd602ac",
+        "bundle_sha256": "561f649f71477023a77398f4011c8294ed615e91e4207a8deb7e1adb0c691355",
+        "bytes": 32479083,
+        "public_bootstrap_only": true,
+        "profile_and_release_signatures_verified": true,
+        "tamper_rejection_verified": true,
+        "seven_source_texts_exact": true,
+        "signed_payload_hashes_verified": true,
+        "anonymous_status": 200,
+        "download_status": 200
+      },
+      {
+        "edition": "technician",
+        "job_id": "d2cf2755-b902-4552-97c1-9e703d0829a6",
+        "bundle_sha256": "5bed238a6d1f5c884a64b9517274cf35a33891043ef3763833523d94036462a9",
+        "bytes": 30288384,
+        "public_bootstrap_only": true,
+        "profile_and_release_signatures_verified": true,
+        "tamper_rejection_verified": true,
+        "seven_source_texts_exact": true,
+        "signed_payload_hashes_verified": true,
+        "anonymous_status": 401,
+        "download_status": 200
+      }
+    ],
+    "management_source": "761b5c56cca8cd7eecb65d3438de0d6f0075bd4e",
+    "application_source": "7bfce49aba857e035663f19cb25353828204e9c0",
+    "independent_company": true,
+    "updates_paused": true,
+    "installer_executed": false,
+    "native_session_qualified": false,
+    "production_publication": false
+  },
+  "installed_technician_upgrade": {
+    "source": "7bfce49aba857e035663f19cb25353828204e9c0",
+    "before_version": "1.5.2",
+    "after_version": "1.5.3",
+    "product_state": 5,
+    "before_sequence": 5,
+    "after_sequence": 6,
+    "technician_bootstrap_preserved": true,
+    "profile_revision": 5,
+    "branding_preserved": true,
+    "installed_hashes_and_publishers_verified": true,
+    "pending_install_absent": true,
+    "customer_identity_credential_and_consent_preserved": true,
+    "customer_and_worker_services_running": true,
+    "automatic_upgrade_tested": false,
+    "native_startup_tested": false
+  },
+  "native_mfa_login": {
+    "utc": "2026-10-27T12:09:40.037427+00:00",
+    "application_source": "7bfce49aba857e035663f19cb25353828204e9c0",
+    "version": "1.5.3",
+    "release_sequence": 6,
+    "profile_revision": 5,
+    "visible_approved_device_count": 2,
+    "os": "Windows Server 2019 x64 build 17763.3650",
+    "generated_technician_bundle_installed": true,
+    "original_verified_launcher_used": true,
+    "actual_desktop_session": 1,
+    "company_branding_visible": true,
+    "updated_signed_branding_visible": true,
+    "company_https_origin_visible": true,
+    "username_password_and_totp_entered_only_in_native_form": true,
+    "gui_mfa_sign_in_succeeded": true,
+    "authorized_device_and_group_visible": true,
+    "session_history_visible": true,
+    "independent_server_login_audit_matches": true,
+    "same_machine_customer_and_technician": true,
+    "native_remote_session_exercised": false,
+    "standard_user_install_qualified": false,
+    "full_product_acceptance": false
+  },
+  "actual_native_process": {
+    "source": "7bfce49aba857e035663f19cb25353828204e9c0",
+    "flutter_and_rust_libraries_loaded": true,
+    "native_child_process_running": true,
+    "version": "1.5.3",
+    "utc": "2026-10-27T12:11:48.3374134Z",
+    "native_process_count": 1,
+    "no_new_application_crash_event": true,
+    "source_payload_hashes": {
+      "rustdesk.exe": "1cf3df638d1079e9ec1a5d23ad5bf36d6028a54fa662021a563a3a571a96a969",
+      "librustdesk.dll": "759a8307dcad81b19188ee02e10c2f17091201714bc6890d5b2647dcae1506d0",
+      "flutter_windows.dll": "c87ba5a71afa7b7100c1c9ccc1289009dab812f9de2acc38f9d5103e48c1f204"
+    },
+    "gui_mfa_and_inventory_observed_separately": true,
+    "remote_session_qualified": false
+  },
+  "worker_recipe_source": "da0c621845057bed321a98a1886ef15891e431a9",
+  "worker_recipe_source_identical_to_pinned_candidate": true,
+  "new_worker_or_management_binary_deployed": false,
+  "failed_152_downloads_remain_withdrawn": true,
+  "automatic_updates_paused": true,
+  "production_publication": false,
+  "limits": [
+    "Technician 1.5.3 startup, MFA, authorized inventory and history observed on the existing Server2019 endpoint.",
+    "A path-only check initially rejected an equivalent /./ path; canonical inspection retained exact byte and creation-time checks.",
+    "No new native remote session is claimed here.",
+    "Customer endpoints remain on 1.5.1; real 1.5.3 automatic upgrade and reboot tests remain required.",
+    "Only a lab publisher and private HTTPS endpoint were used.",
+    "No complete Windows compatibility, public Internet transport or production signing qualification."
+  ]
+}

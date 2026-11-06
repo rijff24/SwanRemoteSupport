@@ -1,0 +1,263 @@
+{
+  "source": "da0c621845057bed321a98a1886ef15891e431a9",
+  "customer": {
+    "source": "da0c621845057bed321a98a1886ef15891e431a9",
+    "package_sha256": "c53626be8ed32f4678d1c7cc1a4b88ca53a07a86f94d36e94b61e68d5f9f06a2",
+    "passed": true,
+    "phases": [
+      {
+        "phase": "install",
+        "exit_code": 0
+      },
+      {
+        "phase": "repair",
+        "exit_code": 0
+      },
+      {
+        "phase": "uninstall",
+        "exit_code": 0
+      }
+    ],
+    "actual_reboot_verified": true,
+    "service_automatically_restarted": true,
+    "installed_manifest_files": 96,
+    "os": {
+      "Caption": "Microsoft Windows Server 2022 Standard Evaluation",
+      "Version": "10.0.20348",
+      "BuildNumber": "20348",
+      "OSArchitecture": "64-bit",
+      "revision": 587
+    },
+    "original_evidence_records": [
+      {
+        "sha256": "602b9cbc9fc2ceb8f14c9c1dc95bb2a29a9bf0ce2015d703b3b90287a28ca243",
+        "name": "fresh-before-install.json",
+        "bytes": 345
+      },
+      {
+        "sha256": "b7ef7b3c6fbb6fb610aa9f571762679a81f4697f11e0e6241bd38594564b7b4d",
+        "name": "transfer-manifest.json",
+        "bytes": 779
+      },
+      {
+        "sha256": "9236e7ac1ed7980b1be4e86a91f8a5feac3879be363c6e2933d6482346de97ba",
+        "name": "Run-InstallRepair.ps1",
+        "bytes": 4756
+      },
+      {
+        "sha256": "6f90c6b2e303827a7dc2a8bd62fedadb353268dbce466275945150567b0f8a6e",
+        "name": "Verify-RebootUninstall-Utc.ps1",
+        "bytes": 3991
+      },
+      {
+        "sha256": "10cacf2be9e211dad0f9166114f159e1fb6b4d6f21144c420e676dae515c61b1",
+        "name": "installed-files.json",
+        "bytes": 14349
+      },
+      {
+        "sha256": "83a9e00e480bcb3de1bc07bed6b8122856a34db1131c54744dc6242f80e7b76a",
+        "name": "lifecycle-started.json",
+        "bytes": 736
+      },
+      {
+        "sha256": "e974d95899a1b275a9e473b8527a26580b6bb6929aff27365b8b0df6f8ec5881",
+        "name": "pre-reboot-boot.json",
+        "bytes": 55
+      },
+      {
+        "sha256": "580b5eeaed5ebe15e7674e0afe7c215dc4af5e66c45c47fd26565cb9fa29a1ca",
+        "name": "pre-reboot-lifecycle.json",
+        "bytes": 1548
+      },
+      {
+        "sha256": "028ce6e72b2f53f01773ee6feb377c4161ced835780c400682fe04bfcba7bffe",
+        "name": "reboot-request.json",
+        "bytes": 168
+      },
+      {
+        "sha256": "ca6b5a8c4bb139b1a3fac7eeb6bbf12c0c7b33396c0a872891c72aee169100b8",
+        "name": "reboot-verification.json",
+        "bytes": 278
+      },
+      {
+        "sha256": "ed7cc487711842e64c312f84336b1d48867dcbe6c77ba48517efa14a5da5074f",
+        "name": "post-reboot-service-original.json",
+        "bytes": 298
+      },
+      {
+        "sha256": "742d185d627d0c0d30389ac75792194adff447a23d146f9a3e9437fcaeeedea5",
+        "name": "post-reboot-lifecycle.json",
+        "bytes": 507
+      },
+      {
+        "sha256": "4049372b611051de750089ba9e496d842f6f2a3326e12d59a9c659d17638eb54",
+        "name": "results/install/result.json",
+        "bytes": 1264
+      },
+      {
+        "sha256": "70d1ddb17621f08481ed2a2b4b9a827dcc3939de14b5a6987708426931410d0d",
+        "name": "results/install/msi.log",
+        "bytes": 355690
+      },
+      {
+        "sha256": "9a33a0778d7d01adb2d98bc0819a493e5cc15e602c13dda24ed53aa9da0e73f6",
+        "name": "results/repair/result.json",
+        "bytes": 1263
+      },
+      {
+        "sha256": "08ba2da25ec4f9e51d8cc43e9e48bd04ec47007dabe6d2d3e70b6550be317ca2",
+        "name": "results/repair/msi.log",
+        "bytes": 403432
+      },
+      {
+        "sha256": "e128a6dddb2928083f5e2114c81565ea1eec2842866ae5fa4b9e54e6b5b6b694",
+        "name": "results/uninstall/result.json",
+        "bytes": 1266
+      },
+      {
+        "sha256": "0c64112cc8f870143161ff4e7ff931e2656e1a7fc2797502b94db44a418df5a8",
+        "name": "results/uninstall/msi.log",
+        "bytes": 271966
+      }
+    ],
+    "fresh_before_install": {
+      "build": "20348",
+      "technician_product_state": -1,
+      "installation_type": "Server",
+      "customer_product_state": -1,
+      "utc": "2026-10-24T04:11:09.8944267Z",
+      "company_management_started": false,
+      "revision": 587,
+      "caption": "Microsoft Windows Server 2022 Standard Evaluation",
+      "fresh_vm": true
+    },
+    "scope": "Administrative lab-signed raw customer MSI on a newly created WindowsServer2022 Desktop Experience disk with absent customer and technician registrations before installation; real reboot and service verification. Not enrollment, sessions or automatic updates",
+    "full_product_acceptance": false
+  },
+  "technician": {
+    "source": "da0c621845057bed321a98a1886ef15891e431a9",
+    "passed": true,
+    "edition": "technician",
+    "package_sha256": "9e339a4140c204846c7b51c33068da9502593fcdd79e6351691426d7fe1319e3",
+    "administrative": true,
+    "phases": [
+      {
+        "passed": true,
+        "exit_code": 0,
+        "missing_file_repair": false,
+        "log_sha256": "c46e1a6d7bb480ae4c3743404d02628545652082631f8e772ff77afe22df60d1",
+        "phase": "install",
+        "result_sha256": "2d3efa80eedb8dde3dc2e85356d12f08da036536a597cb9f79d50d063ac73e00"
+      },
+      {
+        "passed": true,
+        "exit_code": 0,
+        "missing_file_repair": true,
+        "log_sha256": "37f028d00277de3170bbb356bedcdb37abc8bdae0c5a6aabb31ced412b425e37",
+        "phase": "repair",
+        "result_sha256": "93e68b654861898fb8de4e588e647716463ad680dc705d0b10f274f08f44fbb1"
+      },
+      {
+        "passed": true,
+        "exit_code": 0,
+        "missing_file_repair": false,
+        "log_sha256": "28b570ec714667fa4cc3389a783dbea0e98d74e2230f39163b6f3d96361a7b61",
+        "phase": "uninstall",
+        "result_sha256": "c515ee1e0d62f5099f71f43cf7ce56f957507d71063b02db852e14a7c3f1e065"
+      }
+    ],
+    "os": {
+      "Caption": "Microsoft Windows Server 2022 Standard Evaluation",
+      "Version": "10.0.20348",
+      "BuildNumber": "20348",
+      "OSArchitecture": "64-bit",
+      "revision": 587
+    },
+    "original_evidence_records": [
+      {
+        "sha256": "43a6b84c0238d694d950ae7ee3821625566a5c1e7e97f652b5e87d6b2e1c396b",
+        "name": "transfer-manifest.json",
+        "bytes": 577
+      },
+      {
+        "sha256": "ddf36b1a32155674a08468ca23540543965ac6a2f48418eaed0fbe86c2391e00",
+        "name": "Run-Lifecycle.ps1",
+        "bytes": 4342
+      },
+      {
+        "sha256": "4a3e98464044e3511a38c6f917f01f63ff43c2b41253d52e0819bde22c313384",
+        "name": "Test-DisposableMsi.ps1",
+        "bytes": 11239
+      },
+      {
+        "sha256": "64b7144b38c8b963b98cbb96f9964395c9413ce1a1b614d10fd0d57484f7619e",
+        "name": "Get-MsiIdentity.ps1",
+        "bytes": 1035
+      },
+      {
+        "sha256": "845e8355e969b95b38b6ea83f4b89103fdc541aa088d95e2602f0d23005aa8ea",
+        "name": "Get-WindowsCompatibility.ps1",
+        "bytes": 1202
+      },
+      {
+        "sha256": "2046b844c618e0ed1bdf7e790c3ee8f1e83745e6ad233a1288ed5f314fea10aa",
+        "name": "lifecycle-started.json",
+        "bytes": 736
+      },
+      {
+        "sha256": "929d198fd3c9f715715a1fcac713c08670453bedaaf322b1adfe56bf51e3ac54",
+        "name": "lifecycle-result.json",
+        "bytes": 1941
+      },
+      {
+        "sha256": "2d3efa80eedb8dde3dc2e85356d12f08da036536a597cb9f79d50d063ac73e00",
+        "name": "results/install/result.json",
+        "bytes": 1266
+      },
+      {
+        "sha256": "c46e1a6d7bb480ae4c3743404d02628545652082631f8e772ff77afe22df60d1",
+        "name": "results/install/msi.log",
+        "bytes": 130222
+      },
+      {
+        "sha256": "93e68b654861898fb8de4e588e647716463ad680dc705d0b10f274f08f44fbb1",
+        "name": "results/repair/result.json",
+        "bytes": 1264
+      },
+      {
+        "sha256": "37f028d00277de3170bbb356bedcdb37abc8bdae0c5a6aabb31ced412b425e37",
+        "name": "results/repair/msi.log",
+        "bytes": 102348
+      },
+      {
+        "sha256": "c515ee1e0d62f5099f71f43cf7ce56f957507d71063b02db852e14a7c3f1e065",
+        "name": "results/uninstall/result.json",
+        "bytes": 1268
+      },
+      {
+        "sha256": "28b570ec714667fa4cc3389a783dbea0e98d74e2230f39163b6f3d96361a7b61",
+        "name": "results/uninstall/msi.log",
+        "bytes": 94424
+      }
+    ],
+    "scope": "Raw lab-signed technician MSI first application context on newly created Server2022 VM after customer lifecycle testing; administrative install, missing-executable repair and uninstall. Not standard-user, login, sessions, software-version upgrade or approved automatic updates.",
+    "full_product_acceptance": false
+  },
+  "lab_bootstrap": {
+    "initial_ssh_start_failed": true,
+    "cause_verified": "Copied SSH host key retained Authenticated Users read access; sshd -t rejected the key and reported no available hostkeys.",
+    "repair_verified": "Both lab access files now have protected Administrator/SYSTEM-only ACLs; original key bytes and pinned SSH identity were preserved. SSH startup and connection verified.",
+    "temporary_management_forward_removed": true,
+    "setup_media_detached_before_installers": true,
+    "initial_attempt_before_msi": "Lab root certificate import succeeded; optional TrustedPublisher store import returned access denied. No MSI ran in that attempt. Subsequent run used existing root trust, valid Authenticode signatures and explicit publisher checks, without retrying the denied store operation.",
+    "future_local_seed_generator_corrected": true
+  },
+  "limitations": [
+    "Lab signing only; production signing not approved.",
+    "Raw MSI lifecycle, not generated company enrollment on this OS.",
+    "Technician uses administrative per-user context after customer lifecycle; not a second untouched OS installation or a standard-user test.",
+    "No GUI login, remote desktop, public NAT traversal, grant enforcement or automatic update acceptance is established by these MSI checks.",
+    "Company-approved test release metadata still targets Server2016 only."
+  ],
+  "full_product_acceptance": false
+}

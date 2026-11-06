@@ -1,0 +1,47 @@
+{
+  "recorded_utc": "2026-11-04T13:50:45.209682+00:00",
+  "source": "bd331cad1dbe4c45722690c7df70c863a7bd37b5",
+  "version": "1.5.21+89",
+  "os_build": "20348",
+  "edition": "technician",
+  "format": "exe",
+  "previous_release_sequence": 24,
+  "installed_release_sequence": 26,
+  "actual_standard_user_upgrade_passed": true,
+  "identity_token_and_bootstrap_preserved": true,
+  "shipping_installed_verifier_passed": true,
+  "mapped_native_and_libraries_match_primary_build": true,
+  "installed_signed_outer_sha256": "72801ce022644835f228650451e81a062511d3fa92bd73e7fd62a654a0a8326c",
+  "installed_signed_agent_sha256": "6fad3a92f36d632ed2177e9131da4e072b6622b1f17692609375af05ce9c18d7",
+  "native_about_before_login_passed": true,
+  "about_company_name_version_attribution_and_source_links_visible": true,
+  "about_close_returned_to_login": true,
+  "actual_native_mfa_login_and_authorized_inventory_passed": true,
+  "native_sign_out_clears_password_and_mfa": true,
+  "signed_company_profile_revision": 44,
+  "automatic_updates_paused": true,
+  "lab_logon_fixture_original_secret_and_settings_restored": true,
+  "lab_display_policy_restored": true,
+  "new_vm_created": false,
+  "screenshots": [
+    {
+      "purpose": "about",
+      "sha256": "c1afc0145a0cc3739d7ad48ab694e56845c67f34258b1ab5511de0717eb28dd3"
+    },
+    {
+      "purpose": "inventory",
+      "sha256": "9f19b81c21d78c177b9323ece0cb63450b65ae83428713723a62e1746eda68de"
+    },
+    {
+      "purpose": "signed_out",
+      "sha256": "9fda36a20493a61dd4cddc148e006a20f6051d5f16e0a0033347ba5710e4c785"
+    }
+  ],
+  "limits": [
+    "This is focused development verification on the existing test pair; no full Windows matrix is claimed.",
+    "The current customer shipping uninstall correction is not qualified by this technician result.",
+    "Session history, current-candidate desktop-session features, update recovery, external transport and production signing remain separate gates.",
+    "The About dialog was verified in the supported normal window; a smaller-than-minimum layout is not qualified."
+  ],
+  "production_publication": false
+}

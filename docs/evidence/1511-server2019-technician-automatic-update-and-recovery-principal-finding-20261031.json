@@ -1,0 +1,103 @@
+{
+  "recorded_utc": "2026-10-30T22:38:11.917028+00:00",
+  "application_source": "7b60309374389a1b0f8d859f8c164d6cf355353f",
+  "scope": "Existing Server2019 Desktop Experience17763 per-user technician1.5.10 to1.5.11 automatic update",
+  "automatic_update_and_fresh_native_mfa": {
+    "maintenance_end": 0,
+    "agent_sha256": "b74868f18b05d5ff3a90f73d5947ebde6aa832b7a2c61b82546751f8537ca87c",
+    "native_processes": [
+      {
+        "pid": 3264,
+        "version": "1.5.11+79",
+        "session": 1
+      }
+    ],
+    "profile_revision": 30,
+    "no_pending_or_failed_update": true,
+    "mode": "final",
+    "rollout_percent": 20,
+    "utc": "2026-10-30T22:33:49.7317572Z",
+    "actual_shipping_verifier_passed": true,
+    "manual_update_or_installer_invoked": false,
+    "publisher_verified": true,
+    "updates_paused": true,
+    "maintenance_start": 0,
+    "version": "1.5.11",
+    "native_sha256": "c542a8072ff032a3e28eb04a8ee2e21a4ccf49351e2a4b0100f5a9a5691932eb",
+    "identity_consent_and_bootstrap_preserved": true,
+    "sequence": 14,
+    "native_mfa_login_independently_audited": true,
+    "post_upgrade_native_mfa_audited": true,
+    "current_technician_report_received_by_company": true,
+    "report_phases_observed": [
+      "deferred"
+    ],
+    "original_paused_policy_restored": true
+  },
+  "excluded_customer_and_recovery_tasks": {
+    "customer_update14_never_staged": true,
+    "technician_recovery_task_observation": [
+      {
+        "last_run_utc": "2026-10-30T22:31:31.0000000Z",
+        "last_result": 1,
+        "name": "Swan Update Recovery technician E7D878CD3C863040 13",
+        "state": "Ready"
+      },
+      {
+        "last_run_utc": "1999-11-29T22:00:00.0000000Z",
+        "last_result": 267011,
+        "name": "Swan Update Recovery technician E7D878CD3C863040 14",
+        "state": "Ready"
+      }
+    ],
+    "cached_updates_paused": false,
+    "worker_sha256": "8b85306e565c5f95dee049d3ab2c0275abbd06129688e0d5eb0de8d678d25564",
+    "utc": "2026-10-30T22:34:24.4445292Z",
+    "worker_service": "Running",
+    "customer_identity_credential_consent_and_trust_preserved": true,
+    "customer_profile_revision": 29,
+    "customer_sequence": 13,
+    "customer_service": "Running",
+    "cached_rollout_percent": 28
+  },
+  "actual_recovery_principal_diagnosis": {
+    "read_only": true,
+    "utc": "2026-10-30T22:35:32.4135381Z",
+    "tasks": [
+      {
+        "name": "Swan Update Recovery technician E7D878CD3C863040 13",
+        "principal": "Administrator",
+        "arguments": "recover-update-task",
+        "last_result": 1,
+        "state": "Ready",
+        "matches_expected_account": false
+      },
+      {
+        "name": "Swan Update Recovery technician E7D878CD3C863040 14",
+        "principal": "Administrator",
+        "arguments": "recover-update-task",
+        "last_result": 267011,
+        "state": "Ready",
+        "matches_expected_account": false
+      }
+    ],
+    "identity_name": "SWAN-END-19\\Administrator"
+  },
+  "original_policy_restored": {
+    "utc": "2026-10-30T22:32:31.392659+00:00",
+    "profile_revision": 30,
+    "signature_verified": true,
+    "original_paused_policy_restored": true,
+    "original_rollout_percent_restored": 20,
+    "restoration_login_used_fresh_totp_after_replay_rejection": true
+  },
+  "finding": "Task Scheduler returns the local account short name Administrator after registration by SID. The shipping guard compares it with only the SID and fully qualified identity; the observed account fails that guard. An older recovery task remains with exit1; current14 recovery/cleanup is not qualified.",
+  "planned_correction": "Resolve actual task principal to a Windows SID and require the exact expected SID, retaining all path/action/argument checks. Do not authorize suffix or display-name matching.",
+  "fixture_incident": "Pause restoration initially reused the admin MFA step consumed by another verifier and received401 before any PUT. Fresh-step login restored signed profile30 and original pause/20% rollout.",
+  "bounds": [
+    "Automatic upgrade, fresh native MFA and reporting passed; durable recovery remains blocked by the account comparison finding.",
+    "No native remote session after1.5.11 upgrade or full Windows lifecycle qualification claimed.",
+    "Lab publisher only; no production signing or publication."
+  ],
+  "production_publication": false
+}

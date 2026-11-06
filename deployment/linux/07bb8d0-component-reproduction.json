@@ -1,0 +1,67 @@
+{
+  "utc": "2026-10-28T09:10:41.827281+00:00",
+  "project_source": "07bb8d0b99e2be002a30e5d97eebe67a9c2794ad",
+  "independent_pr_merge": "1ba02cc849fcf55fbbc68d2757f56b35d9e783d0",
+  "project_trees_identical": true,
+  "builds": [
+    {
+      "run_id": 40647659405,
+      "artifact": 12797593547,
+      "digest": "sha256:0dbf6abc6ff30442cef41049a83bfc446d9a49d3a7716c9949c654338a35eb64",
+      "bytes": 9561318,
+      "expected_packaging_source": "07bb8d0b99e2be002a30e5d97eebe67a9c2794ad",
+      "public_source_files_verified": 221,
+      "declared_text_checkout_conversions": [],
+      "rustc": "rustc 1.90.0 (1159e78c4 2025-09-14)\nbinary: rustc\ncommit-hash: 1159e78c4747b02ef996e55082b704c09b970588\ncommit-date: 2025-09-14\nhost: x86_64-unknown-linux-gnu\nrelease: 1.90.0\nLLVM version: 20.1.8\n",
+      "files": {
+        "swan-management": "89bd490871eeedbec72fb7c53491762ee1cb776af7f0dfeb77ba40301c97d5ab",
+        "swan-agent": "cb3624bc9f29e9520d47c3bb591fea9dfb3e37105b72ca3a77b5f548b2f42c66",
+        "swan-worker": "e2be24f49dc930423926b84ee4fccdd16d2e2ad0c00999b6b864de2e055bb23e",
+        "CompanyComponents-source.zip": "6c17b840cc0daf8714b2e53b40630c57ea430973064bc177dcf6ba44e1c177cf"
+      },
+      "executables_run": false
+    },
+    {
+      "run_id": 40647664923,
+      "artifact": 12798243526,
+      "digest": "sha256:0b6458ae74d8ba278f6fa0ed99ea48a9f4647a9a2c96d5ce15e10ed0c5e7d00d",
+      "bytes": 9561317,
+      "expected_packaging_source": "1ba02cc849fcf55fbbc68d2757f56b35d9e783d0",
+      "public_source_files_verified": 221,
+      "declared_text_checkout_conversions": [],
+      "rustc": "rustc 1.90.0 (1159e78c4 2025-09-14)\nbinary: rustc\ncommit-hash: 1159e78c4747b02ef996e55082b704c09b970588\ncommit-date: 2025-09-14\nhost: x86_64-unknown-linux-gnu\nrelease: 1.90.0\nLLVM version: 20.1.8\n",
+      "files": {
+        "swan-management": "89bd490871eeedbec72fb7c53491762ee1cb776af7f0dfeb77ba40301c97d5ab",
+        "swan-agent": "cb3624bc9f29e9520d47c3bb591fea9dfb3e37105b72ca3a77b5f548b2f42c66",
+        "swan-worker": "e2be24f49dc930423926b84ee4fccdd16d2e2ad0c00999b6b864de2e055bb23e",
+        "CompanyComponents-source.zip": "285a0ff41456e2d60d4fa894bf84acb6bf8db5c7c856d3057b605f37516e8b1e"
+      },
+      "executables_run": false
+    }
+  ],
+  "original_linux_binaries": {
+    "swan-management": {
+      "identical": true,
+      "first_sha256": "89bd490871eeedbec72fb7c53491762ee1cb776af7f0dfeb77ba40301c97d5ab",
+      "second_sha256": "89bd490871eeedbec72fb7c53491762ee1cb776af7f0dfeb77ba40301c97d5ab",
+      "normalized": false
+    },
+    "swan-agent": {
+      "identical": true,
+      "first_sha256": "cb3624bc9f29e9520d47c3bb591fea9dfb3e37105b72ca3a77b5f548b2f42c66",
+      "second_sha256": "cb3624bc9f29e9520d47c3bb591fea9dfb3e37105b72ca3a77b5f548b2f42c66",
+      "normalized": false
+    },
+    "swan-worker": {
+      "identical": true,
+      "first_sha256": "e2be24f49dc930423926b84ee4fccdd16d2e2ad0c00999b6b864de2e055bb23e",
+      "second_sha256": "e2be24f49dc930423926b84ee4fccdd16d2e2ad0c00999b6b864de2e055bb23e",
+      "normalized": false
+    }
+  },
+  "all_original_binaries_identical": true,
+  "exact_public_sources_verified": true,
+  "executables_run": false,
+  "runtime_qualified": false,
+  "production_publication": false
+}

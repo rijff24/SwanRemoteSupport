@@ -1,0 +1,231 @@
+{
+  "utc": "2026-10-30T15:23:06.418315+00:00",
+  "agent_application_source": "b1fbe1e2419c3e749663746c74442d1fe864302d",
+  "version": "1.5.10+78",
+  "installed_agent_sha256": "f886a53dcb1b97e76fc5792e9fa4a221a13e6bbfd24973d9a56f2a726103adfa",
+  "command": "verify-bootstrap",
+  "real_installed_shipping_binary_executed": true,
+  "separate_state_directories": true,
+  "disposable_fixture_issuer_public_fixtures_only": true,
+  "fixture_private_signing_key_retained": false,
+  "device_credentials_in_fixtures": false,
+  "network_operations_invoked": false,
+  "total_cases": 28,
+  "results": [
+    {
+      "os": "Windows 10 Pro x64 build19045",
+      "utc": "2026-10-30T15:22:24.0129690Z",
+      "cases": [
+        {
+          "edition": "customer",
+          "accepted": true,
+          "case": "valid-control",
+          "expected_reason_matched": true,
+          "state_unchanged": true
+        },
+        {
+          "edition": "customer",
+          "accepted": false,
+          "case": "tampered-payload",
+          "expected_reason_matched": true,
+          "state_unchanged": true
+        },
+        {
+          "edition": "customer",
+          "accepted": false,
+          "case": "invalid-signature",
+          "expected_reason_matched": true,
+          "state_unchanged": true
+        },
+        {
+          "edition": "customer",
+          "accepted": false,
+          "case": "signed-expired",
+          "expected_reason_matched": true,
+          "state_unchanged": true
+        },
+        {
+          "edition": "customer",
+          "accepted": false,
+          "case": "signed-future",
+          "expected_reason_matched": true,
+          "state_unchanged": true
+        },
+        {
+          "edition": "customer",
+          "accepted": false,
+          "case": "signed-wrong-company",
+          "expected_reason_matched": true,
+          "state_unchanged": true
+        },
+        {
+          "edition": "customer",
+          "accepted": false,
+          "case": "signed-older-revision",
+          "expected_reason_matched": true,
+          "state_unchanged": true
+        },
+        {
+          "edition": "technician",
+          "accepted": true,
+          "case": "valid-control",
+          "expected_reason_matched": true,
+          "state_unchanged": true
+        },
+        {
+          "edition": "technician",
+          "accepted": false,
+          "case": "tampered-payload",
+          "expected_reason_matched": true,
+          "state_unchanged": true
+        },
+        {
+          "edition": "technician",
+          "accepted": false,
+          "case": "invalid-signature",
+          "expected_reason_matched": true,
+          "state_unchanged": true
+        },
+        {
+          "edition": "technician",
+          "accepted": false,
+          "case": "signed-expired",
+          "expected_reason_matched": true,
+          "state_unchanged": true
+        },
+        {
+          "edition": "technician",
+          "accepted": false,
+          "case": "signed-future",
+          "expected_reason_matched": true,
+          "state_unchanged": true
+        },
+        {
+          "edition": "technician",
+          "accepted": false,
+          "case": "signed-wrong-company",
+          "expected_reason_matched": true,
+          "state_unchanged": true
+        },
+        {
+          "edition": "technician",
+          "accepted": false,
+          "case": "signed-older-revision",
+          "expected_reason_matched": true,
+          "state_unchanged": true
+        }
+      ],
+      "installed_state_unchanged": true
+    },
+    {
+      "os": "Windows Server 2019 x64 Desktop Experience build17763",
+      "utc": "2026-10-30T15:22:33.6455074Z",
+      "cases": [
+        {
+          "edition": "customer",
+          "accepted": true,
+          "case": "valid-control",
+          "expected_reason_matched": true,
+          "state_unchanged": true
+        },
+        {
+          "edition": "customer",
+          "accepted": false,
+          "case": "tampered-payload",
+          "expected_reason_matched": true,
+          "state_unchanged": true
+        },
+        {
+          "edition": "customer",
+          "accepted": false,
+          "case": "invalid-signature",
+          "expected_reason_matched": true,
+          "state_unchanged": true
+        },
+        {
+          "edition": "customer",
+          "accepted": false,
+          "case": "signed-expired",
+          "expected_reason_matched": true,
+          "state_unchanged": true
+        },
+        {
+          "edition": "customer",
+          "accepted": false,
+          "case": "signed-future",
+          "expected_reason_matched": true,
+          "state_unchanged": true
+        },
+        {
+          "edition": "customer",
+          "accepted": false,
+          "case": "signed-wrong-company",
+          "expected_reason_matched": true,
+          "state_unchanged": true
+        },
+        {
+          "edition": "customer",
+          "accepted": false,
+          "case": "signed-older-revision",
+          "expected_reason_matched": true,
+          "state_unchanged": true
+        },
+        {
+          "edition": "technician",
+          "accepted": true,
+          "case": "valid-control",
+          "expected_reason_matched": true,
+          "state_unchanged": true
+        },
+        {
+          "edition": "technician",
+          "accepted": false,
+          "case": "tampered-payload",
+          "expected_reason_matched": true,
+          "state_unchanged": true
+        },
+        {
+          "edition": "technician",
+          "accepted": false,
+          "case": "invalid-signature",
+          "expected_reason_matched": true,
+          "state_unchanged": true
+        },
+        {
+          "edition": "technician",
+          "accepted": false,
+          "case": "signed-expired",
+          "expected_reason_matched": true,
+          "state_unchanged": true
+        },
+        {
+          "edition": "technician",
+          "accepted": false,
+          "case": "signed-future",
+          "expected_reason_matched": true,
+          "state_unchanged": true
+        },
+        {
+          "edition": "technician",
+          "accepted": false,
+          "case": "signed-wrong-company",
+          "expected_reason_matched": true,
+          "state_unchanged": true
+        },
+        {
+          "edition": "technician",
+          "accepted": false,
+          "case": "signed-older-revision",
+          "expected_reason_matched": true,
+          "state_unchanged": true
+        }
+      ],
+      "installed_state_unchanged": true
+    }
+  ],
+  "scope": "Compiled agent configuration and installer-bootstrap validation for customer and technician state. These are isolated state fixtures, not live endpoint configuration swaps or native UI tests.",
+  "installed_native_ui_tamper_behavior_qualified": false,
+  "live_profile_sync_key_rotation_qualified": false,
+  "full_windows_matrix_qualified": false,
+  "production_publication": false
+}

@@ -1,0 +1,55 @@
+{
+  "utc": "2026-11-02T17:52:07.423679+00:00",
+  "source": "1d04bb71eb34a2111a25aed776de664086ea15aa",
+  "version": "1.5.16",
+  "native_workflow_run": 41471963822,
+  "artifact": 13160353060,
+  "artifact_digest": "sha256:c2d26cec0dc88e5bfe53c029f421826b2df0c63b478f8b981fee19fea3526ecf",
+  "all_manifest_hashes_match": true,
+  "transfer_write_regression_log_verified": true,
+  "corresponding_source_archive_verified": true,
+  "lab_signing": {
+    "retained_machine_local_nonexportable_key": true,
+    "private_key_exported": false,
+    "five_outputs_verified": true,
+    "production_signing": false
+  },
+  "prepared_formats": [
+    {
+      "edition": "technician",
+      "format": "exe",
+      "sequence": 18,
+      "sha256": "ff85dc69ebc8580cf0cf6ad7f8c75b5ae8be3e6b33ea4e2fd58362a7b7ff1759"
+    },
+    {
+      "edition": "customer",
+      "format": "msi",
+      "sequence": 19,
+      "sha256": "860ac01b2600e9db6c96397b98fde57a484566cf4260b35da0a7fdd15b1c823b"
+    },
+    {
+      "edition": "technician",
+      "format": "msi",
+      "sequence": 19,
+      "sha256": "85746d1c020eed59da50ff3545f1d043778c9c1dde5769c16b67a3aa04eb9a1f"
+    }
+  ],
+  "public_https_asset_hashes_verified": true,
+  "release_negative_tests": {
+    "invalid_signature_rejected": true,
+    "request_key_override_rejected": true,
+    "unapproved_build_rejected_without_job": true
+  },
+  "three_approved_test_bundle_jobs_queued": true,
+  "company_profile_revision": 40,
+  "automatic_updates_paused": true,
+  "bundle_generation_complete": true,
+  "installer16_executed": true,
+  "native16_live_session_qualified": false,
+  "independent_native16_reproduction_pending": true,
+  "customer_exe_pending": "Signing the outer archive does not sign its embedded installed executable; a trusted producer pipeline must sign the payload before building and signing the outer installer.",
+  "production_publication": false,
+  "bundle_generation_verified_utc": "2026-11-02T17:53:18.343161+00:00",
+  "bundle_download_access_checks_passed": true,
+  "installer_execution_scope": "Technician EXE on genuine standard Server2022 desktop; customer MSI16 execution pending"
+}

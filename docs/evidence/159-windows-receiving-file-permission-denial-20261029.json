@@ -1,0 +1,21 @@
+{
+  "utc": "2026-10-29T16:43:00.516579+00:00",
+  "only_file_permission_removed_from_real_group_policy": true,
+  "native_desktop_customer_approved_and_connected": true,
+  "receiving_consent_dialog_file_permission_disabled": true,
+  "native_transfer_action_still_available_and_attempted": true,
+  "separate_file_connection_reached_receiving_authorization": true,
+  "receiving_error_observed": "Company grant denies file transfer",
+  "file_manager_never_exposed_remote_directory_listing": true,
+  "failed_file_connection_claimed_then_closed_in_server_history": true,
+  "authorized_limited_desktop_lease_still_live": true,
+  "receiving_implementation_reference": "src/server/connection.rs managed_permission_cap and FileTransfer login gate",
+  "lab_policy_restoration_pending": false,
+  "production_publication": false,
+  "exact_original_policy_restored_and_no_live_sessions_after_test": true,
+  "application_source": "aff8ff61e3fbd6f34c4cf0bb9de6e330ec6e0521",
+  "version": "1.5.9",
+  "limits": [
+    "Separate NAT lab VMs, lab publisher only. This tests native file-transfer login rejection, not every packet or third-party malicious client."
+  ]
+}

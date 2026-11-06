@@ -1,0 +1,84 @@
+{
+  "utc": "2026-10-31T05:51:35.629430+00:00",
+  "source": "58431d9b0d5d3f2b9f0c92f72367bf276c9841da",
+  "edition": "technician",
+  "os": "Windows Server 2019 Standard Evaluation Desktop Experience, build17763",
+  "account_scope": "Owned built-in Administrator console; not standard-user qualification",
+  "automatic_update": {
+    "from_sequence": 15,
+    "to_sequence": 16,
+    "from_version": "1.5.12",
+    "to_version": "1.5.13",
+    "manual_update_or_installer_invoked": false,
+    "exact_signed_installed_files_verified": true,
+    "identity_consent_and_bootstrap_preserved": true,
+    "same_vm_customer_excluded_and_unchanged_sequence": 13
+  },
+  "runtime": {
+    "version": "1.5.13+81",
+    "sha256": "0e2ef1ae0966e1e2bedeeb63741909decf3da1a2737d7fa893383006a7f44b70",
+    "payload_cache": "payload-35f10ad9aa487c1952c0d7d5d020aa3ea735536fdf6fd445d4ea340a45c2de2d",
+    "matches_verified_original_unsigned_native_payload": true,
+    "old_runtime_process_absent": true,
+    "fresh_mfa_login_and_authorized_inventory_observed": true
+  },
+  "reporting": {
+    "same_installation_identity_as_prior_1_5_11_report": true,
+    "installed_sequence": 16,
+    "installed_version": "1.5.13",
+    "phase_after_policy_pause": "deferred",
+    "target_sequence": null,
+    "report_revision_advanced": true
+  },
+  "policy": {
+    "enabled_revision": 35,
+    "restored_paused_revision": 36,
+    "original_rollout_percent": 20,
+    "limited_test_rollout_percent": 28,
+    "included_technician_cohort": 27,
+    "excluded_same_vm_customer_cohort": 78,
+    "restored_signature_and_installed_acceptance_verified": true
+  },
+  "distribution": [
+    {
+      "edition": "customer",
+      "job_id": "1ca9f174-289c-496a-8d27-dbfb7665ed8f",
+      "bundle_sha256": "e0eb653d371faa54667eb0b8b9128c2f7264b72103e59f8422cdbde027d292ce",
+      "bytes": 32729973,
+      "public_bootstrap_only": true,
+      "profile_and_release_signatures_verified": true,
+      "offline_signature_mutation_check": true,
+      "seven_source_texts_exact": true,
+      "signed_payload_hashes_verified": true,
+      "anonymous_status": 200,
+      "download_status": 200
+    },
+    {
+      "edition": "technician",
+      "job_id": "939469a4-89d7-40bc-ae5f-00b2673925ef",
+      "bundle_sha256": "825b094e8b72bb6213c069adf06b82ad5de7968dfe0d8fe2528ef28b7fa6946d",
+      "bytes": 30521805,
+      "public_bootstrap_only": true,
+      "profile_and_release_signatures_verified": true,
+      "offline_signature_mutation_check": true,
+      "seven_source_texts_exact": true,
+      "signed_payload_hashes_verified": true,
+      "anonymous_status": 401,
+      "download_status": 200
+    }
+  ],
+  "lab_fixture_maintenance": {
+    "obsolete_pre_1_5_12_recovery_tasks_13_and_14_removed_after_exact_ownership_checks": true,
+    "these_helpers_had_exited_with_result_1_and_reopened_console_windows": true,
+    "installed_payload_unchanged_by_maintenance": true,
+    "maintenance_not_counted_as_upgrade_cleanup_acceptance": true
+  },
+  "limits": [
+    "This qualifies this technician automatic update, exact running runtime, fresh MFA/inventory and company report; it does not qualify a new remote desktop session",
+    "Standard-user technician, current customer update, other clean OS/edition lifecycle tests and technician interruption remain separate",
+    "Independent native reproduction is still running",
+    "Lab signing only; public NAT/relay and production signing remain unqualified"
+  ],
+  "product_complete": false,
+  "production_publication": false
+}

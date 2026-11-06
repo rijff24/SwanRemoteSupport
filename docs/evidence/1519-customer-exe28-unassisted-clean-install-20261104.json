@@ -1,0 +1,127 @@
+{
+  "utc": "2026-11-04T03:11:29.025430+00:00",
+  "runtime_source": "a3fedd94e38d902164db90321bcf397c85a6c12b",
+  "customer_exe_producer_source": "dbab5fb72b9da1d994a096b91022cb0bc55e1ff3",
+  "company_bundle_recipe_source": "332af85187668b08a87714c6e19b41d9ba124ced",
+  "fresh_os": "Windows10 Pro x64 build19045",
+  "fresh_product_free_overlay": true,
+  "shipping_installation": {
+    "version": "1.5.19",
+    "watch_state": "Running",
+    "profile_revision": 44,
+    "sequence": 28,
+    "shipping_verifier_passed": true,
+    "utc": "2026-11-04T02:49:33.7979305Z",
+    "all_signed_files": 95,
+    "default_unattended_consent_off": true,
+    "service_state": "Running",
+    "production_qualified": false,
+    "enrolled": true,
+    "public_lab_publisher_verified": true,
+    "tailscale_absent": true
+  },
+  "unapproved_device_denial": {
+    "utc": "2026-11-04T02:54:01.352818+00:00",
+    "fresh_customer19_enrollment_pending": true,
+    "unattended_consent_off": true,
+    "authorized_technician_inventory_excludes_unapproved_device": true,
+    "real_pending_device_grant_with_valid_proof_rejected": 403,
+    "device_approval_group_and_consent_unchanged": true,
+    "session_history_unchanged": true,
+    "signed_profile_revision": 44,
+    "updates_paused": true,
+    "no_successful_grant_or_native_session_created": true,
+    "receiving_device_bypass_qualification": false,
+    "production_publication": false
+  },
+  "one_shipping_setup_invocation_only": true,
+  "no_tray_termination_or_manual_service_start": true,
+  "no_manual_executable_rename_or_package_patch": true,
+  "unassisted_shipping_installation_passed": true,
+  "setup_invocation": "Elevated shipping Install-Company.ps1 with explicit company-domain confirmation; isolated lab DNS mapping and public test trust provisioned by fixture",
+  "interactive_uac_and_wizard_success_qualified": false,
+  "fresh_standard_user_gui_qualified": true,
+  "reboot_verification_pending": false,
+  "full_lifecycle_and_windows_matrix_qualified": false,
+  "production_publication": false,
+  "normal_reboot": {
+    "no_pending_recovery": true,
+    "identity_token_bootstrap_and_consent_preserved": true,
+    "build": "19045",
+    "utc": "2026-11-04T03:22:36.3689441Z",
+    "boot_utc": "2026-11-04T03:16:28.5000000Z",
+    "watch": "Running",
+    "tailscale_absent": true,
+    "service": "Running",
+    "sequence": 28,
+    "gui_verification_pending": true,
+    "shipping_verifier_passed": true,
+    "profile_revision": 44
+  },
+  "explicit_shipping_repair": {
+    "no_pending_recovery": true,
+    "utc": "2026-11-04T03:57:00.3504957Z",
+    "explicit_shipping_repair": true,
+    "watch": "Running",
+    "identity_token_bootstrap_consent_preserved": true,
+    "service": "Running",
+    "sequence": 28,
+    "installed_verifier_passed": true,
+    "tailscale_absent": true,
+    "profile_revision": 44
+  },
+  "standard_customer_ui": {
+    "utc": "2026-11-04T04:11:48.375550+00:00",
+    "native_images": {
+      "metadata_only_no_memory_dump": true,
+      "production_qualified": false,
+      "actual_mapped_images_match_primary": true,
+      "utc": "2026-11-04T04:09:17.2624829Z",
+      "unassisted_installation": true,
+      "images": [
+        {
+          "module": "Swan Remote Support.exe",
+          "sha256": "819c78ae404a88801a8ea65f5f9bc69dba5ed9c7bcf91753a942f2f1c540b07c",
+          "matches_primary_or_signed_main": true,
+          "actual_mapped_file": "\\Device\\HarddiskVolume1\\Program Files\\Swan Remote Support\\Swan Remote Support.exe"
+        },
+        {
+          "module": "librustdesk.dll",
+          "sha256": "22df0b04a78e393b6cb79418faa2c1b5a5dd2b9be0360cf915ca638f97b01cad",
+          "matches_primary_or_signed_main": true,
+          "actual_mapped_file": "\\Device\\HarddiskVolume1\\Program Files\\Swan Remote Support\\librustdesk.dll"
+        },
+        {
+          "module": "flutter_windows.dll",
+          "sha256": "c87ba5a71afa7b7100c1c9ccc1289009dab812f9de2acc38f9d5103e48c1f204",
+          "matches_primary_or_signed_main": true,
+          "actual_mapped_file": "\\Device\\HarddiskVolume1\\Program Files\\Swan Remote Support\\flutter_windows.dll"
+        }
+      ],
+      "native_version": "1.5.19+87",
+      "standard_user": true,
+      "native_pid": 3956
+    },
+    "configured_company_name_and_logo_visible": true,
+    "customer_approval_required_visible": true,
+    "stop_support_visibly_paused": true,
+    "resume_support_visibly_ready": true,
+    "unattended_confirmation_shows_company_domain_and_signin_screen_scope": true,
+    "unattended_confirmation_cancelled": true,
+    "unattended_opt_in_and_revocation_qualified_on_this_fixture": false,
+    "live_session_qualified": false,
+    "screenshots": {
+      "standard-ready.png": "6b48839b73f953c684566e04881b8539927f757835b72365c7ea5c4542a27763",
+      "standard-paused.png": "bbdcb86fcb4ed75395951aaaa12e618c2df2d3b857ced1a81d9f7472353d0d81",
+      "unattended-confirmation.png": "47ec2b02cd267eab949ef27bf6202627694832ec2f4f51e4f048deb283bcf665"
+    },
+    "lab_standard_signin_cleanup": {
+      "original_registry_and_lsa_secret_restored": true,
+      "temporary_encrypted_files_removed": true,
+      "automatic_logon_disabled": true,
+      "completed_cleanup_task_removed_separately": true,
+      "first_logon_task_time_limit_reached_after_restoration": true
+    },
+    "production_qualified": false
+  }
+}

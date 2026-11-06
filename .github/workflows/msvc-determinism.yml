@@ -1,0 +1,38 @@
+name: Diagnose MSVC callback reproducibility
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - .github/workflows/msvc-determinism.yml
+      - deployment/windows/test_msvc_determinism.ps1
+      - deployment/windows/patch-flutter-client-wrapper.py
+      - deployment/windows/test_flutter_client_wrapper.py
+      - deployment/windows/emit-flutter-reply-fixture.py
+      - deployment/windows/fixtures/flutter_reply_handler.cpp.in
+permissions:
+  contents: read
+jobs:
+  fixture:
+    runs-on: windows-2022
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          persist-credentials: false
+      - name: Compare actual callback and RTTI bytes across build directories
+        shell: pwsh
+        run: |
+          python3 -m unittest discover -s deployment/windows -p test_flutter_client_wrapper.py
+          if ($LASTEXITCODE) { throw 'Client-wrapper source trust regressions failed.' }
+          ./deployment/windows/test_msvc_determinism.ps1 -WorkDirectory (Join-Path $env:RUNNER_TEMP 'swan-msvc-repro-fixture')
+      - name: Retain original fixture outputs and diagnostics
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: msvc-callback-reproducibility-UNSIGNED-TEST
+          path: |
+            ${{ runner.temp }}/swan-msvc-repro-fixture/report.json
+            ${{ runner.temp }}/swan-msvc-repro-fixture/*.log
+            ${{ runner.temp }}/swan-msvc-repro-fixture/*.arguments.json
+            ${{ runner.temp }}/swan-msvc-repro-fixture/*.exe
+          if-no-files-found: warn

@@ -1,0 +1,25 @@
+{
+  "sequence": 32,
+  "full_shipping_verifier_passed": true,
+  "source": "d5eeaa918fbb2510148d041297be99dbdc169360",
+  "identity_trust_enrollment_and_consent_preserved": true,
+  "exact_license_restored_by_shipping_repair": true,
+  "utc": "2026-11-06T10:21:00.5542646Z",
+  "no_pending_recovery": true,
+  "missing_hashed_license_detected": true,
+  "test_principal": "SYSTEM",
+  "edition": "customer",
+  "service_and_watcher_running": true,
+  "production_signing": false,
+  "interactive_uac_qualified": false,
+  "observation_utc": "2026-11-06T10:22:05.6516570Z",
+  "actual_task_terminal_success": true,
+  "original_missing_file_backup_retained": true,
+  "first_harness_attempt": {
+    "repair_invoked": false,
+    "failed_on_expected_negative_verification_stderr": true,
+    "resolution": "Continuation retained the same missing-file fixture and original error, captured the verifier child exit code correctly, then invoked the shipping repair path."
+  },
+  "scope": "Existing Windows11 x64 only, customer MSI32, signed isolated lab package",
+  "production_publication": false
+}

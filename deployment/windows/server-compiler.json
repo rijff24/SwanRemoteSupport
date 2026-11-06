@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "id": "Microsoft.Net.Compilers.Toolset.Framework",
+  "version": "4.12.0",
+  "url": "https://api.nuget.org/v3-flatcontainer/microsoft.net.compilers.toolset.framework/4.12.0/microsoft.net.compilers.toolset.framework.4.12.0.nupkg",
+  "sha256": "df03cf2ff2c60acab3041b07503252d98b723a2c9afb4f417926699a14f27baf",
+  "sha512_base64": "vRBKKe8CJIVhFIUIAab5BKqbfe9I8uoGHan3hFGXDojLo5ywU/xuEr10NiKVS1hE2LvuKxUuWkOFoAhTsgolxA==",
+  "catalog": "https://api.nuget.org/v3/registration5-gz-semver2/microsoft.net.compilers.toolset.framework/4.12.0.json",
+  "source": "https://github.com/dotnet/roslyn/commit/dfa7fc6bdea31a858a402168384192b633c811fa",
+  "license": "MIT",
+  "compiler": "tasks/net472/csc.exe",
+  "compiler_sha256": "48fc3f6dbd905197a6c46b46ce02e230bae2b2862eec59879b62553797999b85",
+  "build_runtime": ".NET Framework 4.7.2 or newer"
+}

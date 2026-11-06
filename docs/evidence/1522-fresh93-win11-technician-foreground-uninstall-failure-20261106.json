@@ -1,0 +1,25 @@
+{
+  "observed_utc": "2026-11-06T12:11:03.0441551Z",
+  "operating_system": "Windows 11 x64 lab",
+  "edition": "technician",
+  "native_version": "1.5.22+93",
+  "company_release_sequence": 29,
+  "standard_user_test": true,
+  "installer_exit": 0,
+  "msi_registered_after_removal": false,
+  "installed_executable_present_after_removal": false,
+  "installed_agent_present_after_removal": false,
+  "cancellation_marker_retained": true,
+  "native_process_before_and_after": {
+    "pid": 5624,
+    "created_utc": "2026-11-06T09:56:54.6110410Z",
+    "session": 1
+  },
+  "full_foreground_uninstall_passed": false,
+  "test_recorder_task_exit": 0,
+  "recorder_success_is_not_installer_acceptance": true,
+  "corrective_candidate": "1.5.23+94",
+  "superseded_customer_only_candidate_run": 42213325451,
+  "superseded_run_conclusion": "cancelled",
+  "required_follow_up": "Rebuild the combined fixes and repeat real Windows 11 foreground uninstall, reinstall and rollback; process-registration unit tests alone do not qualify the installer."
+}

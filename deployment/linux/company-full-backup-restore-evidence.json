@@ -1,0 +1,34 @@
+{
+  "management_source": "761b5c56cca8cd7eecb65d3438de0d6f0075bd4e",
+  "customer_bootstrap_unchanged": true,
+  "company_identity_and_branding_preserved": true,
+  "restored_signed_profile_original_pin_verified": true,
+  "encrypted_archive": {
+    "sha256": "d9440d79d10287bcf2650888bef0f394123c1e915c0c8daf21f368a96cf2e709",
+    "bytes": 62837628,
+    "passphrase_stored_separately": true
+  },
+  "limitations": [
+    "Initial HTTPS verification through an internal-only Docker network timed out. The original attempt and restored storage were retained; a separate ordinary Docker bridge with loopback-only HTTPS passed without changing TLS trust or restored data.",
+    "Transport startup and exact restored keys/storage were checked. No native desktop session, public NAT traversal or Internet certificate renewal was exercised.",
+    "The existing Windows customer credential was read privately on that guest and used for a device-status API check against the restored endpoint; its configured server and credential were not changed.",
+    "This qualifies the independent Linux lab recovery path. Full Windows company-server recovery remains separate."
+  ],
+  "proxy_and_deployment_settings_match": true,
+  "wrong_password_rejected_before_writes": true,
+  "private_plaintext_keys_copied_to_host": false,
+  "restored_https_original_root_and_hostname_validated": true,
+  "complete_tls_file_tree_matches": true,
+  "both_original_download_links_and_hashes_work": true,
+  "restored_administrator_mfa_login": true,
+  "full_product_acceptance": false,
+  "original_company_endpoints_unchanged": true,
+  "recovery_clone_stopped": true,
+  "transport_key_pair_matches": true,
+  "both_installer_artifact_files_match": true,
+  "existing_windows_customer_credential_authenticates": true,
+  "restored_transport_components_running": true,
+  "logout_revocation_after_restore": true,
+  "date": "2026-10-26",
+  "device_identity_approval_and_consent_preserved": true
+}

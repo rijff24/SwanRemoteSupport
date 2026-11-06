@@ -1,0 +1,43 @@
+{
+  "utc": "2026-10-30T02:40:01Z",
+  "management_source": "361d7c362de7f67b7b7456d33bf0191736eec7d5",
+  "image": "sha256:e273bd77169fa37ca947128f557957e2b2a0aaea1f72116de174ec11d61c6d24",
+  "scope": "Same-host isolated Linux company: live encrypted restore, schema migration, rollback and current-data upgrade. Lab cached compiler recipe; not canonical production Docker reproduction.",
+  "live_restored_data": {
+    "encrypted_backup_authenticated_and_restored": true,
+    "schema2_to3_startup_verified": true,
+    "automatic_preupgrade_backup_authenticated_back_to_schema2": true,
+    "actual_rollback_to_original_schema2_and_original_containers": true,
+    "restored_copy_stopped_after_test": true
+  },
+  "current_data_upgrade": {
+    "fresh_quiesced_management_checkpoint_verified": true,
+    "latest_original_data_upgraded_in_place": true,
+    "actual_old_binary_rollback_on_fresh_schema2_checkpoint": true,
+    "final_rollforward_to_current_schema3": true,
+    "transport_and_https_container_ids_and_volumes_preserved": true,
+    "one_time_migration_passphrase_absent_from_final_container_environment": true,
+    "active_and_local_deployment_recipes_match": true,
+    "recent_preupgrade_audit_events_retained": 20
+  },
+  "all_live_phases": {
+    "fresh_administrator_and_both_technician_mfa_logins": true,
+    "roles_groups_devices_approvals_and_consent_preserved": true,
+    "signed_profile_pin_revision14_branding_and_paused_updates_preserved": true,
+    "unassigned_session_grant_denied": true,
+    "technician_administrator_route_denied": true,
+    "revoked_legacy_worker_credentials_denied": true,
+    "current_private_worker_authenticated_without_user_access": true,
+    "public_customer_and_authenticated_technician_download_hashes_match": true,
+    "schema3_installation_reporting_route_verified": true
+  },
+  "test_harness_correction": "First restored-data attempt expected a list from the paginated installation-report API. The API correctly returned an object; guarded rollback completed. A corrected attempt resumed the retained restored containers and passed. No product failure or fresh restore was hidden.",
+  "limits": [
+    "No native desktop session was exercised against this newly upgraded Linux server.",
+    "External release mirror assets reused their same-host bind mount; different-host disaster recovery remains open.",
+    "Old binaries were never pointed at schema3. Rollback used retained schema2 data.",
+    "Original, restored and checkpoint data remain private and retained. Only one company copy ran at a time."
+  ],
+  "production_publication": false,
+  "full_product_acceptance_complete": false
+}

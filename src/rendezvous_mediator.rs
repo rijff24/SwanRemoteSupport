@@ -151,6 +151,11 @@ impl RendezvousMediator {
         scrap::codec::test_av1();
         *LAST_NOT_DEPLOYED_REGISTER.lock().await = None;
         loop {
+            // DNS failure can prevent either transport's refresh timer from
+            // starting, including the fail-closed unconfigured endpoint after
+            // a long offline period. Consume newly signed policy on retries.
+            #[cfg(feature = "swan_custom")]
+            crate::managed::refresh_defaults();
             let timeout = Arc::new(RwLock::new(CONNECT_TIMEOUT));
             let conn_start_time = Instant::now();
             *SOLVING_PK_MISMATCH.lock().await = "".to_owned();
@@ -280,6 +285,8 @@ impl RendezvousMediator {
                     }
                 },
                 _ = timer.tick() => {
+                    #[cfg(feature = "swan_custom")]
+                    if crate::managed::refresh_defaults() {Self::restart();}
                     if SHOULD_EXIT.load(Ordering::SeqCst) {
                         break;
                     }
@@ -459,6 +466,8 @@ impl RendezvousMediator {
                     rz.handle_resp(msg.union, Sink::Stream(&mut conn), &server, &mut update_latency).await?
                 }
                 _ = timer.tick() => {
+                    #[cfg(feature = "swan_custom")]
+                    if crate::managed::refresh_defaults() {Self::restart();}
                     if SHOULD_EXIT.load(Ordering::SeqCst) {
                         break;
                     }

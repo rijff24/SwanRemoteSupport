@@ -1,0 +1,41 @@
+name: Diagnose pinned AV1 object reproducibility
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  aom:
+    runs-on: windows-2022
+    strategy:
+      fail-fast: false
+      matrix:
+        replica: [first-runner, independent-runner]
+    timeout-minutes: 45
+    env:
+      VCPKG_COMMIT_ID: 120deac3062162151622ca4860575a33844ba10b
+      VCPKG_DEFAULT_HOST_TRIPLET: x64-windows-static
+      VCPKG_BINARY_SOURCES: clear
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          persist-credentials: false
+      - uses: lukka/run-vcpkg@b1a0dd252f06b9e25b3c022a9a03bd7a427fb6a2
+        with:
+          vcpkgDirectory: C:\vcpkg
+          vcpkgGitCommitId: 120deac3062162151622ca4860575a33844ba10b
+          doNotCache: true
+      - name: Build pinned AV1 and repeatedly compile its original source unit
+        shell: pwsh
+        run: |
+          ./deployment/windows/Diagnose-AomObject.ps1 -WorkDirectory (Join-Path $env:RUNNER_TEMP 'swan-aom-object-diagnostic') -RepeatCompiles 24
+      - name: Preserve raw objects and effective compiler inputs
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: aom-object-diagnostic-${{ matrix.replica }}-UNSIGNED-TEST
+          path: ${{ runner.temp }}/swan-aom-object-diagnostic/evidence/**
+          if-no-files-found: warn
+          retention-days: 90

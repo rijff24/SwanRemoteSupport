@@ -11,6 +11,7 @@ import 'package:get/get.dart';
 import 'package:window_manager/window_manager.dart';
 
 import '../common.dart';
+import '../common/approval_window_auto_hide.dart';
 import '../common/formatter/id_formatter.dart';
 import '../desktop/pages/server_page.dart' as desktop;
 import '../desktop/widgets/tabbar_widget.dart';
@@ -48,9 +49,21 @@ class ServerModel with ChangeNotifier {
 
   final List<Client> _clients = [];
 
-  Timer? cmHiddenTimer;
+  late final _approvalWindowAutoHide = ApprovalWindowAutoHide(
+    hasPendingApproval: () =>
+        _clients.any((client) => !client.authorized && !client.disconnected),
+    minimize: () {
+      if (!hideCm) windowManager.minimize();
+    },
+  );
 
   final _wakelockKey = UniqueKey();
+
+  void cancelApprovalWindowAutoHide() => _approvalWindowAutoHide.cancel();
+
+  void scheduleApprovalWindowAutoHide() {
+    if (isDesktop) _approvalWindowAutoHide.schedule();
+  }
 
   bool get isStart => _isStart;
 
@@ -587,6 +600,7 @@ class ServerModel with ChangeNotifier {
   }
 
   void _addTab(Client client) {
+    if (!client.authorized) _approvalWindowAutoHide.cancel();
     tabController.add(TabInfo(
         key: client.id.toString(),
         label: client.name,
@@ -598,10 +612,7 @@ class ServerModel with ChangeNotifier {
     });
     // Only do the hidden task when on Desktop.
     if (client.authorized && isDesktop) {
-      cmHiddenTimer = Timer(const Duration(seconds: 3), () {
-        if (!hideCm) windowManager.minimize();
-        cmHiddenTimer = null;
-      });
+      scheduleApprovalWindowAutoHide();
     }
     parent.target?.chatModel
         .updateConnIdOfKey(MessageKey(client.peerId, client.id));
@@ -701,6 +712,7 @@ class ServerModel with ChangeNotifier {
       parent.target?.invokeMethod("cancel_notification", client.id);
       client.authorized = true;
       notifyListeners();
+      scheduleApprovalWindowAutoHide();
     } else {
       bind.cmLoginRes(connId: client.id, res: res);
       parent.target?.invokeMethod("cancel_notification", client.id);

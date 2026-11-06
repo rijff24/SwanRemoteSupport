@@ -1,0 +1,17 @@
+{
+  "signed_profile_revision": 2,
+  "signature_independently_verified_against_original_pin": true,
+  "automatic_customer_watcher_sync": true,
+  "explicit_sync_command_used": false,
+  "installer_rebuilt_or_reinstalled": false,
+  "device_identity_preserved": true,
+  "company_identity_preserved": true,
+  "consent_preserved": true,
+  "software_release_sequence_preserved": true,
+  "customer_service_running": true,
+  "original_proof_sha256": "3e3ac64f208723835ae6ac5a6a32761362b6177bac8b6e91905c2e91002e071f",
+  "native_visible_ui_or_offline_behavior_qualified": false,
+  "date": "2026-10-26",
+  "application_source": "da0c621845057bed321a98a1886ef15891e431a9",
+  "scope": "Installed Server2019 customer configuration watcher synchronized a newly signed company branding revision without an explicit sync command or reinstall. Native visible UI, offline operation, restart and upgrade persistence remain separate."
+}

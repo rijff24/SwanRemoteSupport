@@ -456,12 +456,14 @@ List<TTextMenu> toolbarControls(BuildContext context, String id, FFI ffi) {
       bool isTcpTunneling = false,
       bool isTerminal = false}) {
     final connToken = bind.sessionGetConnToken(sessionId: ffi.sessionId);
+    final managedHandle = connToken?.startsWith('SWT1.') == true;
     connect(context, id,
         isFileTransfer: isFileTransfer,
         isViewCamera: isViewCamera,
         isTerminal: isTerminal,
         isTcpTunneling: isTcpTunneling,
-        connToken: connToken);
+        password: managedHandle ? connToken : null,
+        connToken: managedHandle ? null : connToken);
   }
 
   if (isDefaultConn && isDesktop) {

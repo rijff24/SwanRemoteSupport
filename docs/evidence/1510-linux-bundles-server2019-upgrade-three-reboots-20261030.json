@@ -1,0 +1,121 @@
+{
+  "utc": "2026-10-30T04:54:51.264365+00:00",
+  "application_source": "b1fbe1e2419c3e749663746c74442d1fe864302d",
+  "version": "1.5.10+78",
+  "management_source": "361d7c362de7f67b7b7456d33bf0191736eec7d5",
+  "worker_source": "1c43a382c87b05e44caff1c6c2bef4cf0b0bb6fc",
+  "scope": "Disposable Linux company and enrolled Windows Server2019 Desktop Experience, build17763. Lab signing, company bundles, explicit customer upgrade and three normal guest reboots.",
+  "signing": {
+    "lab_only": true,
+    "all_five_outputs_fresh_publisher_checks_passed": true,
+    "private_key_nonexportable_and_not_exported": true,
+    "all_original_inputs_unchanged": true,
+    "customer_msi_sha256": "971009e156b0c83382747d26794ee27c56ddb85dd42fb36fe75d51d593c1b8c8",
+    "technician_msi_sha256": "f10ee5c994734d8c22dc1d77b1a39bddd9bc8c8e784f233c30cdd3ee23788491",
+    "agent_sha256": "f886a53dcb1b97e76fc5792e9fa4a221a13e6bbfd24973d9a56f2a726103adfa",
+    "production_provider_approval": false
+  },
+  "verification_harness_recovery": {
+    "original_signing_task_not_claimed_successful": true,
+    "stalled_final_read_only_attempts_preserved": true,
+    "committed_signed_artifacts_not_rebuilt_or_resigned": true,
+    "final_verification_completed_with_normal_task_priority_and_explicit_windows_builtin_modules": true,
+    "compound_first_reboot_observer_timed_out_then_read_only_corrected_observer_passed": true,
+    "no_service_manually_started_or_reboot_repeated_to_replace_a_failed_observation": true
+  },
+  "company_distribution": {
+    "release_sequence": 13,
+    "channel": "test",
+    "invalid_signatures_rejected": true,
+    "request_cannot_override_release_key": true,
+    "unapproved_builds_rejected_without_jobs": true,
+    "two_approved_worker_jobs_completed": true,
+    "signed_profile_policy_unchanged": true,
+    "updates_paused": true,
+    "editions": [
+      {
+        "edition": "customer",
+        "bundle_sha256": "f4b811067cbbde93a0ac7b720094d664dbe57f22bf5fd47b689467f008999071",
+        "bytes": 32722166,
+        "public_bootstrap_only": true,
+        "profile_and_release_signatures_verified": true,
+        "seven_source_texts_exact": true,
+        "signed_payload_hashes_verified": true,
+        "anonymous_status": 200,
+        "download_status": 200
+      },
+      {
+        "edition": "technician",
+        "bundle_sha256": "a70e7a496068a7c5928980e7da441bbb99c64e7d07e047349eda0e714f59be8a",
+        "bytes": 30521970,
+        "public_bootstrap_only": true,
+        "profile_and_release_signatures_verified": true,
+        "seven_source_texts_exact": true,
+        "signed_payload_hashes_verified": true,
+        "anonymous_status": 401,
+        "download_status": 200
+      }
+    ]
+  },
+  "enrolled_upgrade": {
+    "before_version": "1.5.9+77",
+    "after_version": "1.5.10+78",
+    "before_sequence": 11,
+    "after_sequence": 13,
+    "profile_revision": 14,
+    "identity_device_credential_bootstrap_and_consent_preserved": true,
+    "company_branding_and_paused_policy_preserved": true,
+    "shipping_verifier_passed": true,
+    "private_worker_running": true,
+    "explicit_setup_upgrade": true,
+    "automatic_upgrade_tested": false
+  },
+  "normal_reboot_checks": [
+    {
+      "number": 1,
+      "boot_utc": "2026-10-30T04:32:09.5000000Z",
+      "automatic_customer_and_private_worker_system_services_running": true,
+      "no_customer_service_timeout_events": true,
+      "native_core_loaded_without_desktop_engine_or_plugins": true,
+      "no_manual_service_start": true,
+      "identity_credential_bootstrap_and_consent_preserved": true,
+      "shipping_installed_verifier_passed": true,
+      "private_worker_https_authorization_passed": true,
+      "no_pending_recovery": true
+    },
+    {
+      "number": 2,
+      "boot_utc": "2026-10-30T04:44:48.5000000Z",
+      "automatic_customer_and_private_worker_system_services_running": true,
+      "no_customer_service_timeout_events": true,
+      "native_core_loaded_without_desktop_engine_or_plugins": true,
+      "no_manual_service_start": true,
+      "identity_credential_bootstrap_and_consent_preserved": true,
+      "shipping_installed_verifier_passed": true,
+      "private_worker_https_authorization_passed": true,
+      "no_pending_recovery": true
+    },
+    {
+      "number": 3,
+      "boot_utc": "2026-10-30T04:49:33.5000000Z",
+      "automatic_customer_and_private_worker_system_services_running": true,
+      "no_customer_service_timeout_events": true,
+      "native_core_loaded_without_desktop_engine_or_plugins": true,
+      "no_manual_service_start": true,
+      "identity_credential_bootstrap_and_consent_preserved": true,
+      "shipping_installed_verifier_passed": true,
+      "private_worker_https_authorization_passed": true,
+      "no_pending_recovery": true
+    }
+  ],
+  "limits": [
+    "Three normal guest reboots on one Server2019 VM do not establish physical cold-power-on reliability or other Windows versions.",
+    "Current installed customer GUI, authorized native sessions and receiving permission negatives remain to be tested.",
+    "The technician bundle is verified but this receipt does not qualify installed technician1510 behavior.",
+    "Automatic rollout remained paused; this was an explicit setup upgrade, not an automatic-update test.",
+    "Both native builds succeeded; exact shipping-byte comparison is pending.",
+    "The historical intermittent159 startup failure remains preserved; these results qualify only the scoped1510 tests."
+  ],
+  "production_publication": false,
+  "full_product_acceptance_complete": false
+}

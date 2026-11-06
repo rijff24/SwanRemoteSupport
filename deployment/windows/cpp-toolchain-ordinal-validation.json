@@ -1,0 +1,11 @@
+{
+  "input_identity_sha256": "cc28be208566e3a22107767ee1c5a7dbd926154258b518b9abf7f15810a81f47",
+  "files": 618,
+  "visual_studio_version": "17.14.37806.7",
+  "toolset_directory_version": "14.44.35207",
+  "scope": "Windows probe manifest validation; not product reproducibility or runtime acceptance",
+  "probe_run": 40031644530,
+  "provider_digest": "sha256:b7ac90888bd076055b5e48f92cced44c01c34bef20ce0f640925740fe873e754",
+  "original_manifest_sha256": "bb10aa3f6269ae23501ce833f2e48df002ab8b1f529080fb015553212c0e1b89",
+  "original_artifacts_retained": true
+}

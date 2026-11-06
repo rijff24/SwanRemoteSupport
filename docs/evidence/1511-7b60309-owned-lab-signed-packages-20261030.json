@@ -1,0 +1,35 @@
+{
+  "utc": "2026-10-30T18:08:15.520941+00:00",
+  "source": "7b60309374389a1b0f8d859f8c164d6cf355353f",
+  "version": "1.5.11+79",
+  "original_unsigned_native_run": 41079284199,
+  "lab_signer_certificate_sha256": "c797e22798a8afa94496ea0e8668b6e5ee4a4fc9f639b8200d5e1071e6925ec3",
+  "lab_publisher": "Swan Disposable Lab Publisher 20261027",
+  "existing_nonexportable_windows10_key_reused": true,
+  "private_key_exported": false,
+  "five_endpoint_signatures_and_timestamps_verified": true,
+  "source_input_files_unchanged": true,
+  "source_input_files_verified": 217,
+  "default_customer_and_technician_msi_builds_passed": true,
+  "signed_customer_installed_files": 96,
+  "endpoint_output_sha256": {
+    "signed_agent_sha256": "b74868f18b05d5ff3a90f73d5947ebde6aa832b7a2c61b82546751f8537ca87c",
+    "signed_customer_executable_sha256": "faa39ba09ab1e196936171d7290f5ec0d1d28cff27e548385288746821fbd96c",
+    "signed_technician_executable_sha256": "c542a8072ff032a3e28eb04a8ee2e21a4ccf49351e2a4b0100f5a9a5691932eb",
+    "signed_customer_msi_sha256": "87702116ea7906ce845ac29f1d62df199acc6bd7d4930cf5b922cd2405770943",
+    "signed_technician_msi_sha256": "6709171f7c33c00a74936f9221bc1b4c54502e3314aa16a78367f7518536d1e9"
+  },
+  "signed_management_and_worker_sha256": {
+    "swan-worker.exe": "8b85306e565c5f95dee049d3ab2c0275abbd06129688e0d5eb0de8d678d25564",
+    "swan-management.exe": "a1dc59ab82bb246a2b59c48c8db7b31f3f7684373340484ff746cefd5c5563e8"
+  },
+  "both_server_component_signatures_and_timestamps_verified": true,
+  "signed_output_transfer_hashes_verified": true,
+  "signing_tasks_normal_priority4": true,
+  "existing_customer_service_and_identity_consent_bootstrap_preserved": true,
+  "new_packages_installed": false,
+  "live_management_or_worker_upgraded": false,
+  "independent_native_original_byte_comparison_pending": true,
+  "production_signing_approved": false,
+  "production_publication": false
+}

@@ -1,0 +1,55 @@
+{
+  "source": "1c43a382c87b05e44caff1c6c2bef4cf0b0bb6fc",
+  "artifact_id": 12885946951,
+  "archive_sha256": "ef2ea7756c6a01cf9a26331326ebc6f12d90428350fdfc24ccd6a3e195c04604",
+  "public_source_files_verified": 239,
+  "rustc": "rustc 1.90.0 (1159e78c4 2025-09-14)\nbinary: rustc\ncommit-hash: 1159e78c4747b02ef996e55082b704c09b970588\ncommit-date: 2025-09-14\nhost: x86_64-pc-windows-msvc\nrelease: 1.90.0\nLLVM version: 20.1.8\n",
+  "sha256": {
+    "swan-management.exe": "ab29be710b7f546947c3de9fb9f63f1180d0d27ff2157c8446702bd0a280e726",
+    "swan-agent.exe": "9706c97188ffdf878dabfb57e7853c4292caff7c318c9011ce6431220daf7b8c",
+    "swan-worker.exe": "5dbf2a0f2048c9831212cc4a0e8b3a6b454330a1035c1aec5ab011103136cde7",
+    "CompanyComponents-source.zip": "b8271228931b8b2da578f27f45910bf79b3445ead63548b635d7db621607be9f"
+  },
+  "worker_private_configuration_checks": {
+    "passed": true,
+    "checks": [
+      "private input reader can validate both migration inputs in one PowerShell process",
+      "compiled worker accepts protected configuration larger than the Windows pipe buffer without revealing credentials",
+      "app-container read permission rejects configuration before any job is claimed",
+      "unexpected file owner rejected",
+      "oversized configuration rejected",
+      "malformed private JSON rejected without echoing credentials",
+      "complete legacy environment cannot substitute for the service private file"
+    ],
+    "company_request_or_build_claimed": false,
+    "worker_sha256": "5dbf2a0f2048c9831212cc4a0e8b3a6b454330a1035c1aec5ab011103136cde7",
+    "service_installed": false,
+    "only_fixture_credentials": true,
+    "utc": "2026-10-29T09:12:30.8047965Z"
+  },
+  "executables_ran": false,
+  "independent_binary_reproduction": false,
+  "production_publication": false,
+  "ci_runs": [
+    {
+      "run_id": 40846044050,
+      "event": "push",
+      "successful_jobs": [
+        123353777222,
+        123353777580,
+        123353777715
+      ]
+    },
+    {
+      "run_id": 40846052027,
+      "event": "pull_request",
+      "successful_jobs": [
+        123353722297,
+        123353722647,
+        123353722710
+      ]
+    }
+  ],
+  "technician_msi_lifecycle_in_component_workflow": "skipped; separate native workflow lifecycle passed",
+  "actual_company_worker_migration_and_build": "pending"
+}

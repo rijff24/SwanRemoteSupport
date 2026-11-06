@@ -1,0 +1,103 @@
+{
+  "schema": 1,
+  "date": "2026-10-29",
+  "backup_restore_cli_source": "9fa5e8aa6a846ce015362de8082da5c938d79ff8",
+  "installed_management_source": "aff8ff61e3fbd6f34c4cf0bb9de6e330ec6e0521",
+  "installed_worker_source": "1c43a382c87b05e44caff1c6c2bef4cf0b0bb6fc",
+  "platform": "Windows Server 2016 Standard Evaluation x64 build 14393, Desktop Experience",
+  "build_verification": {
+    "company_components_run": 40865719332,
+    "linux_deployment_passed": true,
+    "maintained_windows_transport_build_passed": true,
+    "linux_and_windows_component_checks_passed": true,
+    "windows_large_incompressible_backup_recovery_passed": true,
+    "windows_artifact": 12894028915,
+    "archive_bytes": 9175409,
+    "archive_sha256": "b17c2ad5ee564bca6055a66ee20e7be2b36c0edf8f81f4c0e8578f648037b33a",
+    "all_242_bundled_public_source_files_verified_against_git": true,
+    "three_unsigned_x64_executables_verified_against_manifest": true,
+    "independent_binary_reproduction_for_this_commit": false
+  },
+  "lab_signing": {
+    "timestamped_signatures_and_exact_input_hashes_verified": true,
+    "existing_guest_nonexportable_key_used": true,
+    "private_key_exported": false,
+    "existing_signer_endpoint_identity_consent_and_service_preserved": true,
+    "signer_normally_shut_down_after_collection": true,
+    "production_signing_approval": false
+  },
+  "encrypted_export": {
+    "format": "SWANBK2",
+    "bytes": 128715687,
+    "sha256": "3c9f99b7e7cb5a188807123724d920f62af9cbc61eb646180bef180dcc8670fb",
+    "separate_signed_cli_used_without_replacing_installed_service": true,
+    "company_and_worker_temporarily_stopped_and_resumed": true,
+    "management_database_and_signing_setup_keys": true,
+    "windows_installation_receipt": true,
+    "transport_private_and_public_keys": true,
+    "transport_database_present": false,
+    "complete_https_storage_and_caddy_recipe": true,
+    "service_environment": true,
+    "completed_installer_artifacts": 4,
+    "ciphertext_collected_once_and_hash_verified": true,
+    "separate_private_passphrase_outside_git": true,
+    "earlier_backup_preserved": true
+  },
+  "isolated_restore": {
+    "actual_signed_windows_cli": true,
+    "wrong_password_rejected_without_target": true,
+    "modified_ciphertext_rejected_without_target": true,
+    "private_plaintext_staging_cleaned": true,
+    "management_and_transport_key_hashes_match": true,
+    "installation_receipt_hash_matches": true,
+    "https_files_restored": 13,
+    "https_key_and_certificate_files_hash_verified": 8,
+    "four_installer_hashes_match": true,
+    "restored_keys_have_private_windows_permissions": true,
+    "original_service_pids_and_worker_credential_unchanged_during_isolated_restore": true
+  },
+  "running_restore": {
+    "replacement_built_only_from_authenticated_restored_data": true,
+    "receipt_validated_against_existing_service_paths_and_owned_firewall_rules": true,
+    "restored_deployment_environment_matches_existing_service": true,
+    "transport_and_https_extras_mapped_to_owned_service_directories": true,
+    "normal_service_stops_and_same_parent_directory_moves": true,
+    "original_data_directory_retained": true,
+    "restored_data_started_at_canonical_path": true,
+    "installed_service_binary_and_worker_credential_unchanged": true,
+    "verified_https_and_mfa_login": true,
+    "profile_signature_trust_keys_release_approvals_and_worker_revocation_preserved": true,
+    "revoked_worker_rejected_401": true,
+    "all_four_existing_download_links_and_payload_hashes_verified": true,
+    "customer_downloads_public": true,
+    "technician_download_requires_authentication": true,
+    "anonymous_technician_download_rejected_401": true
+  },
+  "rollback": {
+    "normal_guarded_switch_back_to_preserved_original_directory": true,
+    "successfully_recovered_running_copy_retained": true,
+    "no_data_deleted": true,
+    "company_and_worker_running_automatic": true,
+    "verified_https_mfa_profile_trust_approvals_and_revocation_again": true,
+    "all_four_download_payload_hashes_and_technician_access_checks_passed_again": true,
+    "original_directory_is_current_canonical_data": true
+  },
+  "harness_corrections": {
+    "preparation_stopped_before_mutation_on_environment_json_shape_difference": true,
+    "read_only_comparison_proved_all_five_environment_values_identical": true,
+    "comparison_corrected_to_exact_case_sensitive_array_values_and_count": true,
+    "successful_preparation_multiline_json_collected_without_repeating_preparation": true
+  },
+  "scope_limits": {
+    "same_owned_windows_vm_and_existing_service_layout": true,
+    "new_machine_restore_with_different_paths_not_tested": true,
+    "transport_database_absence_is_not_database_restore_evidence": true,
+    "enrolled_devices_and_remote_sessions_in_this_company": 0,
+    "windows_maintained_transport_not_installed_by_this_test": true,
+    "active_transport_is_still_stock": true,
+    "public_internet_transport_qualification_pending": true,
+    "all_supported_windows_versions_qualification_pending": true,
+    "production_publication": false,
+    "full_product_acceptance_complete": false
+  }
+}

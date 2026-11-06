@@ -1,0 +1,57 @@
+{
+  "utc": "2026-11-02T15:27:22.009733+00:00",
+  "candidate": "1.5.16+84",
+  "helper_files_sha256": {
+    "Restart-CustomerUi.ps1": "1d2aed24fbef06991381062cdddfbf7b73109f0c05e00f6b762cce56cda4a3aa",
+    "test_customer_ui_restart.ps1": "9cd9be3ae0d3dae45302bc689a2e624262463c8042052b81db6ffa381f7283de"
+  },
+  "execution": "Actual SYSTEM task, genuine standard-user customer desktop, Windows10 Pro build19045, existing native1.5.14+82 signed payload",
+  "task_result": 0,
+  "checks": {
+    "foreign_task_unchanged": true,
+    "real_pre_msi_stop_keeps_disabled_durable_recovery_task": true,
+    "fresh_gui_preserved_on_retry": true,
+    "passwords_or_privileged_user_tokens_used": false,
+    "service_and_payload_unchanged": true,
+    "temporary_task_self_deleted": true,
+    "automatic_update_qualified": false,
+    "unrelated_task_preserved": true,
+    "restart_intent_survives_stop_before_launch": true,
+    "owned_task_removed_on_uninstall": true,
+    "real_standard_user_gui_relaunched": true,
+    "native_wrong_creation_path_and_sid_rejected": true,
+    "preparation_requires_pending_update_and_signed_executable_identity": true,
+    "restart_intent_durable_before_stop": true
+  },
+  "loader_regression": {
+    "utc": "2026-11-02T15:15:06.462558+00:00",
+    "cases": [
+      {
+        "case": "accept",
+        "exit": 0,
+        "passed": true
+      },
+      {
+        "case": "throw",
+        "exit": 1,
+        "passed": true
+      },
+      {
+        "case": "parse",
+        "exit": 1,
+        "passed": true
+      }
+    ],
+    "exact_private_stdin_and_embedded_outer_wrapper": true,
+    "product_state_changed": false,
+    "rust_test_compilation_pending": true,
+    "prepare_helpers_powershell_syntax_passed": true
+  },
+  "changes": "Close guarded old UI before MSI can rename mapped images; disable durable restart tasks until verified commit; explicitly fail the private-pipe loader on advanced script exceptions.",
+  "limits": [
+    "This qualifies the real helper and fault boundaries, not an actual MSI update.",
+    "New Rust integration test and full native16 build remain pending.",
+    "The recorded13to14 automatic UI failure remains failed."
+  ],
+  "production_publication": false
+}

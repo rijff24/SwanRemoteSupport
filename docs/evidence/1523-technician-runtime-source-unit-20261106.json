@@ -1,0 +1,21 @@
+{
+  "utc": "2026-11-06T13:01:34.527575+00:00",
+  "container": "swan-technician-lifecycle-unit-20261106",
+  "network": "none",
+  "memory_limit_mib": 512,
+  "exit_code": 0,
+  "oom_killed": false,
+  "public_source_only": true,
+  "test_filter": "technician_runtime::tests",
+  "windows_native_acceptance": false,
+  "tests_passed": 2,
+  "tests_failed": 0,
+  "windows_lock_replacement_test_executed": false,
+  "scope": "Actual Linux file-lock regression; Windows sharing and rebuilt native/installer acceptance remain required.",
+  "source_sha256": {
+    "product/agent/src/technician_runtime.rs": "fa97529c40d5d50869d3931c65453e52653289e0edfca904f3c76e9626bb351a",
+    "product/agent/src/update.rs": "cd71aff29c08938b17c233490668c68e4cf894fb83925e462a116437eb58c409",
+    "src/managed.rs": "0526e9800bef2b24194e54bc9d2e32193561ee4bf4bb408c580c51bd83fc22c2",
+    "src/core_main.rs": "c2f8c474ca85b51aec3ee1346190470ea81117c11ada68f7ca08739a11b63e23"
+  }
+}

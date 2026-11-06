@@ -1,0 +1,104 @@
+{
+  "source": "da0c621845057bed321a98a1886ef15891e431a9",
+  "passed": false,
+  "edition": "technician",
+  "phase": "install",
+  "msi_exit": 1601,
+  "windows_installer_server_connection_error": "0x80070005",
+  "standard_user_token_verified": true,
+  "loaded_user_profile_verified": true,
+  "execution_context": "Password-backed Windows scheduled batch task; interactive desktop test still required",
+  "os": {
+    "Caption": "Microsoft Windows Server 2022 Standard Evaluation",
+    "Version": "10.0.20348",
+    "BuildNumber": "20348",
+    "OSArchitecture": "64-bit",
+    "revision": 587
+  },
+  "temporary_batch_right_restored": true,
+  "tasks_disabled": true,
+  "scope": "Failed standard-user batch-context raw MSI test; no installation, repair, uninstall, company login or full standard-user acceptance established. Root cause of Windows Installer connection denial is not established.",
+  "original_evidence_records": [
+    {
+      "sha256": "7d74124d136c5f9c3ae1c0f22ce721225fc4a56605059de35aecdaa1562b009e",
+      "name": "transfer-manifest.json",
+      "bytes": 577
+    },
+    {
+      "sha256": "a2cb9fba0a11e4d2a6cac35797fce85ae5b76e93b29989e4bbdc4788b38462fe",
+      "name": "Run-Lifecycle.ps1",
+      "bytes": 4469
+    },
+    {
+      "sha256": "4a3e98464044e3511a38c6f917f01f63ff43c2b41253d52e0819bde22c313384",
+      "name": "Test-DisposableMsi.ps1",
+      "bytes": 11239
+    },
+    {
+      "sha256": "64b7144b38c8b963b98cbb96f9964395c9413ce1a1b614d10fd0d57484f7619e",
+      "name": "Get-MsiIdentity.ps1",
+      "bytes": 1035
+    },
+    {
+      "sha256": "845e8355e969b95b38b6ea83f4b89103fdc541aa088d95e2602f0d23005aa8ea",
+      "name": "Get-WindowsCompatibility.ps1",
+      "bytes": 1202
+    },
+    {
+      "sha256": "df79dd9d6d05d1a9489d3458e534aa8d70aaa5bda511a48a62110c89012789ca",
+      "name": "lifecycle-started.json",
+      "bytes": 740
+    },
+    {
+      "sha256": "a15c7be2cf4b83b0a438a4e79f5467c1d5c5f3128919ca3fbc9610748156452d",
+      "name": "lifecycle-result.json",
+      "bytes": 200
+    },
+    {
+      "sha256": "945f0e73902975b3da6abfa5df6d34b9a305be9a514b517f7ae235c45714d24a",
+      "name": "results/install/result.json",
+      "bytes": 1270
+    },
+    {
+      "sha256": "5cd1b4c215bb8f47cd4ee001101e593c8fa9aaf68ff4b9215b509280018b3de9",
+      "name": "results/install/msi.log",
+      "bytes": 2072
+    },
+    {
+      "sha256": "e19d9d161641175fc573c45765d39cbfbf5be5581b9a46ae65b7f0d93219bfc7",
+      "name": "batch-right-temporary.json",
+      "bytes": 238
+    },
+    {
+      "sha256": "c536c92f35f74aadd948ea8bf488f2319b964ad0e8a972a59df53c314a503e7e",
+      "name": "batch-right-restored.json",
+      "bytes": 175
+    },
+    {
+      "sha256": "833b591ce042f92fc9a4d38f2e4f1e8f07a17509625528b1372f633d040c8ec9",
+      "name": "password-task-original.xml",
+      "bytes": 1313
+    },
+    {
+      "sha256": "1edfa7a544599157ddf1ce3fc4959ae90202d5d6bf2c0dc6833367394743e882",
+      "name": "direct-driver-started.json",
+      "bytes": 147
+    },
+    {
+      "sha256": "772ae3d3b13109edfe4df3ab09c119feb2fbf9aee12edba8875e44a67cefa384",
+      "name": "direct-driver-exit.json",
+      "bytes": 77
+    },
+    {
+      "sha256": "9bcdc5177ce8e6b95f037347465f5df97508b985a893ab3b3c4b565aa3d77a2c",
+      "name": "logged-standard-execution.json",
+      "bytes": 400
+    },
+    {
+      "sha256": "7e2b1ae93d123ca40e2be825977e6fa1d7a341eda33dbf04ad9f0fec684e0f6a",
+      "name": "failure-task-state-original.json",
+      "bytes": 212
+    }
+  ],
+  "full_product_acceptance": false
+}

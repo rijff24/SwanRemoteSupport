@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "source_commit": "05d5369c04804b9a9b2dc06df0cb85b0efe6f274",
+  "verified_utc": "2026-10-22T12:15:28.327686+00:00",
+  "builds": [
+    {
+      "workflow_run": 39753153773,
+      "artifact": 12416969754,
+      "archive_digest": "sha256:5629a63868421d17ac00a6cdd4215cda852c59b8bcf9efb802482d6248751d53",
+      "evidence_files_verified": 19,
+      "public_engine_source_files_verified": 5604,
+      "public_buildroot_source_files_verified": 145
+    },
+    {
+      "workflow_run": 39761977920,
+      "artifact": 12420939008,
+      "archive_digest": "sha256:f1e6df169a68c3cc470d68522d7ea997ade549f2c07b621566f76bc07192b258",
+      "evidence_files_verified": 19,
+      "public_engine_source_files_verified": 5604,
+      "public_buildroot_source_files_verified": 145
+    }
+  ],
+  "comparison": "Original DLL, import library and PDB bytes from two independent exact-source CI rebuilds; no normalization",
+  "files": [
+    {
+      "path": "flutter_windows.dll",
+      "bytes_first": 18156544,
+      "bytes_second": 18156544,
+      "first_sha256": "c87ba5a71afa7b7100c1c9ccc1289009dab812f9de2acc38f9d5103e48c1f204",
+      "second_sha256": "c87ba5a71afa7b7100c1c9ccc1289009dab812f9de2acc38f9d5103e48c1f204",
+      "identical": true
+    },
+    {
+      "path": "flutter_windows.dll.lib",
+      "bytes_first": 30436,
+      "bytes_second": 30436,
+      "first_sha256": "f7183633a4053b822ad6e353484c76528ffe98242cbe5bef04923ca40373eafc",
+      "second_sha256": "f7183633a4053b822ad6e353484c76528ffe98242cbe5bef04923ca40373eafc",
+      "identical": true
+    },
+    {
+      "path": "flutter_windows.dll.pdb",
+      "bytes_first": 239464448,
+      "bytes_second": 239464448,
+      "first_sha256": "64317fb6c9248d35fd3b2ed4c72147d44676b27c3d17bee0e74b986942abe521",
+      "second_sha256": "64317fb6c9248d35fd3b2ed4c72147d44676b27c3d17bee0e74b986942abe521",
+      "identical": true
+    }
+  ],
+  "independent_rebuild_verified": true,
+  "full_runtime_qualified": false,
+  "production_approved": false
+}

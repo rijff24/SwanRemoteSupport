@@ -1,0 +1,65 @@
+{
+  "utc": "2026-10-31T06:28:32.813594+00:00",
+  "source": "58431d9b0d5d3f2b9f0c92f72367bf276c9841da",
+  "os": "Windows10 Pro x64, build19045",
+  "account_scope": "Genuine standard-user customer desktop; 2GiB disposable VM",
+  "automatic_installation": {
+    "from_sequence": 15,
+    "to_sequence": 16,
+    "from_version": "1.5.12+80",
+    "to_version": "1.5.13+81",
+    "original_idle_customer_gui_open": true,
+    "exact_signed_installed_files_and_publisher_verified": true,
+    "shipping_verifier_passed": true,
+    "msi_registration_state": 5,
+    "msi_registered_version": "1.5.13",
+    "automatic_system_service_restarted_and_running": true,
+    "configuration_watcher_running_at_normal_priority": true,
+    "identity_credential_consent_and_bootstrap_preserved": true,
+    "unattended_consent": false,
+    "consent_revision": 2,
+    "no_pending_or_failed_recovery": true,
+    "original_paused_policy_restored_and_accepted_revision": 38,
+    "manual_update_or_installer_invoked": false
+  },
+  "failed_idle_gui_acceptance": {
+    "old_standard_user_frontend_processes_persisted_after_msi": [
+      5480,
+      5312
+    ],
+    "both_created_before_update": "2026-10-31T06:01Z",
+    "company_branding_lost_in_those_old_processes": true,
+    "observed_status": "Swan Remote Support / Company setup is not complete / Support paused",
+    "automatic_customer_gui_restart_not_qualified": true,
+    "persistent_company_enrollment_loss_not_observed": true
+  },
+  "diagnostic_only": {
+    "exact_old_pid_creation_executable_path_session_and_account_sid_checked": true,
+    "only_old_idle_gui_processes_stopped": [
+      5480,
+      5312
+    ],
+    "normal_updated_executable_reopened_in_same_standard_user_explorer": true,
+    "fresh_customer_frontend_pids": [
+      4824,
+      3552
+    ],
+    "company_branding_and_customer_approval_controls_restored": true,
+    "support_still_paused_and_unattended_still_disabled": true,
+    "service_not_manually_stopped": true,
+    "reenrollment_reinstall_or_manual_update_not_invoked": true,
+    "manual_reopen_not_counted_as_automatic_update_acceptance": true
+  },
+  "harness_limits": {
+    "read_only_observer_timed_out_during_update": true,
+    "original_update_not_restarted_or_repaired": true,
+    "separate_policy_controller_completed_restoration": true,
+    "vnc_black_frame_resolved_by_viewer_refresh_not_windows_repair": true,
+    "first_diagnostic_stop_guard_rejected_CIM_microsecond_vs_process_submicrosecond_precision": true,
+    "both_original_processes_verified_still_live_before_exact_full_precision_diagnostic": true
+  },
+  "required_next_work": "Implement managed customer GUI quiescence/restart during update and retest a genuine standard-user idle GUI; preserve session coordination and interruption recovery",
+  "current_candidate_remote_session_after_update_qualified": false,
+  "product_complete": false,
+  "production_publication": false
+}

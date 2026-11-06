@@ -1,0 +1,29 @@
+{
+  "native_confirmation_identifies_company_and_signin_screen_access": true,
+  "native_revocation_persisted_locally": true,
+  "server_consent_false_after_revoke": true,
+  "company_policy_allows_unattended": true,
+  "subsequent_unattended_grant_status": 403,
+  "signed_policy_revision": 3,
+  "customer_service_remains_running": true,
+  "local_consent_revision_after_optin": 1,
+  "date": "2026-10-26",
+  "grant_signature_and_identity_bindings_verified": true,
+  "device_initially_requires_customer_approval": true,
+  "limitations": [
+    "These native GUI consent operations were performed in the owned administrator desktop. Standard-user consent controls remain separate.",
+    "The signed unattended grant was never claimed by a receiving native device and had expired before the final closure inspection. No active-session or unexpired-lease termination is qualified.",
+    "Company policy and device consent, identity-bound grant issuance and subsequent management denial were tested. Actual unattended desktop, reboot/logon-screen access, UAC and public transport remain separate requirements."
+  ],
+  "application_source": "da0c621845057bed321a98a1886ef15891e431a9",
+  "prior_unused_grant_closed_and_lease_cleared": true,
+  "full_product_acceptance": false,
+  "consent_revision_increases_on_revoke": true,
+  "prior_grant_still_time_valid_at_final_check": false,
+  "unattended_grant_before_device_consent_status": 403,
+  "os": "Windows Server2019 x64 build 17763.3650",
+  "software_release_sequence_preserved": true,
+  "server_records_device_consent": true,
+  "authorized_unattended_grant_after_consent_status": 200,
+  "native_explicit_optin_persisted": true
+}

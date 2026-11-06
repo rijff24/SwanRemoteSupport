@@ -1,0 +1,49 @@
+{
+  "utc": "2026-10-29T19:48:14.773935+00:00",
+  "application_source": "aff8ff61e3fbd6f34c4cf0bb9de6e330ec6e0521",
+  "version": "1.5.9",
+  "standard_technician_fresh_native_mfa": true,
+  "standard_customer_explicitly_accepted_authenticated_technician": true,
+  "two_active_windows_qxl_displays_1024x768_each": true,
+  "first_display_device": "DISPLAY7",
+  "second_display_device": "DISPLAY5",
+  "native_monitor_selector_switched_to_second_display": true,
+  "distinct_blue_and_green_target_video_observed": true,
+  "remote_mouse_focus_and_keyboard_input_saved_on_both_displays": true,
+  "independent_input_file_hashes_verified": [
+    {
+      "monitor": "one",
+      "bytes": 35,
+      "sha256": "22458fc4c565fd5d21271e849d17b42ab4811ca9eae8708b3fd329082ae0d289"
+    },
+    {
+      "monitor": "two",
+      "bytes": 35,
+      "sha256": "f5d0cdcdb7f23f8d399672babbb34db840a8c024bdd221a8538404f238aeda3d"
+    }
+  ],
+  "same_one_live_claimed_attended_grant_verified": true,
+  "consent_off_revision2_preserved": true,
+  "original_identity_credential_bootstrap_and_binaries_preserved_after_hardware_change": true,
+  "latest_receiver_relay_request_utc": "2026-10-29T19:34:17.906463+00:00",
+  "latest_exact_windows_relay_pair_time": "2026-10-29 21:34:18.062379 +02:00",
+  "receiver_log_sha256": "391ea5259e8ceddfb8eb37ca9598f4e1a49f377cf8541e7c30c86df1f660fe08",
+  "relay_log_sha256": "5c3031ab4e1eef301367ddf61d852042d0b6a9e4d5558c38d4c6dcec883718e7",
+  "initial_unaccepted_request_canceled_and_no_live_authorization_before_retry": true,
+  "production_publication": false,
+  "full_product_acceptance_complete": false,
+  "completed_utc": "2026-10-29T19:57:18.505112+00:00",
+  "returned_to_first_monitor_with_original_saved_marker_visible": true,
+  "monitor_switching_created_no_replacement_grant": true,
+  "native_session_closed_original_grant": true,
+  "closed_row_retained_last_lease_timestamp": true,
+  "closed_flag_makes_retained_lease_unusable": true,
+  "no_live_authorization_after_close": true,
+  "closed_grant_renew_with_original_device_credential_rejected_403": true,
+  "test_target_windows_closed_and_support_service_preserved": true,
+  "scope": "Two separate Windows Server 2016 Desktop Experience lab VMs, standard technician and customer accounts, maintained Windows relay through host forwards, two signed QXL adapters with two active 1024x768 displays.",
+  "limits": [
+    "No mixed-DPI, monitor hot-plug, more than two monitors, combined/individual-window mode or other Windows version qualification.",
+    "No public Internet or direct NAT traversal claim."
+  ]
+}

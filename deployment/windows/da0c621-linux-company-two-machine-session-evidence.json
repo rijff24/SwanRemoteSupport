@@ -1,0 +1,57 @@
+{
+  "source": "da0c621845057bed321a98a1886ef15891e431a9",
+  "lab_only": true,
+  "passed_scope": [
+    "Separate Windows machines using an independently hosted Linux company server",
+    "Technician native MFA and group-authorized inventory",
+    "Attended grant claimed by receiving customer",
+    "Customer approval prompt and acceptance",
+    "Remote desktop video and remote mouse minimize verified on receiving console",
+    "Authorization lease renewed beyond initial expiry",
+    "Customer native Stop support disconnected technician and prevented reconnect"
+  ],
+  "technician_os": "Server 2025 26100.32230",
+  "customer_os": "Server 2019 17763.3650",
+  "transport_classification": "Successful private NAT lab session used company relay; matching receiver and relay UUID verified",
+  "customer_automatic_start_failed": true,
+  "automatic_start_failure": {
+    "events": [
+      7000,
+      7009
+    ],
+    "timeout_milliseconds": 30000,
+    "manual_recovery_succeeded": true,
+    "root_cause_confirmed": false
+  },
+  "session_server_closure_verified": false,
+  "unqualified": [
+    "Public Internet connectivity",
+    "Direct NAT traversal and separately forced relay coverage",
+    "Native unauthorized or wrong-company connection rejection",
+    "Active-session permission revocation and expired-lease termination",
+    "Keyboard clipboard transfer UAC logon screen and multiple monitors",
+    "Automatic updates",
+    "Reliable cold-boot service startup"
+  ],
+  "original_receipt_sha256": {
+    "native-two-machine-session-live.json": "a7c9a22e9130a08bedd2669ff3dbfa7da551c8ff908f69f2fba4f297f525f69d",
+    "native-two-machine-customer-stop.json": "8837876c3a4face09ee11b8ed4f344677c01b04f0a48deeff2afee05ad81945e",
+    "customer19-boot-timeout-record.json": "edec1845f1376f40eef0de225d2fe84640be44b5607f57fae201118352e73abe"
+  },
+  "full_product_acceptance": false,
+  "relay_evidence": {
+    "utc": "2026-10-27T00:53:44.328248+00:00",
+    "successful_session_used_relay": true,
+    "matching_receiver_and_relay_connection_id_verified": true,
+    "receiver_relay_time": "2026-10-27T00:43:22.379423Z",
+    "relay_pair_time": "2026-10-27T00:43:22.160426Z",
+    "native_video_service_time": "2026-10-27T00:43:37.906121Z",
+    "earlier_relay_handshake_failed_to_receive_public_key": true,
+    "direct_transport_qualified": false,
+    "public_internet_qualified": false,
+    "original_log_sha256": {
+      "customer19-native-session-server.private.log": "c61bdea45c8b25e86d461c66af128c09528c6f8f2617c08945fbd5a287a13546",
+      "native-session-hbbr.private.log": "30d78b79d0e94937b984750a7a11114dfc9107b532b3b1938fdd201267eab8c9"
+    }
+  }
+}

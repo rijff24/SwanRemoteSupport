@@ -1,0 +1,21 @@
+{
+  "os": "Windows Server 2019 x64 build 17763.3650",
+  "generated_technician_bundle_installed": true,
+  "original_verified_launcher_used": true,
+  "actual_desktop_session": 1,
+  "company_branding_visible": true,
+  "updated_signed_branding_visible": true,
+  "company_https_origin_visible": true,
+  "username_password_and_totp_entered_only_in_native_form": true,
+  "gui_mfa_sign_in_succeeded": true,
+  "authorized_device_and_group_visible": true,
+  "session_history_visible": true,
+  "independent_server_login_audit_matches": true,
+  "same_machine_customer_and_technician": true,
+  "native_remote_session_exercised": false,
+  "standard_user_install_qualified": false,
+  "full_product_acceptance": false,
+  "date": "2026-10-26",
+  "gui_sign_out_clears_inventory_and_secret_fields": true,
+  "scope": "Original verified technician launcher on owned administrator console. Company branding, MFA form sign-in, authorized device/group, history and sign-out observed in the real Flutter interface. Same-machine endpoint; no remote desktop session or standard-user installation claimed."
+}

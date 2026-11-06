@@ -939,7 +939,7 @@ pub fn is_modifier(evt: &KeyEvent) -> bool {
 }
 
 pub fn check_software_update() {
-    if is_custom_client() {
+    if cfg!(feature = "swan_custom") || is_custom_client() {
         return;
     }
     let opt = LocalConfig::get_option(keys::OPTION_ENABLE_CHECK_UPDATE);
@@ -948,8 +948,14 @@ pub fn check_software_update() {
     }
 }
 
+#[cfg(feature = "swan_custom")]
+pub fn do_check_software_update() -> hbb_common::ResultType<()> {
+    bail!("Managed editions require company-approved releases")
+}
+
 // No need to check `danger_accept_invalid_cert` for now.
 // Because the url is always `https://api.rustdesk.com/version/latest`.
+#[cfg(not(feature = "swan_custom"))]
 #[tokio::main(flavor = "current_thread")]
 pub async fn do_check_software_update() -> hbb_common::ResultType<()> {
     let (request, url) =
@@ -1116,11 +1122,21 @@ pub fn get_local_option(key: &str) -> String {
 }
 
 pub fn get_audit_server(api: String, custom: String, typ: String) -> String {
-    let url = get_api_server(api, custom);
-    if url.is_empty() || is_public(&url) {
-        return "".to_owned();
+    #[cfg(feature = "swan_custom")]
+    {
+        // Company session events use the authenticated HTTPS management API.
+        // Never derive legacy OSS/Pro audit targets from rendezvous addresses.
+        let _ = (api, custom, typ);
+        String::new()
     }
-    format!("{}/api/audit/{}", url, typ)
+    #[cfg(not(feature = "swan_custom"))]
+    {
+        let url = get_api_server(api, custom);
+        if url.is_empty() || is_public(&url) {
+            return "".to_owned();
+        }
+        format!("{}/api/audit/{}", url, typ)
+    }
 }
 
 /// Check if we should use raw TCP proxy for API calls.
@@ -2082,7 +2098,12 @@ pub fn rustdesk_interval(i: Interval) -> ThrottledInterval {
 
 pub fn load_custom_client() {
     #[cfg(feature = "swan_custom")]
-    load_swan_client_defaults();
+    {
+        load_swan_client_defaults();
+        // Company configuration has its own pinned trust key. Never load an
+        // upstream custom.txt over the managed security and routing policy.
+        return;
+    }
 
     #[cfg(debug_assertions)]
     if let Ok(data) = std::fs::read_to_string("./custom.txt") {
@@ -2107,79 +2128,7 @@ pub fn load_custom_client() {
 
 #[cfg(feature = "swan_custom")]
 fn load_swan_client_defaults() {
-    const APP_NAME: &str = "Swan Remote Support";
-    const RENDEZVOUS_SERVER: &str = env!("RENDEZVOUS_SERVER");
-    const RS_PUB_KEY: &str = env!("RS_PUB_KEY");
-    const RELAY_SERVER: Option<&str> = option_env!("RELAY_SERVER");
-    const API_SERVER: Option<&str> = option_env!("API_SERVER");
-
-    *config::APP_NAME.write().unwrap() = APP_NAME.to_owned();
-
-    // Keep every Swan build pinned to the intended self-hosted network. The
-    // Tailscale rendezvous/relay address and Ed25519 public key are public
-    // routing/trust configuration values, not credentials.
-    let mut overrides = config::OVERWRITE_SETTINGS.write().unwrap();
-    overrides.insert(
-        keys::OPTION_CUSTOM_RENDEZVOUS_SERVER.to_owned(),
-        RENDEZVOUS_SERVER.to_owned(),
-    );
-    overrides.insert(keys::OPTION_KEY.to_owned(), RS_PUB_KEY.to_owned());
-    if let Some(relay_server) = RELAY_SERVER.filter(|value| !value.trim().is_empty()) {
-        overrides.insert(
-            keys::OPTION_RELAY_SERVER.to_owned(),
-            relay_server.to_owned(),
-        );
-    }
-    if let Some(api_server) = API_SERVER.filter(|value| !value.trim().is_empty()) {
-        overrides.insert(keys::OPTION_API_SERVER.to_owned(), api_server.to_owned());
-    }
-    // Never replace this branded client with an upstream public-network build.
-    // Swan updates must be built, tested, and signed through the Swan release
-    // process.
-    overrides.insert(keys::OPTION_ALLOW_AUTO_UPDATE.to_owned(), "N".to_owned());
-    drop(overrides);
-
-    // This managed-support edition is installed in person by Swan Computing.
-    // It is ready for unattended operation only after the express setup tool
-    // creates a unique permanent password on that specific device.
-    let mut defaults = config::DEFAULT_SETTINGS.write().unwrap();
-    defaults.insert(keys::OPTION_APPROVE_MODE.to_owned(), "password".to_owned());
-    defaults.insert(
-        keys::OPTION_VERIFICATION_METHOD.to_owned(),
-        "use-permanent-password".to_owned(),
-    );
-    defaults.insert(
-        keys::OPTION_TEMPORARY_PASSWORD_LENGTH.to_owned(),
-        "10".to_owned(),
-    );
-    defaults.insert(
-        keys::OPTION_ALLOW_ONLY_CONN_WINDOW_OPEN.to_owned(),
-        "N".to_owned(),
-    );
-    drop(defaults);
-
-    // Customer devices receive support but do not initiate outbound RustDesk
-    // sessions. Network/server controls are hidden so the embedded Tailscale
-    // configuration cannot be accidentally replaced. The tray and stop-service
-    // controls remain visible so the computer owner can see and pause support.
-    let mut hard_settings = config::HARD_SETTINGS.write().unwrap();
-    hard_settings.insert("conn-type".to_owned(), "incoming".to_owned());
-    hard_settings.insert("disable-account".to_owned(), "Y".to_owned());
-    hard_settings.insert("disable-ab".to_owned(), "Y".to_owned());
-    drop(hard_settings);
-
-    let mut builtin_settings = config::BUILTIN_SETTINGS.write().unwrap();
-    builtin_settings.insert(
-        keys::OPTION_HIDE_NETWORK_SETTINGS.to_owned(),
-        "Y".to_owned(),
-    );
-    builtin_settings.insert(keys::OPTION_HIDE_SERVER_SETTINGS.to_owned(), "Y".to_owned());
-    builtin_settings.insert(keys::OPTION_HIDE_PROXY_SETTINGS.to_owned(), "Y".to_owned());
-    builtin_settings.insert(keys::OPTION_DISABLE_CHANGE_ID.to_owned(), "Y".to_owned());
-    builtin_settings.insert(
-        keys::OPTION_ALLOW_LOGON_SCREEN_PASSWORD.to_owned(),
-        "Y".to_owned(),
-    );
+    crate::managed::apply_defaults();
 }
 
 fn read_custom_client_advanced_settings(
@@ -2706,6 +2655,17 @@ pub fn is_direct_ip_access(peer: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[cfg(feature = "swan_custom")]
+    #[test]
+    fn managed_edition_never_derives_legacy_audit_targets() {
+        for api in ["", "http://legacy.example:21114", "https://company.example"] {
+            for custom in ["", "support.example:21116"] {
+                for typ in ["conn", "file", "alarm"] {
+                    assert!(get_audit_server(api.into(), custom.into(), typ.into()).is_empty());
+                }
+            }
+        }
+    }
     use hbb_common::tokio::{
         self,
         time::{interval, interval_at, sleep, Duration, Instant, Interval},

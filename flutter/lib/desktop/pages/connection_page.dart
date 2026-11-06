@@ -22,10 +22,12 @@ import '../../models/platform_model.dart';
 import '../../desktop/widgets/material_mod_popup_menu.dart' as mod_menu;
 
 class OnlineStatusWidget extends StatefulWidget {
-  const OnlineStatusWidget({Key? key, this.onSvcStatusChanged})
+  const OnlineStatusWidget(
+      {Key? key, this.onSvcStatusChanged, this.managedSupport = false})
       : super(key: key);
 
   final VoidCallback? onSvcStatusChanged;
+  final bool managedSupport;
 
   @override
   State<OnlineStatusWidget> createState() => _OnlineStatusWidgetState();
@@ -143,7 +145,7 @@ class _OnlineStatusWidgetState extends State<OnlineStatusWidget> {
           ? Column(
               children: [
                 basicWidget(),
-                Align(
+                if (!widget.managedSupport) Align(
                         child: startServiceWidget(),
                         alignment: Alignment.centerLeft)
                     .marginOnly(top: 2.0, left: 22.0),
@@ -157,7 +159,9 @@ class _OnlineStatusWidgetState extends State<OnlineStatusWidget> {
     widget.onSvcStatusChanged?.call();
     return Text(
       _svcStopped.value
-          ? translate("Service is not running")
+          ? (widget.managedSupport
+              ? 'Support paused'
+              : translate("Service is not running"))
           : stateGlobal.svcStatus.value == SvcStatus.connecting
               ? translate("connecting_status")
               : stateGlobal.svcStatus.value == SvcStatus.notReady

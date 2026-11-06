@@ -136,6 +136,23 @@ pub extern "C" fn rustdesk_core_main_args(args_len: *mut c_int) -> *mut *mut c_c
     return std::ptr::null_mut() as _;
 }
 
+#[cfg(all(windows, feature = "swan_custom"))]
+#[no_mangle]
+pub extern "C" fn swan_service_bootstrap(
+    report: Option<crate::platform::windows::BootstrapServiceStatus>,
+) -> u32 {
+    match report {
+        Some(report) => crate::platform::windows::run_bootstrapped_service(report),
+        None => winapi::shared::winerror::ERROR_INVALID_PARAMETER,
+    }
+}
+
+#[cfg(all(windows, feature = "swan_custom"))]
+#[no_mangle]
+pub extern "C" fn swan_service_control(control: u32) -> u32 {
+    crate::platform::windows::bootstrap_service_control(control)
+}
+
 // https://gist.github.com/iskakaushik/1c5b8aa75c77479c33c4320913eebef6
 #[cfg(windows)]
 fn rust_args_to_c_args(args: Vec<String>, outlen: *mut c_int) -> *mut *mut c_char {
@@ -2317,19 +2334,25 @@ pub(super) mod async_tasks {
     use std::{
         collections::HashMap,
         sync::{
-            mpsc::{sync_channel, SyncSender},
             Arc, Mutex,
         },
     };
 
-    type TxQueryOnlines = SyncSender<Vec<String>>;
+    type TxQueryOnlines = tokio::sync::mpsc::Sender<Vec<String>>;
+    #[cfg(feature = "swan_custom")]
+    type CompanyTask = (String, flutter_rust_bridge::StreamSink<String>);
     lazy_static::lazy_static! {
         static ref TX_QUERY_ONLINES: Arc<Mutex<Option<TxQueryOnlines>>> = Default::default();
+    }
+    #[cfg(feature = "swan_custom")]
+    lazy_static::lazy_static! {
+        static ref TX_COMPANY: Mutex<Option<tokio::sync::mpsc::Sender<CompanyTask>>> = Default::default();
     }
 
     #[inline]
     pub fn start_flutter_async_runner() {
-        std::thread::spawn(start_flutter_async_runner_);
+        static STARTED:std::sync::Once=std::sync::Once::new();
+        STARTED.call_once(|| {std::thread::spawn(start_flutter_async_runner_);});
     }
 
     #[allow(dead_code)]
@@ -2340,12 +2363,29 @@ pub(super) mod async_tasks {
     #[tokio::main(flavor = "current_thread")]
     async fn start_flutter_async_runner_() {
         // Only one task is allowed to run at the same time.
-        let (tx_onlines, rx_onlines) = sync_channel::<Vec<String>>(1);
+        let (tx_onlines, mut rx_onlines) = tokio::sync::mpsc::channel::<Vec<String>>(1);
         TX_QUERY_ONLINES.lock().unwrap().replace(tx_onlines);
+        #[cfg(feature = "swan_custom")]
+        let mut rx_company = {
+            let (tx,rx)=tokio::sync::mpsc::channel::<CompanyTask>(16);
+            *TX_COMPANY.lock().unwrap()=Some(tx);rx
+        };
 
         loop {
-            match rx_onlines.recv() {
-                Ok(ids) => {
+            #[cfg(feature = "swan_custom")]
+            tokio::select! {
+                task=rx_company.recv()=>match task {
+                    Some((request,sink))=>{let response=crate::managed::technician_request(&request).await;sink.add(response);},
+                    None=>break,
+                },
+                ids=rx_onlines.recv()=>match ids {
+                    Some(ids)=>crate::client::peer_online::query_online_states(ids,handle_query_onlines).await,
+                    None=>break,
+                }
+            }
+            #[cfg(not(feature = "swan_custom"))]
+            match rx_onlines.recv().await {
+                Some(ids) => {
                     crate::client::peer_online::query_online_states(ids, handle_query_onlines).await
                 }
                 _ => {
@@ -2354,6 +2394,14 @@ pub(super) mod async_tasks {
                 }
             }
         }
+    }
+
+    #[cfg(feature = "swan_custom")]
+    pub fn company_request(request:String,sink:flutter_rust_bridge::StreamSink<String>)->ResultType<()> {
+        if let Some(tx)=TX_COMPANY.lock().unwrap().as_ref(){
+            if tx.try_send((request,sink)).is_err(){bail!("Company request queue is full");}Ok(())
+        }
+        else {bail!("Company request runner is not ready")}
     }
 
     pub fn query_onlines(ids: Vec<String>) -> ResultType<()> {

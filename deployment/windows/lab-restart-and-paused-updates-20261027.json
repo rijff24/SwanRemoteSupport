@@ -1,0 +1,115 @@
+{
+  "schema": 1,
+  "observed_utc": "2026-10-27T10:32:58.2410247Z",
+  "sources": {
+    "baseline_customer_151": "da0c621845057bed321a98a1886ef15891e431a9",
+    "installed_technician_152": "9ba592ca0431ce734a1edf7391aec183f5c100fa",
+    "candidate_153": "7bfce49aba857e035663f19cb25353828204e9c0"
+  },
+  "installed_pause_checks": {
+    "editions": [
+      {
+        "profile_revision": 5,
+        "identity_credential_consent_trust_preserved": true,
+        "release_sequence": 1,
+        "program_and_agent_hashes_unchanged": true,
+        "no_install_or_update_receipt": true,
+        "edition": "customer",
+        "credential_disclosed": false,
+        "actual_installed_updater_returned_false": true
+      },
+      {
+        "profile_revision": 5,
+        "identity_credential_consent_trust_preserved": true,
+        "release_sequence": 5,
+        "program_and_agent_hashes_unchanged": true,
+        "no_install_or_update_receipt": true,
+        "edition": "technician",
+        "credential_disclosed": false,
+        "actual_installed_updater_returned_false": true
+      }
+    ],
+    "utc": "2026-10-27T08:29:20.0006809Z",
+    "automatic_update_installation_tested": false,
+    "customer_and_worker_services_running": true,
+    "native_gui_startup_qualified": false
+  },
+  "windows10_full_restart": {
+    "result": "failed service auto-start acceptance",
+    "normal_restart_requested": true,
+    "force_reset": false,
+    "kernel_boot_changed": true,
+    "identity_credential_consent_trust_and_release_preserved": true,
+    "nonexportable_lab_signing_identity_retained": true,
+    "baseline_service_recovery": {
+      "credential_disclosed": false,
+      "identity_credential_consent_and_release_preserved": true,
+      "utc": "2026-10-27T10:32:58.2410247Z",
+      "replacement_153_not_yet_installed": true,
+      "cold_boot_pass": false,
+      "service_after": "Running",
+      "application_event_ids": [
+        1000
+      ],
+      "baseline_version": "1.5.1",
+      "manual_start_performed": true,
+      "system_event_ids": [
+        7000,
+        7009,
+        7000,
+        7000,
+        7009
+      ],
+      "service_before": "Stopped"
+    },
+    "startup_event_records_retained_privately": true,
+    "event_times_crossed_guest_clock_correction": true,
+    "historical_error_ids_not_all_attributed_to_latest_boot": true
+  },
+  "clock_validation": {
+    "host_external_https_time_agreed": true,
+    "guests": [
+      {
+        "application_expiry_checks_changed": false,
+        "before_utc": "2026-10-27T08:30:03.8637366Z",
+        "forward_two_hours": true,
+        "activation_action": false,
+        "guest": "SWAN-END-10B",
+        "host_clock_changed": false,
+        "after_utc": "2026-10-27T10:30:04.2722560Z"
+      },
+      {
+        "application_expiry_checks_changed": false,
+        "before_utc": "2026-10-27T10:30:08.6876199Z",
+        "forward_two_hours": false,
+        "activation_action": false,
+        "guest": "SWAN-END-19",
+        "host_clock_changed": false,
+        "after_utc": "2026-10-27T10:30:08.8166085Z"
+      }
+    ],
+    "clock_backdating": false,
+    "production_system_changed": false
+  },
+  "candidate_153": {
+    "first_workflow_run": 40468079337,
+    "first_workflow_conclusion": "success",
+    "archive_collection_still_running": true,
+    "independent_workflow_run": 40489196703,
+    "independent_rebuild_pending": true,
+    "installed_gui_and_cold_boot_retest_pending": true
+  },
+  "source_receipts": {
+    "server19-installed-paused-update-verified.json": "86f04e0022cebad5bfec131261c1171dcaa73d928804fe5a4058a1306e88b64e",
+    "win10-full-restart-request-returned.json": "79b7d697f0319302ecd0760013418b0e599b19cd743d5d570e31cb2f5143a8f8",
+    "win10-baseline-service-recovery-result.json": "5f7a3331ee8c9c8d97f0a3aa82d5aa32c9496d3e0ea1406223867e0fe4aa33cc",
+    "owned-guest-clock-alignment-20261027.json": "e4171ebcd45dcbcac13444f15f4315a60526f258c82d24ecee6f4e50fa89d746"
+  },
+  "limits": [
+    "The paused checks did not perform an automatic upgrade or interruption recovery.",
+    "The installed technician 1.5.2 GUI failure and withdrawal remain in force.",
+    "The baseline 1.5.1 service required manual recovery after a full Windows 10 restart.",
+    "Candidate 1.5.3 CI success is not proof of installed GUI startup, cold-boot service recovery, or a native session."
+  ],
+  "production_publication": false
+}

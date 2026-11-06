@@ -1,0 +1,49 @@
+{
+  "runtime_source": "a3fedd94e38d902164db90321bcf397c85a6c12b",
+  "qualification": "Server2022 standard-user technician EXE upgrade and native MFA/inventory only",
+  "upgrade_and_native_login": {
+    "native_process_owner_is_existing_standard_user": true,
+    "sequence": 24,
+    "version": "1.5.19",
+    "format": "exe",
+    "identity_and_bootstrap_preserved": true,
+    "utc": "2026-11-03T15:26:41.2781468Z",
+    "profile_revision": 44,
+    "agent_sha256": "9439084e0bab1e4f26ad6a346d7cf2c5d0d8396557f6136cc89daff0c57eb526",
+    "native_file_version": "1.5.19+87",
+    "previous_sequence": 22,
+    "loaded_protocol_library_and_engine_match_primary_build": true,
+    "native_executable_matches_primary_build": true,
+    "native_pid": 2420,
+    "os_build": "20348",
+    "outer_sha256": "c0901f62ad83a7fa4995888b65dcd0fa642d40c3ac64c42bd960082ba13a0c0c",
+    "ui_observation": {
+      "utc": "2026-11-03T15:26:36.772Z",
+      "file": "authorized-inventory.jpg",
+      "sha256": "98d45f2b900c89e692ec82fc16253cb8a4ea9ec377ede61b458f0485b1d31231",
+      "native_mfa_sign_in_observed": true,
+      "authorized_inventory_observed": true,
+      "company_branding_observed": true,
+      "session_connection_tested": false
+    }
+  },
+  "unassigned_technician_permission_test": {
+    "utc": "2026-11-03T15:29:31.548814+00:00",
+    "native19_unassigned_mfa_login_observed": true,
+    "native19_unassigned_inventory_empty": true,
+    "server_unassigned_inventory_empty": true,
+    "target_is_real_approved_device": true,
+    "valid_new_proof_public_key_used": true,
+    "unauthorized_attended_grant_status": 403,
+    "unassigned_history_unchanged_empty": true,
+    "device_approval_group_and_consent_unchanged": true,
+    "signed_profile_revision": 44,
+    "updates_remain_paused": true,
+    "no_successful_grant_or_native_session_created": true,
+    "receiving_device_bypass_tests_qualified": false,
+    "production_publication": false
+  },
+  "unassigned_native_inventory_screenshot_sha256": "0a804e03cc6f6e153b89e3681bdbbe563c84a2e0dec8b568fe5f8da681319a52",
+  "full_windows_matrix_qualified": false,
+  "production_signed": false
+}

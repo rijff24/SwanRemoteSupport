@@ -1,5 +1,7 @@
 # Tailscale deployment for Swan Remote Support
 
+> Historical baseline deployment only. The configurable product uses company-hosted rendezvous/relay and signed session grants; new packages must not install or require Tailscale. Keep the existing private deployment available until public direct, relay and denied-access tests pass. The pricing and service information below is historical, not current purchasing guidance.
+
 ## Why Tailscale is installed separately
 
 Tailscale is largely open source, but it is not one wholly open-source Windows product. The `tailscaled` daemon and CLI are published under the BSD 3-Clause licence; the official Windows graphical client and Tailscale's hosted coordination service include components that are not part of that open-source repository. See Tailscale's [open-source overview](https://tailscale.com/opensource), the [client source and licence](https://github.com/tailscale/tailscale), and the [service terms](https://tailscale.com/terms).

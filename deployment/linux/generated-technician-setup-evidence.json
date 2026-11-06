@@ -1,0 +1,17 @@
+{
+  "release_sequence": 2,
+  "current_branding_received": true,
+  "native_session_tested": false,
+  "company_identity_matches": true,
+  "no_device_token_in_technician_state": true,
+  "edition": "technician",
+  "installed_signature_valid": true,
+  "pending_install_absent": true,
+  "technician_login_tested": false,
+  "standard_user_qualified": false,
+  "profile_revision": 2,
+  "date": "2026-10-26",
+  "scope": "Generated company technician bundle installed per-user in owned administrator profile on Server2019. This is not standard-user installation or a technician login/session test.",
+  "application_source": "da0c621845057bed321a98a1886ef15891e431a9",
+  "private_original_record_sha256": "7f0fc56ba8655b1b54757c449122c032b0c83c512dfa0ca238d90ac3f3d58876"
+}

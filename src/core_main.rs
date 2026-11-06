@@ -33,6 +33,11 @@ pub fn core_main() -> Option<Vec<String>> {
         return None;
     }
     crate::load_custom_client();
+    #[cfg(all(windows,feature = "swan_custom"))]
+    if crate::managed::start_technician_lifecycle().is_err() {
+        log::error!("Technician removal is in progress or its lifecycle registration is unavailable");
+        return None;
+    }
     #[cfg(windows)]
     if !crate::platform::windows::bootstrap() {
         // return None to terminate the process
@@ -138,11 +143,15 @@ pub fn core_main() -> Option<Vec<String>> {
     }
     #[cfg(windows)]
     {
-        _is_quick_support |= !crate::platform::is_installed()
-            && args.is_empty()
-            && (is_quick_support_exe(&arg_exe)
-                || config::LocalConfig::get_option("pre-elevate-service") == "Y"
-                || (!click_setup && crate::platform::is_elevated(None).unwrap_or(false)));
+        if config::is_outgoing_only() {
+            _is_quick_support = false;
+        } else {
+            _is_quick_support |= !crate::platform::is_installed()
+                && args.is_empty()
+                && (is_quick_support_exe(&arg_exe)
+                    || config::LocalConfig::get_option("pre-elevate-service") == "Y"
+                    || (!click_setup && crate::platform::is_elevated(None).unwrap_or(false)));
+        }
         crate::portable_service::client::set_quick_support(_is_quick_support);
     }
     let mut log_name = "".to_owned();
@@ -222,6 +231,12 @@ pub fn core_main() -> Option<Vec<String>> {
                 }
                 return None;
             } else if args[0] == "--update" {
+                #[cfg(feature = "swan_custom")]
+                {
+                    log::warn!("Managed updates require the approved company update agent");
+                }
+                #[cfg(not(feature = "swan_custom"))]
+                {
                 if config::is_disable_installation() {
                     return None;
                 }
@@ -247,6 +262,7 @@ pub fn core_main() -> Option<Vec<String>> {
                     .duration(Duration::Short)
                     .show()
                     .ok();
+                }
                 return None;
             } else if args[0] == "--after-install" {
                 if let Err(err) = platform::run_after_install() {
@@ -269,6 +285,8 @@ pub fn core_main() -> Option<Vec<String>> {
                     Ok(_) => translate("Installation Successful!".to_string()),
                     Err(err) => {
                         println!("Failed with error: {err}");
+                        #[cfg(feature = "swan_custom")]
+                        std::process::exit(1);
                         translate("Installation failed!".to_string())
                     }
                 };
@@ -293,6 +311,10 @@ pub fn core_main() -> Option<Vec<String>> {
                 }
                 return None;
             } else if args[0] == "--portable-service" {
+                if config::is_outgoing_only() {
+                    log::warn!("Outgoing-only editions cannot run an incoming portable service");
+                    return None;
+                }
                 crate::platform::elevate_or_run_as_system(
                     click_setup,
                     _is_elevate,

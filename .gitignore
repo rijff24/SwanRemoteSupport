@@ -65,3 +65,10 @@ flutter/web/
 
 # Working activity log required by the repository's AI-agent rules.
 docs/AI_CHANGELOG.md
+
+# Company server and build outputs. Runtime credentials never belong in Git.
+product/target/
+swan-data/
+deployment/linux/company.env
+*.swan-backup
+deployment/windows/local-test.env

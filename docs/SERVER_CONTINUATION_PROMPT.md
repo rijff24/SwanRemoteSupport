@@ -1,5 +1,7 @@
 # Server continuation prompt
 
+> Historical continuation prompt for the single-company RustDesk/Tailscale baseline. Use it only when maintaining that preserved deployment. Current company-hosted product work follows the [product guide](../product/README.md) and [acceptance report](ACCEPTANCE.md).
+
 Paste the following into Codex when working on the RustDesk/Tailscale server. It is intentionally evidence-first because live Tailnet, firewall, and key changes can interrupt support access.
 
 ```text

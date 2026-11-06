@@ -1,0 +1,101 @@
+{
+  "observed_installed_source": "94284db24b8993344c12cae0a8baa95f82dc0e02",
+  "lab": "Windows Server 2019 technician, owned built-in Administrator console",
+  "automatic_update": {
+    "from_sequence": 14,
+    "to_sequence": 15,
+    "installed_msi_and_shipping_files_verified": true,
+    "installed_version": "1.5.12",
+    "identity_consent_bootstrap_preserved": true,
+    "same_vm_customer_excluded_sequence": 13,
+    "original_paused_policy_restored_profile": 34,
+    "manual_update_or_installer_invoked": false
+  },
+  "failed_acceptance": {
+    "fresh_native_postupdate_login_not_qualified": true,
+    "running_shared_cache_executable_version": "1.5.11+79",
+    "old_cache_runtime_still_present_in_two_processes": true,
+    "backend_control_confirmed_credentials_mfa_and_inventory_valid": true,
+    "company_report_still_installing_old_sequence": true,
+    "restart_to_new_native_runtime_not_qualified": true,
+    "finding": "Portable extraction reuses one per-user runtime directory. A previous process can keep files locked; extraction ignores read/write errors and may launch stale executable bytes. The observed GUI login failure is not independently attributed to this cause."
+  },
+  "candidate": {
+    "version": "1.5.13+81",
+    "separate_cache_directory_per_embedded_payload_sha256": true,
+    "decompression_read_and_write_errors_propagate": true,
+    "failed_extraction_refuses_launch_and_exits_nonzero": true,
+    "new_dependencies": false,
+    "python_payload_metadata_tests_passed": 4,
+    "standalone_rust_linux_cache_tests_passed": 2,
+    "windows_exclusive_locked_file_and_extraction_regressions_added_to_native_ci": true,
+    "source": "58431d9b0d5d3f2b9f0c92f72367bf276c9841da",
+    "native_build": {
+      "run": 41165258500,
+      "url": "https://github.com/rijff24/SwanRemoteSupport/actions/runs/41165258500",
+      "conclusion": "success",
+      "downloaded_archive_sha256": "e053862d1f57fa21d6d75c5b2e533c487fb65325bd0d235292a992760066523d",
+      "public_source_files_verified": 1334,
+      "generated_bridge_files_verified": 6
+    },
+    "cache_regressions": {
+      "source": "8dd97bfe9e417311db55e4d3974d43553d16375f",
+      "runtime_code_identical_to_native_candidate": true,
+      "run": 41165618009,
+      "url": "https://github.com/rijff24/SwanRemoteSupport/actions/runs/41165618009",
+      "windows_job": 124432423815,
+      "linux_job": 124432423707,
+      "both_passed": true,
+      "windows_exclusive_file_lock_branch_executed": true
+    },
+    "independent_build": {
+      "run": 41169951691,
+      "conclusion": "success",
+      "comparison_run": 41175183194,
+      "all_eight_original_shipping_outputs_identical": true,
+      "exact_source_inputs_verified": true
+    },
+    "lab_distribution": {
+      "all_five_signatures_and_original_receipts_verified": true,
+      "existing_key_nonexportable_verified": true,
+      "private_key_exported": false,
+      "project_or_production_signing": false,
+      "customer_msi_sha256": "e328a1ad36f1cd77bbefcc26da8e38b2d1448c5132937c6bb99336f86ae3e0b7",
+      "technician_msi_sha256": "18424b4672cff59a75195570b616bc626445d8e212bf251786469803985ec6a2",
+      "public_https_files_and_corresponding_source_hash_verified": true,
+      "test_release_sequence": 16,
+      "both_editions_approved": true,
+      "both_company_bundle_jobs_queued": true,
+      "company_bundle_download_verification_pending": false,
+      "automatic_updates_paused": true,
+      "profile_revision": 34,
+      "invalid_signatures_and_request_trust_override_rejected": true,
+      "unapproved_build_rejected_without_job_creation": true,
+      "actual_installation_and_native_runtime_qualification_pending": false
+    },
+    "qualified_scope": "See 1513-technician-automatic-update-runtime-mfa-and-report-20261031.json: one Server2019 owned Administrator technician automatic upgrade, exact runtime, MFA/inventory, report and paused-policy restoration",
+    "remaining_scope": [
+      "Current customer and standard-user technician",
+      "Remote desktop and remaining lifecycle/OS matrix",
+      "Current-candidate interrupted recovery"
+    ],
+    "technician_automatic_update_runtime_login_report_qualified": true,
+    "current_candidate_interrupted_recovery_pending": true
+  },
+  "limits": [
+    "Installed-file verification alone does not qualify the running native runtime",
+    "The built-in Administrator is not standard-user technician qualification",
+    "The actual Windows exclusive-file-lock regression passed; full installed application acceptance remains pending",
+    "The actual Server2019 Administrator technician update/runtime/login/report passed; current customer, standard-user, remote desktop and interrupted-recovery qualification remain separate"
+  ],
+  "product_complete": false,
+  "production_publication": false,
+  "broader_ci": {
+    "run": 41165618161,
+    "windows_x64": "success",
+    "overall": "failure",
+    "failed_job": "i686-pc-windows-msvc",
+    "reason": "Deferred 32-bit Windows toolchain cannot parse Cargo.lock version 4",
+    "windows_32bit_release_deferred": true
+  }
+}

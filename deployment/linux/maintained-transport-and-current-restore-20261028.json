@@ -1,0 +1,144 @@
+{
+  "evidence_date": "2026-10-28",
+  "project_source": "07bb8d0b99e2be002a30e5d97eebe67a9c2794ad",
+  "transport_recipe": "650361413543baf7ef150f5960544154ec77ddeb",
+  "upstream_transport": "9bae9f2f39d92c4b4ba2e28e089da5071897b22e",
+  "shared_source": "83419b6549636ee39dacef7776c473f5802e08d6",
+  "source_verification": {
+    "artifact": 12798079841,
+    "run_id": 40647659405,
+    "original_public_git_blobs_verified": 132,
+    "reviewed_patched_udp_verified": true,
+    "exact_public_recipe_files_verified": 6,
+    "artifact_hashes_verified": true,
+    "elf_linux_x64_verified": true
+  },
+  "independent_compilation": {
+    "workflow_runs": [
+      40647659405,
+      40647664923
+    ],
+    "independent_jobs": {
+      "40647659405": {
+        "job_id": 122680134783,
+        "name": "linux-deployment",
+        "required_steps_passed": [
+          "Build maintained transport from pinned public source with corresponding source",
+          "Preserve maintained Linux transport binaries and exact patched source",
+          "Rehearse maintained transport with HTTPS, enrollment and complete backup recovery"
+        ]
+      },
+      "40647664923": {
+        "job_id": 122680152595,
+        "name": "linux-deployment",
+        "required_steps_passed": [
+          "Build maintained transport from pinned public source with corresponding source",
+          "Preserve maintained Linux transport binaries and exact patched source",
+          "Rehearse maintained transport with HTTPS, enrollment and complete backup recovery"
+        ]
+      }
+    },
+    "independent_pr_merge": "1ba02cc849fcf55fbbc68d2757f56b35d9e783d0",
+    "project_trees_identical": true,
+    "public_tree": "40d789382280e6577f4f2615ce73ff9cbd9289ef",
+    "source_archive_entries_identical": 140,
+    "original_elf_binaries": {
+      "hbbs": {
+        "sha256": "6bacfa973533248aa24c2917469149d3e08246140f5423160a6da521c3dd018a",
+        "bytes": 9543512,
+        "original_bytes_identical": true,
+        "normalized": false
+      },
+      "hbbr": {
+        "sha256": "132ab0c989a110a3335220d1afbbdf022afa559cf9bec23b8419f473d04388a3",
+        "bytes": 3269592,
+        "original_bytes_identical": true,
+        "normalized": false
+      }
+    },
+    "oci_images_or_zip_metadata_identical_not_claimed": true
+  },
+  "isolated_runtime": {
+    "verified_public_executable_hashes": true,
+    "embedded_exact_source_verified": true,
+    "private_key_file_mode": "600",
+    "private_key_directory_mode": "700",
+    "host_ports_published": false,
+    "new_isolated_keys_only": true,
+    "private_key_exported": false,
+    "original_company_container_ids_unchanged": true,
+    "original_company_healthy": true
+  },
+  "current_full_backup": {
+    "bytes": 439647643,
+    "sha256": "61e947aee5cedbcc73b4fd50cc68446dc8eb76c99d15653fdf1a34eba9eb5e76",
+    "installer_artifact_count": 14,
+    "installer_artifact_bytes": 439582017,
+    "profile_revision": 14,
+    "separate_passphrase": true
+  },
+  "independent_restore": {
+    "restored_https_original_ca_and_hostname": true,
+    "restored_active_signing_key_from_database": true,
+    "legacy_seed_unchanged": true,
+    "profile_revision": 14,
+    "administrator_mfa": true,
+    "device_approval_identity_and_revoked_consent_preserved": true,
+    "all_four_device_records_preserved": true,
+    "all_fourteen_installer_artifacts_readable_by_service_uid": true,
+    "current_proxy_configuration_and_complete_tls_match": true,
+    "current_bundle_downloads": [
+      {
+        "edition": "customer",
+        "authenticated": false,
+        "status": 200,
+        "hash_matched": true
+      },
+      {
+        "edition": "customer",
+        "authenticated": true,
+        "status": 200,
+        "hash_matched": true
+      },
+      {
+        "edition": "technician",
+        "authenticated": false,
+        "status": 401,
+        "hash_matched": false
+      },
+      {
+        "edition": "technician",
+        "authenticated": true,
+        "status": 200,
+        "hash_matched": true
+      }
+    ],
+    "release_approvals_match_backup": true,
+    "failed_152_downloads_still_withdrawn": true,
+    "no_native_transport_started": true
+  },
+  "owned_lab_migration": {
+    "candidate_image": "sha256:3e879d6f3954ff2bc750ab02cdea43e05894e75cd4f8d288c411450d2fae93ca",
+    "full_restore_and_current_downloads_verified": true,
+    "original_company_vm_or_host_rustdesk_changed": false,
+    "only_owned_fresh_linux_lab": true,
+    "private_keys_copied_to_host": false,
+    "original_and_restored_private_public_keys_unchanged": true,
+    "profile_transport_pin_matches": true,
+    "management_https_container_ids_unchanged": true,
+    "devices_consent_and_release_approvals_unchanged": true,
+    "existing_company_healthy": true,
+    "candidate_transport_active_in_owned_lab": true,
+    "native_direct_relay_and_udp_qualification_pending": true
+  },
+  "tcp_startup_only_not_native_session_proof": true,
+  "machine_configuration_or_credentials_in_receipt": false,
+  "normal_production_compose_pins_changed": false,
+  "production_publication": false,
+  "remaining": [
+    "Actual authorized native direct and relay sessions through this maintained Linux transport.",
+    "Negative receiving-device authorization tests on both transports.",
+    "Public Internet reachability, NAT traversal and CGNAT qualification.",
+    "Production release approval and signing."
+  ]
+}

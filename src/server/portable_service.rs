@@ -994,6 +994,11 @@ pub mod client {
     // 2) Start helper process (direct or logon) with shmem argument.
     // 3) Keep STARTING=true until IPC ping/pong marks RUNNING, or timeout watchdog resets it.
     pub(crate) fn start_portable_service(para: StartPara) -> ResultType<()> {
+        // A portable technician is outgoing-only even when run as administrator.
+        // Reject before display discovery, shared memory allocation or elevation.
+        if hbb_common::config::is_outgoing_only() {
+            bail!("Outgoing-only editions cannot start an incoming portable service");
+        }
         log::info!("start portable service");
         let launch_token = {
             // Keep lock guards in explicit short scopes to make it obvious
@@ -1181,7 +1186,43 @@ pub mod client {
     }
 
     pub fn set_quick_support(v: bool) {
-        *QUICK_SUPPORT.lock().unwrap() = v;
+        let enabled = v && !hbb_common::config::is_outgoing_only();
+        *QUICK_SUPPORT.lock().unwrap() = enabled;
+    }
+
+    #[cfg(test)]
+    mod edition_tests {
+        use super::*;
+
+        #[test]
+        fn outgoing_only_refuses_capture_helper_before_runtime_initialization() {
+            struct RestoreEdition(Option<String>, bool);
+            impl Drop for RestoreEdition {
+                fn drop(&mut self) {
+                    let mut settings = hbb_common::config::HARD_SETTINGS.write().unwrap();
+                    if let Some(value) = self.0.take() {
+                        settings.insert("conn-type".into(), value);
+                    } else {
+                        settings.remove("conn-type");
+                    }
+                    drop(settings);
+                    *QUICK_SUPPORT.lock().unwrap() = self.1;
+                }
+            }
+            let previous = hbb_common::config::HARD_SETTINGS.write().unwrap()
+                .insert("conn-type".into(), "outgoing".into());
+            let _restore = RestoreEdition(previous, *QUICK_SUPPORT.lock().unwrap());
+            let starting = *STARTING.lock().unwrap();
+            let had_memory = SHMEM.lock().unwrap().is_some();
+            set_quick_support(true);
+            assert!(!*QUICK_SUPPORT.lock().unwrap());
+            for mode in [StartPara::Direct, StartPara::Logon("unused".into(), "unused".into())] {
+                let error = start_portable_service(mode).unwrap_err();
+                assert_eq!(error.to_string(), "Outgoing-only editions cannot start an incoming portable service");
+                assert_eq!(*STARTING.lock().unwrap(), starting);
+                assert_eq!(SHMEM.lock().unwrap().is_some(), had_memory);
+            }
+        }
     }
 
     pub struct CapturerPortable {

@@ -1,0 +1,41 @@
+name: Portable installer wait regression
+on:
+  push:
+    paths: ['libs/portable/src/install_wait.rs', 'libs/portable/src/runtime_cache.rs', '.github/workflows/portable-install-wait.yml']
+  pull_request:
+    paths: ['libs/portable/src/install_wait.rs', 'libs/portable/src/runtime_cache.rs', '.github/workflows/portable-install-wait.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    strategy:
+      matrix:
+        os: [ubuntu-24.04, windows-2022]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - name: Install pinned Rust
+        run: rustup toolchain install 1.90.0 --profile minimal
+      - name: Test actual child exit and wait in standalone and embedded module contexts
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json, os, pathlib, subprocess
+          source = pathlib.Path('libs/portable/src/install_wait.rs').resolve()
+          work = pathlib.Path(os.environ['RUNNER_TEMP']) / 'portable-install-wait'
+          work.mkdir()
+          wrapper = work / 'embedded.rs'
+          wrapper.write_text('#[path = ' + json.dumps(source.as_posix()) + ']\nmod install_wait;\n', encoding='utf-8')
+          for context, input_file, prefix in [('standalone', source, 'tests::'), ('embedded', wrapper, 'install_wait::tests::')]:
+              executable = work / (context + '.exe')
+              subprocess.run(['rustc', '+1.90.0', '--edition', '2021', '--test', str(input_file), '-o', str(executable)], check=True)
+              names = subprocess.check_output([str(executable), '--list'], text=True)
+              assert prefix + 'child_fixture: test' in names
+              subprocess.run([str(executable)], check=True)
+          PY
+      - name: Test payload cache isolation while the previous runtime file is held open
+        shell: bash
+        run: |
+          rustc +1.90.0 --edition 2021 --test libs/portable/src/runtime_cache.rs -o portable-cache-tests.exe
+          ./portable-cache-tests.exe

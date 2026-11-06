@@ -8,6 +8,8 @@ use std::{
 use bin_reader::BinaryReader;
 
 pub mod bin_reader;
+mod install_wait;
+mod runtime_cache;
 #[cfg(windows)]
 mod ui;
 
@@ -71,7 +73,13 @@ fn setup(
     } else {
         // home dir
         if let Some(dir) = dirs::data_local_dir() {
-            dir.join(APP_PREFIX)
+            match runtime_cache::directory(&dir.join(APP_PREFIX), APP_METADATA) {
+                Ok(directory) => directory,
+                Err(error) => {
+                    eprintln!("Portable runtime cache unavailable: {error}");
+                    return None;
+                }
+            }
         } else {
             eprintln!("not found data local dir");
             return None;
@@ -88,7 +96,10 @@ fn setup(
         std::fs::remove_dir_all(&dir).ok();
     }
     for file in reader.files.iter() {
-        file.write_to_file(&dir);
+        if let Err(error) = file.write_to_file(&dir) {
+            eprintln!("Portable runtime extraction failed for {}: {error}", file.path);
+            return None;
+        }
     }
     write_meta(&dir, ts);
     #[cfg(windows)]
@@ -133,6 +144,7 @@ fn is_windows_7() -> bool {
 }
 
 fn execute(path: PathBuf, args: Vec<String>, _ui: bool) {
+    let wait_for_install=args.iter().any(|argument|argument=="--silent-install");
     println!("executing {}", path.display());
     // setup env
     let exe = std::env::current_exe().unwrap_or_default();
@@ -160,6 +172,10 @@ fn execute(path: PathBuf, args: Vec<String>, _ui: bool) {
             .stderr(Stdio::inherit());
     }
     let _child = cmd.spawn();
+    if wait_for_install {
+        let code=install_wait::installation_exit_code(_child);
+        std::process::exit(code);
+    }
 
     #[cfg(windows)]
     if _ui {
@@ -207,6 +223,8 @@ fn main() {
             args = vec!["--quick_support".to_owned()];
         }
         execute(exe, args, ui);
+    } else {
+        std::process::exit(1);
     }
 }
 

@@ -1,0 +1,19 @@
+{
+  "application_source": "d5eeaa918fbb2510148d041297be99dbdc169360",
+  "edition": "technician",
+  "installed_sequence": 29,
+  "version": "1.5.22",
+  "scope": "Existing Windows11 x64 fixture; registry26300, desktop watermark26100",
+  "observed_utc": "2026-11-06T10:08:00Z",
+  "evidence_method": "Real installed native GUI through existing lab console, after the shipping signed-file verification and automatic MSI upgrade recorded separately",
+  "existing_standard_lab_user": true,
+  "real_company_mfa_login_succeeded": true,
+  "authorized_device_inventory_visually_displayed": true,
+  "company_branding_visually_displayed": true,
+  "password_and_one_time_code_not_logged": true,
+  "reusable_credentials_or_tokens_in_process_arguments": false,
+  "new_support_session_qualified": false,
+  "sign_out_qualified": false,
+  "production_signing": false,
+  "production_publication": false
+}

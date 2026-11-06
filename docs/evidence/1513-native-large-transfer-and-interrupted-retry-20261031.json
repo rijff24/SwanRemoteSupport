@@ -1,0 +1,73 @@
+{
+  "utc": "2026-10-31T08:11:16.869578+00:00",
+  "application_source": "58431d9b0d5d3f2b9f0c92f72367bf276c9841da",
+  "native_version": "1.5.13+81",
+  "scope": "Windows10 Pro19045 standard-user customer, Server2019 DesktopExperience17763 built-in Administrator technician, independent Linux company",
+  "large_roundtrip": {
+    "utc": "2026-10-31T07:53:22.703669+00:00",
+    "application_source": "58431d9b0d5d3f2b9f0c92f72367bf276c9841da",
+    "native_version": "1.5.13+81",
+    "bytes_each_direction": 67108864,
+    "sha256": "1b160da7a30e2286ac3d41447b666392e06b6beaafc8b31df089215404e1a864",
+    "cryptographically_random_source": true,
+    "both_native_ui_transfers_finished": true,
+    "customer_and_returned_file_hashes_exact": true,
+    "separate_customer_approved_file_transfer_session": true,
+    "customer_standard_user": true,
+    "technician_builtin_administrator_not_standard_user_qualification": true,
+    "interrupted_transfer_qualified": false,
+    "production_publication": false
+  },
+  "interrupted_retry": {
+    "identity_credential_trust_and_consent_preserved": true,
+    "partial_sidecar_count": 0,
+    "final_sha256": "84e40ece77dbe5a34d482916ea7dd5c177c02d32fbb043b40f81885ec6cb1026",
+    "final_bytes": 268435456,
+    "release_sequence": 16,
+    "profile_revision": 38,
+    "utc": "2026-10-31T08:09:46.4478519Z",
+    "application_source": "58431d9b0d5d3f2b9f0c92f72367bf276c9841da",
+    "native_version": "1.5.13+81",
+    "network_disconnection_seconds": 20,
+    "partial_bytes_observed_before_cut": 2490368,
+    "retained_partial_bytes_after_restore": 9568256,
+    "customer_virtual_cable_restored": true,
+    "fresh_customer_approval_required_for_reconnect": true,
+    "normal_ui_close_reopen_and_send_only": true,
+    "native_transfer_finished_after_retry": true,
+    "partial_sidecars_removed_after_success": true,
+    "manual_file_copy_edit_delete_or_rename": false,
+    "vm_app_service_or_company_restart": false,
+    "automatic_file_transfer_recovery_qualified": false,
+    "byte_offset_resume_not_independently_measured": true,
+    "remaining_finding": "Old transfer UI stayed at11% with no timeout/error after network restoration; normal fresh authorized retry recovered exact bytes.",
+    "production_publication": false
+  },
+  "network": {
+    "actual_partial_observed_utc": "2026-10-31T07:56:42.1326045Z",
+    "virtual_cable_disconnected_utc": "2026-10-31T07:56:42.473626+00:00",
+    "virtual_cable_restored_utc": "2026-10-31T07:57:02.574919+00:00",
+    "only_customer_vm_adapter": true,
+    "original_backing_untouched": true
+  },
+  "read_only_verification_harness": {
+    "first_90_second_observation_timed_out": true,
+    "original_verifier_authoritatively_confirmed_absent_before_new_read_only_verification": true,
+    "subsequent_result_durable_in_guest_and_hashes_verified": true,
+    "no_transfer_or_installer_repeated_by_the_verifier": true
+  },
+  "open_issue": {
+    "old_transfer_ui_remained_at_11_percent_for_over_5_minutes_after_network_restore": true,
+    "normal_fresh_approved_retry_recovered_correct_bytes": true,
+    "bounded_client_send_timeout_and_clear_retry_state_still_required": true
+  },
+  "limits": [
+    "Normal UI close/reopen and Send retry recovered after a real network interruption; automatic file-transfer recovery is not qualified.",
+    "The exact resumed byte offset was not independently measured.",
+    "Built-in Administrator technician does not qualify standard-user technician behavior.",
+    "Private lab connectivity does not qualify external public NAT/direct/relay.",
+    "This does not qualify native1.5.14 automatic update or the clean-OS lifecycle matrix."
+  ],
+  "production_publication": false,
+  "product_complete": false
+}

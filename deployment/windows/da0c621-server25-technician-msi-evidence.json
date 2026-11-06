@@ -1,0 +1,117 @@
+{
+  "source": "da0c621845057bed321a98a1886ef15891e431a9",
+  "passed": true,
+  "edition": "technician",
+  "package_sha256": "9e339a4140c204846c7b51c33068da9502593fcdd79e6351691426d7fe1319e3",
+  "administrative": true,
+  "phases": [
+    {
+      "passed": true,
+      "exit_code": 0,
+      "missing_file_repair": false,
+      "log_sha256": "220fbac1ec4561704c2fc0ed5e4012f9b4a0b9d672bdc206739671013b977cb5",
+      "phase": "install",
+      "result_sha256": "eda5109fbc043b31e4030ff8d70e5455062dec4019e608fb6767f9eee96983ad"
+    },
+    {
+      "passed": true,
+      "exit_code": 0,
+      "missing_file_repair": true,
+      "log_sha256": "7d97ca8b656f3c3a012bdb8681c23d401581a60732bc6562d8e941332d737f9c",
+      "phase": "repair",
+      "result_sha256": "13421809e1add5fd015a97dff0732887461786714c9ccaa7039797f71b5a59d6"
+    },
+    {
+      "passed": true,
+      "exit_code": 0,
+      "missing_file_repair": false,
+      "log_sha256": "1e6ce35a2e1866b2fbbaaacc7fda4f8fa1b07f4c4a1ec34ae2a4c25ceba3295b",
+      "phase": "uninstall",
+      "result_sha256": "c67c68ffe8a4a324770e2a8bc3de2fdd6dc714b45b434b3c6d31f5dd39cf261a"
+    }
+  ],
+  "os": {
+    "Caption": "Microsoft Windows Server 2025 Standard Evaluation",
+    "Version": "10.0.26100",
+    "BuildNumber": "26100",
+    "OSArchitecture": "64-bit",
+    "revision": 32230
+  },
+  "original_evidence_records": [
+    {
+      "sha256": "1ab1cb74664f0748c107780146c4cbcdcfdd7a3ab66b5e56992b571e2b3523b0",
+      "name": "transfer-manifest.json",
+      "bytes": 577
+    },
+    {
+      "sha256": "c4cd6515bdff6f11c87cdd65c9aabcfd7e66de8b0979de4f6634085bc79188f9",
+      "name": "Run-Lifecycle.ps1",
+      "bytes": 4342
+    },
+    {
+      "sha256": "4a3e98464044e3511a38c6f917f01f63ff43c2b41253d52e0819bde22c313384",
+      "name": "Test-DisposableMsi.ps1",
+      "bytes": 11239
+    },
+    {
+      "sha256": "64b7144b38c8b963b98cbb96f9964395c9413ce1a1b614d10fd0d57484f7619e",
+      "name": "Get-MsiIdentity.ps1",
+      "bytes": 1035
+    },
+    {
+      "sha256": "845e8355e969b95b38b6ea83f4b89103fdc541aa088d95e2602f0d23005aa8ea",
+      "name": "Get-WindowsCompatibility.ps1",
+      "bytes": 1202
+    },
+    {
+      "sha256": "82b2137605fbb68a2de954b7222600dd628fec89ee22b0fe1b79d1088f996063",
+      "name": "lifecycle-started.json",
+      "bytes": 733
+    },
+    {
+      "sha256": "4c538e89323888418e93697161b37a59197eeb83c154d6cd5493770890d0c12c",
+      "name": "lifecycle-result.json",
+      "bytes": 1941
+    },
+    {
+      "sha256": "eda5109fbc043b31e4030ff8d70e5455062dec4019e608fb6767f9eee96983ad",
+      "name": "results/install/result.json",
+      "bytes": 1268
+    },
+    {
+      "sha256": "220fbac1ec4561704c2fc0ed5e4012f9b4a0b9d672bdc206739671013b977cb5",
+      "name": "results/install/msi.log",
+      "bytes": 130456
+    },
+    {
+      "sha256": "13421809e1add5fd015a97dff0732887461786714c9ccaa7039797f71b5a59d6",
+      "name": "results/repair/result.json",
+      "bytes": 1266
+    },
+    {
+      "sha256": "7d97ca8b656f3c3a012bdb8681c23d401581a60732bc6562d8e941332d737f9c",
+      "name": "results/repair/msi.log",
+      "bytes": 102768
+    },
+    {
+      "sha256": "c67c68ffe8a4a324770e2a8bc3de2fdd6dc714b45b434b3c6d31f5dd39cf261a",
+      "name": "results/uninstall/result.json",
+      "bytes": 1270
+    },
+    {
+      "sha256": "1e6ce35a2e1866b2fbbaaacc7fda4f8fa1b07f4c4a1ec34ae2a4c25ceba3295b",
+      "name": "results/uninstall/msi.log",
+      "bytes": 94658
+    }
+  ],
+  "full_product_acceptance": false,
+  "logon_context": "Local administrator S4U task, highest privileges, session 0; no account password supplied to task registration",
+  "application_context": "First Swan application installation context on a newly created Server 2025 Standard Evaluation Desktop Experience VM; technician tested before customer edition",
+  "lab_signatures_only": true,
+  "limitations": [
+    "Not standard-user installation",
+    "Not technician login or native session acceptance",
+    "Not software-version upgrade or approved automatic updates",
+    "Customer reboot lifecycle remains separate"
+  ]
+}

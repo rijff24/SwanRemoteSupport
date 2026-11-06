@@ -1,0 +1,45 @@
+{
+  "date": "2026-11-02",
+  "source": "1d04bb71eb34a2111a25aed776de664086ea15aa",
+  "candidate": "1.5.16+84",
+  "workflow_run": 41471883938,
+  "event": "push",
+  "jobs": [
+    {
+      "id": 125367297533,
+      "name": "linux-deployment",
+      "conclusion": "success"
+    },
+    {
+      "id": 125367298067,
+      "name": "maintained-windows-transport / transport (windows-2022)",
+      "conclusion": "success"
+    },
+    {
+      "id": 125367299775,
+      "name": "technician-msi-lifecycle",
+      "conclusion": "skipped"
+    },
+    {
+      "id": 125372328011,
+      "name": "verify (ubuntu-24.04)",
+      "conclusion": "success"
+    },
+    {
+      "id": 125372328116,
+      "name": "verify (windows-2022)",
+      "conclusion": "success"
+    }
+  ],
+  "windows_regression_log_lines": [
+    "2026-11-02T15:39:17.5347515Z test update::tests::advanced_customer_ui_script_failure_returns_a_failed_child_status ... ok",
+    "2026-11-02T15:39:17.7893818Z test verifier_process::tests::interrupted_ui_helper_preserves_its_recovery_diagnostic_and_is_reaped ... ok"
+  ],
+  "scope": "Windows/Linux company components, deployment image and workspace checks; the separate full native Windows build is still pending.",
+  "limits": [
+    "Skipped technician MSI lifecycle job is not qualification.",
+    "Real14-to16 automatic MSI update and latest clean-OS lifecycle matrix remain unqualified.",
+    "No production signing or publication approval."
+  ],
+  "production_publication": false
+}

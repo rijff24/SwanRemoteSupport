@@ -1,0 +1,120 @@
+{
+  "source": "1d04bb71eb34a2111a25aed776de664086ea15aa",
+  "native_session": {
+    "utc": "2026-11-02T21:42:06.914897+00:00",
+    "session_id_sha256": "04fbc6ae2976d3cdc5a267dca7a7f58c73e33a840bcf8b2fead47c58d78c0155",
+    "claimed": true,
+    "closed": false,
+    "new_target_bound_grants": 3,
+    "superseded_attempts_closed": 2,
+    "exactly_one_active_native_session": true,
+    "target_and_technician_bound_to_preflight": true,
+    "unattended_disabled": true,
+    "native_customer_waited_for_standard_user_approval": true,
+    "native_desktop_rendered_after_customer_accept": true,
+    "remote_pointer_test_folder_navigation_correlated_on_both_desktops": true,
+    "remote_escape_closed_customer_desktop_context_menu": true,
+    "versions": "1.5.16+84 both native endpoints",
+    "company_source": "94284db24b8993344c12cae0a8baa95f82dc0e02",
+    "native_source": "1d04bb71eb34a2111a25aed776de664086ea15aa",
+    "session_still_active": false,
+    "update_coordination_and_transfer_pending": false,
+    "production_publication": false,
+    "customer_stop_verified": true,
+    "transfer_scope": "64MiB exact roundtrip; interrupted256MiB completed by fresh user retry; automatic reauthorization failed"
+  },
+  "roundtrip64": {
+    "utc": "2026-11-02T21:54:45.601937+00:00",
+    "source": "1d04bb71eb34a2111a25aed776de664086ea15aa",
+    "mode": "roundtrip64",
+    "source_file": {
+      "sha256": "41c16f3eacf0980d39a5b1faac8208093e5be5a8ad2b6bc349574087770954cf",
+      "name": "large-random-64MiB.bin",
+      "bytes": 67108864
+    },
+    "received": [
+      {
+        "no_sidecars": true,
+        "sha256": "41c16f3eacf0980d39a5b1faac8208093e5be5a8ad2b6bc349574087770954cf",
+        "bytes": 67108864,
+        "role": "customer"
+      },
+      {
+        "no_sidecars": true,
+        "sha256": "41c16f3eacf0980d39a5b1faac8208093e5be5a8ad2b6bc349574087770954cf",
+        "bytes": 67108864,
+        "role": "technician"
+      }
+    ],
+    "exact_source_hashes_verified": true,
+    "files_copied_by_verifier": false,
+    "production_publication": false
+  },
+  "interrupted256_retry": {
+    "utc": "2026-11-02T22:18:29.327770+00:00",
+    "source": "1d04bb71eb34a2111a25aed776de664086ea15aa",
+    "mode": "forward256",
+    "source_file": {
+      "sha256": "b4d782a74e39740e47747c2cb0de9d5c307b5cf7e20b3fde0f8ce1898e3db163",
+      "name": "interruption-random-256MiB.bin",
+      "bytes": 268435456
+    },
+    "received": [
+      {
+        "no_sidecars": true,
+        "sha256": "b4d782a74e39740e47747c2cb0de9d5c307b5cf7e20b3fde0f8ce1898e3db163",
+        "bytes": 268435456,
+        "role": "customer"
+      }
+    ],
+    "exact_source_hashes_verified": true,
+    "files_copied_by_verifier": false,
+    "production_publication": false
+  },
+  "automatic_recovery_failure": {
+    "utc": "2026-11-02T22:07:28.663755+00:00",
+    "source": "1d04bb71eb34a2111a25aed776de664086ea15aa",
+    "network_interruption_seconds": 45,
+    "network_restored": true,
+    "real_partial_bytes_observed": 2097152,
+    "ui_last_progress_bytes_approx": 35787898,
+    "native_transfer_left_blocked_write_and_entered_reauthorization": true,
+    "exact30_second_timeout_not_independently_proven": true,
+    "customer_reapproved_desktop_after_outage": true,
+    "file_transfer_still_waited_for_customer_approval_without_visible_file_prompt": true,
+    "automatic_recovery_passed": false,
+    "normal_file_window_cancel_used": true,
+    "partial_file_untouched": true,
+    "vm_app_service_restart_used": false,
+    "fresh_user_retry_pending": true,
+    "production_publication": false
+  },
+  "network_interruption": {
+    "utc": "2026-11-02T21:55:19.450806+00:00",
+    "vm": "owned Windows10 protected overlay",
+    "only_virtual_customer_adapter": true,
+    "original_backing_disk_untouched": true,
+    "expected_bytes": 268435456,
+    "state": "virtual network restored; native transfer recovery inspection pending",
+    "network_down_requested": true,
+    "network_restored": true,
+    "production_publication": false,
+    "partial": {
+      "observed_utc": "2026-11-02T21:56:23.1860776Z",
+      "bytes": 2097152,
+      "event": "partial"
+    },
+    "network_down_utc": "2026-11-02T21:56:24.500064+00:00",
+    "network_restored_utc": "2026-11-02T21:57:09.595245+00:00"
+  },
+  "customer_stop": {
+    "utc": "2026-11-02T22:20:31.936653+00:00",
+    "customer_stop_used": true,
+    "no_live_authorization_leases": true,
+    "unattended_disabled": true,
+    "updates_remain_paused_revision": 42
+  },
+  "byte_resume_offset_not_independently_measured": true,
+  "exact30_second_live_send_timeout_not_independently_proven": true,
+  "production_publication": false
+}

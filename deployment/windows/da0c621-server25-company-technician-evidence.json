@@ -1,0 +1,63 @@
+{
+  "source": "da0c621845057bed321a98a1886ef15891e431a9",
+  "server_source": "761b5c56cca8cd7eecb65d3438de0d6f0075bd4e",
+  "os": "Windows Server 2025 Standard Evaluation Desktop Experience x64 26100.32230",
+  "lab_only": true,
+  "worker": {
+    "authenticated_outbound_build_completed": true,
+    "local_system_service": true,
+    "protected_artifact_matches_server": true,
+    "credential_and_registry_acl_protected": true
+  },
+  "distribution": {
+    "edition": "technician",
+    "release_sequence": 3,
+    "bundle_sha256": "e11e2fbd44a0e16d3e0e01f7b47a5b71093f1b4650d3301bc7a22a3a9c81afb2",
+    "authenticated_download_passed": true,
+    "anonymous_download_rejected": true,
+    "project_signed_production_release": false
+  },
+  "installation": {
+    "release_sequence": 3,
+    "current_branding_received": true,
+    "native_session_tested": false,
+    "utc": "2026-10-27T00:21:43.8359528Z",
+    "company_identity_matches": true,
+    "no_device_token_in_technician_state": true,
+    "edition": "technician",
+    "installed_signature_valid": true,
+    "pending_install_absent": true,
+    "technician_login_tested": false,
+    "standard_user_qualified": false,
+    "profile_revision": 5
+  },
+  "native_login": {
+    "utc": "2026-10-27T00:30:40.560673+00:00",
+    "os": "Windows Server 2025 x64 build 26100.32230",
+    "generated_technician_bundle_installed": true,
+    "release_sequence": 3,
+    "original_verified_launcher_used": true,
+    "actual_desktop_session": 1,
+    "company_branding_and_https_visible": true,
+    "gui_mfa_sign_in_succeeded": true,
+    "authorized_device_and_group_visible": true,
+    "session_history_visible": true,
+    "independent_login_audit_matches": true,
+    "native_remote_session_exercised": false,
+    "standard_user_install_qualified": false
+  },
+  "full_product_acceptance": false,
+  "remaining": [
+    "Separate-machine native sessions and receiver authorization",
+    "Standard-user installation",
+    "Software-version upgrade and automatic rollout",
+    "Public Internet transport",
+    "Production signing"
+  ],
+  "original_receipt_sha256": {
+    "worker25-authenticated-build-verified.json": "64fc22a801e9dd646a9ec1b0b6f918ccdd4bcf9a4fcd92354d96631d79a31de4",
+    "server25-technician-bundle-verified.json": "35b6cdd323a6529506a9369d042b87845e5b16557704d0ad78d3942f87888c5e",
+    "server25-technician-original-setup-result.json": "647b9de0f5a9f1e7551afff45347233da3425e584803091ea4f648d04336112f",
+    "native-technician25-login-verified.json": "037379f2ffbb7a4fef96b97ac8d4eca89053b1bf02fafeaf11e22e81691f9bce"
+  }
+}

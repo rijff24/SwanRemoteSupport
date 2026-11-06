@@ -1,0 +1,67 @@
+{
+  "test_date_local": "2026-11-05",
+  "timezone": "Africa/Johannesburg",
+  "utc": "2026-11-04T23:48:30.988807+00:00",
+  "native_source": "bd331cad1dbe4c45722690c7df70c863a7bd37b5",
+  "version": "1.5.21+89",
+  "scope": "Real direct TCP/protobuf login to installed Windows10 customer through owned loopback forward, with receiving listener temporarily enabled; no company credentials or grant supplied.",
+  "wire_result": {
+    "utc": "2026-11-04T23:32:45.634107+00:00",
+    "native_source": "bd331cad1dbe4c45722690c7df70c863a7bd37b5",
+    "version": "1.5.21+89",
+    "actual_receiving_windows_service": true,
+    "temporary_direct_listener_enabled_for_protocol_test": true,
+    "fresh_native_hash_challenge_received": true,
+    "legacy_password_hash_shaped_from_fresh_challenge": true,
+    "company_credential_or_grant_supplied": false,
+    "actual_native_login_response": "Company session authorization denied",
+    "unauthorized_peer_info_received": false,
+    "response_sha256": "6ed49941fefda2869dd28d4c7bea19c9fd5bf3389352a760a4af10de7b4f4da1",
+    "test_client": "Minimal real TCP/protobuf client; actual installed receiver and company authorization code, no mocked endpoint",
+    "schema_sha256": "a6cd38ffe05f367c8d7bfc2cc03f774f9d08a4078896e62b801f4bb68943b5d6",
+    "framing_source_sha256": "ed5691a29df5db54716e3d5cb065479ad118a5038c35586cad1f703aa4559c47",
+    "stock_graphical_client_result_claimed": false,
+    "full_windows_matrix_qualified": false,
+    "production_publication": false
+  },
+  "company_grants_created_during_controls": 0,
+  "controls_enrolled": false,
+  "company_profile_revision": 44,
+  "automatic_updates_paused": true,
+  "customer_preservation": {
+    "direct_listener_absent": true,
+    "fallback_task_removed": true,
+    "identity_credential_consent_and_trust_preserved": true,
+    "original_native21_hash_preserved": true
+  },
+  "technician_preservation": {
+    "identity_credential_consent_and_trust_preserved": true,
+    "stock_control_not_running": true,
+    "original_native21_hash_preserved": true
+  },
+  "cleanup": {
+    "utc": "2026-11-04T23:39:15.403185+00:00",
+    "owned_stock_processes_stopped": true,
+    "original_direct_option_restored": true,
+    "native_direct_listener_absent": true,
+    "owned_loopback_forward_removed": true,
+    "no_vm_or_company_service_restarted": true
+  },
+  "stock_graphical_control_result": "Inconclusive: window remained black; isolated control processes stopped, files retained. Not claimed as a graphical denial pass.",
+  "historical_stock_id_connection_denial": {
+    "source": "b1fbe1e2419c3e749663746c74442d1fe864302d",
+    "receipt": "1510-native-stock-client-legacy-denial-20261030.json",
+    "unchanged_receiving_source_git_blob_sha256": {
+      "src/managed.rs": "e08c28f7496a07d2f8790d8fded75152386b011ef3fed39530bd47d0aebc8e9f",
+      "src/server/connection.rs": "df3b92623369101f6a1949df0027ea5a182f2224f3529403b28e4fd750c1fdee",
+      "src/server.rs": "32c5485c59ef2d5d1be149ffbce0a4c7176cb1a7dbed55ac763ecfed93325176",
+      "src/rendezvous_mediator.rs": "6f9f02a663f2c7ad8169eedd859c31bf3aa97803c97906e0a9c8130e30b0eee1",
+      "product/agent/src/lib.rs": "45df5a819510b193658428c0c07eb2eeb0b7c55e9e5632d1f7a2ce95625e9484",
+      "product/protocol/src/lib.rs": "e4a1fd4c42f80264c020d6417ed88bd77e5cc411d5e33c0e1eb61e6db9964723"
+    },
+    "current_graphical_id_connection_retested": false
+  },
+  "full_windows_matrix_qualified": false,
+  "external_public_connectivity_qualified": false,
+  "production_publication": false
+}

@@ -1,0 +1,129 @@
+{
+  "utc": "2026-10-30T01:05:44.231049+00:00",
+  "bootstrap_source": "aa73d1779007a751628ebc7a67d9e72fde2ad4f0",
+  "working_version": "1.5.10+78",
+  "ci_run": 40982601944,
+  "ci_url": "https://github.com/rijff24/SwanRemoteSupport/actions/runs/40982601944",
+  "artifact_id": 12945297987,
+  "artifact_sha256": "f6f21247131ef9e8c70935c8cd857d701328e714fcae9673cef4cc8430b0c987",
+  "artifact_source_matches_pinned_commit": true,
+  "scope": "Real Windows SCM, service processes, DLL loader and control dispatch with unsigned simulated core DLLs; no native Rust core or remote-control feature qualification.",
+  "platforms": [
+    {
+      "platform": "Windows Server2022 GitHub runner",
+      "cases": [
+        {
+          "case": "normal",
+          "passed": true,
+          "elapsed_seconds": 0.4891144,
+          "expected_error": 0,
+          "pending_checkpoints": []
+        },
+        {
+          "case": "slow-loader",
+          "passed": true,
+          "elapsed_seconds": 35.6337042,
+          "expected_error": 0,
+          "pending_checkpoints": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+          ]
+        },
+        {
+          "case": "missing-core",
+          "passed": true,
+          "elapsed_seconds": 0.1510484,
+          "expected_error": 126,
+          "pending_checkpoints": []
+        },
+        {
+          "case": "missing-export",
+          "passed": true,
+          "elapsed_seconds": 0.1581287,
+          "expected_error": 127,
+          "pending_checkpoints": []
+        },
+        {
+          "case": "bounded-loader-timeout",
+          "passed": true,
+          "elapsed_seconds": 10.5239257,
+          "expected_error": 1460,
+          "pending_checkpoints": [
+            1,
+            2
+          ]
+        }
+      ]
+    },
+    {
+      "platform": "Windows Server2019 build17763 owned VM",
+      "cases": [
+        {
+          "case": "normal",
+          "passed": true,
+          "elapsed_seconds": 2.9697324999999997,
+          "expected_error": 0,
+          "pending_checkpoints": [
+            1
+          ]
+        },
+        {
+          "case": "slow-loader",
+          "passed": true,
+          "elapsed_seconds": 35.7144145,
+          "expected_error": 0,
+          "pending_checkpoints": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+          ]
+        },
+        {
+          "case": "missing-core",
+          "passed": true,
+          "elapsed_seconds": 0.1122171,
+          "expected_error": 126,
+          "pending_checkpoints": []
+        },
+        {
+          "case": "missing-export",
+          "passed": true,
+          "elapsed_seconds": 0.7184801,
+          "expected_error": 127,
+          "pending_checkpoints": [
+            1
+          ]
+        },
+        {
+          "case": "bounded-loader-timeout",
+          "passed": true,
+          "elapsed_seconds": 10.209052999999999,
+          "expected_error": 1460,
+          "pending_checkpoints": [
+            1,
+            2
+          ]
+        }
+      ]
+    }
+  ],
+  "exact_service_argument_checks_passed_both_platforms": true,
+  "existing_server2019_customer_identity_credential_trust_consent_sequence_preserved": true,
+  "existing_server2019_customer_and_worker_processes_unchanged": true,
+  "all_owned_fixture_services_removed": true,
+  "no_global_service_timeout_or_customer_startup_policy_change": true,
+  "full_native_build_pending": true,
+  "native_cold_boot_retest_pending": true,
+  "original_intermittent_startup_failure_not_cleared": true,
+  "production_publication": false,
+  "full_product_acceptance_complete": false
+}

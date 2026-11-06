@@ -1,0 +1,18 @@
+{
+  "date": "2026-10-26",
+  "application_source": "da0c621845057bed321a98a1886ef15891e431a9",
+  "edition": "technician",
+  "os": "Windows 10 Pro x64 build 19045.3803",
+  "lab_signed_msi_sha256": "9e339a4140c204846c7b51c33068da9502593fcdd79e6351691426d7fe1319e3",
+  "actual_standard_user_console_login_verified": true,
+  "task_logon_type": "InteractiveToken",
+  "task_run_level": "LeastPrivilege",
+  "task_execution_limit_minutes": 10,
+  "task_terminal_result": 267014,
+  "first_driver_observation_created": false,
+  "msi_execution_started": false,
+  "test_task_disabled": true,
+  "passed": false,
+  "scope": "The original task reached its execution limit before creating its first driver observation. This is a failed lab execution attempt, not evidence of installer success or an established installer defect. Its startup stall requires investigation.",
+  "full_windows_qualification": false
+}

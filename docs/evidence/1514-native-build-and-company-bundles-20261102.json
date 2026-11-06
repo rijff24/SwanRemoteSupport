@@ -1,0 +1,56 @@
+{
+  "utc": "2026-11-02T14:37:44.765655+00:00",
+  "source": "dde38c9ae213969041fe1cd4f5c4565d910de087",
+  "version": "1.5.14+82",
+  "workflow_run": 41180376583,
+  "native_job": 124477714041,
+  "conclusion": "success",
+  "github_artifact": 13036196608,
+  "artifact_digest": "sha256:81b20f24c5e877f7026e44418a4dccaefddecb0349c23794de75fe0fccbcacec",
+  "offline_verification": {
+    "archive_checksums": true,
+    "public_tracked_source_files": 1340,
+    "generated_bridge_files": 6,
+    "pinned_engine_and_sdk": true,
+    "required_build_steps": {
+      "Reject paused support and authorization reuse after resume": "success",
+      "Reject authorization retries and inherited audit destinations": "success",
+      "Reject cross-target and stale-login file-transfer handles": "success",
+      "Verify hardened DLL search supports delayed application libraries": "success",
+      "Build branded client": "success",
+      "Build self-extracting installer": "success",
+      "Reject incoming capture helpers in the technician edition": "success",
+      "Verify service launcher defers desktop DLL loading": "success",
+      "Verify customer MSI starts a headless native service": "success",
+      "Reject unsigned legacy management policy in managed editions": "success",
+      "Reject upstream updater entry points in managed editions": "success",
+      "Reject system-control packets from view-only managed sessions": "success",
+      "Build unsigned customer and technician MSIs with pinned WiX": "success",
+      "Verify unsigned technician MSI installation repair and uninstall": "success",
+      "Build unsigned company server setup with pinned components": "success"
+    }
+  },
+  "lab_signing": {
+    "existing_nonexportable_key_reused": true,
+    "all_five_signatures_valid": true,
+    "private_key_exported": false,
+    "customer_msi_sha256": "c0ae038efbd9edb383c7b386b414c4d3daa0f0df320234ed791d6c62c4f54d24",
+    "technician_msi_sha256": "d542555ab950381f8579839973929f529891692beb483c49055398f9afedebcc"
+  },
+  "company_bundles": {
+    "sequence": 17,
+    "generated_by_existing_windows_worker": true,
+    "public_customer_download_http_status": 200,
+    "anonymous_technician_download_http_status": 401,
+    "authenticated_technician_download_http_status": 200,
+    "signed_profiles_releases_payload_hashes_and_exact_bundle_sources_verified": true,
+    "full_corresponding_source_served_over_https": true,
+    "updates_remain_paused": true
+  },
+  "limits": [
+    "Lab certificates do not qualify production signing.",
+    "Actual customer13-to14 automatic update and limited-user frontend relaunch are still pending.",
+    "Independent native14 reproduction and every advertised clean-OS lifecycle remain unqualified."
+  ],
+  "production_publication": false
+}
