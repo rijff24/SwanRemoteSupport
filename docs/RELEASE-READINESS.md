@@ -56,8 +56,15 @@ and consent digests are unchanged. The standard-user customer frontend reopened
 automatically with company branding, and the system service is healthy. No manual
 installer, update command or watcher repair was used. The controlled window restored
 the original paused policy and every release approval at newer signed revision46.
-Technician upgrade and remaining Windows11 runtime qualification stay open.
-No production signing or publication has occurred.
+The [technician automatic MSI upgrade](evidence/1522-fresh93-win11-technician-automatic-msi-upgrade-20261106.json)
+also passes from sequence27/native1.5.21 to sequence29/native1.5.22: exact signed
+bytes, shipping verification, original trust/consent digest and automatic standard-user
+frontend relaunch pass. Company branding and About1.5.22 were observed in the real app.
+The original paused policy and all approvals are restored at signed revision50.
+An earlier lab selection mistake allowed the old approved MSI27 to upgrade sequence19;
+that attempt is retained separately and is not claimed as fresh93 qualification.
+Current-candidate technician login, sessions and remaining Windows11 runtime
+qualification stay open. No production signing or publication has occurred.
 
 Current app candidate: **1.5.21+89**, public source `bd331ca`. Both technician formats and the customer MSI have package verification. Customer EXE30 was withdrawn after a lab MSI/EXE manifest pairing error; [corrected EXE31 shipping recovery, uninstall/reinstall and compact customer About now pass](evidence/1521-customer-exe31-recovery-uninstall-reinstall-and-about-20261104.json) on the existing Windows10 development VM. [Independent native comparison](evidence/1521-independent-native-original-output-reproduction-20261104.json) matches all eight original unsigned outputs; [existing standard-user technician checks](evidence/1521-standard-technician-upgrade-about-mfa-20261104.json) pass upgrade, About, genuine MFA/inventory and sign-out. Both endpoint About screens and the customer shipping uninstall fix now have genuine app evidence. Remaining permission, desktop-feature and update checks are open; current live-session results follow. Finish these on the existing development pair before the final advertised-Windows matrix. Reuse one VM per OS; do not create a VM for each candidate. This remains a development build, without production approval.
 

@@ -1,0 +1,35 @@
+{
+  "version": "1.5.22",
+  "no_pending_or_failed_recovery": true,
+  "shipping_verifier_passed": true,
+  "production_signing": false,
+  "utc": "2026-11-06T09:58:48.5355326Z",
+  "to_sequence": 29,
+  "from_sequence": 27,
+  "expected_lab_publisher_valid": true,
+  "edition": "technician",
+  "customer_remains_sequence32": true,
+  "manual_installer_or_update_command_invoked": false,
+  "exact_signed_installed_bytes": true,
+  "identity_trust_credential_consent_preserved": true,
+  "application_source": "d5eeaa918fbb2510148d041297be99dbdc169360",
+  "package_format": "msi",
+  "os_scope": "Existing Windows11 x64 fixture only; registry build26300; desktop watermark26100",
+  "automatic_standard_user_frontend_relaunch_verified": true,
+  "company_branded_login_and_about_1522_visually_observed": true,
+  "original_policy_and_all_release_approvals_restored": {
+    "utc": "2026-11-06T09:58:31.505620+00:00",
+    "revision": 50,
+    "original_policy_and_all_approvals_restored": true,
+    "updates_paused": true
+  },
+  "earlier_selection_attempt": {
+    "from_sequence": 19,
+    "selected_sequence": 27,
+    "version": "1.5.21",
+    "cause": "Existing installation used MSI, while the initial lab selection withdrew new MSI29 and targeted EXE28. Old approved MSI27 was therefore selected. Policy and all approvals were restored at revision48 before the corrected MSI29 test.",
+    "fresh93_qualification_claimed_for_that_attempt": false
+  },
+  "current_candidate_login_and_sessions_qualified": false,
+  "production_publication": false
+}
