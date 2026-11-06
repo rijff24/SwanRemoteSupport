@@ -1,4 +1,37 @@
-# Release readiness — 5 November 2026
+# Release readiness — 6 November 2026
+
+## First publication: Windows 11 x64
+
+The first endpoint release targets **Windows 11 x64 only**, following the revised
+release scope of 6 November. Windows 10 and Windows Server qualification is
+deferred to subsequent releases; historical tests below are evidence, not first
+release compatibility claims. Reuse the existing Windows 11 VM. Do not create
+additional OS guests or run the full Windows matrix before this release.
+
+The shortest release path is the existing company server and Windows worker,
+customer and technician packages, and approved automatic updates. Preserve the
+existing security and recovery gates. Before publication, verify the exact
+candidate on Windows 11: company setup and branding, public customer/protected
+technician downloads, enrollment and MFA, real authorized sessions and rejection
+of bypasses, customer consent and revocation, desktop features, signed profile
+sync and rotation, installer lifecycle and interrupted automatic-update recovery.
+Public direct/relay operation without Tailscale and valid production signatures
+remain required. Linux and Windows server deployment instructions remain in scope;
+deferring Windows endpoint versions does not remove company hosting.
+
+The [fresh-input +93 primary build](https://github.com/rijff24/SwanRemoteSupport/actions/runs/42079677235)
+passed from exact public source `d5eeaa918fbb2510148d041297be99dbdc169360`.
+Its original unsigned archive SHA256 is
+`030303d1e0f736f68c2b238fb3ee0e15e71d9c7099c0bb608b20416b2d89e51a`.
+Local verification covered all 1,421 tracked source files, six original generated
+bridge inputs, artifact hashes and compiled branding/approval/transfer tests.
+The captured AV1 object is present byte-for-byte in the installed static library;
+the function prefix before its recorded terminal relocation is present once in
+the original packaged DLL. This traces build provenance, not reproducibility.
+The [independent exact-source build](https://github.com/rijff24/SwanRemoteSupport/actions/runs/42169429003)
+has started; original-output comparison remains pending. No +93 package is
+signed, installed, approved or published. The historical +92 mismatch remains
+unexplained.
 
 Current app candidate: **1.5.21+89**, public source `bd331ca`. Both technician formats and the customer MSI have package verification. Customer EXE30 was withdrawn after a lab MSI/EXE manifest pairing error; [corrected EXE31 shipping recovery, uninstall/reinstall and compact customer About now pass](evidence/1521-customer-exe31-recovery-uninstall-reinstall-and-about-20261104.json) on the existing Windows10 development VM. [Independent native comparison](evidence/1521-independent-native-original-output-reproduction-20261104.json) matches all eight original unsigned outputs; [existing standard-user technician checks](evidence/1521-standard-technician-upgrade-about-mfa-20261104.json) pass upgrade, About, genuine MFA/inventory and sign-out. Both endpoint About screens and the customer shipping uninstall fix now have genuine app evidence. Remaining permission, desktop-feature and update checks are open; current live-session results follow. Finish these on the existing development pair before the final advertised-Windows matrix. Reuse one VM per OS; do not create a VM for each candidate. This remains a development build, without production approval.
 
@@ -227,9 +260,10 @@ Candidate1.5.14+82 implements customer UI recovery after a verified update while
 | Public connectivity without Tailscale | Native maintained-relay tests currently use separate VMs with lab host port forwarding. External NAT traversal, external relay fallback and negative-access tests are not qualified by those results. |
 | Profile security and trust rotation | [Current compiled-agent rejection checks](evidence/1510-installed-agent-profile-rejection-20261030.json) passed 28 isolated public-fixture cases on Windows 10 and Server 2019. [Live installed key rotation](evidence/1510-installed-profile-key-rotation-and-native-recovery-20261030.json) then passed automatic trusted transition/adoption on the Windows 10 customer and both Server 2019 editions, preserving identity and consent. Current shipping agents accepted new-key HTTPS controls and rejected missed-transition caches; old downloads were withdrawn. Fresh native MFA/approval/desktop and customer stop passed after rotation. The worker pin was changed explicitly, preserving its credential and ACLs. [Post-rotation restore and replacement bundles](evidence/361d7c3-post-profile26-restore-and-replacement-bundles-20261030.json) also passed. Offline-client recovery, interrupted activation and the remaining live tamper cases stay open. |
 
-## Windows release matrix
+## Deferred Windows compatibility matrix
 
-For the current candidate, do not substitute older-version test results for
+Windows 11 is the first-release gate above. The other systems below are deferred.
+For any future advertised candidate, do not substitute older-version test results for
 clean installation, repair, upgrade, interrupted-upgrade recovery, reboot,
 uninstall and native behavior on each advertised operating system.
 

@@ -1,12 +1,19 @@
 # Configurable product acceptance report
 
-Evidence through 5 November 2026. **The product is not complete or approved for
+Evidence through 6 November 2026. **The product is not complete or approved for
 production publication.** A passing component test is not evidence of a working
 native support session or a clean-machine installation.
 
 For the current candidate and remaining release gates, start with the compact
 [release-readiness index](RELEASE-READINESS.md). The older checkpoints below
 remain source-specific historical evidence.
+
+The first published endpoint release now targets **Windows 11 x64 only**.
+Windows 10 and Windows Server endpoint releases are deferred. This changes the
+first-release OS matrix, not the consent, authorization, update, recovery or
+signing requirements. Existing results on other systems remain scoped historical
+evidence and do not qualify Windows 11. Company-hosted infrastructure remains
+required; there is no project-operated service.
 
 ## Current direct TCP authorization denial, 5 November
 
