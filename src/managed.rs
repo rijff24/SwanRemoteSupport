@@ -22,6 +22,38 @@ hbb_common::lazy_static::lazy_static! {
     static ref SUPPORT_PAUSE_SIGNAL:hbb_common::tokio::sync::watch::Sender<u64>=hbb_common::tokio::sync::watch::channel(0).0;
 }
 
+#[cfg(windows)]
+pub fn start_technician_lifecycle()->ResultType<()> {
+    static STARTED:std::sync::Mutex<bool>=std::sync::Mutex::new(false);
+    let mut started=STARTED.lock().unwrap();
+    if *started {return Ok(());}
+    let directory=swan_agent::state_directory();
+    let state=match AgentState::load_for_refresh(&directory) {
+        Ok(state)=>state,
+        Err(_)=>{
+            // Preserve the existing unconfigured customer UI; managed access
+            // still requires validated company state on both ends.
+            log::debug!("Technician lifecycle unavailable without valid company configuration");
+            return Ok(());
+        }
+    };
+    if state.bootstrap.edition!=Edition::Technician {return Ok(());}
+    let runtime=swan_agent::technician_runtime::register(&directory)?;
+    std::thread::Builder::new().name("swan-technician-lifecycle".into()).spawn(move || {
+        let _runtime=runtime;
+        loop {
+            if directory.join("pending-uninstall").try_exists().unwrap_or(true) {
+                // Exit all windows and connections, including an idle signed-in
+                // UI. The OS releases credentials, transports and registration.
+                std::process::exit(0);
+            }
+            std::thread::sleep(std::time::Duration::from_millis(250));
+        }
+    })?;
+    *started=true;
+    Ok(())
+}
+
 pub async fn technician_request(request:&str)->String {
     match technician_request_inner(request).await {
         Ok(value)=>serde_json::json!({"ok":true,"data":value}).to_string(),

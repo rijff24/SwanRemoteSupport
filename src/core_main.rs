@@ -33,6 +33,11 @@ pub fn core_main() -> Option<Vec<String>> {
         return None;
     }
     crate::load_custom_client();
+    #[cfg(all(windows,feature = "swan_custom"))]
+    if crate::managed::start_technician_lifecycle().is_err() {
+        log::error!("Technician removal is in progress or its lifecycle registration is unavailable");
+        return None;
+    }
     #[cfg(windows)]
     if !crate::platform::windows::bootstrap() {
         // return None to terminate the process

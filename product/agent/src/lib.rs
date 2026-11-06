@@ -10,6 +10,7 @@ pub mod update;
 pub mod payload;
 pub mod technician;
 pub mod reporting;
+pub mod technician_runtime;
 #[cfg(any(windows,test))]
 mod verifier_process;
 

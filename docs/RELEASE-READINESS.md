@@ -2,6 +2,19 @@
 
 ## First publication: Windows 11 x64
 
+**Technician uninstall also needs rebuilt acceptance:** the standard-user
+foreground test of technician MSI29 (native 1.5.22+93) returned installer exit 0
+and removed its registration and installed files, but left its extracted native
+GUI process running. That is a failed uninstall test, not a successful lifecycle
+result. Candidate 1.5.23+94 now registers every configured technician native
+process for its lifetime, exits those processes on explicit removal, and makes
+the remover wait for their registrations to close before deleting files. A
+bounded wait fails removal if a process does not exit. This uses a separate
+runtime lock and does not replace session authorization or its activity lock.
+The rebuilt Windows native application, foreground MSI/EXE uninstall and rollback
+still need real acceptance tests. The earlier customer-only candidate build
+42213325451 was cancelled; it must not be published as the combined fix.
+
 **Publication blocker found in current +93:** [real Windows11 MSI uninstall/reinstall regression](evidence/1522-fresh93-win11-msi-uninstall-ui-regression-20261106.json).
 MSI removed files, service, watcher and registration but left customer UI processes
 running from Windows Installer rollback storage. The next EXE setup retained its

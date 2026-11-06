@@ -601,7 +601,11 @@ pub fn uninstall_cancellation(directory:&Path,restore:bool,customer:bool)->Resul
     validate_uninstall_directory(directory,customer)?;
     let status=embedded_powershell_command(include_str!("../../../deployment/windows/Update-UninstallCancellation.ps1"),
         &[("Directory",directory.to_str().context("Uninstall state path is not valid Unicode")?),("Operation",if restore{"restore"}else{"cancel"})])?.status()?;
-    ensure!(status.success(),"Uninstall recovery cancellation failed");Ok(())
+    ensure!(status.success(),"Uninstall recovery cancellation failed");
+    if !customer && !restore {
+        crate::technician_runtime::wait_for_exit(directory,std::time::Duration::from_secs(20))?;
+    }
+    Ok(())
 }
 
 #[cfg(windows)]
